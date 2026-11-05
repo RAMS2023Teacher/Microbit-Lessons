@@ -43,7 +43,7 @@ python tools/validate_lessons.py
 | `agenda` | list of `{key, name, minutes}`; keys from warmup, learn, circuit, code, debug, quiz, challenge |
 | `video` | `{title, note}` — the teacher pastes a video URL later in the site |
 | `warmup` | `{prompt}` — a quick-write question, no wrong answers |
-| `learn` | list of Markdown blocks (each one is a "card"; start with a `###` heading) |
+| `learn` | list of Markdown blocks (each one is a "card"; start with a `###` heading). Students see one card at a time, so keep each to one idea and about 60 words |
 | `circuit` | optional; see below |
 | `code` | `{intro, starter, walkthrough: [{lines, explain}], try_it: [..]}` — `starter` must be valid Python |
 | `debug` | see below |

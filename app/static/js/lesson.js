@@ -32,7 +32,8 @@
     const pct = Math.round((100 * done) / KEYS.length);
     $('lesson-meter').style.width = pct + '%';
     $('lesson-pct').textContent = pct + '%';
-    $('lesson-done').hidden = pct < 100;
+    lessonComplete = pct === 100;
+    syncLessonDone();
   }
 
   function autosave(el, field, statusEl) {
@@ -49,7 +50,50 @@
 
   // ----- warm-up & learn -----
   autosave($('warmup-answer'), 'warmup_answer', $('warmup-status'));
-  $('learn-done').addEventListener('click', () => api('/save', { mark: { learn: true } }));
+  (function learnStepper() {
+    const cards = [...$('learn-cards').children];
+    const dots = $('learn-dots');
+    const seen = new Set();
+    let cur = 0;
+    cards.forEach((card, i) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = i + 1;
+      b.setAttribute('aria-label', `Card ${i + 1} of ${cards.length}`);
+      b.addEventListener('click', () => show(i, true));
+      li.appendChild(b);
+      dots.appendChild(li);
+    });
+    function show(i, moved) {
+      cur = i;
+      seen.add(i);
+      cards.forEach((card, j) => { card.hidden = j !== i; });
+      const last = i === cards.length - 1;
+      $('learn-count').textContent = `Card ${i + 1} of ${cards.length}`;
+      $('learn-prev').hidden = i === 0;
+      $('learn-next').hidden = last;
+      $('learn-done').hidden = !last;
+      [...dots.children].forEach((li, j) => {
+        li.classList.toggle('current', j === i);
+        li.classList.toggle('checked', seen.has(j) && j !== i);
+      });
+      if (moved) {
+        cards[i].focus({ preventScroll: true });
+        // Cards differ in height: keep the top of the new card below the sticky header.
+        const limit = document.querySelector('.topbar').offsetHeight + 12;
+        const top = $('learn-count').getBoundingClientRect().top;
+        if (top < limit) window.scrollBy({ top: top - limit, behavior: 'smooth' });
+      }
+    }
+    $('learn-prev').addEventListener('click', () => show(cur - 1, true));
+    $('learn-next').addEventListener('click', () => show(cur + 1, true));
+    $('learn-done').addEventListener('click', () => {
+      api('/save', { mark: { learn: true } });
+      goToNextSection();
+    });
+    show(0, false);
+  })();
   $('code-done').addEventListener('click', () => api('/save', { mark: { code: true } }));
 
   // ----- editors -----
@@ -109,7 +153,7 @@
     $('step-next').addEventListener('click', () => {
       if (!checked.has(cur)) { checked.add(cur); saveSteps(); }
       if (cur < steps.length - 1) show(cur + 1);
-      else { show(cur); $('code').scrollIntoView({ behavior: 'smooth' }); }
+      else { show(cur); goToNextSection(); }
     });
     show(cur);
   }
@@ -197,7 +241,7 @@
   try { timerStart = parseInt(localStorage.getItem(TKEY), 10) || null; } catch (e) { /* ignore */ }
   function fmt(s) { const m = Math.floor(Math.abs(s) / 60), r = Math.abs(s) % 60; return (s < 0 ? '+' : '') + m + ':' + String(r).padStart(2, '0'); }
   function updateTimer() {
-    const lis = document.querySelectorAll('#agenda li');
+    const lis = document.querySelectorAll('#agenda li[data-minutes]');
     lis.forEach((li) => li.classList.remove('now'));
     if (!timerStart) {
       $('timer-clock').textContent = fmt(total);
@@ -231,6 +275,68 @@
   if (timerStart && Date.now() - timerStart > 3 * 3600 * 1000) timerStart = null;   // stale
   updateTimer();
   tick = setInterval(updateTimer, 1000);
+
+  // ----- one section at a time -----
+  const lessonEl = $('lesson');
+  const stepEls = [...lessonEl.querySelectorAll('[data-step]')];
+  const stepName = (el) => document.querySelector(`#agenda li[data-key="${el.id}"] .grow`).textContent;
+  // These sections have their own Next button, so a second one here would let students skip them by accident.
+  const HAS_OWN_NEXT = new Set(['learn', 'circuit']);
+  let curStep = 0;
+  let lessonComplete = false;
+
+  function syncLessonDone() {
+    $('lesson-done').hidden = !lessonComplete || curStep !== stepEls.length - 1;
+  }
+  function showStep(i, moved) {
+    curStep = i;
+    const el = stepEls[i], prev = stepEls[i - 1], next = stepEls[i + 1];
+    stepEls.forEach((s, j) => { s.hidden = j !== i; });
+    lessonEl.classList.toggle('compact', i > 0);
+    document.querySelectorAll('#agenda li').forEach((li) => {
+      const on = li.dataset.key === el.id;
+      li.classList.toggle('current', on);
+      if (on) li.querySelector('a').setAttribute('aria-current', 'step');
+      else li.querySelector('a').removeAttribute('aria-current');
+    });
+    $('section-count').textContent = `Part ${i + 1} of ${stepEls.length}`;
+    $('section-prev').hidden = !prev;
+    if (prev) $('section-prev').textContent = `← Back to ${stepName(prev)}`;
+    $('section-next').hidden = !next || HAS_OWN_NEXT.has(el.id);
+    if (next) $('section-next').textContent = `Next: ${stepName(next)} →`;
+    syncLessonDone();
+    // CodeMirror can't measure itself while hidden.
+    MakerEditor.all.forEach((ed) => { if (el.contains(ed.root)) ed.cm.refresh(); });
+    if (moved) {
+      el.focus({ preventScroll: true });
+      const top = lessonEl.getBoundingClientRect().top + window.scrollY - document.querySelector('.topbar').offsetHeight - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    }
+  }
+  function goToNextSection() {
+    const next = stepEls[curStep + 1];
+    if (next) location.hash = next.id;
+  }
+  stepEls.forEach((el) => { el.tabIndex = -1; });
+  $('section-next').addEventListener('click', goToNextSection);
+  $('section-prev').addEventListener('click', () => { location.hash = stepEls[curStep - 1].id; });
+  window.addEventListener('hashchange', () => {
+    const i = stepEls.findIndex((el) => '#' + el.id === location.hash);
+    if (i >= 0) showStep(i, true);
+  });
+
+  // Open the section in the link, or pick up where the student left off.
+  (function firstStep() {
+    const sections = S.sections || {};
+    let i = stepEls.findIndex((el) => '#' + el.id === location.hash);
+    if (i < 0 && KEYS.some((k) => sections[k])) {
+      i = stepEls.findIndex((el) => KEYS.includes(el.id) && !sections[el.id]);
+      if (i < 0) i = stepEls.length - 1;
+    }
+    if (i < 0) i = 0;
+    history.replaceState(null, '', '#' + stepEls[i].id);
+    showStep(i, false);
+  })();
 
   updateProgress(S.sections || {});
 })();
