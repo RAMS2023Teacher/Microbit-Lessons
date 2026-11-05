@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% from "_forms.html" import field, csrf %}
+{% block title %}Teacher sign-up · {{ site_name }}{% endblock %}
+{% block content %}
+<div class="auth-card card">
+  <h1>Teacher sign-up</h1>
+  <p class="muted">You need the teacher sign-up code set by whoever runs this site (the <code>TEACHER_SIGNUP_CODE</code> setting).</p>
+  <form method="post">
+    {{ csrf() }}
+    {{ field("teacher_code", "Teacher sign-up code", "password", attrs='required') }}
+    {{ field("display_name", "Name students will see", value=form.get('display_name',''), attrs='required placeholder="Mr. Perkins"') }}
+    {{ field("username", "Username", value=form.get('username',''), attrs='required autocomplete="username"') }}
+    {{ field("password", "Password", "password", attrs='required autocomplete="new-password"') }}
+    {{ field("confirm", "Confirm password", "password", attrs='required autocomplete="new-password"') }}
+    <button class="btn wide" type="submit">Create teacher account</button>
+  </form>
+</div>
+{% endblock %}

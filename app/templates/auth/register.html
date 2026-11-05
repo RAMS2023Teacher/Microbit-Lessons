@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% from "_forms.html" import field, csrf %}
+{% block title %}Join a class · {{ site_name }}{% endblock %}
+{% block content %}
+<div class="auth-card card">
+  <h1>Join your class</h1>
+  <p class="muted">Your teacher will give you a 6-letter class code. Don't use your email or your full last name as a username.</p>
+  <form method="post">
+    {{ csrf() }}
+    {{ field("class_code", "Class code", value=form.get('class_code',''), attrs='required maxlength="10" style="text-transform:uppercase;letter-spacing:.2em"') }}
+    {{ field("display_name", "Your name (first name + last initial)", value=form.get('display_name',''), attrs='required maxlength="80" placeholder="Sam K."') }}
+    {{ field("username", "Pick a username", value=form.get('username',''), hint="3+ letters or numbers, no spaces", attrs='required autocomplete="username"') }}
+    {{ field("password", "Password", "password", hint="At least 6 characters", attrs='required autocomplete="new-password"') }}
+    {{ field("confirm", "Type your password again", "password", attrs='required autocomplete="new-password"') }}
+    <button class="btn wide" type="submit">Create my account</button>
+  </form>
+  <p class="muted">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</div>
+{% endblock %}

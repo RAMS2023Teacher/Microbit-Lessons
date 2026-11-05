@@ -1,0 +1,387 @@
+id: radio-remote
+unit: 4
+order: 16
+title: Radio Remote Control
+subtitle: Tilt one micro:bit to drive your robot with the other
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  Two micro:bits can talk by radio: one sends short command messages, the
+  other listens and drives - and stops by itself if the messages stop coming.
+objectives:
+  - Send and receive radio messages with radio.send() and radio.receive()
+  - Use radio.config(group=...) so teams don't control each other's robots
+  - Turn accelerometer tilt into commands F, L, R and S
+  - Add a safety stop that halts the robot when no message arrives for 500 ms
+vocabulary:
+  - term: Radio
+    definition: The micro:bit's built-in wireless chip. It sends short messages through the air to other micro:bits nearby.
+  - term: Group
+    definition: A channel number (0-255). micro:bits only hear messages from others in the same group.
+  - term: Controller / receiver
+    definition: The controller is the micro:bit in your hand that sends commands. The receiver is the micro:bit on the robot that listens and acts.
+  - term: Fail-safe
+    definition: A design that makes a machine go to a safe state (like stopping) when something goes wrong, such as losing contact.
+  - term: Accelerometer
+    definition: The sensor that measures tilt and movement. get_x() is left/right tilt, get_y() is forward/back tilt.
+materials:
+  - 2 micro:bit V2 boards + USB cable (one controller, one on the robot)
+  - 2 battery holders (2×AAA), one for each micro:bit
+  - Your robot from lesson 14 (chassis, 2 TT motors, DRV8833 driver, 4×AA pack, breadboard, breakout)
+  - A sticky note to label the controller with your team's radio group number
+  - Cones, cups or tape for a driving course
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Check the robot wiring, minutes: 3}
+  - {key: code, name: Code it, minutes: 10}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 7}
+video:
+  title: micro:bit radio basics
+  note: Notice that both micro:bits set the same group number. What happens to a message sent in a different group?
+warmup:
+  prompt: >-
+    Think of a remote-controlled toy, a drone, or a TV remote. What should
+    happen if the remote's batteries die while the toy is moving? Why?
+learn:
+  - |
+    ### Two micro:bits, two programs
+    Today you need **two** programs:
+
+    * The **controller** (in your hand) reads **tilt** and sends a one-letter
+      command with `radio.send()`.
+    * The **robot** listens with `radio.receive()` and calls `drive()`.
+
+    | message | meaning |
+    |---|---|
+    | `'F'` | forward |
+    | `'L'` | spin left |
+    | `'R'` | spin right |
+    | `'S'` | stop |
+  - |
+    ### Groups keep teams apart
+    Every micro:bit in the room can hear every other one! `radio.config(group=12)`
+    puts your pair on **channel 12**. A micro:bit only hears messages from its
+    **own group**. Your teacher will give each team a different number - write
+    it on a sticky note on your controller. **Both** micro:bits must use the
+    same number.
+  - |
+    ### Fail-safe: stop if the messages stop
+    What if the controller's batteries die while the robot is driving forward?
+    The last command was `'F'`... so it would drive forever!
+
+    The fix: the controller sends a command **every 100 ms**. The robot
+    remembers **when** it last heard one using `running_time()` (milliseconds
+    since it started). If more than **500 ms** go by with no message, it
+    **stops by itself**. Real robots, drones and lawnmowers all have a fail-safe like this.
+  - |
+    ### The robot's program
+    Flash this onto the **robot's** micro:bit. Change the group to your team's number.
+
+    ```python
+    from microbit import *
+    import radio
+
+    radio.config(group=12)   # must match the controller!
+    radio.on()
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    last_heard = running_time()
+    while True:
+        msg = radio.receive()          # a string, or None if nothing arrived
+        if msg:
+            last_heard = running_time()
+            if msg == 'F':
+                drive(700, 700)
+            elif msg == 'L':
+                drive(-500, 500)
+            elif msg == 'R':
+                drive(500, -500)
+            else:
+                drive(0, 0)
+            display.show(msg)
+        if running_time() - last_heard > 500:
+            drive(0, 0)                # fail-safe: lost contact
+            display.show(Image.NO)
+        sleep(20)
+    ```
+circuit:
+  intro: >-
+    The robot's wiring is exactly the same as lesson 14 - no new parts! Use
+    these steps to check every connection before you drive. The controller
+    micro:bit needs no wiring at all, just its 2×AAA battery holder.
+  safety:
+    - Check wiring with the micro:bit unplugged and the 4×AA pack switched off.
+    - Battery pack red (+) goes ONLY to the driver's VM. Never to the micro:bit's 3V.
+    - Test the first time with the robot's wheels in the air, in case it drives off unexpectedly.
+  steps:
+    - title: Shared ground
+      instruction: >-
+        Check: a **black** wire from the breakout's **GND** to **T-1**, the
+        driver's **GND** to **T-5**, and the 4×AA pack's **black (–)** to **T-3**.
+        Battery **red (+)** goes to the driver's **VM**.
+      check: Do all three grounds meet in the blue rail, and is battery + only on VM?
+      add:
+        - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, BIN1, BIN2, AOUT1, AOUT2, BOUT1, BOUT2]}
+        - {type: battery, id: bat1, label: "4×AA 6V"}
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: wire, from: drv1.GND, to: T-5, color: black}
+        - {type: wire, from: bat1.minus, to: T-3, color: black}
+        - {type: wire, from: bat1.plus, to: drv1.VM, color: red}
+    - title: Control wires
+      instruction: >-
+        Check: **P13 → AIN1** and **P14 → AIN2** (left motor), **P15 → BIN1**
+        and **P16 → BIN2** (right motor).
+      check: Are all four control wires on the right pins?
+      add:
+        - {type: wire, from: mb.P13, to: drv1.AIN1, color: yellow}
+        - {type: wire, from: mb.P14, to: drv1.AIN2, color: green}
+        - {type: wire, from: mb.P15, to: drv1.BIN1, color: blue}
+        - {type: wire, from: mb.P16, to: drv1.BIN2, color: purple}
+    - title: Motors and micro:bit power
+      instruction: >-
+        Check: left motor on **AOUT1/AOUT2**, right motor on **BOUT1/BOUT2**.
+        Plug a **2×AAA holder** into the robot micro:bit's battery socket, and
+        another into the controller micro:bit.
+      check: Did both wheels go forward with the lesson 14 code? If one went backward, swap that motor's two wires.
+      add:
+        - {type: dcmotor, id: motor_l}
+        - {type: dcmotor, id: motor_r}
+        - {type: wire, from: drv1.AOUT1, to: motor_l.a, color: orange}
+        - {type: wire, from: drv1.AOUT2, to: motor_l.b, color: white}
+        - {type: wire, from: drv1.BOUT1, to: motor_r.a, color: orange}
+        - {type: wire, from: drv1.BOUT2, to: motor_r.b, color: white}
+  verify:
+    connected:
+      - [mb.GND, drv1.GND, bat1.minus]
+      - [bat1.plus, drv1.VM]
+      - [mb.P13, drv1.AIN1]
+      - [mb.P14, drv1.AIN2]
+      - [mb.P15, drv1.BIN1]
+      - [mb.P16, drv1.BIN2]
+      - [drv1.AOUT1, motor_l.a]
+      - [drv1.AOUT2, motor_l.b]
+      - [drv1.BOUT1, motor_r.a]
+      - [drv1.BOUT2, motor_r.b]
+    not_connected:
+      - [bat1.plus, mb.3V]
+      - [bat1.plus, mb.GND]
+      - [motor_l.a, motor_l.b]
+      - [motor_r.a, motor_r.b]
+code:
+  intro: >-
+    This is the **controller** program - flash it onto the micro:bit you'll
+    hold. Flash the **robot** program from the Learn section onto the robot.
+    Change group=12 in BOTH programs to your team's number. Hold the
+    controller flat with the logo pointing away from you, then tilt to drive.
+  starter: |
+    from microbit import *
+    import radio
+
+    radio.config(group=12)   # your team's number, 0-255 - same on the robot!
+    radio.on()
+
+    TILT = 300   # how far you must tilt before it counts
+
+    while True:
+        x = accelerometer.get_x()   # left / right tilt
+        y = accelerometer.get_y()   # forward / back tilt
+
+        if x < -TILT:
+            command = 'L'
+        elif x > TILT:
+            command = 'R'
+        elif y > TILT:
+            command = 'F'
+        else:
+            command = 'S'
+
+        radio.send(command)
+        display.show(command)
+        sleep(100)               # send 10 times a second
+  walkthrough:
+    - lines: "2"
+      explain: The radio module isn't included in `from microbit import *`, so we import it separately.
+    - lines: "4-5"
+      explain: "**config(group=12)** chooses your team's channel. **on()** switches the radio on - without it nothing is sent."
+    - lines: "7"
+      explain: A "dead zone". Small wobbles in your hand (under 300) don't count, so the robot stops when you hold the controller flat.
+    - lines: "10-11"
+      explain: Read the tilt. Tilting right makes x positive, left makes x negative. Tilting the logo edge down makes y positive.
+    - lines: "13-20"
+      explain: Turn the tilt into one letter. Turning is checked first so you can steer even while tipping forward a bit.
+    - lines: "22-24"
+      explain: Send the letter, show it so you can see what you're sending, and repeat 10 times a second. Sending often keeps the robot's fail-safe from kicking in.
+  try_it:
+    - Add a 'B' command for backward (tilt toward you, y < -TILT) - and add it to the robot program too.
+    - Press button A for a "turbo" command 'T' that drives at 1023 on the robot.
+    - Switch off the controller while the robot drives (wheels in the air!). Does the fail-safe stop it? How long does it take?
+    - "Make the robot say hello: when it gets a new message 'H' from button B, play music.play(music.POWER_UP)."
+debug:
+  story: >-
+    Ana flashed this onto her robot. At first it ignores the controller
+    completely. After she fixed that, the robot only twitches - and when she
+    turned the controller off, the robot drove away across the room!
+    There are **two** bugs. Fix them and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+    import radio
+
+    radio.config(group=12)
+    radio.on
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    last_heard = running_time()
+    while True:
+        msg = radio.receive()
+        if msg:
+            last_heard = running_time()
+            if msg == 'F':
+                drive(700, 700)
+            elif msg == 'L':
+                drive(-500, 500)
+            elif msg == 'R':
+                drive(500, -500)
+            else:
+                drive(0, 0)
+        if running_time() - last_heard < 500:
+            drive(0, 0)
+        sleep(20)
+  hints:
+    - Functions only run when you call them with (). Is every function call complete?
+    - The fail-safe should stop the robot when it has NOT heard anything for a while. Read the if line out loud - when does it stop the robot?
+    - running_time() - last_heard is "how long since the last message". Should that be bigger or smaller than 500 to stop?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "radio\\.on\\(\\s*\\)", message: "radio.on needs () or the radio never switches on."}
+    - {type: not_contains, pattern: "running_time\\(\\)\\s*-\\s*last_heard\\s*<=?\\s*\\d+\\s*:\\s*\\n\\s*drive\\(\\s*0\\s*,\\s*0\\s*\\)", message: "The fail-safe stops the robot when it HAS heard a message recently. It should stop when it hasn't."}
+    - {type: contains, pattern: "running_time\\(\\)\\s*-\\s*last_heard\\s*>=?\\s*\\d+|\\d+\\s*<=?\\s*running_time\\(\\)\\s*-\\s*last_heard|running_time\\(\\)\\s*>=?\\s*last_heard\\s*\\+\\s*\\d+", message: "Add a fail-safe that stops the robot when more than 500 ms have passed since last_heard."}
+  solution: |
+    from microbit import *
+    import radio
+
+    radio.config(group=12)
+    radio.on()
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    last_heard = running_time()
+    while True:
+        msg = radio.receive()
+        if msg:
+            last_heard = running_time()
+            if msg == 'F':
+                drive(700, 700)
+            elif msg == 'L':
+                drive(-500, 500)
+            elif msg == 'R':
+                drive(500, -500)
+            else:
+                drive(0, 0)
+        if running_time() - last_heard > 500:
+            drive(0, 0)
+        sleep(20)
+  reflection_prompt: Why is a fail-safe that only works "backwards" more dangerous than having no robot code at all?
+quiz:
+  - question: Your controller uses group 7 and your robot uses group 8. What happens?
+    choices:
+      - The robot works normally
+      - The robot never hears the controller
+      - The robot goes twice as fast
+      - Both micro:bits switch to group 15
+    answer: 1
+    explain: micro:bits only hear messages from their own group. Both programs must use the same number.
+  - question: What does radio.receive() give you when no message has arrived?
+    choices:
+      - The last message again
+      - The letter 'S'
+      - None
+      - An error
+    answer: 2
+    explain: It returns None when the message queue is empty, which is why the robot checks `if msg:` before using it.
+  - question: Why does the controller send a command every 100 ms, even when the command hasn't changed?
+    choices:
+      - The radio switches off if you don't use it
+      - So the robot knows the controller is still there, and the fail-safe doesn't stop it
+      - To make the batteries last longer
+      - Python requires a sleep(100)
+    answer: 1
+    explain: The robot stops if it hears nothing for 500 ms. Regular messages are like a heartbeat saying "I'm still here".
+  - question: "In the robot's code, what does running_time() - last_heard measure?"
+    choices:
+      - How fast the robot is going
+      - How many messages arrived
+      - How many milliseconds since the last message
+      - The radio group number
+    answer: 2
+    explain: running_time() is "now" in milliseconds. Subtracting the time of the last message gives how long it has been quiet.
+  - question: The controller is flat on the table. Which command does it send?
+    choices:
+      - "'F'"
+      - "'L'"
+      - "'R'"
+      - "'S'"
+    answer: 3
+    explain: Flat means x and y are both close to 0 - inside the dead zone - so the else branch sends 'S' for stop.
+challenge:
+  title: Robot Grand Prix
+  prompt: >-
+    Set up a course with cups, cones or tape and race your remote-controlled
+    robot. Make your controller and robot programs better so you can drive
+    faster and more precisely than everyone else.
+  levels:
+    - "Mild: Add a backward 'B' command and drive through a slalom of 3 cups without knocking any over."
+    - "Medium: Make speed depend on how far you tilt - send a letter for the direction and a number for the speed (for example 'F8'), and use int() on the robot to read the number. Then race another team on the same course."
+    - "Spicy: Robot soccer! Two teams, a ping-pong ball and two goals. Add a button-controlled \"kick\" (a quick forward burst) and a horn with music.pitch(). Every team keeps its own radio group."
+  submit_prompt: What did you add to your controller or robot, and how did it help on the course?
+teacher_notes: |
+  * **Give every team a different radio group** (for example their table number plus 10) and write it on the board. Most "my robot is possessed" problems are two teams on the same group. Groups go from 0 to 255.
+  * **Robot ignores the controller:** check radio.on() is called in both programs, that both use the same group, and that the robot is running the robot program (it's easy to flash the same file twice). The controller's display shows what it's sending.
+  * **Forward and back feel swapped:** students may be holding the controller the other way round. Have them scroll accelerometer.get_y() while tilting to see which way is positive, then adjust the comparison.
+  * **A wheel spins backward** or the robot turns the wrong way: swap that motor's wires on the driver (same fix as lesson 14).
+  * **Robot stutters or stops randomly:** the controller may be too far away or sending too slowly, or the batteries are low (the 4×AA pack, the robot's 2×AAA or the controller's 2×AAA). The fail-safe makes low batteries show up as "stops by itself" - that's the safe way to fail.
+  * The robot program lives in the Learn section because the starter box holds one program. Students can copy it into a second editor tab.
+  * Radio is not private: any micro:bit in the same group can listen. Good discussion starter about security - a Spicy extension is a "secret password" letter at the start of each message.

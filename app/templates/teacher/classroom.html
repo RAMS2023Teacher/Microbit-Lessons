@@ -1,0 +1,87 @@
+{% extends "base.html" %}{% from "_forms.html" import csrf %}
+{% block title %}{{ c.name }} · {{ site_name }}{% endblock %}
+{% block main_class %}container wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><a class="muted small" href="{{ url_for('teacher.home') }}">← My classes</a><h1>{{ c.name }}</h1></div>
+  <div class="join-code">Join code <b>{{ c.join_code }}</b>
+    <small>{{ url_for('auth.register', code=c.join_code, _external=True) }}</small></div>
+</div>
+
+<section class="card">
+  <div class="row between"><h2>Gradebook</h2>
+    {% if cols %}<a class="btn small ghost" href="{{ url_for('teacher.export', cid=c.id) }}">⬇ Export CSV</a>{% endif %}</div>
+  {% if not c.students %}
+    <p class="muted">No students yet. Have them click <b>Join a class</b> and enter <b>{{ c.join_code }}</b>.</p>
+  {% elif not cols %}
+    <p class="muted">No assignments yet — assign lessons below.</p>
+  {% else %}
+  <div class="table-scroll">
+  <table class="gradebook">
+    <thead><tr><th>Student</th>
+      {% for a, l in cols %}<th><a href="{{ url_for('teacher.assignment', aid=a.id) }}" title="{{ l.title }}">{{ l.number }}. {{ l.title }}</a>{% if a.due_date %}<small>due {{ a.due_date.strftime('%b %-d') }}</small>{% endif %}</th>{% endfor %}
+    </tr></thead>
+    <tbody>
+    {% for s in c.students %}
+      <tr><th><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a><small>{{ s.username }}</small></th>
+      {% for a, l in cols %}{% set cell = grid[(s.id, a.id)] %}
+        <td class="cell {{ cell.status }}{{ ' late' if cell.late }}">
+          <a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}#{{ l.id }}">
+          <span class="meter"><i style="width:{{ cell.pct }}%"></i></span>
+          <span class="cell-detail">{{ cell.pct }}%
+            {% if cell.p %}
+              {% if cell.p.quiz_total %}· Q {{ cell.p.quiz_best }}/{{ cell.p.quiz_total }}{% endif %}
+              {% if cell.p.debug_solved %}· 🐞✓{% endif %}
+              {% if cell.p.challenge_submitted_at %}· 🚀{% endif %}
+            {% endif %}
+            {% if cell.late %}<b class="bad">late</b>{% endif %}</span></a>
+        </td>
+      {% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="muted small">Q = best quiz score · 🐞✓ = debug challenge fixed · 🚀 = open-ended challenge submitted. Click a column title for everyone's answers side by side.</p>
+  {% endif %}
+</section>
+
+<div class="grid-2">
+<section class="card">
+  <h2>Assign lessons</h2>
+  <form method="post" action="{{ url_for('teacher.assign', cid=c.id) }}">
+    {{ csrf() }}
+    <div class="assign-picker">
+    {% for u in units %}
+      <fieldset><legend>Unit {{ u.number }}: {{ u.title }}</legend>
+      {% for l in u.lessons %}
+        <label class="check{{ ' muted' if l.id in assigned }}"><input type="checkbox" name="lesson_id" value="{{ l.id }}" {{ 'disabled checked' if l.id in assigned }}> {{ l.number }}. {{ l.title }} <a href="{{ url_for('student.lesson', lesson_id=l.id) }}" target="_blank" class="small">preview</a></label>
+      {% endfor %}
+      </fieldset>
+    {% endfor %}
+    </div>
+    <div class="row">
+      <label class="field"><span>Due date (optional)</span><input type="date" name="due_date"></label>
+      <label class="field grow"><span>Note to students (optional)</span><input name="note" maxlength="500" placeholder="e.g. Bring your breakout board!"></label>
+    </div>
+    <button class="btn" type="submit">Assign selected</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Roster ({{ c.students|length }})</h2>
+  <ul class="roster">
+    {% for s in c.students %}
+    <li><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a> <small class="muted">{{ s.username }}</small></li>
+    {% else %}<li class="muted">Nobody yet.</li>{% endfor %}
+  </ul>
+  <details class="danger-zone">
+    <summary>Delete this class</summary>
+    <form method="post" action="{{ url_for('teacher.delete_class', cid=c.id) }}">
+      {{ csrf() }}
+      <p class="small">Type <b>{{ c.name }}</b> to confirm. Student accounts and their work are kept.</p>
+      <input name="confirm" required> <button class="btn small danger" type="submit">Delete class</button>
+    </form>
+  </details>
+</section>
+</div>
+{% endblock %}

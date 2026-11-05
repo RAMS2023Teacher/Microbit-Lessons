@@ -1,0 +1,323 @@
+id: dc-motor-transistor
+unit: 3
+order: 12
+title: DC Motor with a Transistor
+subtitle: Use an NPN transistor as a switch so a tiny pin signal can run a big motor
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  A transistor is an electronic switch: a small current from a micro:bit pin
+  controls a much bigger current from a battery, so code can safely run a motor.
+objectives:
+  - Explain why a micro:bit pin can't power a motor directly
+  - Build an NPN transistor switch with a base resistor, a separate battery and a shared ground
+  - Protect the circuit with a flyback diode across the motor
+  - Control motor speed with pin0.write_analog()
+vocabulary:
+  - term: Transistor
+    definition: A part with three legs that works like a switch - a small current into the base lets a big current flow from collector to emitter.
+  - term: NPN transistor
+    definition: The kind of transistor that switches ON when its base gets a positive voltage. The 2N2222 is one.
+  - term: Base resistor
+    definition: The resistor between the pin and the transistor's base. It limits the current the pin has to give.
+  - term: Flyback diode
+    definition: A diode across the motor that safely soaks up the voltage spike a motor makes when it is switched off.
+  - term: Current
+    definition: How much electricity flows, measured in milliamps (mA). Motors need a lot more than LEDs.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - 1 small DC hobby motor (3-6 V), with wires
+  - 1 NPN transistor - PN2222A / 2N2222A in the plastic TO-92 package
+  - 1 resistor, 1 kΩ (brown-black-red)
+  - 1 diode, 1N4001 (black with a gray stripe)
+  - 1 battery pack, 3×AA (4.5 V) with on/off switch
+  - 8 jumper wires
+  - A piece of tape to make a flag on the motor shaft
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 2}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Build the circuit, minutes: 11}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Transistors as switches
+  note: Watch how a tiny current into the middle leg lets a big current flow through the motor.
+warmup:
+  prompt: >-
+    A light switch on the wall is small, but it controls big lights. Can you
+    think of other times something small controls something big?
+learn:
+  - |
+    ### Pins are weak
+    A micro:bit pin can safely give only a few **milliamps (mA)** - enough for an
+    LED. A small motor needs **100-500 mA**, especially when it starts. Wiring a
+    motor straight to a pin can **damage the micro:bit**. A motor also needs more
+    than 3 volts to spin well.
+
+    So the motor gets its **own battery** - and we need a way for the pin to
+    switch that battery on and off.
+  - |
+    ### The transistor is a switch
+    An **NPN transistor** has three legs:
+
+    * **Collector (C)** - where the big current comes **in** (from the motor)
+    * **Base (B)** - the **control** leg (from the pin, through a resistor)
+    * **Emitter (E)** - where the current goes **out** to ground
+
+    When P0 sends a little current into the **base**, the switch closes and the
+    big motor current flows **collector → emitter → ground**.
+  - |
+    ### Which leg is which?
+    Hold the **PN2222A / 2N2222A** with the **flat side facing you** and the legs
+    pointing down. From **left to right** the legs are:
+
+    **E - B - C** (Emitter, Base, Collector)
+
+    **Watch out:** some parts stamped **P2N2222A** are the other way round (C - B - E)! Always
+    read the letters on the flat side and check with your teacher.
+  - |
+    ### The flyback diode
+    When a motor switches off, its coil makes a quick **voltage spike** that can
+    zap the transistor. A **diode** placed backwards across the motor gives that
+    spike a safe loop to die out in.
+
+    The diode's **stripe (cathode)** goes to the **battery +** side.
+  - |
+    ### Speed control with PWM
+    `pin0.write_digital(1)` turns the motor fully on. But you already know
+    **PWM**! `pin0.write_analog(512)` switches the transistor on and off very
+    fast, so the motor gets power about half the time and spins **slower**.
+circuit:
+  intro: >-
+    The micro:bit uses the **top** rails and the battery uses the **bottom**
+    rails, with the two grounds joined. The path of the motor current is
+    **battery + → motor → transistor collector → emitter → ground**. Build with
+    the USB unplugged and the battery pack OFF.
+  safety:
+    - Build with the micro:bit unplugged and the battery pack switched off.
+    - Battery + goes only to the bottom red (B+) rail. Never connect battery + to the micro:bit's 3V or any pin.
+    - Never wire the motor straight to a micro:bit pin or to 3V.
+    - The diode's stripe must face battery +. Backwards, it shorts the battery whenever the motor turns on.
+    - If the transistor or diode gets hot, switch the battery off right away and tell your teacher.
+  steps:
+    - title: micro:bit ground on the top rail
+      instruction: >-
+        Push the micro:bit into the breakout board (logo facing up). Run a
+        **black** wire from the breakout's **GND** pin to **T-1** on the top
+        **blue (–) rail**. We won't use the micro:bit's 3V pin today.
+      check: Is the black wire in the top rail next to the blue line?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Battery on the bottom rails, grounds joined
+      instruction: >-
+        With the battery pack **OFF**, connect its **red** wire to **B+1** (bottom
+        red rail) and its **black** wire to **B-1** (bottom blue rail). Then add
+        a **black** wire from **T-30** to **B-30** to join the two ground rails.
+      check: Is battery + on the BOTTOM red rail, and does the black jumper join blue rail to blue rail?
+      add:
+        - {type: battery, id: bat1, label: "3×AA 4.5V"}
+        - {type: wire, from: bat1.plus, to: B+1, color: red}
+        - {type: wire, from: bat1.minus, to: B-1, color: black}
+        - {type: wire, from: T-30, to: B-30, color: black}
+    - title: Transistor
+      instruction: >-
+        Hold the PN2222A with the **flat side facing you**. Push the legs into
+        row **e**: **Emitter → e20**, **Base → e21**, **Collector → e22** (left to right).
+      check: Is the flat side facing you, with the three legs in three different columns (20, 21, 22)?
+      tip: If your transistor says P2N2222A, its legs are C-B-E - turn it around so the collector is still in e22.
+      add:
+        - {type: transistor, id: q1, emitter: e20, base: e21, collector: e22, label: "PN2222A"}
+    - title: Base resistor and signal
+      instruction: >-
+        Put the **1 kΩ** resistor from **c16** to **c21** (column 21 is the base).
+        Add a **yellow** wire from **P0** to **a16**. Add a **black** wire from
+        **a20** (the emitter's column) to **T-20** on the top blue rail.
+      check: Does P0 reach the base only THROUGH the resistor? Is the emitter going to ground?
+      add:
+        - {type: resistor, id: r1, a: c16, b: c21, ohms: 1000}
+        - {type: wire, from: mb.P0, to: a16, color: yellow}
+        - {type: wire, from: a20, to: T-20, color: black}
+    - title: Flyback diode across the gap
+      instruction: >-
+        Bend the 1N4001's legs and bridge the center gap: **plain end (anode) in
+        d22** (the collector's column) and **striped end (cathode) in f22**. Then add a
+        **red** wire from **j22** to **B+22**, so the bottom half of column 22 is battery +.
+      check: Is the stripe on the bottom side (f22), toward the battery + wire?
+      tip: Top half of column 22 = collector. Bottom half of column 22 = battery +. The gap keeps them apart.
+      add:
+        - {type: diode, id: d1, anode: d22, cathode: f22}
+        - {type: wire, from: j22, to: B+22, color: red}
+    - title: Motor
+      instruction: >-
+        Connect one motor wire to **g22** (battery + side) and the other motor
+        wire to **a22** (collector side). The motor has no + or –: either way
+        round works, it just changes the spin direction. Stick a tape flag on the
+        shaft. Plug in USB, then switch the battery ON.
+      check: Is the motor connected across the gap - one wire in the top half of column 22, one in the bottom half?
+      add:
+        - {type: dcmotor, id: motor1}
+        - {type: wire, from: motor1.a, to: g22, color: red}
+        - {type: wire, from: motor1.b, to: a22, color: orange}
+  verify:
+    connected:
+      - [mb.P0, r1.a]
+      - [r1.b, q1.base]
+      - [q1.emitter, mb.GND, bat1.minus]
+      - [q1.collector, motor1.b, d1.anode]
+      - [d1.cathode, motor1.a, bat1.plus]
+    not_connected:
+      - [bat1.plus, mb.3V]
+      - [bat1.plus, mb.GND]
+      - [bat1.plus, mb.P0]
+      - [mb.P0, q1.base]
+      - [q1.collector, q1.emitter]
+      - [motor1.a, motor1.b]
+code:
+  intro: >-
+    Press **B** to speed up and **A** to slow down. The display shows the speed
+    from 0 (stopped) to 9 (full).
+  starter: |
+    from microbit import *
+
+    speed = 0       # 0 = stopped, 1023 = full speed
+
+    while True:
+        if button_b.was_pressed():
+            speed = speed + 256
+        if button_a.was_pressed():
+            speed = speed - 256
+        speed = max(0, min(1023, speed))   # stay between 0 and 1023
+
+        pin0.write_analog(speed)
+        display.show(speed * 10 // 1024)   # 0-9 on the screen
+        sleep(50)
+  walkthrough:
+    - lines: "3"
+      explain: A variable remembers the speed. 0 is off, 1023 is fully on.
+    - lines: "6-9"
+      explain: Each press of B adds 256 (a quarter of full speed). Each press of A takes 256 away.
+    - lines: "10"
+      explain: "write_analog() only accepts 0 to 1023, so `max()` and `min()` keep speed in range."
+    - lines: "12"
+      explain: >-
+        PWM on P0 switches the transistor on and off very fast. More ON time =
+        more power to the motor = faster spin.
+    - lines: "13"
+      explain: "`speed * 10 // 1024` turns 0-1023 into a single digit 0-9 for the display."
+  try_it:
+    - Find the slowest speed that still makes your motor turn. Why doesn't it spin at very low numbers?
+    - "Make a 'kick start': when the motor starts from 0, run it at 1023 for 100 ms, then drop to the speed you want."
+    - Swap the two motor wires. What changes?
+    - "Make the motor speed up slowly from 0 to 1023 with a `for speed in range(0, 1024, 32):` loop."
+debug:
+  story: >-
+    Sam wants button B to make the motor go faster with every press. The first
+    press gives an error - and even after that's fixed, the fifth press crashes
+    it. There are **two** bugs. Find them, fix them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    speed = 0
+
+    while True:
+        if button_b.was_pressed():
+            speed = speed + 300
+        if button_a.was_pressed():
+            speed = 0
+        pin0.write_digital(speed)
+        sleep(50)
+  hints:
+    - write_digital() only understands 0 or 1. Which pin command lets you send 0 to 1023?
+    - After 4 presses speed is 1200. What's the biggest number write_analog() accepts? How can you stop speed going past it?
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: 'write_digital\(\s*speed', message: "write_digital() only takes 0 or 1 - use write_analog() for speeds."}
+    - {type: contains, pattern: 'write_analog\(', message: "Send the speed with pin0.write_analog(...)."}
+    - {type: contains, pattern: 'min\(|if\s+speed\s*>|speed\s*%|102[34]\s*<|speed\s*=\s*102[34]', message: "Keep speed from going over 1023 - for example speed = min(1023, speed)."}
+  solution: |
+    from microbit import *
+
+    speed = 0
+
+    while True:
+        if button_b.was_pressed():
+            speed = speed + 300
+        if button_a.was_pressed():
+            speed = 0
+        speed = min(1023, speed)
+        pin0.write_analog(speed)
+        sleep(50)
+  reflection_prompt: Why did write_digital() fail here, and why does write_analog() need a limit on the number?
+quiz:
+  - question: Why can't you connect a motor straight to pin 0?
+    choices:
+      - Motors only work with buttons
+      - A pin can give only a few mA, but a motor needs hundreds of mA
+      - Pin 0 is only for sound
+    answer: 1
+    explain: Motors need far more current than a pin can safely supply. The transistor lets the battery provide it.
+  - question: Which transistor leg does the micro:bit (through the 1 kΩ resistor) connect to?
+    choices:
+      - Collector
+      - Base
+      - Emitter
+    answer: 1
+    explain: The base is the control leg. A small current into it switches on the big collector-to-emitter current.
+  - question: On a PN2222A with the flat side facing you, what is the leg order from left to right?
+    choices:
+      - C - B - E
+      - B - C - E
+      - E - B - C
+    answer: 2
+    explain: Emitter, Base, Collector. (Watch out - some P2N2222A parts are C - B - E, so always check.)
+  - question: What does the flyback diode do?
+    choices:
+      - Makes the motor spin faster
+      - Gives the motor's voltage spike a safe path when it turns off
+      - Lets the motor spin backwards
+    answer: 1
+    explain: Switching off a motor makes a spike that could damage the transistor. The diode safely absorbs it.
+  - question: What does pin0.write_analog(512) do to the motor?
+    choices:
+      - Runs it at about half power
+      - Spins it 512 times
+      - Turns it off
+    answer: 0
+    explain: 512 is about half of 1023, so the transistor is ON about half the time and the motor goes slower.
+challenge:
+  title: Motor Mayhem
+  prompt: >-
+    Your motor can spin a fan, wind up a string, twirl a paper spinner, or
+    shake a "scribble bot" with a pen taped on. Build something fun that your
+    code controls - and give it a name!
+  levels:
+    - "Mild: Make a desk fan with three speeds (low, medium, high) shown as L, M, H on the display."
+    - "Medium: Make the fan turn on automatically when it's warm - use temperature() and a threshold from the temperature lesson."
+    - "Spicy: Shake to start a spin-art machine that ramps up, runs a random time with `random.randint()`, then slows down and stops."
+  submit_prompt: What did you build, how does your code control the motor's speed, and what does the transistor do in your circuit?
+teacher_notes: |
+  **Pin order - check every transistor**
+  * PN2222A and most 2N2222A in TO-92 (Fairchild/onsemi PN2222A, many kits): flat side facing you, legs down → **E-B-C**.
+  * **P2N2222A** (onsemi) is **C-B-E** in the same view. The metal-can 2N2222 (TO-18) is different again. Check the datasheet for whatever is in your kit before class.
+  * 2N3904 is also E-B-C but is only rated 200 mA - too small for most hobby motors.
+
+  **Common problems**
+  * **Motor doesn't spin:** check the shared ground (T-30 to B-30), battery switch and fresh batteries. Then check the transistor orientation. Test the motor alone by touching its wires to the battery pack.
+  * **Motor always on:** collector and emitter swapped or shorted, or the motor is wired straight to B+ and ground.
+  * **Motor weak or transistor warm:** the motor draws too much. With a 1 kΩ base resistor the pin gives about 2.6 mA to the base, which is enough for small motors (up to roughly 200-300 mA). For bigger motors use a TIP120 Darlington or a logic-level MOSFET, or the motor-driver lesson.
+  * **Low speeds don't spin:** normal - motors need a minimum push to overcome friction. Use a kick start.
+  * **Motor whines at low speed:** that's the 20 ms PWM period. `pin0.set_analog_period(1)` (1 kHz) can make it smoother on some motors.
+  * **micro:bit resets when the motor starts:** usually a missing diode, motor wired to 3V, or a battery + wire on the top rail.
+
+  **Safety**
+  * Inspect every board **before** batteries go in: battery + only on the bottom rail; diode stripe toward B+ (a backwards diode shorts the battery through the transistor).
+  * Stalled motors get hot. Don't hold the shaft to stop it for long.
+  * Tie back long hair and keep loose items away from spinning parts.
+
+  **Extensions**
+  * Compare with lesson 3: the pin drove the LED directly - why is that fine for an LED but not a motor?
+  * Use a photoresistor so the motor speeds up when it gets brighter (a "solar" fan).

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Lessons · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Lesson library</h1>
+<p class="muted">16 lessons · each designed for about 35 minutes.</p>
+{% for u in units %}
+<section class="unit-block">
+  <h2><span class="unit-num">Unit {{ u.number }}</span> {{ u.title }}</h2>
+  <p class="muted">{{ u.blurb }}</p>
+  <div class="lesson-cards">
+    {% for l in u.lessons %}
+    <a class="lesson-card card" href="{{ url_for('student.lesson', lesson_id=l.id) }}">
+      <div class="lesson-num">{{ l.number }}</div>
+      <h3>{{ l.title }}</h3>
+      <p>{{ l.subtitle }}</p>
+      <div class="tags">
+        <span class="tag">⏱ {{ l.duration_minutes }} min</span>
+        {% if l.circuit %}<span class="tag">⚡ circuit</span>{% endif %}
+        <span class="tag">{{ l.level }}</span>
+      </div>
+      {% if pct.get(l.id) is not none %}<span class="meter"><i style="width:{{ pct[l.id] }}%"></i></span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,283 @@
+id: buttons-and-inputs
+unit: 2
+order: 6
+title: Buttons and Inputs
+subtitle: Read a pushbutton on pin 1 and make decisions with if/else
+duration_minutes: 35
+level: Beginner
+big_idea: >-
+  A pin can listen as well as talk: your code reads a button as 1 or 0 and
+  uses if/else to decide what to do.
+objectives:
+  - Read the micro:bit's built-in buttons with button_a.is_pressed() and button_a.was_pressed()
+  - Wire an external pushbutton from pin 1 to GND and read it with pin1.read_digital()
+  - Explain what a pull-up resistor does and why a pressed button reads 0
+  - Use if/else to turn an LED on pin 0 on only while the button is held
+vocabulary:
+  - term: Digital input
+    definition: A pin your code reads. It is either HIGH (1, about 3 volts) or LOW (0, 0 volts).
+  - term: if / else
+    definition: Python's way to make a choice. If something is True, do one thing; else, do another.
+  - term: Pull-up resistor
+    definition: A resistor (built into the micro:bit) that gently pulls a pin up to 1 when nothing else is connected.
+  - term: "=="
+    definition: Python's "is equal to?" question. One = stores a value; two == compares.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - 1 LED (any color)
+  - 1 resistor, 220 Ω (red-red-brown)
+  - 1 pushbutton (4-leg tactile switch)
+  - 5 jumper wires
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 4}
+  - {key: circuit, name: Build the circuit, minutes: 9}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Reading a pushbutton
+  note: Watch how the button straddles the gap in the middle of the breadboard.
+warmup:
+  prompt: >-
+    Think of three things at home that do something only when you press a
+    button. What does each one "decide" to do when you press it - and when you
+    let go?
+learn:
+  - |
+    ### Inputs vs. outputs
+    So far your pins have been **outputs** - the code *tells* the pin what to
+    do. Today pin 1 is an **input** - the code *asks* the pin what's happening.
+    `pin1.read_digital()` answers with **1** (about 3 volts) or **0** (0 volts).
+  - |
+    ### Making choices with if / else
+    ```python
+    if button_a.is_pressed():
+        display.show(Image.HAPPY)
+    else:
+        display.clear()
+    ```
+    The line after `if` must end with a **colon**, and the lines inside are
+    **indented**. To compare two things, use **double equals** `==`.
+    One `=` means *store*; two `==` means *are these equal?*
+  - |
+    ### is_pressed vs. was_pressed
+    * `button_a.is_pressed()` - **True right now** while you hold it down.
+      Good for "hold to light".
+    * `button_a.was_pressed()` - **True once** for each press since you last
+      asked. Good for counting presses.
+  - |
+    ### Why does pressed = 0?
+    Our button connects pin 1 to **GND**. Pressed: pin 1 touches GND, so it
+    reads **0**. Not pressed: pin 1 is touching... nothing! A loose pin reads
+    random junk. So we turn on the micro:bit's tiny built-in **pull-up
+    resistor**: `pin1.set_pull(pin1.PULL_UP)`. It gently pulls the pin up to
+    **1**. Pressing the button is stronger and pulls it down to **0**.
+
+    **Not pressed = 1. Pressed = 0.** It feels backwards, but it's how most
+    buttons are wired!
+circuit:
+  intro: >-
+    You'll rebuild the LED on pin 0 from Lesson 3, then add a pushbutton
+    between pin 1 and GND. If your traffic light from Lesson 4 is still on the
+    board, take out the LEDs and wires for P1 and P2 first. Unplug the USB
+    cable while you build.
+  safety:
+    - Always build with the micro:bit unplugged.
+    - The button goes between P1 and GND - never between 3V and GND, or pressing it makes a short circuit.
+  steps:
+    - title: Ground rail
+      instruction: >-
+        Push the micro:bit into the breakout board (logo facing up). Run a
+        **black** wire from the breakout's **GND** pin to the top **blue (–)
+        rail** at **T-1**.
+      check: Is your black wire in the rail with the blue line next to it?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Resistor and LED
+      instruction: >-
+        Put the 220 Ω resistor in row **c**, from **c10** to **c14**. Put the
+        LED's **long leg (+)** in **e14** and its **short leg (–)** in **e15**.
+      check: Is the long leg of the LED in the same column (14) as the resistor's right leg?
+      tip: Same layout as Lesson 3 - if you still have it built, just check it matches.
+      add:
+        - {type: resistor, id: r1, a: c10, b: c14, ohms: 220}
+        - {type: led, id: led1, anode: e14, cathode: e15, color: red}
+    - title: LED wires
+      instruction: >-
+        Add a **yellow** wire from **P0** to **a10**. Add a **black** wire from
+        **a15** to the **blue (–) rail** at **T-15**.
+      check: Can you trace P0 → resistor → LED → ground with your finger?
+      add:
+        - {type: wire, from: mb.P0, to: a10, color: yellow}
+        - {type: wire, from: a15, to: T-15, color: black}
+    - title: Pushbutton
+      instruction: >-
+        Press the button so it **straddles the center gap**: two legs go in
+        **e20** and **e22** (top half), and the other two legs go in **f20**
+        and **f22** (bottom half). Push until it clicks flat.
+      check: Is the button sitting across the middle gap, with legs in columns 20 and 22?
+      tip: >-
+        If the legs don't fit, turn the button a quarter turn. The legs that
+        are farther apart should cross the gap.
+      add:
+        - {type: button, id: btn1, a: e20, b: e22}
+    - title: Button wires
+      instruction: >-
+        Add a **green** wire from **P1** to **a20**. Add a **black** wire from
+        **a22** to the **blue (–) rail** at **T-22**.
+      check: Does one side of the button go to P1 and the other side go to GND?
+      add:
+        - {type: wire, from: mb.P1, to: a20, color: green}
+        - {type: wire, from: a22, to: T-22, color: black}
+  verify:
+    connected:
+      - [mb.P0, r1.a]
+      - [r1.b, led1.anode]
+      - [led1.cathode, mb.GND]
+      - [mb.P1, btn1.a]
+      - [btn1.b, mb.GND]
+    not_connected:
+      - [led1.anode, led1.cathode]
+      - [btn1.a, btn1.b]
+      - [mb.P1, mb.P0]
+code:
+  intro: >-
+    Hold the breadboard button and the LED lights. Press button A on the
+    micro:bit and it counts your presses.
+  starter: |
+    from microbit import *
+
+    pin1.set_pull(pin1.PULL_UP)   # not pressed = 1, pressed = 0
+    presses = 0
+
+    while True:
+        if pin1.read_digital() == 0:    # 0 means pressed
+            pin0.write_digital(1)       # LED on
+        else:
+            pin0.write_digital(0)       # LED off
+
+        if button_a.was_pressed():
+            presses = presses + 1
+            display.show(presses)
+
+        sleep(20)
+  walkthrough:
+    - lines: "3"
+      explain: Turns on the built-in **pull-up resistor** once, before the loop. Now pin 1 reads 1 until the button pulls it to 0.
+    - lines: "4"
+      explain: A variable to count presses of button A. It starts at 0.
+    - lines: "7-10"
+      explain: >-
+        The **if/else** decision. `==` asks "is pin 1 equal to 0?" If yes, the
+        button is pressed, so the LED goes on. Otherwise (`else`), it goes off.
+    - lines: "12-14"
+      explain: >-
+        `was_pressed()` is True **once per press**, so holding the button
+        down only counts 1. Try changing it to `is_pressed()` and hold it -
+        what happens?
+    - lines: "16"
+      explain: A tiny pause so the loop isn't running flat out. 20 ms is too short for you to notice.
+  try_it:
+    - Swap the LED so it is ON normally and turns OFF while you press the button.
+    - Add button B with is_pressed() to show Image.HEART while you hold it.
+    - Delete the set_pull line, download, and press nothing. Does the LED act strangely? Put the line back!
+debug:
+  story: >-
+    Sam wired the button perfectly, but the code won't even run - and Sam's
+    friend says that once it runs, the LED will be **stuck on**. There are
+    **two** bugs. Find them, fix them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    while True:
+        if pin1.read_digital() = 0:
+            pin0.write_digital(1)
+        else:
+            pin0.write_digital(0)
+        sleep(20)
+  hints:
+    - Is the if line storing a value, or asking a question? Which needs two equals signs?
+    - The button connects pin 1 to GND. When it isn't pressed, what is pulling pin 1 up to 1?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "pin1\\.set_pull\\(\\s*pin1\\.PULL_UP\\s*\\)", message: "Turn on the pull-up resistor with pin1.set_pull(pin1.PULL_UP) - otherwise pin 1 doesn't read 1 when the button is up."}
+    - {type: contains, pattern: "pin1\\.read_digital\\(\\s*\\)", message: "Keep reading the button with pin1.read_digital()."}
+    - {type: contains, pattern: "pin0\\.write_digital\\(\\s*1\\s*\\)", message: "The LED on pin 0 still needs to turn on."}
+  solution: |
+    from microbit import *
+
+    pin1.set_pull(pin1.PULL_UP)
+
+    while True:
+        if pin1.read_digital() == 0:
+            pin0.write_digital(1)
+        else:
+            pin0.write_digital(0)
+        sleep(20)
+  reflection_prompt: Why would the LED stay on without set_pull, even when nobody touches the button?
+quiz:
+  - question: With pin1.set_pull(pin1.PULL_UP), what does pin1.read_digital() give while the button is pressed?
+    choices:
+      - "1"
+      - "0"
+      - "1023"
+      - It changes randomly
+    answer: 1
+    explain: Pressing connects pin 1 to GND (0 volts), so it reads 0. The pull-up makes it 1 when not pressed.
+  - question: Which line correctly checks whether x is equal to 0?
+    choices:
+      - "if x = 0:"
+      - "if x == 0:"
+      - "if x == 0"
+      - "if (x = 0)"
+    answer: 1
+    explain: Comparing uses == and the if line must end with a colon.
+  - question: You want to count how many times button A is clicked, even if someone holds it down. Which should you use?
+    choices:
+      - button_a.is_pressed()
+      - button_a.was_pressed()
+      - pin1.read_digital()
+    answer: 1
+    explain: was_pressed() is True once per press. is_pressed() stays True the whole time you hold it, so it would count many times.
+  - question: What does the pull-up resistor do?
+    choices:
+      - It makes the LED brighter
+      - It gently holds the pin at 1 when the button isn't pressed
+      - It protects the button from breaking
+      - It makes the button read 1023
+    answer: 1
+    explain: Without it, a pin connected to nothing "floats" and reads random values.
+  - question: Why does the button go between P1 and GND, not between 3V and GND?
+    choices:
+      - Pressing a button between 3V and GND would make a short circuit
+      - GND is faster than 3V
+      - It doesn't matter at all
+    answer: 0
+    explain: A pressed button is just a wire. A wire from 3V to GND is a short circuit - never do that!
+challenge:
+  title: Reaction Time Game
+  prompt: >-
+    Turn your button and LED into a game! Make something happen that players
+    must react to, and use if/else to decide who wins, who's out, or what
+    happens next. Test it on a friend.
+  levels:
+    - "Mild: The LED stays on, and pressing the breadboard button turns it off and shows a happy face."
+    - "Medium: Wait a random time (random.randint), light the LED, and show a smile if the player presses within 1 second - or a sad face if they press too early."
+    - "Spicy: Two-player race - first to press wins. Player 1 uses the breadboard button, player 2 uses button B. Keep score with variables."
+  submit_prompt: Explain your game's rules and point to the if/else that decides what happens.
+teacher_notes: |
+  * **LED always on, even without pressing?** Almost always a missing `pin1.set_pull(pin1.PULL_UP)`.
+    In micro:bit MicroPython, `read_digital()` defaults to a *pull-down*, so a button to GND reads 0 all the time.
+  * **Nothing happens when pressing?** The button is probably rotated so the always-connected legs
+    are in the same column, or it isn't straddling the gap. Rotate it 90° and try again.
+    If the LED is on all the time *with* set_pull, the button is rotated so its legs are always connected.
+  * **Quick button test with the display:** `display.show(pin1.read_digital())` inside the loop
+    shows 1 or 0 live.
+  * `SyntaxError` on the if line usually means `=` instead of `==` or a missing colon.
+  * Leftover traffic-light LEDs on P1 or P2 will confuse the button reading - make sure only the button is on P1.
+  * Early finishers: introduce `and`/`or` (`if button_a.is_pressed() and pin1.read_digital() == 0:`).
+  * `import random` is needed for the Medium challenge (`random.randint(1000, 4000)`).

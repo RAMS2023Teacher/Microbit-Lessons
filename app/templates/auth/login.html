@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% from "_forms.html" import field, csrf %}
+{% block title %}Log in · {{ site_name }}{% endblock %}
+{% block content %}
+<div class="auth-card card">
+  <h1>Welcome back, maker</h1>
+  <form method="post">
+    {{ csrf() }}
+    {{ field("username", "Username", value=username, attrs='required autofocus autocomplete="username"') }}
+    {{ field("password", "Password", "password", attrs='required autocomplete="current-password"') }}
+    <label class="check"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
+    <button class="btn wide" type="submit">Log in</button>
+  </form>
+  <p class="muted">New student? <a href="{{ url_for('auth.register') }}">Join your class</a> ·
+     Teacher? <a href="{{ url_for('auth.register_teacher') }}">Create a teacher account</a></p>
+  <p class="muted small">Forgot your password? Ask your teacher to reset it.</p>
+</div>
+{% endblock %}

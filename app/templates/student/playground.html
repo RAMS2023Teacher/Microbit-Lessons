@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% from "_editor.html" import editor %}
+{% block title %}Editor · {{ site_name }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/codemirror.css') }}">{% endblock %}
+{% block content %}
+<h1>Free-code editor</h1>
+<p class="muted">Experiment with anything. Your code is saved in this browser only.</p>
+{{ editor("ed-play", "from microbit import *\n\nwhile True:\n    display.show(Image.HAPPY)\n    sleep(500)\n    display.show(Image.SMILE)\n    sleep(500)\n", "play", "my-program", reset_code="from microbit import *\n\n") }}
+<details class="card help">
+  <summary>How do I get my code onto the micro:bit?</summary>
+  <ol>
+    <li>Plug the micro:bit into the computer with a USB cable.</li>
+    <li><b>First time only:</b> click <b>Download .hex</b> and drag the file onto the <b>MICROBIT</b> drive. The yellow light blinks while it copies. This installs Python on the micro:bit.</li>
+    <li>Click <b>Send to micro:bit</b>. The first time, pick “BBC micro:bit” in the pop-up and click <b>Connect</b>.</li>
+    <li>Your program runs right away. Anything you <code>print()</code> — and any error messages — show up under the editor.</li>
+  </ol>
+  <p class="muted small">Send to micro:bit needs Chrome, Edge or a Chromebook. In other browsers, use Download .hex every time.</p>
+</details>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/codemirror/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/mode/python.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/matchbrackets.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/microbit/microbit-fs.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/microbit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+<script>
+  const ed = MakerEditor.mount(document.getElementById('ed-play'), {});
+  try { const saved = localStorage.getItem('playground-code'); if (saved) ed.setCode(saved); } catch (e) {}
+  ed.onChange(code => { try { localStorage.setItem('playground-code', code); } catch (e) {} });
+</script>
+{% endblock %}

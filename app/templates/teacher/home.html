@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% from "_forms.html" import csrf %}
+{% block title %}My classes · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>My classes</h1>
+<div class="class-cards">
+  {% for c in classes %}
+  <a class="card class-card" href="{{ url_for('teacher.classroom', cid=c.id) }}">
+    <h2>{{ c.name }}</h2>
+    <div class="join-code small">Code <b>{{ c.join_code }}</b></div>
+    <p class="muted">{{ c.students|length }} students · {{ c.assignments|length }} assignments</p>
+  </a>
+  {% endfor %}
+  <form class="card class-card new" method="post" action="{{ url_for('teacher.create_class') }}">
+    {{ csrf() }}
+    <h2>+ New class</h2>
+    <input name="name" placeholder="e.g. Period 3 Makers" required maxlength="80">
+    <button class="btn" type="submit">Create</button>
+  </form>
+</div>
+<section class="card tip">
+  <h2>Getting started</h2>
+  <ol>
+    <li>Create a class. Each class gets a 6-letter <b>join code</b>.</li>
+    <li>Students go to <b>Join a class</b> and enter the code to make their account.</li>
+    <li>Assign lessons with due dates. The gradebook shows who's done what — warm-ups, circuit steps, debug fixes, quiz scores and challenge write-ups.</li>
+    <li>Open any lesson to see the <b>teacher answer key</b> and notes. Add your videos on the <a href="{{ url_for('teacher.videos') }}">Videos</a> page.</li>
+  </ol>
+</section>
+{% endblock %}

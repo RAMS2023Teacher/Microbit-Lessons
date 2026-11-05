@@ -1,0 +1,196 @@
+id: hello-microbit
+unit: 1
+order: 1
+title: Hello, micro:bit!
+subtitle: Meet your tiny computer and make it say hello
+duration_minutes: 35
+level: Beginner
+big_idea: >-
+  A micro:bit is a tiny computer that follows your Python instructions one
+  line at a time, from top to bottom.
+objectives:
+  - Name the main parts of the micro:bit (LED display, buttons, pins, USB port)
+  - Use display.scroll() and display.show() to put words and pictures on the LEDs
+  - Use sleep() and a while True loop to make an animation that repeats forever
+  - Flash a Python program onto a real micro:bit
+vocabulary:
+  - term: Program
+    definition: A list of instructions a computer follows in order.
+  - term: String
+    definition: Text inside quote marks, like "Hello". Python needs the quotes to know it's text.
+  - term: Image
+    definition: A built-in 5×5 picture, like Image.HEART or Image.HAPPY.
+  - term: Loop
+    definition: Code that repeats. while True repeats the indented lines forever.
+  - term: Flashing
+    definition: Copying your program from the computer onto the micro:bit so it can run.
+materials:
+  - micro:bit V2 + USB cable
+  - A computer with a web browser
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: code, name: Code it, minutes: 11}
+  - {key: debug, name: Debug, minutes: 6}
+  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: challenge, name: Open-ended challenge, minutes: 7}
+video:
+  title: Meet the micro:bit
+  note: Look for the 25 red LEDs, buttons A and B, and the gold pins along the bottom edge.
+warmup:
+  prompt: >-
+    Computers are hiding everywhere - not just in laptops and phones. List as
+    many things as you can think of that have a tiny computer inside. Which
+    one surprised you the most?
+learn:
+  - |
+    ### Meet the micro:bit
+    The micro:bit is a **tiny computer** about the size of a credit card.
+    On the front you'll find:
+
+    * **25 red LEDs** in a 5×5 grid - the **display**
+    * **Button A** and **Button B**
+    * A **gold edge** with **pins** for connecting wires (we'll use these soon!)
+
+    On the back: a **USB port**, a **speaker**, a **microphone** and sensors
+    that can feel motion and temperature.
+  - |
+    ### Code is a list of instructions
+    A **program** is a list of instructions. The micro:bit runs them **in
+    order, top to bottom**. Every program starts with:
+
+    `from microbit import *`
+
+    That line loads the micro:bit toolbox, so Python knows words like
+    `display`, `Image` and `sleep`.
+  - |
+    ### Words, pictures and waiting
+    * `display.scroll("Hi!")` slides text across the LEDs. The text is a
+      **string**, so it needs **quote marks**.
+    * `display.show(Image.HEART)` shows a picture. Image names are in
+      **CAPITAL LETTERS**.
+    * `sleep(1000)` waits **1000 milliseconds** = 1 second.
+  - |
+    ### Forever loops and indentation
+    `while True:` means "repeat forever." The lines that belong to the loop
+    are **indented** (pushed in by 4 spaces). Python uses indentation to know
+    what's inside the loop - so spacing really matters!
+
+    **Flashing:** when your code is ready, click **Send to micro:bit** under the
+    editor. The very first time, click **Download .hex** and drag the file
+    onto the **MICROBIT** drive instead - that puts Python on the micro:bit. The
+    yellow light on the back blinks while it copies, then your code runs.
+code:
+  intro: >-
+    This program says hello once, then animates a beating heart forever.
+    Type it in (or use the starter), flash it, and watch your micro:bit come alive.
+  starter: |
+    from microbit import *
+
+    display.scroll("Hello!")
+
+    while True:
+        display.show(Image.HEART)
+        sleep(500)
+        display.show(Image.HEART_SMALL)
+        sleep(500)
+  walkthrough:
+    - lines: "1"
+      explain: Loads the micro:bit toolbox so Python knows display, Image and sleep.
+    - lines: "3"
+      explain: Scrolls the **string** "Hello!" across the display one time. The quotes tell Python it's text.
+    - lines: "5"
+      explain: "`while True:` starts a loop that repeats forever. Don't forget the colon `:` at the end."
+    - lines: "6-9"
+      explain: >-
+        These four lines are **indented**, so they're inside the loop. Big heart,
+        wait half a second, small heart, wait. Over and over = a heartbeat!
+  try_it:
+    - Change "Hello!" to your own name.
+    - Make the heart beat faster by changing both 500s to 200.
+    - Swap the hearts for other pictures, like Image.HAPPY and Image.SAD, or Image.DUCK.
+    - Delete one of the sleep() lines. What happens to the animation? Why?
+debug:
+  story: >-
+    Maya wanted her micro:bit to scroll "Hi" and then flash a heart and a smiley
+    forever. Instead, Python won't even run it! There are **three** bugs. Find
+    them, fix them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    display.scroll(Hi)
+
+    while True:
+        display.show(Image.heart)
+        sleep(500)
+      display.show(Image.HAPPY)
+        sleep(500)
+  hints:
+    - Text that should appear on the screen needs something around it. What?
+    - Image names are written in a special way. Look at Image.HAPPY - how is it different from the heart?
+    - Every line inside the loop must be pushed in by the same amount. Does one line stick out?
+  checks:
+    - {type: syntax, message: "Python can't read this yet - check that every line in the loop is indented by the same amount (4 spaces)."}
+    - {type: contains, pattern: "display\\.scroll\\(\\s*(\"[^\"]*\"|'[^']*')\\s*\\)", message: "Text needs quote marks around it: display.scroll(\"Hi\")."}
+    - {type: not_contains, pattern: "Image\\.heart\\b", message: "Image names are in CAPITAL letters: Image.HEART."}
+    - {type: contains, pattern: "Image\\.HEART\\b", message: "Keep the heart picture - it should be Image.HEART."}
+  solution: |
+    from microbit import *
+
+    display.scroll("Hi")
+
+    while True:
+        display.show(Image.HEART)
+        sleep(500)
+        display.show(Image.HAPPY)
+        sleep(500)
+  reflection_prompt: Which bug was hardest to spot? What clue (an error message, a color, the shape of the code) helped you find it?
+quiz:
+  - question: What does display.scroll("Go!") do?
+    choices:
+      - Shows a picture of the word Go
+      - Slides the text Go! across the LED display
+      - Waits for you to press a button
+      - Makes the micro:bit go faster
+    answer: 1
+    explain: scroll() slides text across the 5×5 LEDs, one letter at a time.
+  - question: How long does sleep(2000) wait?
+    choices:
+      - 2 seconds
+      - 2000 seconds
+      - 20 seconds
+      - 0.2 seconds
+    answer: 0
+    explain: sleep() counts in milliseconds. 1000 ms = 1 second, so 2000 ms = 2 seconds.
+  - question: Which line is written correctly?
+    choices:
+      - display.show(image.happy)
+      - display.show(Image.happy)
+      - display.show(Image.HAPPY)
+    answer: 2
+    explain: Python is case-sensitive. It's Image with a capital I and the picture name in CAPITALS.
+  - question: How does Python know which lines are inside a while True loop?
+    choices:
+      - They are written in capital letters
+      - They are indented (pushed in) under the loop
+      - They have a # at the start
+      - They are all on one line
+    answer: 1
+    explain: Indented lines after the colon belong to the loop. Lines that line up with "while" are outside it.
+challenge:
+  title: Name Badge Animation
+  prompt: >-
+    Turn your micro:bit into a wearable name badge that shows off who you are.
+    Mix scrolling words with pictures and timing to make it your own - there's
+    no single right answer!
+  levels:
+    - "Mild: Scroll your name, then show a picture you like, inside a while True loop."
+    - "Medium: Make a 3-picture animation (like a wink, a beating heart, or a clock with Image.CLOCK1, Image.CLOCK2...) that tells a tiny story."
+    - "Spicy: Design your own picture with Image(\"09090:99999:99999:09990:00900\") (numbers 0-9 are brightness) and add it to your badge."
+  submit_prompt: What does your badge show, and which line of code are you most proud of?
+teacher_notes: |
+  * **Flashing problems:** make sure the micro:bit shows up as a **MICROBIT** drive. Some USB cables are charge-only - swap the cable if the drive never appears.
+  * If the display shows a **scrolling error message** (like "SyntaxError line 6"), the code reached the micro:bit but has a bug. Read the line number with the class - this is a great teaching moment.
+  * The three most common bugs today: missing quotes, lowercase image names, and mixed indentation. Encourage students to use the Tab key or 4 spaces consistently.
+  * Point out that `display.scroll("Hello!")` is *outside* the loop, so it runs only once. Ask: "How could you make it scroll every time?"
+  * Early finishers: show `button_a.is_pressed()` with an `if` inside the loop as a preview, or let them browse the built-in Image list (Image.GIRAFFE, Image.GHOST, Image.PACMAN...).

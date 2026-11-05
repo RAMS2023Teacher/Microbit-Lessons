@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% from "_forms.html" import csrf %}
+{% block title %}{{ lesson.title }} · {{ c.name }}{% endblock %}
+{% block main_class %}container wide{% endblock %}
+{% block content %}
+<a class="muted small" href="{{ url_for('teacher.classroom', cid=c.id) }}">← {{ c.name }}</a>
+<div class="page-head">
+  <h1>{{ lesson.number }}. {{ lesson.title }}</h1>
+  <a class="btn ghost small" href="{{ url_for('student.lesson', lesson_id=lesson.id) }}">Open lesson &amp; answer key</a>
+</div>
+<form class="card row" method="post" action="{{ url_for('teacher.update_assignment', aid=a.id) }}">
+  {{ csrf() }}
+  <label class="field"><span>Due date</span><input type="date" name="due_date" value="{{ a.due_date.isoformat() if a.due_date }}"></label>
+  <label class="field grow"><span>Note to students</span><input name="note" value="{{ a.note or '' }}" maxlength="500"></label>
+  <button class="btn small" name="action" value="save">Save</button>
+  <button class="btn small danger" name="action" value="delete" onclick="return confirm('Remove this assignment? Student work is kept.')">Unassign</button>
+</form>
+
+<section class="card">
+  <h2>Class responses</h2>
+  <div class="table-scroll">
+  <table class="responses">
+    <thead><tr><th>Student</th><th>Done</th>{% for k in keys %}<th>{{ k|capitalize }}</th>{% endfor %}<th>Warm-up answer</th><th>Debug reflection</th><th>Challenge</th></tr></thead>
+    <tbody>
+    {% for s, cell in rows %}{% set p = cell.p %}
+    <tr class="{{ cell.status }}">
+      <th><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}#{{ lesson.id }}">{{ s.display_name }}</a></th>
+      <td>{{ cell.pct }}%{% if cell.late %} <b class="bad">late</b>{% endif %}</td>
+      {% for k in keys %}<td class="tickcell">{{ '✓' if p and (p.sections or {}).get(k) else '·' }}{% if k == 'quiz' and p and p.quiz_total %}<small>{{ p.quiz_best }}/{{ p.quiz_total }}</small>{% endif %}{% if k == 'debug' and p and p.debug_attempts %}<small>{{ p.debug_attempts }} tries</small>{% endif %}</td>{% endfor %}
+      <td class="resp">{{ p.warmup_answer if p else '' }}</td>
+      <td class="resp">{{ p.debug_reflection if p else '' }}</td>
+      <td class="resp">{{ p.challenge_response if p and p.challenge_submitted_at else '' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

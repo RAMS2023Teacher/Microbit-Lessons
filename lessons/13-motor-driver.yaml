@@ -1,0 +1,341 @@
+id: motor-driver
+unit: 3
+order: 13
+title: Forward and Reverse with a Motor Driver
+subtitle: Use an H-bridge driver so your code can spin a motor both ways
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  An H-bridge flips which way current flows through a motor, so two pins can
+  choose forward, backward or stop - and PWM on one of them sets the speed.
+objectives:
+  - Explain how an H-bridge reverses a motor by switching which side gets power
+  - Wire a DRV8833-style motor driver with a separate battery pack and a shared ground
+  - Control direction with two pins (P13 and P14) and speed with write_analog()
+  - Write forward(speed), backward(speed) and stop() functions
+vocabulary:
+  - term: H-bridge
+    definition: Four switches arranged in an "H" around a motor. Turning on opposite corners sends current one way or the other, so the motor can spin forward or backward.
+  - term: Motor driver
+    definition: A chip (like the DRV8833) that contains H-bridges. Small signals from the micro:bit tell it what to do; it handles the big motor current from the battery.
+  - term: Logic input
+    definition: A driver terminal (like AIN1) that only listens to a small 0 V / 3 V signal. It doesn't power anything.
+  - term: PWM (pulse-width modulation)
+    definition: Switching a pin on and off very fast. More "on" time means more average power, so the motor spins faster.
+  - term: Shared ground
+    definition: Connecting the micro:bit's GND and the battery pack's minus (–) together so both circuits agree on what "0 volts" means.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - DRV8833 dual motor driver module (with header pins)
+  - 1 DC motor (a TT gear motor is perfect)
+  - Battery pack, 4×AA (6 V), with an on/off switch if possible
+  - 8 jumper wires (male-female wires help for the module's header pins)
+  - A piece of tape to stick on the motor shaft as a "flag"
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 4}
+  - {key: circuit, name: Build the circuit, minutes: 9}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: How an H-bridge reverses a motor
+  note: Watch which two switches close for "forward" and which two close for "backward". They are always diagonal from each other.
+warmup:
+  prompt: >-
+    With your transistor circuit, the motor could only spin one way. Think of
+    things that need to go forward AND backward - a car, a garage door, a
+    robot arm. How do you think we could make a motor spin the other way?
+learn:
+  - |
+    ### Why the transistor isn't enough
+    Last time, one **NPN transistor** let a pin switch a motor **on** and **off**.
+    But current always went through the motor the same way, so it always spun
+    the **same direction**.
+
+    A DC motor reverses when you **swap its two wires**. Try it in your head:
+    battery + on the left wire spins one way, battery + on the right wire spins
+    the other way. We want **code** to do that swap for us.
+  - |
+    ### The H-bridge
+    Picture four switches around the motor, shaped like the letter **H**.
+    The motor is the bar across the middle.
+
+    * Close the **top-left** and **bottom-right** switches → current flows left to right → **forward**.
+    * Close the **top-right** and **bottom-left** switches → current flows right to left → **backward**.
+    * Open them all → the motor **coasts** to a stop.
+
+    Never close both switches on the **same side** - that shorts the battery!
+    That's why we use a **motor driver chip**: it has the H-bridge built in and
+    won't let that happen. It also has the **flyback diodes** built in.
+  - |
+    ### The DRV8833 driver
+    Our driver has **two** H-bridges (A and B) - enough for two motors. Today we only use **A**.
+
+    | Terminal | Connects to | Job |
+    |---|---|---|
+    | **VM** | battery **+** | motor power (big current) |
+    | **GND** | battery **–** and micro:bit **GND** | shared ground |
+    | **AIN1, AIN2** | **P13, P14** | logic inputs - the micro:bit's orders |
+    | **AOUT1, AOUT2** | the motor's two wires | power out to the motor |
+
+    It understands **3 V** signals, so the micro:bit can talk to it directly.
+  - |
+    ### Two pins, four moves
+    | AIN1 (P13) | AIN2 (P14) | Motor |
+    |---|---|---|
+    | 1 | 0 | **forward** |
+    | 0 | 1 | **backward** |
+    | 0 | 0 | **stop** (coast) |
+    | 1 | 1 | **brake** (quick stop) |
+
+    For **speed**, use `write_analog()` on the "1" pin instead of `write_digital(1)`.
+    `pin13.write_analog(1023)` is full speed; `pin13.write_analog(400)` is slower.
+circuit:
+  intro: >-
+    The micro:bit sends tiny signals to the driver on P13 and P14. The battery
+    pack sends the big motor current through the driver's VM terminal. Build
+    with the USB cable unplugged and the battery pack switched OFF (or with one
+    battery out).
+  safety:
+    - Build with the micro:bit unplugged and the battery pack off.
+    - The battery pack's red (+) wire goes ONLY to the driver's VM. Never connect it to the micro:bit's 3V pin - 6 V can destroy the micro:bit.
+    - Never connect the motor straight to a micro:bit pin. Pins can't supply motor current.
+    - If the driver chip gets hot, switch the battery off and check your wiring.
+  steps:
+    - title: Ground rail
+      instruction: >-
+        Push the micro:bit into the breakout (logo facing up). Run a **black**
+        wire from the breakout's **GND** pin to the top **blue (–) rail**, hole **T-1**.
+      check: Is the black wire in the rail next to the blue line, not the red one?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Driver and battery ground
+      instruction: >-
+        Set the DRV8833 module next to the breadboard. Connect a **black** wire
+        from the driver's **GND** terminal to **T-5**. Connect the battery pack's
+        **black (–)** wire to **T-3**. Now the micro:bit, the driver and the
+        battery all share one ground.
+      check: Do three black wires (micro:bit, driver, battery) all land in the same blue rail?
+      tip: Some driver boards have two GND pins. Either one works - they are connected inside.
+      add:
+        - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, AOUT1, AOUT2]}
+        - {type: battery, id: bat1, label: "4×AA 6V"}
+        - {type: wire, from: drv1.GND, to: T-5, color: black}
+        - {type: wire, from: bat1.minus, to: T-3, color: black}
+    - title: Motor power
+      instruction: >-
+        Connect the battery pack's **red (+)** wire to the driver's **VM**
+        terminal. That's the only place battery + goes. Keep the pack switched off.
+      check: Is battery + going to VM - and NOT to the micro:bit's 3V or the red rail?
+      add:
+        - {type: wire, from: bat1.plus, to: drv1.VM, color: red}
+    - title: Control wires
+      instruction: >-
+        Connect a **yellow** wire from the breakout's **P13** to the driver's
+        **AIN1**. Connect a **green** wire from **P14** to **AIN2**.
+      check: Is P13 on AIN1 and P14 on AIN2 (not the B inputs)?
+      add:
+        - {type: wire, from: mb.P13, to: drv1.AIN1, color: yellow}
+        - {type: wire, from: mb.P14, to: drv1.AIN2, color: green}
+    - title: The motor
+      instruction: >-
+        Connect one motor wire to **AOUT1** and the other to **AOUT2**. It
+        doesn't matter which is which yet - if it spins the "wrong" way later,
+        just swap these two wires. Stick a tape flag on the motor shaft so you
+        can see which way it turns.
+      check: Do the motor's wires go to AOUT1 and AOUT2 only (nothing from the motor to the micro:bit)?
+      add:
+        - {type: dcmotor, id: motor1}
+        - {type: wire, from: drv1.AOUT1, to: motor1.a, color: orange}
+        - {type: wire, from: drv1.AOUT2, to: motor1.b, color: white}
+  verify:
+    connected:
+      - [mb.GND, drv1.GND, bat1.minus]
+      - [bat1.plus, drv1.VM]
+      - [mb.P13, drv1.AIN1]
+      - [mb.P14, drv1.AIN2]
+      - [drv1.AOUT1, motor1.a]
+      - [drv1.AOUT2, motor1.b]
+    not_connected:
+      - [bat1.plus, mb.3V]
+      - [bat1.plus, mb.GND]
+      - [bat1.plus, bat1.minus]
+      - [motor1.a, motor1.b]
+      - [mb.P13, mb.P14]
+code:
+  intro: >-
+    Three small functions hide the pin details. After that, your main program
+    reads like instructions: forward, stop, backward, stop. Plug in USB, then
+    switch on the battery pack.
+  starter: |
+    from microbit import *
+
+    def forward(speed):
+        pin13.write_analog(speed)   # AIN1 gets PWM
+        pin14.write_digital(0)      # AIN2 off
+
+    def backward(speed):
+        pin13.write_digital(0)      # AIN1 off
+        pin14.write_analog(speed)   # AIN2 gets PWM
+
+    def stop():
+        pin13.write_digital(0)
+        pin14.write_digital(0)
+
+    while True:
+        display.show(Image.ARROW_N)
+        forward(800)
+        sleep(2000)
+
+        display.show(Image.NO)
+        stop()
+        sleep(1000)
+
+        display.show(Image.ARROW_S)
+        backward(800)
+        sleep(2000)
+
+        display.show(Image.NO)
+        stop()
+        sleep(1000)
+  walkthrough:
+    - lines: "3-5"
+      explain: "**forward** - P13 gets PWM (speed 0-1023) and P14 is 0. Current flows AOUT1 → motor → AOUT2."
+    - lines: "7-9"
+      explain: "**backward** - the opposite: P13 is 0 and P14 gets the PWM. Current flows the other way through the motor."
+    - lines: "11-13"
+      explain: "**stop** - both inputs 0, so the driver lets the motor coast to a stop."
+    - lines: "15-33"
+      explain: The main loop uses the functions like LEGO bricks. The arrows on the display show what the motor *should* be doing - handy for spotting a mismatch.
+  try_it:
+    - Change 800 to 400. Then 1023. How slow can it go before the motor stalls and just hums?
+    - Add a brake() function that sets both pins to 1. Compare brake() with stop() - which stops faster?
+    - Make button A run forward and button B run backward, and stop when neither is pressed.
+    - Use a for loop to ramp the speed from 300 up to 1023 so the motor speeds up smoothly.
+debug:
+  story: >-
+    Priya's motor goes forward, stops... and then goes forward again. It never
+    reverses! Also, Python complains before the program even starts. There are
+    **two** bugs. Fix them and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    def forward(speed):
+        pin13.write_analog(speed)
+        pin14.write_digital(0)
+
+    def backward(speed):
+        pin13.write_analog(speed)
+        pin14.write_digital(0)
+
+    def stop()
+        pin13.write_digital(0)
+        pin14.write_digital(0)
+
+    while True:
+        forward(800)
+        sleep(2000)
+        stop()
+        sleep(1000)
+        backward(800)
+        sleep(2000)
+        stop()
+        sleep(1000)
+  hints:
+    - Every def line needs something at the very end. Compare stop with forward.
+    - Look at the truth table. For backward, which pin should get the speed - P13 or P14?
+    - Did someone copy and paste forward() to make backward() and forget to change it?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "def backward\\([^)]*\\)\\s*:[^\\n]*\\n(?:(?:[ \\t]+[^\\n]*)?\\n)*?[ \\t]+pin14\\.write_analog\\(", message: "In backward(), pin 14 (AIN2) should get the speed with write_analog."}
+    - {type: not_contains, pattern: "def backward\\([^)]*\\)\\s*:[^\\n]*\\n(?:(?:[ \\t]+[^\\n]*)?\\n)*?[ \\t]+pin13\\.write_analog\\(", message: "In backward(), pin 13 (AIN1) should be 0, not getting PWM - otherwise the motor still goes forward."}
+  solution: |
+    from microbit import *
+
+    def forward(speed):
+        pin13.write_analog(speed)
+        pin14.write_digital(0)
+
+    def backward(speed):
+        pin13.write_digital(0)
+        pin14.write_analog(speed)
+
+    def stop():
+        pin13.write_digital(0)
+        pin14.write_digital(0)
+
+    while True:
+        forward(800)
+        sleep(2000)
+        stop()
+        sleep(1000)
+        backward(800)
+        sleep(2000)
+        stop()
+        sleep(1000)
+  reflection_prompt: How did the truth table help you find the copy-and-paste bug in backward()?
+quiz:
+  - question: How does an H-bridge make a motor spin backward?
+    choices:
+      - It makes the battery voltage negative
+      - It sends current through the motor the opposite way
+      - It slows the motor down until it reverses
+      - It turns the motor upside down
+    answer: 1
+    explain: Closing the other diagonal pair of switches makes current flow through the motor in the opposite direction, so it spins the other way.
+  - question: P13 (AIN1) is 0 and P14 (AIN2) is 1. What does the motor do?
+    choices:
+      - Forward
+      - Backward
+      - Coast to a stop
+      - Brake
+    answer: 1
+    explain: "From the truth table: AIN1 = 0, AIN2 = 1 means backward."
+  - question: Where does the battery pack's red (+) wire connect?
+    choices:
+      - The micro:bit's 3V pin
+      - The driver's AIN1
+      - The driver's VM terminal
+      - Straight to the motor
+    answer: 2
+    explain: VM is the driver's motor-power input. Battery + must never touch the micro:bit's 3V pin.
+  - question: Why must the micro:bit GND and battery minus be connected?
+    choices:
+      - So the signals from the micro:bit have the same "0 volts" reference as the driver
+      - To charge the batteries
+      - It makes the motor spin faster
+      - They don't need to be connected
+    answer: 0
+    explain: The driver reads the micro:bit's 3 V signals compared to its own ground. Without a shared ground the signals don't make sense to it.
+  - question: Which line makes the motor go forward at about half speed?
+    choices:
+      - pin13.write_digital(512)
+      - pin13.write_analog(512) and pin14.write_digital(0)
+      - pin13.write_analog(512) and pin14.write_analog(512)
+      - pin14.write_analog(1023)
+    answer: 1
+    explain: write_analog takes 0-1023, so 512 is about half power. The other input must be 0 for forward.
+challenge:
+  title: Motor Machine
+  prompt: >-
+    Turn your motor into a machine that does something fun. Tape a paper arm,
+    a flag, a spinner or a pom-pom to the shaft and program a show using
+    forward(), backward(), stop() and different speeds.
+  levels:
+    - "Mild: Make a \"wiggle\" - forward and backward quickly 5 times with a for loop, then rest."
+    - "Medium: Build a fan or a winch: button A speeds up, button B slows down, and the display shows the current speed level."
+    - "Spicy: Tilt control! Use accelerometer.get_x() so tilting right spins forward, tilting left spins backward, and tilting more makes it faster."
+  submit_prompt: What does your motor machine do, and how do your functions control direction and speed?
+teacher_notes: |
+  * **Motor spins the wrong way:** that's normal. Swap the two motor wires on AOUT1/AOUT2, or swap the bodies of forward() and backward(). Physically swapping wires is the habit to build for the robot lessons.
+  * **Nothing moves:** check the battery pack is switched on and has fresh batteries (a 4×AA pack below about 4.5 V makes TT motors weak or silent). Then check the shared ground - a missing ground wire is the #1 cause.
+  * **Motor hums but doesn't turn:** the speed is too low to overcome friction. Most TT motors need about 400-500 or more.
+  * **Board has an extra SLP / STBY / EEP pin:** some DRV8833 boards leave the chip asleep unless that pin is pulled high. Many boards pull it up for you; if yours doesn't, a wire from that pin to the micro:bit's **3V** wakes it (that pin is a logic input, so 3 V is fine). Never connect battery + there.
+  * **micro:bit resets when the motor starts:** the battery pack isn't sharing ground properly, or someone powered the motor from USB. Motor power must come from the pack through VM.
+  * P13 and P14 are also the SPI pins, but they work as normal pins as long as you don't use the spi module.
+  * The default PWM period is 20 ms. If motors stutter at low speeds, advanced students can try `pin13.set_analog_period(1)` and `pin14.set_analog_period(1)`.
+  * Keep the same wiring for lesson 14 if you can - it adds a second motor on the B side.

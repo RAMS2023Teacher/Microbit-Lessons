@@ -1,0 +1,18 @@
+{% macro editor(id, code, section, filename="main", reset_code=None, compact=False) %}
+<div class="mb-editor{{ ' compact' if compact }}" id="{{ id }}" data-section="{{ section }}" data-filename="{{ filename }}">
+  <div class="ed-toolbar">
+    <button type="button" class="btn small primary" data-act="send" title="Save the code onto your micro:bit and run it">▶ Send to micro:bit</button>
+    <button type="button" class="btn small ghost" data-act="stop" title="Stop the running program">■ Stop</button>
+    <button type="button" class="btn small ghost" data-act="hex" title="Download a .hex file to drag onto the MICROBIT drive">⬇ Download .hex</button>
+    <span class="spacer"></span>
+    <button type="button" class="btn small ghost" data-act="reset" title="Put the original code back">↺ Reset</button>
+    <span class="ed-status" role="status" aria-live="polite"></span>
+  </div>
+  <textarea class="ed-source" spellcheck="false">{{ code }}</textarea>
+  {% if reset_code is not none %}<script type="application/json" class="ed-reset">{{ reset_code|tojson }}</script>{% endif %}
+  <div class="ed-console" hidden>
+    <div class="ed-console-head"><span>micro:bit says…</span><button type="button" class="linklike" data-act="clear">clear</button></div>
+    <pre></pre>
+  </div>
+</div>
+{% endmacro %}

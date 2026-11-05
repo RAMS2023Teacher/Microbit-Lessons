@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% from "_forms.html" import csrf %}
+{% block title %}Lesson videos · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Lesson videos</h1>
+<p class="muted">Paste a link for any lesson — YouTube, Google Drive ("Anyone with the link"), Vimeo, or a direct .mp4 link. It appears at the top of the lesson. Leave it blank to show "Video coming soon".</p>
+<form method="post" class="card">
+  {{ csrf() }}
+  {% for u in units %}
+  <h2>Unit {{ u.number }}: {{ u.title }}</h2>
+  {% for l in u.lessons %}
+  <label class="field video-field"><span>{{ l.number }}. {{ l.title }}{% if l.video %} <small class="muted">— suggested: {{ l.video.title }}</small>{% endif %}</span>
+    <input type="url" name="video_{{ l.id }}" value="{{ urls.get(l.id, '') }}" placeholder="https://youtu.be/…"></label>
+  {% endfor %}
+  {% endfor %}
+  <button class="btn" type="submit">Save videos</button>
+</form>
+{% endblock %}

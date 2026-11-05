@@ -1,0 +1,257 @@
+id: dimmer-pwm
+unit: 1
+order: 5
+title: Dimmer Switch with PWM
+subtitle: Fade an LED up and down with write_analog and for loops
+duration_minutes: 35
+level: Beginner
+big_idea: >-
+  A pin can only be on or off, but by flicking it on and off super fast we can
+  make an LED look any brightness we want.
+objectives:
+  - Explain PWM as switching a pin on and off very fast
+  - Use pin0.write_analog() with numbers from 0 to 1023 to set LED brightness
+  - Use a for loop with range(start, stop, step) to count up and count down
+  - Make an LED fade smoothly up and down forever
+vocabulary:
+  - term: PWM (Pulse Width Modulation)
+    definition: Turning a pin on and off so fast that your eye only sees the average - a dimmer light.
+  - term: Duty cycle
+    definition: The fraction of time the pin is ON. 50% duty cycle looks about half bright.
+  - term: write_analog
+    definition: A micro:bit command that makes PWM on a pin. 0 = always off, 1023 = always on.
+  - term: for loop
+    definition: A loop that runs once for every number (or item) in a list, like every number from range().
+  - term: range(start, stop, step)
+    definition: Makes the numbers start, start+step, ... and stops BEFORE it reaches stop.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - 1 LED (any color)
+  - 1 resistor, 220 Ω (red-red-brown)
+  - 3 jumper wires
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Build the circuit, minutes: 6}
+  - {key: code, name: Code it, minutes: 9}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: How PWM dims an LED
+  note: Watch the slow-motion part where the LED is really blinking on and off.
+warmup:
+  prompt: >-
+    A light switch is only ON or OFF. But a dimmer knob lets you pick
+    "a little bit on." How do you think a dimmer could work if electricity can
+    only be on or off?
+learn:
+  - |
+    ### On, off... and in between?
+    `write_digital` only knows **1** (on) and **0** (off). But what if you
+    blink an LED **so fast** your eyes can't keep up? Your brain sees the
+    **average**. On half the time looks **half bright**. On a tenth of the
+    time looks **dim**.
+
+    This trick is called **PWM** - Pulse Width Modulation.
+  - |
+    ### write_analog: 0 to 1023
+    ```python
+    pin0.write_analog(0)      # always off
+    pin0.write_analog(256)    # on 25% of the time - dim
+    pin0.write_analog(512)    # on 50% - about half
+    pin0.write_analog(1023)   # always on - full brightness
+    ```
+    The fraction of time the pin is on is the **duty cycle**. The micro:bit
+    does all the fast blinking for you - your code just picks a number.
+  - |
+    ### for loops and range()
+    A **for loop** runs once for each number:
+    ```python
+    for n in range(0, 10, 2):
+        display.scroll(n)       # 0, 2, 4, 6, 8
+    ```
+    `range(start, stop, step)` **stops before** `stop` - 10 is never shown!
+    To count **down**, use a **negative step**: `range(10, 0, -2)` gives
+    10, 8, 6, 4, 2.
+  - |
+    ### Putting it together: a fade
+    Count from 0 up to 1023 and give each number to `write_analog`. The LED
+    gets a tiny bit brighter each time. Then count back down. That's a
+    **fade**, like a "breathing" light on a sleeping laptop.
+circuit:
+  intro: >-
+    It's the same LED circuit as Lesson 3: P0 → resistor → LED → GND. If it's
+    still on your board, just check it against these steps. Unplug the USB
+    cable while you build.
+  safety:
+    - Always build with the micro:bit unplugged.
+    - Never connect 3V straight to GND with a wire - that's a short circuit.
+  steps:
+    - title: Ground rail
+      instruction: >-
+        Push the micro:bit into the breakout board (logo facing up). Run a
+        **black** wire from the breakout's **GND** pin to the top **blue (–)
+        rail** at **T-1**.
+      check: Is your black wire in the rail with the blue line next to it?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Resistor and LED
+      instruction: >-
+        Put the 220 Ω resistor from **c10** to **c14**. Put the LED's **long leg
+        (+)** in **e14** and its **short leg (–)** in **e15**.
+      check: Is the LED's long leg in column 14, next to the resistor?
+      tip: The flat edge on the LED's rim marks the short leg (–).
+      add:
+        - {type: resistor, id: r1, a: c10, b: c14, ohms: 220}
+        - {type: led, id: led1, anode: e14, cathode: e15, color: red}
+    - title: Connect to pin 0 and ground
+      instruction: >-
+        Add a **yellow** wire from **P0** to **a10**. Add a **black** wire from
+        **a15** to the **blue (–) rail** at **T-15**.
+      check: Trace the loop - P0, resistor, LED, ground. Is it complete?
+      add:
+        - {type: wire, from: mb.P0, to: a10, color: yellow}
+        - {type: wire, from: a15, to: T-15, color: black}
+  verify:
+    connected:
+      - [mb.P0, r1.a]
+      - [r1.b, led1.anode]
+      - [led1.cathode, mb.GND]
+    not_connected:
+      - [led1.anode, led1.cathode]
+code:
+  intro: >-
+    This program fades the LED up, then back down, forever - a "breathing"
+    light.
+  starter: |
+    from microbit import *
+
+    step = 8      # bigger step = faster fade
+    wait = 5      # milliseconds at each brightness
+
+    while True:
+        for brightness in range(0, 1024, step):      # fade up
+            pin0.write_analog(brightness)
+            sleep(wait)
+        for brightness in range(1023, -1, -step):    # fade down
+            pin0.write_analog(brightness)
+            sleep(wait)
+  walkthrough:
+    - lines: "3-4"
+      explain: Two **variables** control the speed. Change them once and the whole fade changes.
+    - lines: "7"
+      explain: >-
+        Counts 0, 8, 16, ... up to 1016. We say **1024** as the stop because
+        range stops *before* the stop number.
+    - lines: "8-9"
+      explain: Sets the brightness to the current number, then waits a moment so you can see it.
+    - lines: "10"
+      explain: >-
+        Counts **down** from 1023 with a **negative step** (`-step`). The stop
+        is **-1** so the count gets all the way down near 0.
+    - lines: "6"
+      explain: "`while True:` repeats the fade up + fade down forever."
+  try_it:
+    - Change step to 1, then to 64. What happens to the fade?
+    - Make the LED fade up slowly but drop down fast (use two different waits).
+    - Add display.show(Image.HEART) after fading up and display.clear() after fading down.
+    - Try pin0.write_analog(50) on its own. How dim can you go before it looks off?
+debug:
+  story: >-
+    Alex wants a breathing light, but the micro:bit stops with an error about
+    the value, and even after that's fixed the LED never fades back down -
+    it just jumps from bright to dark. There are **two** bugs. Find them, fix
+    them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    while True:
+        for brightness in range(0, 1024, 8):
+            pin0.write_digital(brightness)
+            sleep(5)
+        for brightness in range(1023, 0, 8):
+            pin0.write_analog(brightness)
+            sleep(5)
+  hints:
+    - write_digital only understands 0 and 1. Which command understands 0 to 1023?
+    - Starting at 1023 and adding 8 each time... will you ever get down to 0? How do you count backwards with range?
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: "write_digital\\(", message: "write_digital only knows 0 or 1. Use write_analog for brightness levels."}
+    - {type: contains, pattern: "pin0\\.write_analog\\(", message: "Set the brightness with pin0.write_analog()."}
+    - {type: not_contains, pattern: "range\\(\\s*10\\d\\d\\s*,\\s*-?\\d+\\s*,\\s*(?!-)[\\w+]+\\s*\\)", message: "To count DOWN, range needs a negative step, like range(1023, -1, -8)."}
+  solution: |
+    from microbit import *
+
+    while True:
+        for brightness in range(0, 1024, 8):
+            pin0.write_analog(brightness)
+            sleep(5)
+        for brightness in range(1023, -1, -8):
+            pin0.write_analog(brightness)
+            sleep(5)
+  reflection_prompt: Why did range(1023, 0, 8) never run at all? What did you change to fix it?
+quiz:
+  - question: What does pin0.write_analog(512) do to the LED?
+    choices:
+      - Turns it fully on
+      - Makes it about half as bright
+      - Turns it off
+      - Makes it blink once every 512 ms
+    answer: 1
+    explain: 512 is about half of 1023, so the pin is on about 50% of the time - it looks about half bright.
+  - question: Which numbers does range(0, 10, 3) make?
+    choices:
+      - 0, 3, 6, 9
+      - 0, 3, 6, 9, 10
+      - 3, 6, 9
+      - 0, 3, 6
+    answer: 0
+    explain: Start at 0, add 3 each time, and stop before reaching 10.
+  - question: How do you count down from 10 to 1?
+    choices:
+      - range(10, 1)
+      - range(10, 0, 1)
+      - range(10, 0, -1)
+      - range(1, 10, -1)
+    answer: 2
+    explain: Counting down needs a negative step, and the stop (0) is never reached, so the last number is 1.
+  - question: Why does a PWM LED look dim instead of blinking?
+    choices:
+      - The resistor gets hotter
+      - It blinks too fast for your eyes, so you see the average
+      - The pin sends out less voltage
+    answer: 1
+    explain: The pin is still only on (3 V) or off (0 V), but switching very fast makes your brain see an in-between brightness.
+  - question: What number makes write_analog fully ON?
+    choices:
+      - "1"
+      - "100"
+      - "1023"
+      - "9"
+    answer: 2
+    explain: write_analog goes from 0 (always off) to 1023 (always on).
+challenge:
+  title: Mood Lighting
+  prompt: >-
+    Design a light show with your dimmable LED. Make it calm, creepy, exciting -
+    your choice! Use for loops and write_analog to create a pattern nobody
+    else in class has.
+  levels:
+    - "Mild: Make a heartbeat - two quick fades up and down, then a pause."
+    - "Medium: Make a candle flicker using random.randint to pick a new brightness every few milliseconds."
+    - "Spicy: Use button A to switch between two or more light modes (calm fade, flicker, strobe), shown on the display as 1, 2, 3."
+  submit_prompt: Describe your light show and explain how your for loop or random numbers change the brightness.
+teacher_notes: |
+  * **"value must be 0 or 1" error:** a student used `write_digital` with a brightness number.
+  * **LED only gets brighter, then snaps off:** the count-down `range` has a positive step, so it runs zero times.
+    Have students print the range: `display.scroll(str(list(range(10, 0, 2))))` shows `[]`.
+  * **Slight flicker at low brightness:** the default PWM period is 20 ms. Students can add
+    `pin0.set_analog_period(1)` before the loop for a smoother fade (optional).
+  * **No light at all:** check the LED direction first, then move the yellow wire to 3V to test the LED.
+  * Our eyes don't see brightness in a straight line: the change from 0 to 100 looks bigger than 900 to 1023.
+    Curious students can try squaring the number (`b * b // 1023`) for a smoother-looking fade.
+  * Early finishers: `import random` for the candle challenge; `random.randint(200, 1023)`.

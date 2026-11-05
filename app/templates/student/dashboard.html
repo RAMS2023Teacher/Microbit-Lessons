@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% from "_forms.html" import csrf %}
+{% block title %}Dashboard · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Hi {{ current_user.display_name }} 👋</h1>
+<div class="grid-2">
+  <section class="card">
+    <h2>My assignments</h2>
+    {% if rows %}
+    <ul class="assign-list">
+      {% for r in rows %}
+      <li class="{{ 'overdue' if r.overdue }}">
+        <a href="{{ url_for('student.lesson', lesson_id=r.lesson.id) }}">
+          <span class="lesson-num">{{ r.lesson.number }}</span>
+          <span class="grow"><b>{{ r.lesson.title }}</b>
+            <small class="muted">{{ r.a.classroom.name }}{% if r.a.due_date %} · due {{ r.a.due_date.strftime('%a %b %-d') }}{% endif %}{% if r.overdue %} · <span class="bad">overdue</span>{% endif %}</small>
+            {% if r.a.note %}<small class="note">📌 {{ r.a.note }}</small>{% endif %}
+            {% if r.feedback %}<small class="note">💬 Teacher feedback waiting</small>{% endif %}
+          </span>
+          <span class="meter" title="{{ r.pct }}% done"><i style="width:{{ r.pct }}%"></i></span>
+          <span class="pct">{{ r.pct }}%</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="muted">No assignments yet. You can still explore any lesson in the <a href="{{ url_for('student.catalog') }}">lesson library</a>.</p>
+    {% endif %}
+  </section>
+  <aside>
+    {% if recent %}
+    <section class="card">
+      <h2>Pick up where you left off</h2>
+      {% for p, l, pct in recent %}
+        <a class="resume" href="{{ url_for('student.lesson', lesson_id=l.id) }}"><b>{{ l.title }}</b><span>{{ pct }}%</span></a>
+      {% endfor %}
+    </section>
+    {% endif %}
+    <section class="card">
+      <h2>My classes</h2>
+      <ul>{% for c in current_user.classes %}<li>{{ c.name }} <small class="muted">({{ c.teacher.display_name }})</small></li>{% else %}<li class="muted">None</li>{% endfor %}</ul>
+      <form method="post" action="{{ url_for('student.join_class') }}" class="inline-form">
+        {{ csrf() }}
+        <input name="class_code" placeholder="Class code" required maxlength="10">
+        <button class="btn small" type="submit">Join</button>
+      </form>
+    </section>
+    <section class="card tip">
+      <h2>Before you start</h2>
+      <p>Use <b>Chrome</b> or <b>Edge</b> (or a Chromebook) so you can send code straight to your micro:bit.</p>
+      <p>First time with a micro:bit? In any lesson, click <b>Download .hex</b> and drag the file onto the <b>MICROBIT</b> drive once. After that, <b>Send to micro:bit</b> works with one click.</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

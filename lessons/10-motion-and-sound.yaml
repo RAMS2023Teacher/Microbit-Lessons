@@ -1,0 +1,290 @@
+id: motion-and-sound
+unit: 3
+order: 10
+title: Shake, Tilt and Play
+subtitle: Use the accelerometer and the music module to build a shake alarm and a tilt theremin
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  The accelerometer senses how the micro:bit moves and tilts, and the music
+  module turns numbers into sound - so motion can control music.
+objectives:
+  - Read tilt with accelerometer.get_x() and detect a shake with accelerometer.was_gesture('shake')
+  - Play built-in melodies and single pitches with the music module
+  - Wire a piezo buzzer to pin 0 and GND, and switch between it and the V2 built-in speaker
+  - Map a tilt number to a sound frequency to make a tilt theremin
+vocabulary:
+  - term: Accelerometer
+    definition: A sensor that measures pushes and pulls (like gravity) in three directions - x, y and z.
+  - term: Gesture
+    definition: A movement the micro:bit recognizes for you, like 'shake', 'face up' or 'left'.
+  - term: Frequency (pitch)
+    definition: How many times per second a sound vibrates, measured in hertz (Hz). Higher frequency = higher note.
+  - term: Piezo buzzer
+    definition: A thin disc that clicks back and forth when the voltage changes fast, making sound.
+  - term: Theremin
+    definition: A musical instrument you play without touching it - the pitch changes as you move.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - 1 passive piezo buzzer (2 legs)
+  - 3 jumper wires
+  - Optional - headphones with alligator clips, or just the V2 built-in speaker
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Wire the buzzer, minutes: 5}
+  - {key: code, name: Code it, minutes: 10}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Motion and sound with the micro:bit
+  note: Listen for how the pitch slides up and down as the micro:bit tilts left and right.
+warmup:
+  prompt: >-
+    Your phone knows when you turn it sideways and flips the screen. How do you
+    think it can tell which way is down? What could a game do with that?
+learn:
+  - |
+    ### The accelerometer feels gravity
+    The micro:bit has an **accelerometer** that measures force in three
+    directions: **x** (left-right), **y** (forward-back) and **z** (up-down).
+
+    `accelerometer.get_x()` gives a number in **milli-g**:
+    * Flat on the table: about **0**
+    * Tilted all the way **right**: about **1024**
+    * Tilted all the way **left**: about **-1024**
+
+    Shake it hard and the numbers can go even bigger!
+  - |
+    ### Gestures do the math for you
+    Instead of watching numbers, you can ask about **gestures**:
+
+    ```python
+    if accelerometer.was_gesture('shake'):
+        display.show(Image.SURPRISED)
+    ```
+
+    Other gestures: `'up'`, `'down'`, `'left'`, `'right'`, `'face up'`,
+    `'face down'` and `'freefall'`. The gesture name goes in **quotes** - it's text.
+  - |
+    ### The music module
+    Sound lives in its own module, so you need **`import music`** at the top.
+
+    * `music.play(music.BIRTHDAY)` - play a **built-in melody**. Others include
+      `music.POWER_UP`, `music.NYAN`, `music.BA_DING` and `music.WAWAWAWAA`.
+    * `music.play(['C4:4', 'E4:4', 'G4:8'])` - play your **own notes**.
+    * `music.pitch(440, 200)` - play **440 Hz** for **200 ms**.
+  - |
+    ### Where does the sound come out?
+    By default, music goes to **pin 0** *and* the V2's **built-in speaker** at
+    the same time. A **piezo buzzer** wired from **P0** to **GND** gets the same signal.
+
+    * `speaker.off()` - only the buzzer on pin 0 plays
+    * `speaker.on()` - the built-in speaker plays again
+
+    You can also say exactly which pin to use: `music.play(music.BA_DING, pin=pin0)`.
+  - |
+    ### Turning tilt into a note
+    To make a **theremin**, change the tilt number into a frequency:
+
+    `freq = 600 + x * 400 // 1024`
+
+    Flat (x = 0) → 600 Hz. Right (x = 1024) → 1000 Hz. Left (x = -1024) → 200 Hz.
+circuit:
+  intro: >-
+    You'll wire a piezo buzzer between pin 0 and ground. It's a short circuit
+    to build - most of today is about the code. Unplug the USB cable while you build.
+  safety:
+    - Always build with the micro:bit unplugged.
+    - Use a passive piezo buzzer. A big magnetic buzzer can pull too much current from a pin.
+    - Keep the volume kind to your neighbors - cover the buzzer with a finger to make it quieter.
+  steps:
+    - title: Ground rail
+      instruction: >-
+        Push the micro:bit into the breakout board (logo facing up). Run a
+        **black** wire from the breakout's **GND** pin to hole **T-1** on the top
+        **blue (–) rail**.
+      check: Is your black wire in the rail with the blue line next to it?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Piezo buzzer
+      instruction: >-
+        Push the buzzer's **+ leg** (often the longer leg, or marked **+**) into
+        **e10** and the other leg into **e13**. If your buzzer's legs are closer
+        together, use **e10** and **e12** and move the black wire in the next step to column 12.
+      check: Are the two buzzer legs in two different columns?
+      tip: Many piezo buzzers work either way round, but following the + mark is a good habit.
+      add:
+        - {type: buzzer, id: bz1, plus: e10, minus: e13}
+    - title: Connect pin 0 and ground
+      instruction: >-
+        Add a **yellow** wire from **P0** to **a10** (the + leg's column). Add a
+        **black** wire from **a13** (the other leg's column) to **T-13** on the
+        blue (–) rail.
+      check: Trace it - P0, buzzer, ground. Is the loop complete?
+      add:
+        - {type: wire, from: mb.P0, to: a10, color: yellow}
+        - {type: wire, from: a13, to: T-13, color: black}
+  verify:
+    connected:
+      - [mb.P0, bz1.plus]
+      - [bz1.minus, mb.GND]
+    not_connected:
+      - [bz1.plus, bz1.minus]
+      - [mb.P0, mb.GND]
+code:
+  intro: >-
+    This program is two instruments in one. **Shake** it to set off an alarm.
+    **Hold button A** and tilt left and right to play the theremin.
+  starter: |
+    from microbit import *
+    import music
+
+    display.show(Image.MUSIC_CROTCHET)
+
+    while True:
+        if accelerometer.was_gesture('shake'):
+            display.show(Image.SURPRISED)
+            music.play(music.POWER_UP)
+            display.show(Image.MUSIC_CROTCHET)
+
+        if button_a.is_pressed():
+            x = accelerometer.get_x()
+            freq = 600 + x * 400 // 1024
+            freq = max(100, min(2000, freq))   # keep it in a safe range
+            music.pitch(freq, 50)
+
+        if button_b.was_pressed():
+            speaker.off()      # buzzer only
+            display.show("B")
+            sleep(500)
+            display.show(Image.MUSIC_CROTCHET)
+  walkthrough:
+    - lines: "1-2"
+      explain: "`from microbit import *` gets the display, buttons and accelerometer. `import music` adds the sound tools."
+    - lines: "7-10"
+      explain: >-
+        `was_gesture('shake')` is True if the micro:bit was shaken since the last
+        time we asked. Then it plays a built-in melody and goes back to the music note picture.
+    - lines: "12-14"
+      explain: >-
+        While A is held, read the tilt and turn it into a frequency: 200 Hz
+        tilted left, 600 Hz flat, 1000 Hz tilted right.
+    - lines: "15"
+      explain: >-
+        A really hard shake can make x bigger than 1024. `max()` and `min()`
+        keep the frequency between 100 and 2000 Hz.
+    - lines: "16"
+      explain: "`music.pitch(freq, 50)` plays that note for 50 ms. The loop repeats, so you hear a smooth slide."
+    - lines: "18-22"
+      explain: Button B turns off the built-in speaker so only your buzzer on pin 0 makes sound.
+  try_it:
+    - Swap music.POWER_UP for another built-in melody, like music.NYAN or music.WAWAWAWAA.
+    - Change 400 to 800 in the freq line. How does the theremin's range change?
+    - Use accelerometer.get_y() instead of get_x() so you tilt forward and back.
+    - "Write your own alarm tune as a list of notes, like `music.play(['C5:2', 'G4:2', 'C5:2', 'G4:2'])`."
+debug:
+  story: >-
+    Leo built a "don't touch my stuff" alarm. It should scream when somebody
+    shakes it - but it crashes the moment it starts. There are **two** bugs.
+    Find them, fix them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    display.show(Image.ASLEEP)
+
+    while True:
+        if accelerometer.was_gesture(shake):
+            display.show(Image.ANGRY)
+            music.play(music.BADDY)
+            display.show(Image.ASLEEP)
+        sleep(100)
+  hints:
+    - "Is 'shake' a variable, or is it the name of a gesture? How do you write text in Python?"
+    - "`from microbit import *` doesn't include music. What line do you need at the top?"
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: '^\s*import\s+music|^\s*from\s+music\s+import', message: "Add import music at the top - the music module isn't part of from microbit import *."}
+    - {type: contains, pattern: 'was_gesture\(\s*[''"]shake[''"]\s*\)', message: "Gesture names are text - put shake in quotes: was_gesture('shake')."}
+  solution: |
+    from microbit import *
+    import music
+
+    display.show(Image.ASLEEP)
+
+    while True:
+        if accelerometer.was_gesture('shake'):
+            display.show(Image.ANGRY)
+            music.play(music.BADDY)
+            display.show(Image.ASLEEP)
+        sleep(100)
+  reflection_prompt: Both bugs gave a NameError. What does a NameError tell you, and how did it help you find the problem?
+quiz:
+  - question: The micro:bit is lying flat on the table. About what does accelerometer.get_x() return?
+    choices:
+      - About 0
+      - About 1024
+      - About -1024
+      - It returns 'flat'
+    answer: 0
+    explain: Flat means no tilt left or right, so x is close to 0. Tilting right goes toward 1024, left toward -1024.
+  - question: Which line correctly checks for a shake?
+    choices:
+      - if accelerometer.was_gesture(shake)
+      - "if accelerometer.was_gesture('shake'):"
+      - "if accelerometer.shake == True:"
+    answer: 1
+    explain: The gesture name is text, so it needs quotes, and an if line ends with a colon.
+  - question: What happens to the sound if you make the frequency number bigger?
+    choices:
+      - The note gets louder
+      - The note gets higher
+      - The note gets longer
+    answer: 1
+    explain: Frequency is how fast the sound vibrates. More vibrations per second = a higher pitch.
+  - question: On a micro:bit V2, where does music.play() send sound by default?
+    choices:
+      - Only the built-in speaker
+      - Only pin 0
+      - Both pin 0 and the built-in speaker
+    answer: 2
+    explain: Sound goes to pin 0 and the V2 speaker together. Use speaker.off() to hear only the buzzer.
+  - question: In music.pitch(440, 200), what is 200?
+    choices:
+      - The frequency in Hz
+      - How long to play, in milliseconds
+      - The volume
+    answer: 1
+    explain: The first number is the frequency (440 Hz) and the second is the duration (200 ms).
+challenge:
+  title: Motion-Powered Music Machine
+  prompt: >-
+    Invent a gadget where **movement makes sound**. It could be a bike-bell for
+    your backpack, a game that beeps when you tilt too far, a "magic wand" with
+    sound effects, or a new musical instrument. Make it surprising!
+  levels:
+    - "Mild: Give each gesture its own sound - 'left', 'right', 'face down' and 'shake' all play different melodies."
+    - "Medium: Make a steady-hand game - tilt more than 300 either way and the buzzer buzzes and you lose a life (show lives on the display)."
+    - "Spicy: Make the theremin play only real notes (a scale) instead of sliding, or use get_y() to control how long each note lasts."
+  submit_prompt: What does your gadget do, which motions does it react to, and how did you turn motion into sound?
+teacher_notes: |
+  **Common problems**
+  * **NameError: music** - `import music` is missing. `from microbit import *` does not include it.
+  * **No sound from the buzzer:** make sure it's a *passive* piezo. An active buzzer only beeps one tone and can't play melodies. Check that the legs are in two different columns.
+  * **Buzzer is quiet:** piezos are quieter than the V2 speaker - that's normal. Pressing B (speaker.off()) makes it easier to hear which is playing. `speaker.on()` brings the speaker back; it also comes back after a reset.
+  * **Shake doesn't trigger:** use a firm shake. `was_gesture()` remembers a gesture since the last check, so short loops catch it reliably.
+  * **Theremin sounds choppy:** that's the 50 ms notes. Try 20 ms, or remove other sleeps from the loop.
+  * `music.play()` waits until the tune finishes (`wait=True`), so the program pauses during the alarm. Add `wait=False` to play in the background.
+
+  **Noise management**
+  * Thirty buzzers at once is a lot! Agree on a "quiet signal", let students use a finger over the buzzer, or use headphones with alligator clips on P0 and GND.
+
+  **Safety**
+  * Shake gently enough that the micro:bit doesn't fly out of hands or pull wires out. Hold the breadboard and micro:bit together while shaking, or unplug the buzzer and use the built-in speaker for the shake tests.
+
+  **Extensions**
+  * `accelerometer.get_values()` returns (x, y, z) together.
+  * Use `radio` so shaking one micro:bit sets off the alarm on another.

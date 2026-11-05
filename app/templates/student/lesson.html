@@ -1,0 +1,210 @@
+{% extends "base.html" %}{% from "_editor.html" import editor %}
+{% block title %}{{ lesson.title }} · {{ site_name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/codemirror.css') }}">
+{% endblock %}
+{% block main_class %}lesson-layout{% endblock %}
+{% block content %}
+<aside class="lesson-nav">
+  <div class="lesson-nav-inner">
+    <a class="muted small" href="{{ url_for('student.catalog') }}">← All lessons</a>
+    <div class="timer card" id="timer">
+      <div class="timer-face"><span id="timer-clock">35:00</span><small id="timer-label">35-minute lesson</small></div>
+      <div class="timer-bar"><i id="timer-fill"></i></div>
+      <button type="button" class="btn small wide" id="timer-btn">Start class timer</button>
+    </div>
+    <ol class="agenda" id="agenda">
+      {% for item in lesson.agenda %}
+      <li data-key="{{ item.key }}" data-minutes="{{ item.minutes }}">
+        <a href="#{{ item.key }}"><span class="tick" aria-hidden="true"></span><span class="grow">{{ item.name }}</span><small>{{ item.minutes }}m</small></a>
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="progress-wrap"><span class="meter"><i id="lesson-meter"></i></span> <b id="lesson-pct">0%</b></div>
+    <div class="lesson-pager">
+      {% if prev %}<a href="{{ url_for('student.lesson', lesson_id=prev.id) }}">← {{ prev.title }}</a>{% endif %}
+      {% if nxt %}<a href="{{ url_for('student.lesson', lesson_id=nxt.id) }}">{{ nxt.title }} →</a>{% endif %}
+    </div>
+  </div>
+</aside>
+
+<article class="lesson">
+  <header class="lesson-head">
+    <div class="eyebrow">Lesson {{ lesson.number }} · Unit {{ lesson.unit }} · {{ lesson.level }} · ⏱ {{ lesson.duration_minutes }} min</div>
+    <h1>{{ lesson.title }}</h1>
+    {% if lesson.subtitle %}<p class="subtitle">{{ lesson.subtitle }}</p>{% endif %}
+    <div class="big-idea"><b>Big idea</b> {{ lesson.big_idea }}</div>
+  </header>
+
+  {% if state.feedback %}
+  <div class="card feedback-note"><b>💬 Feedback from your teacher</b><div>{{ state.feedback }}</div></div>
+  {% endif %}
+
+  {% if is_teacher %}
+  <details class="card teacher-key" open>
+    <summary>🍎 Teacher answer key &amp; notes (only teachers see this)</summary>
+    {% if lesson.teacher_notes %}<h3>Teacher notes</h3>{{ lesson.teacher_notes|md }}{% endif %}
+    <h3>Debug solution</h3>
+    <pre class="code-block">{{ lesson.debug.solution }}</pre>
+    <h3>Quiz answers</h3>
+    <ol>{% for q in lesson.quiz %}<li>{{ q.question }} — <b>{{ q.choices[q.answer] }}</b></li>{% endfor %}</ol>
+  </details>
+  {% endif %}
+
+  <section class="card overview" id="overview">
+    <div class="grid-2">
+      <div>
+        <h2>Today you will…</h2>
+        <ul class="checklist">{% for o in lesson.objectives %}<li>{{ o }}</li>{% endfor %}</ul>
+        <h3>You'll need</h3>
+        <ul class="materials">{% for m in lesson.materials %}<li>{{ m }}</li>{% endfor %}</ul>
+      </div>
+      <div>
+        <div class="video-box">
+          {% if video and video.kind == 'iframe' %}
+            <iframe src="{{ video.src }}" title="{{ lesson.video.title if lesson.video else lesson.title }}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+          {% elif video and video.kind == 'video' %}
+            <video src="{{ video.src }}" controls preload="metadata"></video>
+          {% elif video %}
+            <a class="video-link" href="{{ video.src }}" target="_blank" rel="noopener">▶ Watch the lesson video</a>
+          {% else %}
+            <div class="video-placeholder"><span>🎬</span><b>Video coming soon</b>{% if is_teacher %}<small>Add one on the <a href="{{ url_for('teacher.videos') }}">Videos</a> page.</small>{% endif %}</div>
+          {% endif %}
+        </div>
+        {% if lesson.video and lesson.video.note %}<p class="muted small">{{ lesson.video.note }}</p>{% endif %}
+        {% if lesson.vocabulary %}
+        <h3>Vocabulary</h3>
+        <dl class="vocab">{% for v in lesson.vocabulary %}<dt>{{ v.term }}</dt><dd>{{ v.definition }}</dd>{% endfor %}</dl>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="card step-section" id="warmup">
+    <h2><span class="sec-num">1</span> Warm-up</h2>
+    <p class="prompt">{{ lesson.warmup.prompt }}</p>
+    <textarea id="warmup-answer" rows="3" placeholder="Type your idea… there are no wrong answers.">{{ state.warmup_answer }}</textarea>
+    <div class="row"><span class="save-status muted small" id="warmup-status"></span></div>
+  </section>
+
+  <section class="card step-section" id="learn">
+    <h2><span class="sec-num">2</span> Learn</h2>
+    <div class="learn-cards">
+      {% for block in lesson.learn %}<div class="learn-card">{{ block|md }}</div>{% endfor %}
+    </div>
+    <button type="button" class="btn" id="learn-done">✓ Got it</button>
+  </section>
+
+  {% if lesson.circuit %}
+  <section class="card step-section" id="circuit">
+    <h2><span class="sec-num">3</span> Build the circuit</h2>
+    {% if lesson.circuit.intro %}<p>{{ lesson.circuit.intro }}</p>{% endif %}
+    {% if lesson.circuit.safety %}
+    <div class="safety"><b>⚠ Safety first</b><ul>{% for s in lesson.circuit.safety %}<li>{{ s }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    <div class="builder">
+      <div class="bb-wrap"><div id="breadboard" class="bb" aria-label="Breadboard diagram"></div>
+        <div class="bb-legend muted small">New parts glow. Hover a part to see its name. Holes a–e in a column are connected; so are f–j.</div>
+      </div>
+      <div class="step-panel">
+        <div class="step-count" id="step-count"></div>
+        <h3 id="step-title"></h3>
+        <div id="step-text"></div>
+        <div id="step-tip" class="tip-box" hidden></div>
+        <label class="check big-check"><input type="checkbox" id="step-check"> <span id="step-check-label"></span></label>
+        <div class="row">
+          <button type="button" class="btn ghost" id="step-prev">← Back</button>
+          <button type="button" class="btn" id="step-next">Next step →</button>
+        </div>
+        <ol class="step-dots" id="step-dots"></ol>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% set n = 4 if lesson.circuit else 3 %}
+  <section class="card step-section" id="code">
+    <h2><span class="sec-num">{{ n }}</span> Code it</h2>
+    {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
+    {{ editor("ed-code", state.code, "code", lesson.id, reset_code=lesson.code.starter) }}
+    {% if lesson.code.walkthrough %}
+    <h3>How it works</h3>
+    <ul class="walkthrough">{% for w in lesson.code.walkthrough %}<li><code class="lines">line {{ w.lines }}</code> {{ w.explain|md }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if lesson.code.try_it %}
+    <h3>Try it</h3>
+    <ol class="try-it">{% for t in lesson.code.try_it %}<li>{{ t|md }}</li>{% endfor %}</ol>
+    {% endif %}
+    <button type="button" class="btn" id="code-done">✓ I ran my code</button>
+  </section>
+
+  <section class="card step-section" id="debug">
+    <h2><span class="sec-num">{{ n + 1 }}</span> Debug it 🐞</h2>
+    {{ lesson.debug.story|md }}
+    {{ editor("ed-debug", state.debug_code, "debug", lesson.id ~ "-debug", reset_code=lesson.debug.buggy_code) }}
+    <div class="row">
+      <button type="button" class="btn" id="debug-check">🔍 Check my fix</button>
+      <button type="button" class="btn ghost" id="debug-hint">💡 Hint</button>
+    </div>
+    <ul class="hints" id="hints"></ul>
+    <div class="debug-result" id="debug-result" role="status" aria-live="polite"></div>
+    <div class="reflection" id="reflection" {% if not state.debug_solved %}hidden{% endif %}>
+      <label><b>{{ lesson.debug.reflection_prompt }}</b>
+      <textarea id="debug-reflection" rows="3">{{ state.debug_reflection }}</textarea></label>
+      <span class="save-status muted small" id="reflection-status"></span>
+    </div>
+  </section>
+
+  <section class="card step-section" id="quiz">
+    <h2><span class="sec-num">{{ n + 2 }}</span> Check for understanding</h2>
+    <form id="quiz-form">
+      {% for q in view.quiz %}{% set qi = loop.index0 %}
+      <fieldset class="q" data-q="{{ qi }}">
+        <legend>{{ loop.index }}. {{ q.question|md }}</legend>
+        {% for c in q.choices %}
+        <label class="choice"><input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}"> <span>{{ c|md }}</span></label>
+        {% endfor %}
+        <div class="explain" hidden></div>
+      </fieldset>
+      {% endfor %}
+      <div class="row"><button class="btn" type="submit">Submit answers</button><span id="quiz-score" class="score"></span></div>
+    </form>
+  </section>
+
+  <section class="card step-section challenge" id="challenge">
+    <h2><span class="sec-num">{{ n + 3 }}</span> Challenge: {{ lesson.challenge.title }} 🚀</h2>
+    {{ lesson.challenge.prompt|md }}
+    <div class="levels">
+      {% for lv in lesson.challenge.levels %}
+        {% set parts = lv.split(':', 1) %}
+        <div class="level level-{{ loop.index }}"><b>{{ parts[0] if parts|length > 1 else ['Mild','Medium','Spicy'][loop.index0 % 3] }}</b><span>{{ (parts[1] if parts|length > 1 else lv)|md }}</span></div>
+      {% endfor %}
+    </div>
+    {{ editor("ed-challenge", state.challenge_code, "challenge", lesson.id ~ "-challenge") }}
+    <label class="field"><span><b>{{ lesson.challenge.submit_prompt or "Describe what you made." }}</b></span>
+      <textarea id="challenge-response" rows="4">{{ state.challenge_response }}</textarea></label>
+    <div class="row"><button type="button" class="btn" id="challenge-submit">📤 Submit my challenge</button><span class="save-status muted small" id="challenge-status">{% if state.challenge_submitted %}Submitted ✓ (you can resubmit){% endif %}</span></div>
+  </section>
+
+  <div class="lesson-done card" id="lesson-done" hidden>
+    <h2>🎉 Lesson complete!</h2>
+    {% if nxt %}<a class="btn" href="{{ url_for('student.lesson', lesson_id=nxt.id) }}">Next: {{ nxt.title }} →</a>{% endif %}
+  </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.LESSON = {{ view|tojson }};
+  window.STATE = {{ state|tojson }};
+  window.SECTION_KEYS = {{ keys|tojson }};
+</script>
+<script src="{{ url_for('static', filename='vendor/codemirror/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/mode/python.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/matchbrackets.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/microbit/microbit-fs.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/microbit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/breadboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lesson.js') }}"></script>
+{% endblock %}

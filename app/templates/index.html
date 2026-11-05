@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block main_class %}{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <h1>Code it. Wire it. <span class="hl">Make it move.</span></h1>
+    <p>Learn Python on the BBC micro:bit while you build real circuits — from your first blinking LED
+       to sensors, motors and a radio-controlled robot. Every lesson fits in a 35-minute class.</p>
+    <div class="hero-actions">
+      <a class="btn big" href="{{ url_for('auth.register') }}">Join my class</a>
+      <a class="btn big ghost" href="{{ url_for('auth.login') }}">Log in</a>
+    </div>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="mb-face">{% for i in range(25) %}<i class="{{ 'on' if i in [1,3,5,6,7,8,9,10,11,12,13,14,16,17,18,22] }}"></i>{% endfor %}</div>
+  </div>
+</section>
+<section class="container">
+  <div class="how">
+    <div class="card"><b>⚡ Build</b><p>Step-by-step breadboard diagrams show exactly where every wire and part goes.</p></div>
+    <div class="card"><b>🐍 Code</b><p>Write Python in the browser and send it straight to your micro:bit over USB.</p></div>
+    <div class="card"><b>🐞 Debug</b><p>Every lesson has broken code to fix — the most important skill a coder has.</p></div>
+    <div class="card"><b>🚀 Invent</b><p>Open-ended challenges with mild, medium and spicy levels.</p></div>
+  </div>
+  <h2>The course</h2>
+  <div class="units">
+    {% for u in units %}
+    <div class="unit card">
+      <div class="unit-num">Unit {{ u.number }}</div>
+      <h3>{{ u.title }}</h3>
+      <p class="muted">{{ u.blurb }}</p>
+      <ol start="{{ u.lessons[0].number }}">{% for l in u.lessons %}<li>{{ l.title }}</li>{% endfor %}</ol>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="muted center">Teachers: <a href="{{ url_for('auth.register_teacher') }}">create a teacher account</a> to make classes, assign lessons and track progress.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,431 @@
+id: line-follower
+unit: 4
+order: 15
+title: Line-Following Robot
+subtitle: Give your robot eyes on the floor and let it steer itself
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  A robot can steer itself by reading sensors over and over and using
+  if/elif/else to choose a move - and remembering where it last saw the line
+  helps it find its way back.
+objectives:
+  - Wire two IR line sensor modules to P1 and P2, powered from the micro:bit's 3V
+  - Read the sensors with read_digital() and test what "on the line" looks like
+  - Use if/elif/else to choose straight, left, right or search
+  - Use a state variable (last_seen) to remember which way the line went
+vocabulary:
+  - term: IR reflectance sensor
+    definition: A sensor that shines invisible infrared light down and measures how much bounces back. White floor reflects a lot; black tape reflects very little.
+  - term: Digital sensor output
+    definition: The module's OUT pin gives just 0 or 1 - "I see the line" or "I don't".
+  - term: Feedback loop
+    definition: Sense, decide, act - then sense again. The robot corrects itself many times every second.
+  - term: State
+    definition: Something the program remembers between loops, like which side the line was on last time.
+  - term: Threshold
+    definition: The brightness level where the sensor switches between 0 and 1. The little knob on the module adjusts it.
+materials:
+  - Your robot from lesson 14 (chassis, 2 TT motors, DRV8833 driver, 4×AA pack, breadboard, micro:bit + 2×AAA holder)
+  - 2 IR line sensor modules (TCRT5000 style, pins VCC, GND, OUT)
+  - 6 extra jumper wires (female-male for the sensor pins)
+  - Black electrical tape (about 19 mm wide) on white paper or a light floor for the track
+  - Small screwdriver for the sensor's adjustment knob
+  - Tape or zip ties to mount the sensors at the front, 5-10 mm above the floor
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 4}
+  - {key: circuit, name: Build the circuit, minutes: 9}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: How line-following robots work
+  note: Watch the robot's path closely. It doesn't drive perfectly straight - it wiggles, correcting itself over and over.
+warmup:
+  prompt: >-
+    Imagine walking along a line on the floor with your eyes closed, but you
+    can feel the tape with your two feet. What rules would you follow? What
+    would you do if you lost the line?
+learn:
+  - |
+    ### Eyes on the floor
+    An **IR line sensor** has two parts: an **infrared LED** that shines down,
+    and a **sensor** that measures what bounces back.
+
+    * **White** floor → lots of light bounces back.
+    * **Black** tape → the light is soaked up.
+
+    A chip on the module turns that into a **digital** signal on **OUT**. On
+    most modules, OUT is **1 over black** and **0 over white** - but some are
+    the other way! We'll **test yours** before trusting it.
+  - |
+    ### Two sensors, four situations
+    Mount the two sensors close together at the front, so both sit **over the
+    tape** when the robot is centered.
+
+    | left | right | what it means | move |
+    |---|---|---|---|
+    | line | line | centered | **straight** |
+    | line | – | line is drifting left | **turn left** |
+    | – | line | line is drifting right | **turn right** |
+    | – | – | **lost it!** | search |
+
+    That's a perfect job for **if / elif / elif / else**.
+  - |
+    ### Remembering: state
+    When both sensors lose the line, which way should the robot search? It
+    needs a **memory**. A variable called `last_seen` stores `'left'` or
+    `'right'` every time only one sensor sees the line. When it's lost, the
+    robot **spins toward the side it saw last**.
+
+    A value that the program keeps between loops is called **state**.
+  - |
+    ### Sense → decide → act → repeat
+    The loop runs about **100 times a second**. Each time it **reads** the
+    sensors, **decides** with if/elif/else, and **drives**. Lots of tiny
+    corrections make a smooth path. Slower speeds give the code more time to
+    react - start slow, then speed up.
+circuit:
+  intro: >-
+    Start with your lesson 14 robot wiring (steps 1-2 recap it), then add two
+    line sensors. The sensors are small, so they get power from the micro:bit's
+    3V pin - not from the battery pack. Build with USB unplugged and both
+    battery packs off.
+  safety:
+    - Build with the micro:bit unplugged and both battery packs off.
+    - The red rail carries the micro:bit's 3V for the sensors. Battery pack + goes ONLY to the driver's VM - never to the red rail or 3V.
+    - Double-check VCC and GND on each sensor before powering up. Swapping them can damage the module.
+  steps:
+    - title: Ground rail
+      instruction: >-
+        With the micro:bit in the breakout (logo up), run a **black** wire from
+        the breakout's **GND** to the top **blue (–) rail** at **T-1**.
+      check: Is the black wire in the blue rail?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Driver wiring from lesson 14
+      instruction: >-
+        This is your lesson 14 wiring - check each one is still there:
+        driver **GND** → **T-5**; battery **–** → **T-3**; battery **+** →
+        driver **VM**; **P13 → AIN1**, **P14 → AIN2** (left motor);
+        **P15 → BIN1**, **P16 → BIN2** (right motor); left motor on
+        **AOUT1/AOUT2**; right motor on **BOUT1/BOUT2**.
+      check: Does the lesson 14 square program still drive both wheels forward? (Test with wheels in the air.)
+      add:
+        - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, BIN1, BIN2, AOUT1, AOUT2, BOUT1, BOUT2]}
+        - {type: battery, id: bat1, label: "4×AA 6V"}
+        - {type: dcmotor, id: motor_l}
+        - {type: dcmotor, id: motor_r}
+        - {type: wire, from: drv1.GND, to: T-5, color: black}
+        - {type: wire, from: bat1.minus, to: T-3, color: black}
+        - {type: wire, from: bat1.plus, to: drv1.VM, color: red}
+        - {type: wire, from: mb.P13, to: drv1.AIN1, color: yellow}
+        - {type: wire, from: mb.P14, to: drv1.AIN2, color: green}
+        - {type: wire, from: mb.P15, to: drv1.BIN1, color: blue}
+        - {type: wire, from: mb.P16, to: drv1.BIN2, color: purple}
+        - {type: wire, from: drv1.AOUT1, to: motor_l.a, color: orange}
+        - {type: wire, from: drv1.AOUT2, to: motor_l.b, color: white}
+        - {type: wire, from: drv1.BOUT1, to: motor_r.a, color: orange}
+        - {type: wire, from: drv1.BOUT2, to: motor_r.b, color: white}
+    - title: 3V rail for the sensors
+      instruction: >-
+        Run a **red** wire from the breakout's **3V** pin to the top **red (+)
+        rail** at **T+1**. This rail is for the sensors only.
+      check: Is the 3V wire in the red rail - and is nothing from the battery pack in that rail?
+      add:
+        - {type: wire, from: mb.3V, to: T+1, color: red}
+    - title: Left line sensor
+      instruction: >-
+        For the **left** sensor: a **red** wire from its **VCC** to **T+5**,
+        a **black** wire from its **GND** to **T-7**, and a **yellow** wire
+        from its **OUT** to the breakout's **P1**.
+      check: VCC on red rail, GND on blue rail, OUT on P1?
+      add:
+        - {type: module, id: sensor_l, label: "IR line sensor (left)", terminals: [VCC, GND, OUT]}
+        - {type: wire, from: sensor_l.VCC, to: T+5, color: red}
+        - {type: wire, from: sensor_l.GND, to: T-7, color: black}
+        - {type: wire, from: sensor_l.OUT, to: mb.P1, color: yellow}
+    - title: Right line sensor
+      instruction: >-
+        For the **right** sensor: a **red** wire from **VCC** to **T+9**, a
+        **black** wire from **GND** to **T-11**, and a **green** wire from
+        **OUT** to **P2**.
+      check: VCC on red rail, GND on blue rail, OUT on P2?
+      add:
+        - {type: module, id: sensor_r, label: "IR line sensor (right)", terminals: [VCC, GND, OUT]}
+        - {type: wire, from: sensor_r.VCC, to: T+9, color: red}
+        - {type: wire, from: sensor_r.GND, to: T-11, color: black}
+        - {type: wire, from: sensor_r.OUT, to: mb.P2, color: green}
+    - title: Mount and test the sensors
+      instruction: >-
+        Tape the sensors to the front of the chassis, pointing **down**, about
+        **5-10 mm** above the floor and about **1 cm apart** - close enough
+        that both fit over the black tape. Plug in USB and run
+        `display.scroll(pin1.read_digital())` in a loop. Slide white paper and
+        black tape under the left sensor and watch the number (and the
+        module's little LED) change. Repeat for P2.
+      check: Does each sensor give one value over black and a different value over white?
+      tip: If a sensor never changes, turn the tiny knob on the module slowly with a screwdriver until its LED switches as you cross the tape.
+  verify:
+    connected:
+      - [mb.GND, drv1.GND, bat1.minus, sensor_l.GND, sensor_r.GND]
+      - [mb.3V, sensor_l.VCC, sensor_r.VCC]
+      - [bat1.plus, drv1.VM]
+      - [sensor_l.OUT, mb.P1]
+      - [sensor_r.OUT, mb.P2]
+      - [mb.P13, drv1.AIN1]
+      - [mb.P14, drv1.AIN2]
+      - [mb.P15, drv1.BIN1]
+      - [mb.P16, drv1.BIN2]
+      - [drv1.AOUT1, motor_l.a]
+      - [drv1.AOUT2, motor_l.b]
+      - [drv1.BOUT1, motor_r.a]
+      - [drv1.BOUT2, motor_r.b]
+    not_connected:
+      - [bat1.plus, mb.3V]
+      - [bat1.plus, sensor_l.VCC]
+      - [bat1.plus, mb.GND]
+      - [sensor_l.OUT, sensor_r.OUT]
+      - [sensor_l.VCC, sensor_l.GND]
+code:
+  intro: >-
+    The drive functions are the same as lesson 14. The new part is the loop:
+    read both sensors, pick one of four moves, remember which side the line
+    was on. Set the robot on the line, press A to go, press B to stop.
+  starter: |
+    from microbit import *
+
+    LINE = 1        # what read_digital() gives over black - change to 0 if yours is opposite
+    SPEED = 450     # start slow!
+    SEARCH = 380
+
+    def set_motor(pin_a, pin_b, speed):
+        speed = max(-1023, min(1023, speed))
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    last_seen = 'left'
+    drive(0, 0)
+    display.show(Image.ARROW_W)        # press A to start
+    while not button_a.was_pressed():
+        sleep(20)
+
+    while True:
+        left = pin1.read_digital()
+        right = pin2.read_digital()
+
+        if left == LINE and right == LINE:
+            drive(SPEED, SPEED)            # centered - go straight
+            display.show(Image.ARROW_N)
+        elif left == LINE:
+            drive(0, SPEED)                # line drifting left - turn left
+            last_seen = 'left'
+            display.show(Image.ARROW_W)
+        elif right == LINE:
+            drive(SPEED, 0)                # line drifting right - turn right
+            last_seen = 'right'
+            display.show(Image.ARROW_E)
+        else:
+            display.show('?')              # lost - search toward last_seen
+            if last_seen == 'left':
+                drive(-SEARCH, SEARCH)
+            else:
+                drive(SEARCH, -SEARCH)
+
+        if button_b.was_pressed():         # emergency stop
+            drive(0, 0)
+            display.show(Image.NO)
+            break
+        sleep(10)
+  walkthrough:
+    - lines: "3-5"
+      explain: "**LINE** says what the sensor reads over black. If your test showed 0 over black, just change this one number. SPEED starts slow so the code has time to react."
+    - lines: "7-21"
+      explain: The same set_motor() and drive() from lesson 14.
+    - lines: "23"
+      explain: "**last_seen** is the robot's memory (its **state**). It starts as 'left', but the loop will update it."
+    - lines: "30-31"
+      explain: "**Sense.** Read both sensors. Each gives 0 or 1."
+    - lines: "33-49"
+      explain: "**Decide and act.** The order matters: we check \"both see the line\" first, because if we checked `left == LINE` first, it would also be true when both see it."
+    - lines: "38, 42"
+      explain: Every time only one sensor sees the line, we **update the state** so we know which way it went.
+    - lines: "44-49"
+      explain: Lost! Spin on the spot toward the side we saw last. As soon as a sensor finds the tape again, the loop goes back to following.
+    - lines: "51-54"
+      explain: Button B is the emergency stop. break leaves the loop.
+  try_it:
+    - Make a gentle oval track first. Then add a sharp corner. Where does your robot lose the line?
+    - Raise SPEED by 50 at a time. What's the fastest speed that still finishes a lap?
+    - Instead of drive(0, SPEED) for a turn, try drive(SPEED // 3, SPEED). Smoother or worse?
+    - Play a sound with music.pitch(880, 50) whenever the robot is lost.
+debug:
+  story: >-
+    Sam's robot never drives straight and never turns right - it just keeps
+    curving left. And when it loses the line it always spins left, even when
+    the line went right. There are **two** kinds of bugs. Fix them and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    LINE = 1
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    last_seen = 'left'
+
+    while True:
+        left = pin1.read_digital()
+        right = pin2.read_digital
+
+        if left == LINE and right == LINE:
+            drive(450, 450)
+        elif left == LINE:
+            drive(0, 450)
+            last_seen == 'left'
+        elif right == LINE:
+            drive(450, 0)
+            last_seen == 'right'
+        else:
+            if last_seen == 'left':
+                drive(-380, 380)
+            else:
+                drive(380, -380)
+        sleep(10)
+  hints:
+    - Look at how the two sensors are read. Is one line missing something that the other has?
+    - "`==` asks a question (\"is it equal?\"). `=` stores a value. Which one changes last_seen?"
+    - If last_seen never changes, which way does the robot always search?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "pin2\\.read_digital\\(\\s*\\)", message: "pin2.read_digital needs () to actually read the sensor. Without them, right is the function itself, never 0 or 1."}
+    - {type: not_contains, pattern: "^\\s*last_seen\\s*==", message: "A line that starts with last_seen == only asks a question - it doesn't store anything. Use = to update the state."}
+    - {type: contains, pattern: "last_seen\\s*=\\s*['\"]right['\"]", message: "Update last_seen to 'right' when only the right sensor sees the line."}
+    - {type: contains, pattern: "last_seen\\s*=\\s*['\"]left['\"]\\s*\\n(?:.*\\n)*?.*last_seen\\s*=\\s*['\"]right['\"]|last_seen\\s*=\\s*['\"]right['\"]\\s*\\n(?:.*\\n)*?.*last_seen\\s*=\\s*['\"]left['\"]", message: "Update last_seen in both the left and right branches, not just at the start."}
+  solution: |
+    from microbit import *
+
+    LINE = 1
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    last_seen = 'left'
+
+    while True:
+        left = pin1.read_digital()
+        right = pin2.read_digital()
+
+        if left == LINE and right == LINE:
+            drive(450, 450)
+        elif left == LINE:
+            drive(0, 450)
+            last_seen = 'left'
+        elif right == LINE:
+            drive(450, 0)
+            last_seen = 'right'
+        else:
+            if last_seen == 'left':
+                drive(-380, 380)
+            else:
+                drive(380, -380)
+        sleep(10)
+  reflection_prompt: Neither bug made an error message. How did you figure out what was wrong just from how the robot behaved?
+quiz:
+  - question: Why do we check "both sensors see the line" BEFORE checking "left sees the line"?
+    choices:
+      - Python always checks the right sensor first
+      - If left == LINE came first, it would also catch the case where both see the line, so the robot would never go straight
+      - It makes the code run faster
+      - It doesn't matter what order they're in
+    answer: 1
+    explain: if/elif stops at the first true condition. "left == LINE" is also true when both see it, so the most specific check must come first.
+  - question: Only the right sensor sees the black line. Which way should the robot turn?
+    choices:
+      - Left
+      - Right
+      - Backward
+      - It should stop
+    answer: 1
+    explain: The line has drifted to the right side of the robot, so it turns right to get centered again.
+  - question: What is last_seen used for?
+    choices:
+      - Counting how many laps the robot did
+      - Remembering which side the line was on, so the robot knows which way to search when it's lost
+      - Storing the battery level
+      - Making the sensors brighter
+    answer: 1
+    explain: last_seen is the robot's state - a memory that lasts between loops.
+  - question: Where do the line sensors get their power?
+    choices:
+      - The 4×AA battery pack's + wire
+      - The driver's AOUT1
+      - The micro:bit's 3V pin, through the red rail
+      - They don't need power
+    answer: 2
+    explain: The sensors use very little current, so the micro:bit's 3V is perfect. Battery + only ever goes to the driver's VM.
+  - question: Your robot keeps overshooting corners and losing the line. What's the best first thing to try?
+    choices:
+      - Lower SPEED
+      - Remove the sleep(10)
+      - Unplug one sensor
+      - Swap the battery pack's wires
+    answer: 0
+    explain: Slower driving gives the loop more chances to react before the robot runs off the line.
+challenge:
+  title: Track Masters
+  prompt: >-
+    Design a track with black tape and tune your robot to conquer it. Give
+    your track a name and at least one tricky feature. Then challenge another
+    team's robot to try it!
+  levels:
+    - "Mild: Tune SPEED and SEARCH until your robot finishes a full lap of an oval without help."
+    - "Medium: Add an S-bend and a sharp corner. Make the robot play a sound and show a sad face when it's lost, and a happy face when it finds the line again."
+    - "Spicy: Time trial! Use running_time() to time a lap (press A at the start, B at the finish) and scroll the lap time - fastest robot wins. Extra spicy: add a 5 cm gap in the tape and make the robot drive straight for a moment before it starts searching, so it can jump the gap."
+  submit_prompt: What was the trickiest part of your track, and what did you change in the code to get through it?
+teacher_notes: |
+  * **Test the sensors before driving.** Many modules give 1 over black, some give 0. The LINE constant handles either - students just change one number.
+  * **Sensor never changes:** check VCC/GND aren't swapped, then adjust the module's knob slowly. Height matters a lot: 5-10 mm is the sweet spot. Glossy tape or bright sunlight can confuse IR sensors.
+  * **Robot turns away from the line:** either the sensors are swapped (left sensor wired to P2) or the turn speeds are swapped. Check with the display arrows while sliding tape under each sensor by hand.
+  * **A wheel spins backward:** swap that motor's wires on the driver, same fix as lesson 14.
+  * **Gets slower and wobblier during class:** low batteries. Fresh AAs make a big difference to how well the speed numbers carry over between runs.
+  * The sensors run from the micro:bit's 3V. Make sure no one moves the battery + wire to the red rail - the verify step on the circuit page checks that it isn't.
+  * The "jump the gap" Spicy idea needs a second piece of state: the time the robot first got lost (lost_since = running_time()). Drive straight while running_time() - lost_since is small, then search.
+  * Extension: use pin1.read_analog() on an analog-output sensor (if your modules have an AO pin) for smoother proportional steering.

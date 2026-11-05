@@ -1,0 +1,287 @@
+id: potentiometer
+unit: 2
+order: 8
+title: Knobs and Potentiometers
+subtitle: Read a knob, scale the numbers, and draw a bar graph
+duration_minutes: 35
+level: Beginner
+big_idea: >-
+  Scaling turns one range of numbers into another, so a knob reading of
+  0-1023 can become 0-5 bars on the display or any brightness you like.
+objectives:
+  - Wire a potentiometer as a voltage divider and read it with pin2.read_analog()
+  - Scale (map) a 0-1023 reading to a smaller range using integer division //
+  - Draw a bar graph on the 5×5 display with nested for loops and display.set_pixel()
+  - Control an LED's brightness on pin 0 by turning the knob
+vocabulary:
+  - term: Potentiometer
+    definition: A knob with three legs. Turning it slides the middle leg (the wiper) between the two outer legs.
+  - term: Wiper
+    definition: The middle leg of a potentiometer. Its voltage changes as you turn the knob.
+  - term: Scaling (mapping)
+    definition: Changing a number from one range to another, like 0-1023 into 0-5.
+  - term: Integer division //
+    definition: Division that throws away the remainder and gives a whole number. 7 // 2 is 3.
+  - term: Pixel
+    definition: One of the 25 LEDs on the display. set_pixel(x, y, brightness) sets one, with brightness 0-9.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - 1 LED (any color)
+  - 1 resistor, 220 Ω (red-red-brown)
+  - 1 potentiometer, 10 kΩ (breadboard-friendly knob)
+  - 7 jumper wires
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Build the circuit, minutes: 7}
+  - {key: code, name: Code it, minutes: 8}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: How a potentiometer works
+  note: Look inside the knob to see the wiper sliding along the track.
+warmup:
+  prompt: >-
+    Name some knobs and sliders you've used - on a speaker, a stove, a game
+    controller, anything. What does turning each one change, and from what to
+    what?
+learn:
+  - |
+    ### What's inside a knob?
+    A **potentiometer** ("pot") has a strip of resistance inside with a
+    leg at each end, and a **wiper** (the middle leg) that slides along it when
+    you turn the knob. Connect one end to **3V** and the other to **GND**.
+    The wiper's voltage goes smoothly from 0 to 3 volts as you turn.
+    `pin2.read_analog()` turns that into **0 to 1023**.
+  - |
+    ### It's a voltage divider you can turn
+    Last lesson, light changed the resistances. Now **your hand** does. Same
+    idea: two resistances sharing 3 volts, with the pin reading the middle.
+  - |
+    ### Scaling numbers
+    The knob gives **0-1023**, but the display only has **5** rows, and a
+    pixel's brightness only goes **0-9**. To shrink a range, multiply by the new size and **integer-divide** by the old size:
+    ```python
+    bars = value * 6 // 1024     # 0, 1, 2, 3, 4 or 5
+    ```
+    `//` divides and **drops the remainder**: `7 // 2` is `3`. One `/` gives a
+    decimal like `3.5` - and you can't light 3.5 rows!
+  - |
+    ### The display's grid
+    `display.set_pixel(x, y, brightness)` lights one LED. **x** goes 0-4 left
+    to right, **y** goes 0-4 **top to bottom**, and brightness goes 0-9.
+    So the bottom row is **y = 4**.
+circuit:
+  intro: >-
+    Keep the LED on pin 0 and add a knob on pin 2. You'll use both rails: red
+    (+) for 3V and blue (–) for GND. Unplug the USB cable while you build.
+  safety:
+    - Always build with the micro:bit unplugged.
+    - The wiper (middle leg) goes to P2 - never wire the middle leg to 3V or GND.
+    - Never connect the red (+) rail straight to the blue (–) rail.
+  steps:
+    - title: Power rails
+      instruction: >-
+        Push the micro:bit into the breakout board (logo facing up). Run a
+        **black** wire from **GND** to the top **blue (–) rail** at **T-1**.
+        Run a **red** wire from **3V** to the top **red (+) rail** at **T+1**.
+      check: Is red in the + rail and black in the – rail?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: wire, from: mb.3V, to: T+1, color: red}
+    - title: Resistor and LED
+      instruction: >-
+        Put the 220 Ω resistor from **c10** to **c14**. Put the LED's **long leg
+        (+)** in **e14** and its **short leg (–)** in **e15**.
+      check: Is the LED's long leg in column 14, next to the resistor?
+      add:
+        - {type: resistor, id: r1, a: c10, b: c14, ohms: 220}
+        - {type: led, id: led1, anode: e14, cathode: e15, color: green}
+    - title: LED wires
+      instruction: >-
+        Add a **yellow** wire from **P0** to **a10**. Add a **black** wire from
+        **a15** to the **blue (–) rail** at **T-15**.
+      check: Can you trace P0 → resistor → LED → ground?
+      add:
+        - {type: wire, from: mb.P0, to: a10, color: yellow}
+        - {type: wire, from: a15, to: T-15, color: black}
+    - title: Potentiometer
+      instruction: >-
+        With the knob facing you, push the potentiometer's three legs into
+        **e24** (left), **e25** (middle, the wiper) and **e26** (right).
+      check: Is each of the three legs in its own column - 24, 25 and 26?
+      tip: >-
+        If your pot's legs are spread wider, use every other column (e24, e26,
+        e28) and move the wires in the next step to match.
+      add:
+        - {type: potentiometer, id: pot1, left: e24, wiper: e25, right: e26}
+    - title: Potentiometer wires
+      instruction: >-
+        Add a **red** wire from the **red (+) rail** at **T+24** to **a24**
+        (left leg). Add a **green** wire from **P2** to **a25** (the wiper).
+        Add a **black** wire from **a26** (right leg) to the **blue (–) rail**
+        at **T-26**.
+      check: "Outer legs go to 3V and GND, and the middle leg goes to P2?"
+      add:
+        - {type: wire, from: T+24, to: a24, color: red}
+        - {type: wire, from: mb.P2, to: a25, color: green}
+        - {type: wire, from: a26, to: T-26, color: black}
+  verify:
+    connected:
+      - [mb.P0, r1.a]
+      - [r1.b, led1.anode]
+      - [led1.cathode, mb.GND]
+      - [mb.3V, pot1.left]
+      - [mb.P2, pot1.wiper]
+      - [mb.GND, pot1.right]
+    not_connected:
+      - [led1.anode, led1.cathode]
+      - [pot1.wiper, mb.3V]
+      - [pot1.wiper, mb.GND]
+      - [pot1.left, pot1.right]
+code:
+  intro: >-
+    Turn the knob: the LED dims and brightens, and a bar graph rises and falls
+    on the display.
+  starter: |
+    from microbit import *
+
+    while True:
+        value = pin2.read_analog()      # 0 to 1023
+        pin0.write_analog(value)        # knob = LED brightness
+
+        bars = value * 6 // 1024        # scale 0-1023 down to 0-5
+
+        for row in range(5):            # row 0 is the bottom
+            if row < bars:
+                brightness = 9
+            else:
+                brightness = 0
+            for x in range(5):
+                display.set_pixel(x, 4 - row, brightness)
+
+        sleep(50)
+  walkthrough:
+    - lines: "4"
+      explain: Reads the wiper on pin 2. All the way one way is about 0; all the way the other way is about 1023.
+    - lines: "5"
+      explain: write_analog also uses 0-1023, so the knob reading can go straight in - no scaling needed!
+    - lines: "7"
+      explain: >-
+        **Scaling.** There are 6 possible bar heights (0 to 5), so multiply by
+        6 and integer-divide by 1024 (the number of possible readings). The
+        answer is always a whole number from 0 to 5.
+    - lines: "9-13"
+      explain: >-
+        For each of the 5 rows, decide: is this row part of the bar? Row 0 is
+        the bottom, so if `row < bars` it lights up (9), otherwise it's dark (0).
+    - lines: "14-15"
+      explain: >-
+        A loop **inside** a loop lights every LED across the row. `4 - row`
+        flips the numbers so row 0 is drawn at y = 4, the bottom of the
+        display.
+  try_it:
+    - Turn the knob all the way each way. Which direction makes the bar go up? Swap the red and black wires on the pot and see what changes.
+    - Show the knob as a single digit with display.show(value * 10 // 1024) instead of the bar graph.
+    - Make the bars dimmer - use brightness = 3 instead of 9.
+    - Make the LED do the opposite of the bar (hint - 1023 - value).
+debug:
+  story: >-
+    Riley wants a row of lights in the middle of the display that grows as
+    the knob turns. Instead the micro:bit scrolls an error about a **float**,
+    and turning the knob does nothing. There are **two** bugs. Find them, fix
+    them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    while True:
+        value = pin1.read_analog()
+        bars = value * 6 / 1024
+        display.clear()
+        for x in range(bars):
+            display.set_pixel(x, 2, 9)
+        sleep(50)
+  hints:
+    - Check the circuit. Which pin is the knob's middle leg wired to?
+    - range() needs a whole number. Which kind of division always gives a whole number?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "pin2\\.read_analog\\(\\s*\\)", message: "The knob's wiper is wired to P2 - read it with pin2.read_analog()."}
+    - {type: not_contains, pattern: "pin1\\.", message: "Nothing is plugged into pin 1 in this circuit."}
+    - {type: contains, pattern: "//|int\\(", message: "range() can't use a decimal number. Use integer division // to get a whole number."}
+  solution: |
+    from microbit import *
+
+    while True:
+        value = pin2.read_analog()
+        bars = value * 6 // 1024
+        display.clear()
+        for x in range(bars):
+            display.set_pixel(x, 2, 9)
+        sleep(50)
+  reflection_prompt: What's the difference between / and // in Python, and why did it matter here?
+quiz:
+  - question: What is 17 // 5 in Python?
+    choices:
+      - "3.4"
+      - "3"
+      - "4"
+      - "2"
+    answer: 1
+    explain: Integer division drops the remainder. 5 goes into 17 three whole times.
+  - question: The knob reads 512. What is 512 * 6 // 1024?
+    choices:
+      - "3"
+      - "2"
+      - "6"
+      - "512"
+    answer: 0
+    explain: 512 × 6 = 3072, and 3072 // 1024 = 3. Halfway on the knob = 3 bars.
+  - question: Which leg of the potentiometer goes to the micro:bit pin?
+    choices:
+      - The left leg
+      - The middle leg (wiper)
+      - The right leg
+      - Any leg
+    answer: 1
+    explain: The outer legs go to 3V and GND. The wiper in the middle is the one whose voltage changes.
+  - question: Which pixel is in the bottom-left corner of the display?
+    choices:
+      - set_pixel(0, 0, 9)
+      - set_pixel(4, 4, 9)
+      - set_pixel(0, 4, 9)
+      - set_pixel(4, 0, 9)
+    answer: 2
+    explain: x = 0 is the left column and y = 4 is the bottom row (y counts down from the top).
+  - question: Why can the knob reading go straight into pin0.write_analog(value) without scaling?
+    choices:
+      - Both use the same range, 0 to 1023
+      - write_analog scales numbers itself
+      - The LED ignores big numbers
+    answer: 0
+    explain: read_analog gives 0-1023 and write_analog takes 0-1023, so they already match.
+challenge:
+  title: Knob-Controlled Gadget
+  prompt: >-
+    Use the knob to control something fun. Invent a volume meter, a game
+    controller, a mood dial, or a timer - anything where turning the knob
+    changes what happens.
+  levels:
+    - "Mild: Make the knob pick a picture - scale it to 0-3 and show a different Image for each number."
+    - "Medium: Make the knob control the blink speed of the LED (scale 0-1023 to a sleep time between 50 and 1000 ms)."
+    - "Spicy: Build a paddle game - the knob moves a single dot left and right along the bottom row to catch a falling pixel. Keep score!"
+  submit_prompt: What does your knob control, and what scaling math did you use to turn 0-1023 into the numbers you needed?
+teacher_notes: |
+  * **Reading stuck at 0 or 1023:** the wiper wire is on an outer leg, or one outer leg isn't connected
+    (check T+24 → a24 and a26 → T-26).
+  * **Reading jumps around randomly:** the P2 wire isn't in the wiper's column (25), so P2 is floating.
+  * **Pot feels loose / readings flicker:** many pots don't sit snugly in a breadboard. Press it in firmly or
+    use a pot with breadboard pins. Some have legs 0.2" apart - use e24, e26, e28 and shift the wires.
+  * **"can't convert float to int":** a single `/` was used before `range()`. Use `//`.
+  * The bar may never quite reach 5 if the pot tops out around 1015 - that's normal. `value * 6 // 1024` still
+    reaches 5 for any reading of 854 or more.
+  * Nested loops are new for many students - trace the bar code on the board for bars = 2 before running it.
+  * Extension: write a reusable function `def scale(value, new_max): return value * (new_max + 1) // 1024`.

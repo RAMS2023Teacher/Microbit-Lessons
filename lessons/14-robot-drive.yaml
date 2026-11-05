@@ -1,0 +1,369 @@
+id: robot-drive
+unit: 4
+order: 14
+title: Drive Your Robot
+subtitle: Two motors, one driver - go straight, turn, and drive a square
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  A two-wheel robot steers by giving its wheels different speeds, so one
+  drive(left, right) function can make it go straight, curve, or spin.
+objectives:
+  - Wire two TT gear motors to the A and B sides of a DRV8833 driver
+  - Write a drive(left, right) function that takes negative speeds for reverse
+  - Turn the robot by giving the two wheels different speeds (differential drive)
+  - Calibrate timing so the robot drives a square
+vocabulary:
+  - term: Chassis
+    definition: The robot's body - the frame that holds the motors, wheels, batteries and micro:bit.
+  - term: Differential drive
+    definition: Steering by running the left and right wheels at different speeds. No steering wheel needed!
+  - term: Pivot / spin turn
+    definition: Turning on the spot by running one wheel forward and the other backward.
+  - term: Calibrate
+    definition: Testing and adjusting numbers (like how long to turn) until the robot does what you want in real life.
+  - term: Parameter
+    definition: A value you pass into a function, like the left and right in drive(left, right).
+materials:
+  - micro:bit V2 + USB cable
+  - Battery holder for the micro:bit (2×AAA) so the robot can drive untethered
+  - Edge-connector breakout board
+  - Half-size breadboard (mounted on the chassis)
+  - Robot chassis with 2 TT gear motors, 2 wheels and a caster
+  - DRV8833 dual motor driver module
+  - Battery pack, 4×AA (6 V), with an on/off switch
+  - About 12 jumper wires (male-female for the driver pins)
+  - Masking tape for marking a start line and square corners on the floor
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 4}
+  - {key: circuit, name: Build the circuit, minutes: 9}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: How tank-steering robots turn
+  note: Watch the wheels during each turn. Which wheel is faster? When does one go backward?
+warmup:
+  prompt: >-
+    A shopping cart, a tank and a wheelchair have no steering wheel that turns
+    the wheels sideways. How do you think they turn? Draw arrows for what each
+    wheel does in a left turn.
+learn:
+  - |
+    ### Two wheels, one driver
+    The DRV8833 has **two** H-bridges. Last lesson we used side **A**. Now:
+
+    * **A side** (AIN1 = **P13**, AIN2 = **P14**) → **left** motor
+    * **B side** (BIN1 = **P15**, BIN2 = **P16**) → **right** motor
+
+    Both motors get power from the **same battery pack** through VM, and all
+    grounds are still **shared**.
+  - |
+    ### Steering with speed
+    Our robot has no steering wheel. It turns by **differential drive**:
+
+    | left | right | robot does |
+    |---|---|---|
+    | 700 | 700 | straight ahead |
+    | 700 | 300 | gentle curve **right** |
+    | 600 | -600 | **spin** right on the spot |
+    | -700 | -700 | straight backward |
+
+    The robot always curves toward the **slower** wheel.
+  - |
+    ### One function to rule them all
+    Instead of separate forward/left/right functions, we write **drive(left, right)**.
+    Each speed goes from **-1023** (full backward) to **1023** (full forward).
+    A **negative** number means "backward". Inside, a helper function checks the
+    sign and sets the two pins of that motor.
+  - |
+    ### Real robots need calibrating
+    Code says "turn for 400 ms", but how far is that? It depends on battery
+    level, the floor and your motors. Engineers **test, measure and adjust**.
+    Keep your timing in **variables** at the top so you only change it once.
+circuit:
+  intro: >-
+    It's the lesson 13 circuit plus a second motor on the driver's B side.
+    Mount the breadboard, breakout and driver on the chassis first. Build with
+    the USB unplugged and the 4×AA pack switched OFF.
+  safety:
+    - Build with the micro:bit unplugged and both battery packs off.
+    - Battery pack red (+) goes ONLY to the driver's VM. Never to the micro:bit's 3V.
+    - Test with the robot's wheels in the air (on a cup or a box) so it can't drive off the table.
+  steps:
+    - title: Ground rail
+      instruction: >-
+        Push the micro:bit into the breakout (logo up). Run a **black** wire
+        from the breakout's **GND** to the top **blue (–) rail** at **T-1**.
+      check: Is the black wire in the blue rail?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Driver, battery and shared ground
+      instruction: >-
+        Place the DRV8833 module on the chassis. Run a **black** wire from the
+        driver's **GND** to **T-5**, and the 4×AA pack's **black (–)** wire to
+        **T-3**. Then connect the pack's **red (+)** wire to the driver's **VM**.
+      check: Do micro:bit GND, driver GND and battery – all meet in the blue rail? Is battery + only on VM?
+      add:
+        - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, BIN1, BIN2, AOUT1, AOUT2, BOUT1, BOUT2]}
+        - {type: battery, id: bat1, label: "4×AA 6V"}
+        - {type: wire, from: drv1.GND, to: T-5, color: black}
+        - {type: wire, from: bat1.minus, to: T-3, color: black}
+        - {type: wire, from: bat1.plus, to: drv1.VM, color: red}
+    - title: Left motor control (A side)
+      instruction: >-
+        Connect a **yellow** wire from **P13** to **AIN1**, and a **green** wire
+        from **P14** to **AIN2**.
+      check: Are P13 → AIN1 and P14 → AIN2?
+      add:
+        - {type: wire, from: mb.P13, to: drv1.AIN1, color: yellow}
+        - {type: wire, from: mb.P14, to: drv1.AIN2, color: green}
+    - title: Right motor control (B side)
+      instruction: >-
+        Connect a **blue** wire from **P15** to **BIN1**, and a **purple** wire
+        from **P16** to **BIN2**.
+      check: Are P15 → BIN1 and P16 → BIN2?
+      add:
+        - {type: wire, from: mb.P15, to: drv1.BIN1, color: blue}
+        - {type: wire, from: mb.P16, to: drv1.BIN2, color: purple}
+    - title: Motors
+      instruction: >-
+        Looking from behind the robot, the **left** motor's wires go to
+        **AOUT1** and **AOUT2**. The **right** motor's wires go to **BOUT1** and
+        **BOUT2**. Don't worry about which wire is which yet - we'll fix
+        direction during testing.
+      check: Does each motor connect to its own pair of outputs (A for left, B for right)?
+      add:
+        - {type: dcmotor, id: motor_l}
+        - {type: dcmotor, id: motor_r}
+        - {type: wire, from: drv1.AOUT1, to: motor_l.a, color: orange}
+        - {type: wire, from: drv1.AOUT2, to: motor_l.b, color: white}
+        - {type: wire, from: drv1.BOUT1, to: motor_r.a, color: orange}
+        - {type: wire, from: drv1.BOUT2, to: motor_r.b, color: white}
+    - title: Power the micro:bit and test direction
+      instruction: >-
+        Plug the **2×AAA holder** into the micro:bit's **battery socket** (the
+        small white plug on the top edge) so the robot doesn't need the USB
+        cable. Flash the starter code with the wheels in the air. During
+        drive(600, 600) **both** wheels should roll forward. If one goes
+        backward, **swap that motor's two wires** on the driver.
+      check: With the wheels in the air, do both wheels spin forward during the first move?
+      tip: The two motors face opposite ways on the chassis, so it's very common for one to start out backward. Swapping its wires fixes it.
+  verify:
+    connected:
+      - [mb.GND, drv1.GND, bat1.minus]
+      - [bat1.plus, drv1.VM]
+      - [mb.P13, drv1.AIN1]
+      - [mb.P14, drv1.AIN2]
+      - [mb.P15, drv1.BIN1]
+      - [mb.P16, drv1.BIN2]
+      - [drv1.AOUT1, motor_l.a]
+      - [drv1.AOUT2, motor_l.b]
+      - [drv1.BOUT1, motor_r.a]
+      - [drv1.BOUT2, motor_r.b]
+    not_connected:
+      - [bat1.plus, mb.3V]
+      - [bat1.plus, mb.GND]
+      - [motor_l.a, motor_l.b]
+      - [motor_r.a, motor_r.b]
+      - [motor_l.a, motor_r.a]
+code:
+  intro: >-
+    set_motor() handles one motor and knows that a negative speed means
+    backward. drive() calls it for both wheels. Then the main program drives a
+    square. Press button A to start, so the robot doesn't zoom off while you're
+    still holding it.
+  starter: |
+    from microbit import *
+
+    FORWARD_TIME = 1000   # ms to drive one side of the square
+    TURN_TIME = 450       # ms to spin about 90 degrees - calibrate me!
+    SPEED = 700
+    TURN_SPEED = 600
+
+    def set_motor(pin_a, pin_b, speed):
+        speed = max(-1023, min(1023, speed))   # keep it in range
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)    # left motor on AIN1/AIN2
+        set_motor(pin15, pin16, right)   # right motor on BIN1/BIN2
+
+    def stop():
+        drive(0, 0)
+
+    def turn_right():
+        drive(TURN_SPEED, -TURN_SPEED)
+        sleep(TURN_TIME)
+        stop()
+        sleep(200)
+
+    stop()
+    display.show(Image.ARROW_W)        # "press A"
+    while not button_a.was_pressed():
+        sleep(20)
+
+    for side in range(4):
+        display.show(str(side + 1))
+        drive(SPEED, SPEED)
+        sleep(FORWARD_TIME)
+        stop()
+        sleep(200)
+        turn_right()
+
+    stop()
+    display.show(Image.HAPPY)
+  walkthrough:
+    - lines: "3-6"
+      explain: All the numbers you'll **calibrate** live at the top, in CAPITALS so they stand out.
+    - lines: "8-18"
+      explain: "**set_motor** works for any motor. Positive speed → PWM on the first pin. Negative → PWM on the second pin (we use -speed to make it positive again). Zero → both off. The max/min line stops anyone from asking for more than 1023."
+    - lines: "20-22"
+      explain: "**drive(left, right)** sends each speed to the right pair of pins. Now the whole robot is one line of code."
+    - lines: "27-31"
+      explain: A **spin turn** - left wheel forward, right wheel backward. The short pause after stopping lets the robot settle so turns are more consistent.
+    - lines: "33-36"
+      explain: Wait for button A. was_pressed() remembers a press, so even a quick tap works.
+    - lines: "38-44"
+      explain: Four sides, four turns = a square. The display counts the sides so you can see where the code is.
+  try_it:
+    - "Calibrate TURN_TIME: if the robot turns too far, make it smaller; not far enough, make it bigger. Change it by 25 ms at a time."
+    - Does your robot drift instead of going straight? Try drive(700, 670) or drive(670, 700) to balance the motors.
+    - Write turn_left() and drive a square the other way.
+    - Try drive(700, 300) for 3 seconds. What shape does the robot make?
+debug:
+  story: >-
+    Malik's robot is supposed to drive a square. Instead it drives in one long
+    straight line and only does three "sides". There are **two** bugs. Fix them
+    and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    TURN_TIME = 450
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    def turn_right():
+        drive(600, 600)
+        sleep(TURN_TIME)
+        drive(0, 0)
+
+    for side in range(3):
+        drive(700, 700)
+        sleep(1000)
+        drive(0, 0)
+        turn_right()
+  hints:
+    - In turn_right(), both wheels get the same speed. What does the robot do when both wheels match?
+    - How many sides does a square have? How many times does range(3) repeat?
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: "def turn_right\\(\\)\\s*:[^\\n]*\\n(?:(?:[ \\t]+[^\\n]*)?\\n)*?[ \\t]+drive\\(\\s*(-?(?:[1-9]\\d*|[A-Za-z_]\\w*))\\s*,\\s*\\1\\s*\\)", message: "In turn_right(), the two wheels need DIFFERENT speeds, or the robot just goes straight."}
+    - {type: contains, pattern: "def turn_right\\(\\)\\s*:[^\\n]*\\n(?:(?:[ \\t]+[^\\n]*)?\\n)*?[ \\t]+drive\\(", message: "turn_right() should still call drive()."}
+    - {type: contains, pattern: "range\\(\\s*(0\\s*,\\s*)?4\\s*\\)", message: "A square has 4 sides - the loop should repeat 4 times."}
+  solution: |
+    from microbit import *
+
+    TURN_TIME = 450
+
+    def set_motor(pin_a, pin_b, speed):
+        if speed > 0:
+            pin_a.write_analog(speed)
+            pin_b.write_digital(0)
+        elif speed < 0:
+            pin_a.write_digital(0)
+            pin_b.write_analog(-speed)
+        else:
+            pin_a.write_digital(0)
+            pin_b.write_digital(0)
+
+    def drive(left, right):
+        set_motor(pin13, pin14, left)
+        set_motor(pin15, pin16, right)
+
+    def turn_right():
+        drive(600, -600)
+        sleep(TURN_TIME)
+        drive(0, 0)
+
+    for side in range(4):
+        drive(700, 700)
+        sleep(1000)
+        drive(0, 0)
+        turn_right()
+  reflection_prompt: Why does a robot go straight when both wheels get the same speed - even inside a function called turn_right?
+quiz:
+  - question: What does drive(600, -600) do?
+    choices:
+      - Drives straight forward
+      - Spins right on the spot
+      - Drives backward
+      - Nothing - negative speeds aren't allowed
+    answer: 1
+    explain: The left wheel goes forward and the right wheel goes backward, so the robot spins clockwise (right) in place.
+  - question: Your robot curves to the left when you call drive(700, 700). Which fix could help?
+    choices:
+      - drive(670, 700)
+      - drive(700, 670)
+      - drive(-700, -700)
+      - Delete the stop() function
+    answer: 1
+    explain: Curving left means the left wheel is slower (or the right is faster). Slowing the right wheel a little balances them.
+  - question: During testing, the right wheel spins backward when it should go forward. What's the easiest fix?
+    choices:
+      - Swap the right motor's two wires on BOUT1 and BOUT2
+      - Swap the battery pack's wires
+      - Move the right motor to the A side
+      - Connect the motor to 3V
+    answer: 0
+    explain: Swapping a motor's two wires reverses the current through it. Never swap the battery pack's wires!
+  - question: Why keep FORWARD_TIME and TURN_TIME as variables at the top?
+    choices:
+      - Python requires it
+      - It makes the motors faster
+      - So you can calibrate the robot by changing one number in one place
+      - Variables use less battery
+    answer: 2
+    explain: Calibrating means changing numbers again and again. Having them in one place makes that quick and avoids mistakes.
+challenge:
+  title: Robot Choreographer
+  prompt: >-
+    Design a path or a dance for your robot! Mark your course on the floor
+    with tape, then program the robot to follow it using drive() with
+    different speeds and times. Bonus points for style.
+  levels:
+    - "Mild: Drive a triangle or a figure-of-eight path (hint: what does drive(700, 350) do?)."
+    - "Medium: Program a 15-second robot dance with spins, wiggles and a display show. Put each move in its own function, like wiggle() or moonwalk()."
+    - "Spicy: Tape an obstacle course (start box, a slalom of 3 cups, a parking space). Calibrate until your robot finishes it without touching a cup, then race another team."
+  submit_prompt: What path or dance did you program? Which number took the most calibrating, and what value did you end up with?
+teacher_notes: |
+  * **One wheel spins backward:** the motors are mirrored on the chassis, so this happens on most robots. Swap that motor's two wires on the driver. (Changing code works too, but then every future lesson's code would need the same change.)
+  * **Robot spins left instead of right:** the left and right motors are swapped - move the A and B motor wires, or check P13/P14 really go to AIN1/AIN2.
+  * **Turns get shorter over the lesson:** the batteries are draining. Weak AA packs are the biggest cause of "it worked 10 minutes ago". Keep spares and recalibrate with fresh ones.
+  * **micro:bit resets or acts strange when motors start:** check the shared ground and that the micro:bit has its own 2×AAA holder (never power it from the motor pack).
+  * Floors matter: carpet needs more speed and longer turn times than a smooth floor. Let teams calibrate on the surface they'll be judged on.
+  * Always test with the wheels lifted first. Robots driving off desks is a rite of passage - but an expensive one.
+  * Extension: use a for loop to make spirals by increasing FORWARD_TIME each side.

@@ -1,0 +1,123 @@
+from flask import Blueprint, abort, jsonify, request
+from flask_login import current_user, login_required
+
+from . import lessons as L
+from .models import Progress, db, utcnow
+
+bp = Blueprint("api", __name__, url_prefix="/api")
+
+MAX_TEXT = 20_000
+
+
+def _lesson_and_progress(lesson_id):
+    lesson = L.get_lesson(lesson_id)
+    if not lesson:
+        abort(404)
+    p = Progress.query.filter_by(user_id=current_user.id, lesson_id=lesson_id).first()
+    if not p:
+        p = Progress(user_id=current_user.id, lesson_id=lesson_id, sections={}, circuit_steps=[])
+        db.session.add(p)
+    return lesson, p
+
+
+def _text(v):
+    if not isinstance(v, str):
+        abort(400)
+    return v[:MAX_TEXT]
+
+
+def _finish(lesson, p, **extra):
+    keys = L.section_keys(lesson)
+    pct = p.percent(keys)
+    if pct == 100 and not p.completed_at:
+        p.completed_at = utcnow()
+    db.session.commit()
+    return jsonify({"ok": True, "sections": p.sections, "percent": pct, **extra})
+
+
+@bp.post("/lessons/<lesson_id>/save")
+@login_required
+def save(lesson_id):
+    lesson, p = _lesson_and_progress(lesson_id)
+    data = request.get_json(silent=True) or {}
+    for field in ("code", "debug_code", "challenge_code", "challenge_response", "debug_reflection"):
+        if field in data:
+            setattr(p, field, _text(data[field]))
+    if "warmup_answer" in data:
+        p.warmup_answer = _text(data["warmup_answer"])
+        p.mark("warmup", len(p.warmup_answer.strip()) >= 3)
+    if "debug_hints_used" in data and isinstance(data["debug_hints_used"], int):
+        p.debug_hints_used = max(p.debug_hints_used or 0, min(data["debug_hints_used"], 10))
+    if "circuit_steps" in data and lesson.get("circuit"):
+        n = len(lesson["circuit"]["steps"])
+        steps = sorted({int(i) for i in data["circuit_steps"] if isinstance(i, int) and 0 <= i < n})
+        p.circuit_steps = steps
+        p.mark("circuit", len(steps) == n)
+    for key in ("learn", "code"):
+        if key in (data.get("mark") or {}):
+            p.mark(key, bool(data["mark"][key]))
+    return _finish(lesson, p)
+
+
+@bp.post("/lessons/<lesson_id>/sent")
+@login_required
+def sent(lesson_id):
+    lesson, p = _lesson_and_progress(lesson_id)
+    p.sends = (p.sends or 0) + 1
+    data = request.get_json(silent=True) or {}
+    if data.get("section") == "code":
+        p.mark("code")
+    return _finish(lesson, p)
+
+
+@bp.post("/lessons/<lesson_id>/debug")
+@login_required
+def debug(lesson_id):
+    lesson, p = _lesson_and_progress(lesson_id)
+    code = _text((request.get_json(silent=True) or {}).get("code", ""))
+    p.debug_code = code
+    p.debug_attempts = (p.debug_attempts or 0) + 1
+    if code.strip() == lesson["debug"]["buggy_code"].strip():
+        results = [{"ok": False, "message": "This is still the original broken code. Change something first!"}]
+    else:
+        results = L.run_checks(code, lesson["debug"]["checks"])
+    solved = all(r["ok"] for r in results)
+    if solved:
+        p.debug_solved = True
+        p.mark("debug")
+    failing = [r["message"] for r in results if not r["ok"] and r["message"]]
+    return _finish(lesson, p, solved=solved, messages=failing[:1] if failing else [],
+                   passed=sum(r["ok"] for r in results), total=len(results))
+
+
+@bp.post("/lessons/<lesson_id>/quiz")
+@login_required
+def quiz(lesson_id):
+    lesson, p = _lesson_and_progress(lesson_id)
+    answers = (request.get_json(silent=True) or {}).get("answers")
+    if not isinstance(answers, list) or len(answers) != len(lesson["quiz"]):
+        abort(400)
+    answers = [a if isinstance(a, int) else None for a in answers]
+    graded = L.grade_quiz(lesson, answers)
+    p.quiz_answers = answers
+    p.quiz_score = graded["score"]
+    p.quiz_total = graded["total"]
+    p.quiz_best = max(p.quiz_best or 0, graded["score"])
+    p.quiz_attempts = (p.quiz_attempts or 0) + 1
+    p.mark("quiz")
+    return _finish(lesson, p, quiz=graded, best=p.quiz_best)
+
+
+@bp.post("/lessons/<lesson_id>/challenge")
+@login_required
+def challenge(lesson_id):
+    lesson, p = _lesson_and_progress(lesson_id)
+    data = request.get_json(silent=True) or {}
+    response = _text(data.get("response", "")).strip()
+    if len(response) < 10:
+        return jsonify({"ok": False, "error": "Tell us a bit more about what you built (at least a sentence)."}), 400
+    p.challenge_code = _text(data.get("code", ""))
+    p.challenge_response = response
+    p.challenge_submitted_at = utcnow()
+    p.mark("challenge")
+    return _finish(lesson, p)

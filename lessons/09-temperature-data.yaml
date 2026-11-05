@@ -1,0 +1,330 @@
+id: temperature-data
+unit: 2
+order: 9
+title: Temperature Data Detective
+subtitle: Collect temperature readings in a list, find the high, low and average, and warn when it's too hot
+duration_minutes: 35
+level: Intermediate
+big_idea: >-
+  A list lets your program remember many readings, so it can find patterns
+  like the highest, lowest and average temperature - and react when something
+  goes wrong.
+objectives:
+  - Read the micro:bit's built-in temperature sensor with temperature()
+  - Store readings in a list with append() and keep the list from growing forever
+  - Use min(), max(), sum() and len() to summarize data
+  - Build a "too hot" warning LED on pin 0 that turns on above a threshold
+vocabulary:
+  - term: List
+    definition: One variable that holds many values in order, like readings = [21, 22, 22, 23].
+  - term: append
+    definition: Adds a new value to the end of a list, like readings.append(24).
+  - term: Average (mean)
+    definition: Add up all the values and divide by how many there are.
+  - term: Threshold
+    definition: A cut-off number. Above it, the program does one thing; below it, something else.
+  - term: Data logging
+    definition: Saving readings over time so you can look at them later, like a weather station.
+materials:
+  - micro:bit V2 + USB cable
+  - Edge-connector breakout board
+  - Half-size breadboard
+  - 1 red LED
+  - 1 resistor, 220 Ω (red-red-brown)
+  - 3 jumper wires
+  - Optional - a cup of cool water in a sealed zip bag, or a warm hand, to change the temperature
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Build the warning light, minutes: 6}
+  - {key: code, name: Code it, minutes: 9}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Lists and temperature data on the micro:bit
+  note: Watch how the list gets one number longer every time a new reading is added.
+warmup:
+  prompt: >-
+    A weather reporter says "Today's high was 24 and the low was 15." How do
+    you think they know that? What would a machine need to remember to figure it out?
+learn:
+  - |
+    ### The micro:bit has a thermometer
+    `temperature()` gives back the temperature in **degrees Celsius** as a whole
+    number, like `22`. The sensor is inside the micro:bit's main **processor chip**,
+    so it reads the chip's temperature. It's usually a degree or two **warmer**
+    than the room, because the chip makes a little heat while it works.
+
+    Try it: `display.scroll(temperature())`. Then put your thumb on the back of
+    the micro:bit for 30 seconds and try again.
+  - |
+    ### Lists remember many values
+    A normal variable holds **one** value. A **list** holds lots of them, in order:
+
+    ```python
+    readings = []          # an empty list
+    readings.append(21)    # now [21]
+    readings.append(23)    # now [21, 23]
+    len(readings)          # 2 - how many are in the list
+    ```
+
+    Square brackets `[ ]` make a list. `.append()` adds to the **end**.
+  - |
+    ### Python's data tools
+    Once your readings are in a list, Python can summarize them for you:
+
+    * `min(readings)` - the **lowest** value
+    * `max(readings)` - the **highest** value
+    * `sum(readings) / len(readings)` - the **average**
+
+    The micro:bit has limited memory, so we keep only the **newest 30** readings.
+    `readings.pop(0)` removes the **oldest** one (the one at position 0).
+  - |
+    ### A warning light with a threshold
+    A **threshold** is a cut-off. If the temperature is **at or above** `HOT`,
+    the program turns on the red LED on pin 0. Otherwise it turns it off.
+    That's just `if` / `else` with `pin0.write_digital()` - things you already know!
+  - |
+    ### Bonus: save your data with `log`
+    The micro:bit V2 can **save readings** even after you unplug it. Each
+    `log.add()` adds a row to a table stored on the micro:bit:
+
+    ```python
+    import log
+    log.set_labels('temp', timestamp=log.SECONDS)
+    log.add(temp=temperature())
+    ```
+
+    Plug the micro:bit into a computer, open the **MICROBIT** drive and
+    double-click **MY_DATA.HTM** to see your table and a chart.
+circuit:
+  intro: >-
+    This is the same LED circuit you built before: P0 → resistor → LED → GND.
+    This time it becomes a "too hot" alarm light. Unplug the USB cable while you build.
+  safety:
+    - Always build with the micro:bit unplugged.
+    - Never connect 3V straight to GND with a wire - that's a short circuit.
+    - Don't heat the micro:bit with a hair dryer, lighter or hot water. A warm hand is enough!
+  steps:
+    - title: Ground rail
+      instruction: >-
+        Push the micro:bit into the breakout board (logo facing up). Run a
+        **black** wire from the breakout's **GND** pin to hole **T-1** on the top
+        **blue (–) rail**.
+      check: Is your black wire in the rail with the blue line next to it?
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+    - title: Resistor
+      instruction: >-
+        Put the 220 Ω resistor in row **c**, from **c10** to **c14**.
+        Resistors have no direction - either way works.
+      check: Is one leg in column 10 and the other in column 14?
+      add:
+        - {type: resistor, id: r1, a: c10, b: c14, ohms: 220}
+    - title: Warning LED
+      instruction: >-
+        Put the red LED's **long leg (+, anode)** in **e14**, the same column as
+        the resistor's right leg. Put the **short leg (–, cathode)** in **e15**.
+      check: Is the long leg in column 14 and the short leg in column 15?
+      tip: The flat edge on the LED's rim is the cathode (–) side.
+      add:
+        - {type: led, id: led1, anode: e14, cathode: e15, color: red}
+    - title: Connect pin 0 and ground
+      instruction: >-
+        Add a **yellow** wire from **P0** to **a10** (the resistor's left column).
+        Add a **black** wire from **a15** (the LED's short-leg column) to **T-15**
+        on the blue (–) rail.
+      check: Trace the loop with your finger - P0, resistor, LED, ground. Is it complete?
+      add:
+        - {type: wire, from: mb.P0, to: a10, color: yellow}
+        - {type: wire, from: a15, to: T-15, color: black}
+  verify:
+    connected:
+      - [mb.P0, r1.a]
+      - [r1.b, led1.anode]
+      - [led1.cathode, mb.GND]
+    not_connected:
+      - [led1.anode, led1.cathode]
+      - [mb.P0, mb.GND]
+code:
+  intro: >-
+    This program takes a reading every second and adds it to a list. The LED
+    warns you when it's too hot. Press **A** for the low and high, and **B** for the average.
+  starter: |
+    from microbit import *
+
+    HOT = 28          # degrees C - change this to fit your room
+    readings = []     # start with an empty list
+
+    while True:
+        t = temperature()
+        readings.append(t)
+        if len(readings) > 30:
+            readings.pop(0)     # forget the oldest reading
+
+        if t >= HOT:
+            pin0.write_digital(1)       # too hot - warning light on
+            display.show(Image.SAD)
+        else:
+            pin0.write_digital(0)
+            display.show(Image.HAPPY)
+
+        if button_a.was_pressed():
+            display.scroll("Lo " + str(min(readings)))
+            display.scroll("Hi " + str(max(readings)))
+        if button_b.was_pressed():
+            average = sum(readings) / len(readings)
+            display.scroll("Avg " + str(round(average, 1)))
+
+        sleep(1000)
+  walkthrough:
+    - lines: "3"
+      explain: >-
+        `HOT` is the **threshold**. It's in capital letters to show it's a
+        setting you choose once and don't change while the program runs.
+    - lines: "4"
+      explain: "`[]` makes an **empty list**. It's made **before** the loop so it only happens once."
+    - lines: "7-10"
+      explain: >-
+        Read the temperature, add it to the end of the list, and if the list
+        has more than 30 readings, remove the oldest one with `pop(0)`.
+    - lines: "12-17"
+      explain: "`if` / `else` with a threshold: the LED and the face show whether it's too hot."
+    - lines: "19-21"
+      explain: >-
+        `min()` and `max()` search the whole list for you. `str()` turns the number
+        into text so it can be joined to "Lo " and "Hi ".
+    - lines: "22-24"
+      explain: >-
+        The average is the total divided by how many readings there are.
+        `round(average, 1)` keeps one decimal place, like 23.4.
+    - lines: "26"
+      explain: One reading per second. Change it to collect data faster or slower.
+  try_it:
+    - Set HOT to one degree above the room's temperature. Hold the micro:bit in your hand until the LED turns on.
+    - Press A right away, then again after warming it. How do Lo and Hi change?
+    - "Add a button: when you press both A and B (`button_a.is_pressed() and button_b.is_pressed()`), clear the list with `readings = []`."
+    - "Bonus (V2 data logging): add `import log`, then `log.set_labels('temp', timestamp=log.SECONDS)` before the loop, and `log.add(temp=t)` inside it. Open MY_DATA.HTM afterwards."
+debug:
+  story: >-
+    Priya's temperature tracker always says the low, the high and the average
+    are all the **same number** - and then it crashes with an error. There are
+    **two** bugs. Find them, fix them, and press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    HOT = 28
+
+    while True:
+        readings = []
+        t = temperature()
+        readings.add(t)
+
+        if t >= HOT:
+            pin0.write_digital(1)
+        else:
+            pin0.write_digital(0)
+
+        if button_a.was_pressed():
+            display.scroll(min(readings))
+            display.scroll(max(readings))
+        sleep(1000)
+  hints:
+    - Lists don't have an `.add()` - what's the word for adding something to the end of a list?
+    - Where is the list created? What happens to it every time the loop starts over?
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: '\.add\(', message: "Lists use .append() to add a value, not .add()."}
+    - {type: contains, pattern: 'readings\.append\(', message: "Add each new reading to the list with readings.append(...)."}
+    - {type: contains, pattern: '^readings\s*=\s*\[\s*\]', message: "Create the empty list once, before the while loop (not indented)."}
+    - {type: not_contains, pattern: '^\s+readings\s*=\s*\[\s*\]', message: "The list is being emptied inside the loop - every reading erases the old ones. Move readings = [] above the loop."}
+  solution: |
+    from microbit import *
+
+    HOT = 28
+    readings = []
+
+    while True:
+        t = temperature()
+        readings.append(t)
+
+        if t >= HOT:
+            pin0.write_digital(1)
+        else:
+            pin0.write_digital(0)
+
+        if button_a.was_pressed():
+            display.scroll(min(readings))
+            display.scroll(max(readings))
+        sleep(1000)
+  reflection_prompt: Why did the low and high always match when the list was created inside the loop?
+quiz:
+  - question: After this code runs, what is in the list? `nums = []` then `nums.append(5)` then `nums.append(8)`
+    choices:
+      - "[8, 5]"
+      - "[5, 8]"
+      - "[13]"
+      - "[]"
+    answer: 1
+    explain: append() adds each value to the end, so the list grows in order - [5, 8].
+  - question: The list is [20, 22, 24]. What does sum(readings) / len(readings) give?
+    choices:
+      - "66"
+      - "3"
+      - "22.0"
+      - "24"
+    answer: 2
+    explain: The sum is 66 and there are 3 readings, so the average is 66 / 3 = 22.0.
+  - question: Why is the micro:bit's temperature often a little higher than the room?
+    choices:
+      - The sensor is inside the processor chip, which warms up as it works
+      - The LED on pin 0 heats it up
+      - Celsius numbers are always higher
+    answer: 0
+    explain: temperature() reads the chip itself, and chips make a little heat while running.
+  - question: What happens if you put readings = [] inside the while True loop?
+    choices:
+      - Nothing different
+      - The list is emptied every loop, so it only ever holds one reading
+      - The program runs faster and saves more data
+    answer: 1
+    explain: Every pass through the loop makes a brand-new empty list, wiping out the old readings.
+  - question: With HOT = 28, when does `if t >= HOT:` turn the LED on?
+    choices:
+      - Only when t is exactly 28
+      - When t is 28 or more
+      - When t is less than 28
+    answer: 1
+    explain: ">= means 'greater than or equal to', so 28, 29, 30... all turn the LED on."
+challenge:
+  title: Mini Weather Station
+  prompt: >-
+    Turn your micro:bit into a science instrument. Run an experiment: how fast
+    does it warm up in your hand, cool down near a window, or change inside a
+    backpack? Collect the data, then show it off in a creative way.
+  levels:
+    - "Mild: Add a blue or green LED on pin 1 that lights when it's too cold (below a COLD threshold)."
+    - "Medium: Use the V2 log module to record the temperature every 5 seconds during an experiment, then open MY_DATA.HTM and describe the chart."
+    - "Spicy: Show a live bar graph - light up more rows of the display as it gets warmer - and make the LED blink faster the hotter it gets."
+  submit_prompt: What experiment did you run, what did your data show, and which list tools (append, min, max, average) did you use?
+teacher_notes: |
+  **Common problems**
+  * **Readings never change:** the chip warms slowly. A warm thumb on the back for 30+ seconds raises it by 1-3 °C. A cool zip-bag of water lowers it. Lower `HOT` so it's 1 degree above the starting reading.
+  * **Readings seem high:** this is normal - `temperature()` measures the processor die, so expect 1-3 °C above room temperature, more when the micro:bit has been busy or plugged in a while.
+  * **LED never lights:** check the LED direction first, then move the yellow wire from P0 to 3V to test the LED. If it lights, the problem is the threshold or the code.
+  * **`NameError: readings`** usually means the list is created after it's used, or spelled differently.
+  * `display.scroll()` blocks while text scrolls, so readings pause during it. That's fine for this lesson; mention it if students notice.
+
+  **Data logging (`log` module)**
+  * Needs micro:bit **V2** and a recent MicroPython (v2.1 or newer, used by python.microbit.org).
+  * Data survives unplugging and re-flashing the same program. `log.delete()` erases it.
+  * If memory fills up, `log.add()` raises an error - log every few seconds, not every 10 ms.
+  * `log.set_mirroring(True)` also prints each row to the serial console.
+
+  **Safety**
+  * No heat guns, lighters, hot water or radiators. Water and electronics don't mix - keep any water sealed in a bag and away from the breadboard.
+
+  **Extensions**
+  * Compare readings from two micro:bits with `radio`.
+  * Discuss why scientists take many readings and average them instead of trusting one.
