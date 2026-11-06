@@ -33,9 +33,9 @@ materials:
   - 3 jumper wires
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 5}
+  - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Build the circuit, minutes: 6}
-  - {key: code, name: Code it, minutes: 9}
+  - {key: code, name: Code it, minutes: 8}
   - {key: debug, name: Debug, minutes: 5}
   - {key: quiz, name: Check for understanding, minutes: 2}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
@@ -81,6 +81,21 @@ learn:
     Count from 0 up to 1023 and give each number to `write_analog`. The LED
     gets a tiny bit brighter each time. Then count back down. That's a
     **fade**, like a "breathing" light on a sleeping laptop.
+  - |
+    ### Why 1023? Counting in binary
+    Computers store every number in **binary** (base 2), using only **0s and 1s**.
+    Each digit is a **bit**, and every extra bit doubles how many numbers you can make.
+
+    | bits | how many numbers | biggest |
+    |---|---|---|
+    | 1 | 2 | 1 |
+    | 8 | 256 | 255 |
+    | 10 | 1024 | **1023** |
+
+    `write_analog` uses **10 bits**, so it goes from 0 to 1023. Fully on is
+    `1111111111` (all ten bits on). Programmers also write numbers in
+    **hexadecimal** (base 16): 1023 is `0x3ff`. Try `display.scroll(bin(1023))`
+    and `display.scroll(hex(1023))`.
 circuit:
   intro: >-
     It's the same LED circuit as Lesson 3: P0 → resistor → LED → GND. If it's
@@ -234,6 +249,14 @@ quiz:
       - "9"
     answer: 2
     explain: write_analog goes from 0 (always off) to 1023 (always on).
+  - question: Why is the biggest write_analog value 1023?
+    choices:
+      - It uses 10 bits, and 10 bits can make 1024 different numbers (0 to 1023)
+      - The pin can send up to 1023 volts
+      - The number was picked at random
+      - The LED has 1023 tiny lights inside
+    answer: 0
+    explain: 2 × 2 × 2 … ten times is 1024, so 10 bits count from 0 to 1023. In binary, 1023 is 1111111111.
 challenge:
   title: Mood Lighting
   prompt: >-
@@ -265,3 +288,7 @@ standards:  # Massachusetts DLCS framework (2016), grades 6-8
     how: Predict how changing the step size or the wait changes the speed and smoothness of the fade.
   - code: 6-8.CS.a.4
     how: PWM is how a digital controller makes an output look like it's in between on and off.
+  - code: 6-8.CT.c.1
+    how: "A Learn card shows the same number in base 10, binary (1023 = 1111111111) and hexadecimal (0x3ff), and students use bin() and hex()."
+  - code: 6-8.CT.c.2
+    how: "Students see why write_analog stops at 1023: the micro:bit stores it as a 10-bit binary integer."

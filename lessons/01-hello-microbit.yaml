@@ -29,8 +29,8 @@ materials:
   - A computer with a web browser
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 5}
-  - {key: code, name: Code it, minutes: 11}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: code, name: Code it, minutes: 10}
   - {key: debug, name: Debug, minutes: 6}
   - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
@@ -80,6 +80,19 @@ learn:
     editor. The very first time, click **Download .hex** and drag the file
     onto the **MICROBIT** drive instead - that puts Python on the micro:bit. The
     yellow light on the back blinks while it copies, then your code runs.
+  - |
+    ### Free code you can look inside
+    The Python on your micro:bit is called **MicroPython**, and it's
+    **open source**: anyone can read its code, change it and share it, as long
+    as they follow its **license** (MicroPython uses the MIT License, which
+    mostly asks you to keep the credit).
+
+    A lot of software is **proprietary**: the company keeps the code secret,
+    and its license only lets you *use* the program, not change or share it.
+    * Open source: MicroPython, Firefox, Linux
+    * Proprietary: Microsoft Word, most video games
+
+    Before you copy someone's code, pictures or music, check the license!
 code:
   intro: >-
     This program says hello once, then animates a beating heart forever.
@@ -177,6 +190,14 @@ quiz:
       - They are all on one line
     answer: 1
     explain: Indented lines after the colon belong to the loop. Lines that line up with "while" are outside it.
+  - question: MicroPython is open source. What does that mean?
+    choices:
+      - Anyone can read, change and share its code, following its license
+      - It costs money every time you use it
+      - Only the company that made it can see the code
+      - It only works on laptops with the lid open
+    answer: 0
+    explain: Open-source software shares its code with everyone under a license. Proprietary software keeps its code private.
 challenge:
   title: Name Badge Animation
   prompt: >-
@@ -204,3 +225,5 @@ standards:  # Massachusetts DLCS framework (2016), grades 6-8
     how: Debug challenge with three bugs (missing quotes, Image.heart, bad indentation), fixed by testing and retrying.
   - code: 6-8.CS.a.7
     how: 'Troubleshoot getting code onto the device: the MICROBIT drive, USB cables (some are charge-only) and re-flashing.'
+  - code: 6-8.CAS.b.5
+    how: "A Learn card contrasts open-source licenses (MicroPython, MIT License) with proprietary software, with examples of each."
