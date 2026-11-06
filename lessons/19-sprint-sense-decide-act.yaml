@@ -1,0 +1,361 @@
+id: sprint-sense-decide-act
+label: S3
+unit: 5
+order: 19
+title: "Sprint 3: Sense → Decide → Act"
+subtitle: Build an automatic gate that opens when it sees your hand
+duration_minutes: 35
+level: Robot Sprint
+big_idea: >-
+  Every robot runs the same loop: sense the world, decide what to do, then act,
+  and it remembers what it already did.
+objectives:
+  - Connect a sensor and a servo on one shield
+  - Write a sense, decide, act loop
+  - Use a state variable to remember open or closed
+  - Add a cooldown so the gate doesn't flap
+vocabulary:
+  - term: Sense, decide, act
+    definition: The loop every robot runs. Read sensors, choose what to do, then move.
+  - term: State
+    definition: What the robot remembers about itself right now, like "open" or "closed".
+  - term: Cooldown
+    definition: A short wait after an action, so the robot doesn't react again too soon.
+  - term: Flapping
+    definition: Switching back and forth too fast, like a door that won't stop opening and closing.
+materials:
+  - micro:bit V2 + USB cable
+  - Keyestudio sensor shield (KS0360)
+  - 6×AA battery holder with batteries
+  - IR obstacle sensor
+  - 180° servo
+  - Cardboard, tape and scissors for the gate
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: circuit, name: Plug it in, minutes: 4}
+  - {key: code, name: Code it, minutes: 10}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Automatic doors
+  note: Watch how a store's automatic door senses you, decides, then opens.
+warmup:
+  prompt: >-
+    Think of an automatic door at a store. What does it notice? What does it
+    do? What would go wrong if it never waited?
+learn:
+  - text: |
+      ### Sense → Decide → Act
+      Robots, smart doors and game controllers all run the same loop.
+
+      1. **Sense:** read the sensors.
+      2. **Decide:** use `if` to choose what to do.
+      3. **Act:** move a servo or show a picture.
+
+      Then repeat, many times each second.
+    visual:
+      type: flow
+      steps:
+        - {icon: "👀", label: "Sense: read the sensor"}
+        - {icon: "🤔", label: "Decide: if ..."}
+        - {icon: "🦾", label: "Act: move the servo"}
+      loop: true
+      loop_label: "repeat forever"
+  - text: |
+      ### Today's parts
+      * The **IR obstacle sensor** on pin 0 gives **0** when your hand is in front. It gives 1 when the path is clear.
+      * A **180° servo** on pin 13 points to an angle and holds it. That makes a great gate arm.
+    visual:
+      type: board
+      board: shield
+      jumpers: {V1: "3.3V", V2: "5V"}
+      power: "6×AA"
+      plugs:
+        - {pin: 0, device: "IR obstacle", kind: sensor}
+        - {pin: 13, device: "Gate servo", kind: servo}
+  - text: |
+      ### Gate angles
+      In code, `write_analog` sends the servo a pulse. The pulse sets the angle.
+
+      * **26** → 0°: gate **closed**
+      * **77** → 90°: gate **open**
+      * **128** → 180°
+
+      A small function, `angle(deg)`, does this math for you.
+    visual:
+      type: dial
+      caption: "Closed at 0°, open at 90°"
+      marks:
+        - {angle: 0, label: "closed · 26", pointer: true}
+        - {angle: 90, label: "open · 77"}
+        - {angle: 180, label: "180° · 128"}
+  - text: |
+      ### Remember the state
+      The gate should only open if it's **closed**. A **state** variable remembers which one it is.
+
+      * `state = "closed"` at the start.
+      * When it opens, set `state = "open"`.
+
+      Without it, the code sends "open!" again and again while your hand is there.
+    visual:
+      type: compare
+      items:
+        - {icon: "🚪", title: "closed", text: "hand seen? Then open it"}
+        - {icon: "🔓", title: "open", text: "hand gone? Then close it"}
+  - text: |
+      ### Add a cooldown
+      At the edge of its range, a sensor can flicker: 0, 1, 0, 1. Then the gate **flaps** open and shut.
+
+      A **cooldown** fixes it. After the gate moves, wait a moment with `sleep()` before you sense again.
+    visual:
+      type: graph
+      points: [1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1]
+      min: 0
+      max: 1
+      x_label: "time"
+      y_label: "IR reading"
+      caption: "A hand at the edge makes the reading flicker."
+circuit:
+  intro: >-
+    You'll plug the IR sensor into pin 0 and a 180° servo into pin 13. The servo
+    needs the battery pack.
+  safety:
+    - Unplug the battery pack before you plug in or move anything.
+    - Brown servo wire to G. A backwards servo can be damaged.
+    - The two small chips on the shield get hot. Don't touch them.
+  steps:
+    - title: Set the jumpers
+      instruction: >-
+        Set **V1 to 3.3V**. That's the sensor row, pins 0-10. Set **V2 to 5V**.
+        That's the servo row, pins 11-20. Slide in the micro:bit, screen facing
+        out.
+      check: Is V1 on 3.3V and V2 on 5V?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        caption: "V1 is next to pins 0-10. V2 is next to pins 11-20."
+    - title: Plug in the IR sensor
+      instruction: >-
+        Plug the **IR obstacle sensor** into header **0**: **G to G**, V to V,
+        S to S. Point its eyes where a hand will come.
+      check: Is G on the sensor lined up with G on the shield?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+    - title: Plug in the servo
+      instruction: >-
+        Plug the **180° servo** into header **13**: **brown on G**, red on V,
+        orange on S. Tape a strip of cardboard to its arm. That's your gate.
+      check: Is the brown wire on G at pin 13?
+      tip: If your servo has black, red and white wires, black goes on G.
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+          - {pin: 13, device: "Gate servo", kind: servo}
+    - title: Power it up
+      instruction: >-
+        Plug the **6×AA battery pack** into the DC jack. Plug in the **USB
+        cable** too, so you can send code.
+      check: Is the shield's power light on?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+          - {pin: 13, device: "Gate servo", kind: servo}
+code:
+  intro: >-
+    This is a working automatic gate. Send it, then hold your hand in front of
+    the sensor. The gate should open, wait, then close when you move away.
+  starter: |
+    from microbit import *
+
+    SENSOR = pin0   # IR obstacle sensor: 0 = something in front
+    GATE = pin13    # 180 degree servo
+    GATE.set_analog_period(20)
+
+    def angle(deg):
+        GATE.write_analog(26 + deg * 102 // 180)
+
+    angle(0)
+    state = "closed"
+    display.show(Image.NO)
+
+    while True:
+        hand = SENSOR.read_digital() == 0      # SENSE
+        if hand and state == "closed":         # DECIDE
+            angle(90)                          # ACT
+            state = "open"
+            display.show(Image.YES)
+            sleep(2000)    # stay open at least 2 seconds
+        elif not hand and state == "open":
+            angle(0)
+            state = "closed"
+            display.show(Image.NO)
+            sleep(500)     # cooldown so it doesn't flap
+        sleep(50)
+  walkthrough:
+    - lines: "3-8"
+      explain: Name the pins, send servo pulses every 20 ms, and make an `angle()` function.
+    - lines: "10-12"
+      explain: Start closed. The `state` variable remembers that.
+    - lines: "15"
+      explain: "**Sense:** `hand` is True when the sensor reads 0."
+    - lines: "16-25"
+      explain: "**Decide and act:** open only if closed, close only if open. Then wait as a cooldown."
+  try_it:
+    - Change the open angle from 90 to 150. Does your gate open wider?
+    - Change sleep(2000) to sleep(5000). How long does the gate stay open now?
+    - "Delete the cooldown sleep(500). Hold your hand at the edge of the range. What happens?"
+debug:
+  story: >-
+    Jordan built a trash-can lid. The servo doesn't move. After a fix, the lid
+    opens when nobody is there, and it flaps. Find **three** bugs.
+  buggy_code: |
+    from microbit import *
+
+    LID = pin13
+
+    def angle(deg):
+        LID.write_analog(26 + deg * 102 // 180)
+
+    angle(0)
+    state = "closed"
+
+    while True:
+        hand = pin0.read_digital() == 1
+        if hand and state == "closed":
+            angle(90)
+            state = "open"
+        elif not hand and state == "open":
+            angle(0)
+            state = "closed"
+        sleep(50)
+  hints:
+    - Servos need a pulse every 20 ms. Which line sets that up?
+    - What does the IR sensor read when a hand is in front of it?
+    - After the lid moves, how long does the code wait before it senses again?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "set_analog_period\\(\\s*20\\s*\\)", message: "Servos need one pulse every 20 ms: add LID.set_analog_period(20)."}
+    - {type: not_contains, pattern: "read_digital\\(\\s*\\)\\s*==\\s*1", message: "The IR sensor gives 0 when a hand is in front, not 1."}
+    - {type: contains, pattern: "read_digital\\(\\s*\\)\\s*(==\\s*0|!=\\s*1|<\\s*1)|not\\s+pin0\\.read_digital", message: "Check for the IR sensor's 0: it means a hand is in front."}
+    - {type: contains, pattern: "sleep\\(\\s*([3-9]\\d\\d|\\d{4,})\\s*\\)|running_time\\(", message: "Add a cooldown: after the lid moves, wait (for example sleep(1000)) so it doesn't flap."}
+  solution: |
+    from microbit import *
+
+    LID = pin13
+    LID.set_analog_period(20)
+
+    def angle(deg):
+        LID.write_analog(26 + deg * 102 // 180)
+
+    angle(0)
+    state = "closed"
+
+    while True:
+        hand = pin0.read_digital() == 0
+        if hand and state == "closed":
+            angle(90)
+            state = "open"
+            sleep(2000)
+        elif not hand and state == "open":
+            angle(0)
+            state = "closed"
+            sleep(500)
+        sleep(50)
+  reflection_prompt: Which bug made the lid flap, and why does a short wait fix it?
+quiz:
+  - question: Put the robot loop in order.
+    visual:
+      type: flow
+      steps:
+        - {icon: "❓", label: "Step 1"}
+        - {icon: "❓", label: "Step 2"}
+        - {icon: "❓", label: "Step 3"}
+      loop: true
+    choices:
+      - Act, then sense, then decide
+      - Decide, then act, then sense
+      - Sense, then decide, then act
+    answer: 2
+    explain: First read the sensors, then choose with if, then move. Then repeat.
+  - question: "The code says hand = pin0.read_digital() == 0. When is hand True?"
+    choices:
+      - When the path is clear
+      - When something is in front of the sensor
+      - Never
+    answer: 1
+    explain: The IR obstacle sensor reads 0 when something is in front, so hand becomes True.
+  - question: Why does the code check state == "closed" before opening?
+    choices:
+      - So it only opens once, not over and over
+      - Because the servo can't read numbers
+      - To make the sensor see farther
+    answer: 0
+    explain: The state variable remembers the gate is already open, so it doesn't keep re-opening.
+  - question: Your gate opens and shuts fast when a hand is at the edge of the range. What helps most?
+    visual:
+      type: graph
+      points: [1, 0, 1, 0, 0, 1, 0, 1, 1, 0]
+      min: 0
+      max: 1
+      y_label: "IR reading"
+    choices:
+      - A faster loop with no sleep
+      - A different servo
+      - A cooldown wait after the gate moves
+    answer: 2
+    explain: A cooldown makes the gate ignore quick flickers, so it stops flapping.
+  - question: Which write_analog value closes the gate at 0°?
+    choices:
+      - "26"
+      - "77"
+      - "1023"
+    answer: 0
+    explain: 26 is 0°, 77 is 90° and 128 is 180°.
+challenge:
+  title: Build a Real Gadget
+  prompt: >-
+    Turn your gate into a real gadget: a candy dispenser, a trash-can lid or an
+    alarm flag that pops up. Build it from cardboard and tape!
+  levels:
+    - "Mild: Change the angles and wait times so your gadget works well. Show a matching picture when it moves."
+    - "Medium: Count how many times it opens. Button A shows the count. Lock it after 5 opens for a candy limit."
+    - "Spicy: Replace the sleep() waits with running_time() timers, so it keeps sensing. Close 3 s after the hand leaves; scroll a countdown."
+  submit_prompt: What gadget did you build? How did you stop it from flapping?
+  visual:
+    type: leds
+    caption: "Closed, then open."
+    frames: ["NO", "YES"]
+teacher_notes: |
+  * **Setup:** see `docs/ROBOT_SPRINT_HARDWARE.md`. V1 on 3.3V (sensor row), V2 on 5V (servo row). The servo **needs the battery pack** in the DC jack; on USB alone the micro:bit resets when the servo starts.
+  * **Quick win:** the starter runs as-is. A student whose gate opens for their hand has succeeded. Changing 90 to 150 is the next easy win.
+  * **Gate opens by itself:** the IR sensor is seeing the servo arm, the table or the cardboard. Point the sensor away from the gate, or turn its knob to shorten the range.
+  * **Gate never opens:** check the IR sensor's own LED. If it lights for a hand but the gate doesn't move, check the battery pack, the brown wire on G and that `set_analog_period(20)` runs.
+  * **Why a cooldown:** near the edge of its range the IR reading flickers, and a moving servo arm can trigger the sensor too. A `sleep()` after each move is the simple fix. The Spicy level replaces it with `running_time()` so the loop keeps sensing while it waits.
+  * **Debug checks** accept any cooldown of 300 ms or more, or a `running_time()` timer.
+  * **Fast finishers:** the Spicy timer pattern is `opened_at = running_time()`, then later `if running_time() - opened_at > 3000:`. Push them to also make a "locked" state toggled by button A, so the gadget has three states.
+  * **Students who need a quick win:** let them decorate the gate and pick the YES/NO pictures. Changing one number and seeing the result counts.
+standards:
+  - code: 6-8.CS.a.4
+    how: Students build a small control system where an IR sensor input drives a servo actuator.
+  - code: 6-8.CS.a.5
+    how: Students design and demonstrate a gadget, such as a candy dispenser or trash-can lid, that does a task on its own.
+  - code: 6-8.CT.b.1
+    how: The gate uses a forever loop and if/elif conditionals on the sensor reading and the state.
+  - code: 6-8.CT.b.5
+    how: Students handle the edge of the sensor's range, where flickering readings make the gate flap, with a cooldown.
+  - code: 6-8.CT.d.4
+    how: The program combines a loop, conditionals, a Boolean expression, a state variable and an angle() function.

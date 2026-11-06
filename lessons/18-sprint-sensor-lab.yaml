@@ -1,0 +1,365 @@
+id: sprint-sensor-lab
+label: S2
+unit: 5
+order: 18
+title: "Sprint 2: Sensor Lab"
+subtitle: Give your robot eyes with an IR sensor and a line sensor
+duration_minutes: 35
+level: Robot Sprint
+big_idea: >-
+  A digital sensor answers a yes-or-no question with a 0 or a 1, and a small
+  knob tunes when its answer flips.
+objectives:
+  - Plug two sensors into the sensor shield
+  - Read a sensor with read_digital()
+  - Show sensor readings on the LED screen
+  - Tune a sensor with its knob
+vocabulary:
+  - term: Sensor
+    definition: A part that notices something about the world and sends the micro:bit a signal.
+  - term: Digital
+    definition: Only two values, 0 or 1. Like a light switch, it's off or on.
+  - term: Infrared (IR)
+    definition: Light that our eyes can't see. TV remotes use it.
+  - term: Potentiometer
+    definition: A small knob you turn to adjust a part. On these sensors it sets when the answer flips.
+materials:
+  - micro:bit V2 + USB cable
+  - Keyestudio sensor shield (KS0360)
+  - IR obstacle sensor
+  - Line tracking sensor
+  - Small screwdriver for the tuning knobs
+  - A sheet of white paper with a thick black marker line
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: circuit, name: Plug it in, minutes: 5}
+  - {key: code, name: Code it, minutes: 10}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: How robots see
+  note: Watch how an IR sensor spots a hand and how a line sensor spots a black line.
+warmup:
+  prompt: >-
+    A robot can't see like you do. What are two things it should notice so it
+    doesn't crash or get lost?
+learn:
+  - text: |
+      ### Sensors answer yes or no
+      A **digital** sensor only says **0** or **1**. It's like a yes-or-no question.
+
+      * Is something in front of me?
+      * Is the floor black under me?
+
+      The code to ask is `pin0.read_digital()`. It gives back a 0 or a 1.
+    visual:
+      type: compare
+      items:
+        - {icon: "0️⃣", title: "0", text: "low: about 0 volts"}
+        - {icon: "1️⃣", title: "1", text: "high: about 3 volts"}
+  - text: |
+      ### The IR obstacle sensor
+      It shines **infrared** light. That's light you can't see. If the light bounces back off something, the sensor knows.
+
+      * Something in front → **0**
+      * Nothing there → **1**
+
+      Yes, 0 means "I see it." It works from about **2 to 40 cm** away.
+    visual:
+      type: compare
+      items:
+        - {icon: "✋", title: "Hand in front", text: "read_digital() gives 0"}
+        - {icon: "🌫️", title: "Nothing there", text: "read_digital() gives 1"}
+  - text: |
+      ### The line sensor
+      It looks **down** at the floor.
+
+      * Black line → **1**
+      * White floor → **0**
+      * Nothing below (lifted up) → **1**
+
+      Black soaks up its light, just like empty air. Keep it **0 to 3 cm** above the floor.
+    visual:
+      type: compare
+      items:
+        - {icon: "⬛", title: "Black line", text: "gives 1"}
+        - {icon: "⬜", title: "White paper", text: "gives 0"}
+        - {icon: "🚁", title: "Lifted up", text: "gives 1, same as black"}
+  - text: |
+      ### The tuning knob
+      Each sensor has a tiny knob called a **potentiometer**. Turn it gently with a small screwdriver.
+
+      * On the IR sensor, it sets **how far** it can see.
+      * On the line sensor, set it so the LED **just** flips between black and white.
+
+      Watch the sensor's own LED while you turn.
+    visual:
+      type: scale
+      min: 0
+      max: 45
+      zones:
+        - {from: 0, to: 2, label: "too close", color: "#fde2e2"}
+        - {from: 2, to: 40, label: "knob sets the reach", color: "#dff4f4"}
+        - {from: 40, to: 45, label: "too far", color: "#fde2e2"}
+      marks:
+        - {at: 2, label: "2 cm"}
+        - {at: 20, label: "20 cm", pointer: true}
+        - {at: 40, label: "40 cm"}
+      caption: "IR obstacle sensor range in cm"
+  - text: |
+      ### Spicy: the ultrasonic sensor
+      The **HC-SR04** measures real distance, not just yes or no.
+
+      1. Your code sends a short **ping** on Trig.
+      2. The sound bounces back.
+      3. Echo stays on while it waits.
+
+      Time it in microseconds. Divide by **58** to get cm. It runs on 5V, so it needs **safe wiring**. Ask your teacher.
+    visual:
+      type: flow
+      steps:
+        - {icon: "📤", label: "Trig high for 10 µs"}
+        - {icon: "🔊", label: "Sound bounces back"}
+        - {icon: "⏱️", label: "Time the Echo pulse"}
+        - {icon: "📏", label: "µs ÷ 58 = cm"}
+circuit:
+  intro: >-
+    You'll plug the IR sensor into pin 0 and the line sensor into pin 8. No
+    servos today, so USB power is enough.
+  safety:
+    - Unplug the USB cable before you plug in a sensor.
+    - Match G to G. A backwards sensor can be damaged.
+    - The two small chips on the shield get hot. Don't touch them.
+  steps:
+    - title: Set the jumpers
+      instruction: >-
+        Find jumpers **V1** and **V2** on the shield. Set **V1 to 3.3V**. That
+        is the sensor row, pins 0-10. The micro:bit's pins only like 3 volts.
+        Set **V2 to 5V**.
+      check: Is V1 on 3.3V?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        caption: "V1 is next to pins 0-10. V2 is next to pins 11-20."
+    - title: Plug in the IR sensor
+      instruction: >-
+        Slide the micro:bit in, screen facing out. Plug the **IR obstacle
+        sensor** into header **0**. Match the letters: **G to G**, V to V, S to
+        S. Point its two eyes forward.
+      check: Is G on the sensor lined up with G on the shield?
+      tip: If the sensor says GND, VCC and OUT, then OUT goes to S.
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+    - title: Plug in the line sensor
+      instruction: >-
+        Plug the **line tracking sensor** into header **8**, G to G. Point its
+        eyes **down** at your paper, about 1 cm above it.
+      check: Is the line sensor on pin 8, facing down?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+          - {pin: 8, device: "Line tracker", kind: sensor}
+    - title: Power it up
+      instruction: >-
+        Plug in the **USB cable**. Each sensor has a small power light. Wave
+        your hand in front of the IR sensor. Its other LED should blink on.
+      check: Did the IR sensor's LED react to your hand?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+          - {pin: 8, device: "Line tracker", kind: sensor}
+code:
+  intro: >-
+    This program lights the **left** side of the screen when the IR sensor
+    sees your hand. It lights the **right** side over a black line. Send it and
+    wave!
+  starter: |
+    from microbit import *
+
+    IR = pin0      # IR obstacle sensor: 0 = something in front
+    LINE = pin8    # line sensor: 1 = black (or nothing below)
+
+    def bar(x, on):
+        # light up column x, or turn it off
+        for y in range(5):
+            if on:
+                display.set_pixel(x, y, 9)
+            else:
+                display.set_pixel(x, y, 0)
+
+    while True:
+        ir = IR.read_digital()
+        line = LINE.read_digital()
+        bar(0, ir == 0)
+        bar(1, ir == 0)
+        bar(3, line == 1)
+        bar(4, line == 1)
+        sleep(50)
+  walkthrough:
+    - lines: "3-4"
+      explain: Give each sensor's pin a name, so the code is easy to read.
+    - lines: "6-12"
+      explain: A **function** that lights a whole column when `on` is True, or clears it.
+    - lines: "15-16"
+      explain: "**Sense:** ask each sensor for a 0 or a 1."
+    - lines: "17-20"
+      explain: "`ir == 0` is True when your hand is close. `line == 1` is True over black."
+  try_it:
+    - Slide your hand closer and farther. At what distance does the left side switch on?
+    - "Turn the IR knob a little. Did that distance change? Tune it to about 10 cm."
+    - "Lift the line sensor off the paper. Why does the right side light up?"
+debug:
+  story: >-
+    Sam wants a surprised face when a hand is close and a down arrow over the
+    black line. Instead the screen is always happy. Find **three** bugs.
+  buggy_code: |
+    from microbit import *
+
+    while True:
+        ir = pin0.read_digital
+        line = pin9.read_digital()
+        if ir == 1:
+            display.show(Image.SURPRISED)
+        elif line == 1:
+            display.show(Image.ARROW_S)
+        else:
+            display.show(Image.HAPPY)
+        sleep(100)
+  hints:
+    - "A function needs () to run. Look closely at each read_digital."
+    - Which pin is the line sensor plugged into?
+    - What does the IR sensor give when something is in front of it?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "pin0\\.read_digital\\(\\s*\\)", message: "read_digital needs () to actually read the sensor: pin0.read_digital()."}
+    - {type: contains, pattern: "pin8\\.read_digital\\(\\s*\\)", message: "The line sensor is plugged into pin 8, not pin 9."}
+    - {type: not_contains, pattern: "pin9", message: "Pin 9 is shared with the LED screen. The line sensor is on pin 8."}
+    - {type: not_contains, pattern: "\\bir\\s*==\\s*1|pin0\\.read_digital\\(\\s*\\)\\s*==\\s*1", message: "The IR sensor gives 0 when something is in front, not 1."}
+    - {type: contains, pattern: "==\\s*0|!=\\s*1|<\\s*1|\\bnot\\s+\\w", message: "Check for the IR sensor's 0: it means something is in front."}
+  solution: |
+    from microbit import *
+
+    while True:
+        ir = pin0.read_digital()
+        line = pin8.read_digital()
+        if ir == 0:
+            display.show(Image.SURPRISED)
+        elif line == 1:
+            display.show(Image.ARROW_S)
+        else:
+            display.show(Image.HAPPY)
+        sleep(100)
+  reflection_prompt: Which bug surprised you most? How did you prove your fix worked?
+quiz:
+  - question: The IR obstacle sensor reads 0. What does that mean?
+    choices:
+      - Something is in front of it
+      - Nothing is in front of it
+      - The sensor is broken
+    answer: 0
+    explain: For this sensor, 0 means "I see something." 1 means the path is clear.
+  - question: You lift the line sensor high into the air. What does it read?
+    visual:
+      type: compare
+      items:
+        - {icon: "⬛", title: "Black line", text: "1"}
+        - {icon: "⬜", title: "White paper", text: "0"}
+        - {icon: "🚁", title: "Lifted up", text: "?"}
+    choices:
+      - "0, like white"
+      - "1, like black"
+      - "A number from 0 to 1023"
+    answer: 1
+    explain: With nothing below, no light bounces back. That looks the same as black, so it reads 1.
+  - question: Your IR sensor spots things from across the room. What should you do?
+    choices:
+      - Use a different pin
+      - Unplug the battery
+      - Turn its tuning knob to shorten its reach
+    answer: 2
+    explain: The potentiometer sets how far the sensor reaches. Turn it until it only sees close things.
+  - question: Which line of code reads the sensor on pin 0?
+    choices:
+      - "pin0.write_digital(0)"
+      - "pin0.read_digital()"
+      - "pin0.read_digital"
+    answer: 1
+    explain: read_digital() reads the pin. Without the (), the function never runs.
+  - question: Why does the ultrasonic Echo wire go through two resistors first?
+    choices:
+      - Echo's 5V is too much for the pins
+      - The resistors make the sound louder
+      - It makes the distance read in inches
+    answer: 0
+    explain: Echo sends out 5 volts. The two resistors drop it to about 3.3 volts, which is safe.
+challenge:
+  title: Sensor Detective
+  prompt: >-
+    Your kit has more sensors. Plug one in, read it, and find out what 0 and 1
+    mean for it. Report what you discover!
+  levels:
+    - "Mild: Try the crash sensor on pin 1. Show a sad face when it's pressed."
+    - "Medium: Test two more sensors from the kit. Make a table: sensor, pin, what 0 means, what 1 means."
+    - "Spicy: Wire the ultrasonic with your teacher's safe divider. Write distance_cm() and show the distance in cm."
+  submit_prompt: Which sensors did you test, and what did 0 and 1 mean for each one?
+  visual:
+    type: leds
+    caption: "Show what each sensor sees."
+    frames: [HAPPY, SAD, TARGET]
+teacher_notes: |
+  * **Setup:** see `docs/ROBOT_SPRINT_HARDWARE.md`. Set **V1 to 3.3V** before class. The micro:bit's pins are rated for 3 V, and Keyestudio notes it "does not support sensors of 5V". USB power is fine today because there are no servos.
+  * **Quick win:** the starter runs as-is. A student who waves a hand and sees the left side light up has succeeded. Tuning the knob to 10 cm is the next win.
+  * **Backwards logic:** the IR sensor gives **0** when it sees something, and the line sensor gives **1** for black *or* nothing below. Expect students to say "it's broken." Ask them to test with the sensor's own LED first.
+  * **Line sensor always reads 1:** it's too high. Keep it 0-3 cm above the paper, then turn the knob until its LED is right at the on/off point.
+  * **Pin labels:** most kit sensors are marked G, V, S. If yours say GND, VCC and OUT/DO, match them up. Check your kit if a module is labeled differently.
+  * **Sensor detective:** the crash sensor on P1 reads **0 when pressed**. For other modules (PIR motion, touch, tilt and so on), check your kit's docs for the pin labels, the logic level and whether it works at 3.3 V. Only use the 0-10 row at 3.3V, and unplug the crash sensor before using P1 for the ultrasonic.
+  * **The ultrasonic and 5V (Spicy only):** the HC-SR04 is a 5 V module, and its **Echo pin outputs 5 V**. That is more than a micro:bit pin is rated for, even though wiring it straight to P1 often "works". Use the safe wiring:
+    * **VCC** to any **V** pin in the **11-20 row** (V2 = 5V), **GND** to any **G**.
+    * **Trig** straight to the **S** pin of header **2** (3.3 V is enough to trigger it).
+    * **Echo → 1 kΩ → P1**, and **P1 → 2 kΩ → GND** (10 kΩ + 20 kΩ also works). 5 V × 2/3 ≈ 3.3 V. Build the divider on a small breadboard with jumper wires, or use the SparkFun breakout.
+    * Don't move V1 to 5V for this: that puts every sensor on pins 0-10 at 5 V.
+  * **Ultrasonic reference code** for strong coders who get stuck (distance in cm = echo time in µs ÷ 58):
+
+    ```python
+    from microbit import *
+    import utime
+    from machine import time_pulse_us
+
+    pin1.read_digital()          # Echo pin in input mode
+    def distance_cm():
+        pin2.write_digital(1)
+        utime.sleep_us(10)
+        pin2.write_digital(0)
+        t = time_pulse_us(pin1, 1, 30000)
+        if t < 0:
+            return 999           # no echo
+        return t // 58
+
+    while True:
+        display.scroll(distance_cm())
+    ```
+  * **Fast finishers:** have them write `def near():` that returns True when the IR sensor sees something, then use it to count how many times a hand passes (and show the count on button A).
+standards:
+  - code: 6-8.CS.a.4
+    how: Students identify what the IR obstacle and line tracking sensors detect and how they signal the micro:bit.
+  - code: 6-8.CS.a.6
+    how: In Sensor Detective, students read new kit sensors and report what each one's 0 and 1 mean.
+  - code: 6-8.CT.b.2
+    how: Students predict each sensor's reading for a hand, a black line, white paper or empty air.
+  - code: 6-8.CS.a.7
+    how: Students diagnose sensor problems such as a wrong pin, a sensor held too high or a knob set too far.
+  - code: 6-8.CT.d.6
+    how: Students fix three bugs (missing (), wrong pin, backwards 0/1 check), then tune each sensor's knob by testing and adjusting.
