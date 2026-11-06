@@ -23,7 +23,7 @@
     </tr></thead>
     <tbody>
     {% for s in c.students %}
-      <tr><th><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a><small>{{ s.username }}</small></th>
+      <tr><th class="who"><span data-avatar='{{ avatar_of(s)|tojson }}' data-size="34"></span><span><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a><small>{{ s.username }} · Lv {{ levels[s.id].level }} · {{ s.xp or 0 }} XP</small></span></th>
       {% for a, l in cols %}{% set cell = grid[(s.id, a.id)] %}
         <td class="cell {{ cell.status }}{{ ' late' if cell.late }}">
           <a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}#{{ l.id }}">
@@ -69,9 +69,9 @@
 
 <section class="card">
   <h2>Roster ({{ c.students|length }})</h2>
-  <ul class="roster">
+  <ul class="roster plain">
     {% for s in c.students %}
-    <li><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a> <small class="muted">{{ s.username }}</small></li>
+    <li><span data-avatar='{{ avatar_of(s)|tojson }}' data-size="26"></span> <a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a> <small class="muted">{{ s.username }} · Lv {{ levels[s.id].level }}</small></li>
     {% else %}<li class="muted">Nobody yet.</li>{% endfor %}
   </ul>
   <details class="danger-zone">

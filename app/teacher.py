@@ -7,6 +7,7 @@ from flask import (Blueprint, Response, abort, flash, redirect, render_template,
                    url_for)
 from flask_login import current_user
 
+from . import gamify
 from . import lessons as L
 from .auth import teacher_required
 from .models import Assignment, Classroom, LessonVideo, Progress, User, db, new_join_code
@@ -81,7 +82,8 @@ def classroom(cid):
     c = _own_class(cid)
     cols, grid = gradebook(c)
     assigned = {a.lesson_id for a in c.assignments}
-    return render_template("teacher/classroom.html", c=c, cols=cols, grid=grid,
+    levels = {st.id: gamify.level_info(st.xp or 0) for st in c.students}
+    return render_template("teacher/classroom.html", c=c, cols=cols, grid=grid, levels=levels,
                            units=L.lessons_by_unit(), assigned=assigned)
 
 
@@ -173,7 +175,24 @@ def student(cid, sid):
         if p or assigned:
             items.append({"lesson": lesson, "p": p, "assigned": assigned,
                           "pct": p.percent(L.section_keys(lesson)) if p else 0})
-    return render_template("teacher/student.html", c=c, s=s, items=items)
+    return render_template("teacher/student.html", c=c, s=s, items=items,
+                           level=gamify.level_info(s.xp or 0), badges=gamify.badge_list(s))
+
+
+@bp.post("/classes/<int:cid>/students/<int:sid>/bonus")
+@teacher_required
+def bonus(cid, sid):
+    c = _own_class(cid)
+    s = _student_in(c, sid)
+    reason = request.form.get("reason", "").strip()[:120] or "Great work"
+    try:
+        amount = int(request.form.get("amount") or 0)
+    except ValueError:
+        amount = 0
+    got = gamify.give_bonus(s, current_user, amount, reason, bool(request.form.get("badge")))
+    flash(f"Gave {s.display_name} {got['xp']} XP." if got["xp"] else "Nothing to give (they may already have that badge).",
+          "success" if got["xp"] else "info")
+    return redirect(url_for("teacher.student", cid=cid, sid=sid))
 
 
 @bp.post("/progress/<int:pid>/feedback")
@@ -225,13 +244,14 @@ def export(cid):
     cols, grid = gradebook(c)
     out = io.StringIO()
     w = csv.writer(out)
-    header = ["Student", "Username"]
+    header = ["Student", "Username", "XP", "Level"]
     for a, lesson in cols:
         t = lesson["title"]
         header += [f"{t} - % complete", f"{t} - quiz best", f"{t} - debug solved", f"{t} - challenge"]
     w.writerow(header)
     for s in c.students:
-        row = [s.display_name, s.username]
+        lv = gamify.level_info(s.xp or 0)
+        row = [s.display_name, s.username, s.xp or 0, f"{lv['level']} {lv['title']}"]
         for a, lesson in cols:
             cell = grid[(s.id, a.id)]
             p = cell["p"]

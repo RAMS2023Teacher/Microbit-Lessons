@@ -34,6 +34,13 @@
     <h1>{{ lesson.title }}</h1>
     {% if lesson.subtitle %}<p class="subtitle">{{ lesson.subtitle }}</p>{% endif %}
     <div class="big-idea"><b>Big idea</b> {{ lesson.big_idea }}</div>
+    {% if not is_teacher %}
+    <div class="lesson-rewards">
+      <span class="xp-chip">⚡ <b id="lesson-xp">{{ lesson_xp }}</b> / {{ xp_possible }} XP</span>
+      <span class="stars-chip" id="lesson-stars" title="Stars: fix the bug · perfect quiz · submit the challenge">{{ '★' * stars }}{{ '☆' * (3 - stars) }}</span>
+      <a class="small" href="{{ url_for('student.lesson_map') }}">🗺️ Map</a>
+    </div>
+    {% endif %}
   </header>
 
   {% if state.feedback %}
