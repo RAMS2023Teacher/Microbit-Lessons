@@ -125,3 +125,17 @@ def test_login_redirect_is_safe(client):
     logout(client)
     r = client.post("/login?next=https://evil.example", data={"username": "teach", "password": "pass1234"})
     assert "evil" not in r.headers["Location"]
+
+
+def test_no_lesson_screen_is_a_wall_of_text():
+    """Every screen stays within the readability limits in docs/LESSON_FORMAT.md."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import readability_report as R
+    problems = []
+    for lesson in L.all_lessons():
+        for name, text, _ in R.screens(lesson):
+            if R.flag(R.words(text), R.grade(text)):
+                problems.append(f"{lesson['id']} {name}: {R.words(text)} words, grade {R.grade(text)}")
+    assert not problems, "\n".join(problems)

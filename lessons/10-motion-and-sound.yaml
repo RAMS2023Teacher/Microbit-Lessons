@@ -9,10 +9,10 @@ big_idea: >-
   The accelerometer senses how the micro:bit moves and tilts, and the music
   module turns numbers into sound - so motion can control music.
 objectives:
-  - Read tilt with accelerometer.get_x() and detect a shake with accelerometer.was_gesture('shake')
-  - Play built-in melodies and single pitches with the music module
-  - Wire a piezo buzzer to pin 0 and GND, and switch between it and the V2 built-in speaker
-  - Map a tilt number to a sound frequency to make a tilt theremin
+  - Read tilt and shakes with the accelerometer
+  - Wire a piezo buzzer to pin 0
+  - Play tunes and notes with the music module
+  - Turn tilt into pitch to make a theremin
 vocabulary:
   - term: Accelerometer
     definition: A sensor that measures pushes and pulls (like gravity) in three directions - x, y and z.
@@ -47,52 +47,101 @@ warmup:
     Your phone knows when you turn it sideways and flips the screen. How do you
     think it can tell which way is down? What could a game do with that?
 learn:
-  - |
-    ### The accelerometer feels gravity
-    The micro:bit has an **accelerometer** that measures force in three
-    directions: **x** (left-right), **y** (forward-back) and **z** (up-down).
+  - text: |
+      ### The accelerometer feels tilt
+      The **accelerometer** is a sensor that feels gravity. It measures
+      **x** (left-right), **y** (forward-back) and **z** (up-down).
 
-    `accelerometer.get_x()` gives a number in **milli-g**:
-    * Flat on the table: about **0**
-    * Tilted all the way **right**: about **1024**
-    * Tilted all the way **left**: about **-1024**
+      `accelerometer.get_x()` gives a number:
+      * Flat on the table: about **0**
+      * Tilted all the way **right**: about **1024**
+      * Tilted all the way **left**: about **-1024**
 
-    Shake it hard and the numbers can go even bigger!
-  - |
-    ### Gestures do the math for you
-    Instead of watching numbers, you can ask about **gestures**:
+      A hard shake can go even bigger!
+    visual:
+      type: scale
+      min: -1024
+      max: 1024
+      caption: What get_x() says as you tilt left and right.
+      zones:
+        - {from: -1024, to: -300, label: "tilted left"}
+        - {from: -300, to: 300, label: "flat"}
+        - {from: 300, to: 1024, label: "tilted right"}
+      marks:
+        - {at: -1024, label: "-1024"}
+        - {at: 0, label: "0", pointer: true}
+        - {at: 1024, label: "1024"}
+  - text: |
+      ### Gestures do the math for you
+      A **gesture** is a move the micro:bit knows by name.
 
-    ```python
-    if accelerometer.was_gesture('shake'):
-        display.show(Image.SURPRISED)
-    ```
+      ```python
+      if accelerometer.was_gesture('shake'):
+          display.show(Image.SURPRISED)
+      ```
 
-    Other gestures: `'up'`, `'down'`, `'left'`, `'right'`, `'face up'`,
-    `'face down'` and `'freefall'`. The gesture name goes in **quotes** - it's text.
-  - |
-    ### The music module
-    Sound lives in its own module, so you need **`import music`** at the top.
+      * Others: `'up'`, `'down'`, `'left'`, `'right'`, `'face up'`, `'face down'`, `'freefall'`
+      * The name goes in **quotes**. It's text.
+    visual:
+      type: leds
+      caption: "Show an arrow for each gesture: 'left', 'right', 'up', 'down'."
+      frames: [ARROW_W, ARROW_E, ARROW_N, ARROW_S]
+  - text: |
+      ### The music module
+      Sound lives in its own module. Put **`import music`** at the top.
 
-    * `music.play(music.BIRTHDAY)` - play a **built-in melody**. Others include
-      `music.POWER_UP`, `music.NYAN`, `music.BA_DING` and `music.WAWAWAWAA`.
-    * `music.play(['C4:4', 'E4:4', 'G4:8'])` - play your **own notes**.
-    * `music.pitch(440, 200)` - play **440 Hz** for **200 ms**.
-  - |
-    ### Where does the sound come out?
-    By default, music goes to **pin 0** *and* the V2's **built-in speaker** at
-    the same time. A **piezo buzzer** wired from **P0** to **GND** gets the same signal.
+      * Play a **built-in tune**, like `music.BIRTHDAY` or `music.NYAN`.
+      * Play your **own notes** from a list.
+      * Play **one pitch** for a set time.
+    visual:
+      type: compare
+      items:
+        - {icon: "🎂", title: "music.play(music.BIRTHDAY)", text: "a built-in tune"}
+        - {icon: "🎼", title: "music.play(['C4:4', 'E4:4'])", text: "your own notes"}
+        - {icon: "🔔", title: "music.pitch(440, 200)", text: "440 Hz for 200 ms"}
+  - text: |
+      ### Wire a piezo buzzer
+      A **piezo buzzer** is a thin disc that clicks fast to make sound.
 
-    * `speaker.off()` - only the buzzer on pin 0 plays
-    * `speaker.on()` - the built-in speaker plays again
+      * Its **+ leg** goes to **P0**.
+      * Its other leg goes to **GND**.
 
-    You can also say exactly which pin to use: `music.play(music.BA_DING, pin=pin0)`.
-  - |
-    ### Turning tilt into a note
-    To make a **theremin**, change the tilt number into a frequency:
+      Music sent to pin 0 now plays on the buzzer.
+    visual:
+      type: part
+      part: buzzer
+      labels: {plus: "+ → P0", minus: "– → GND"}
+  - text: |
+      ### Where does the sound come out?
+      On a V2, music plays on **pin 0** *and* the **built-in speaker** at the same time.
 
-    `freq = 600 + x * 400 // 1024`
+      * `speaker.off()`: only the buzzer on pin 0 plays.
+      * `speaker.on()`: the built-in speaker plays again.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔊", title: "speaker.on()", text: "pin 0 and the built-in speaker"}
+        - {icon: "🔈", title: "speaker.off()", text: "only the buzzer on pin 0"}
+  - text: |
+      ### Turning tilt into a note
+      A **theremin** changes pitch as you move. Turn the tilt number into a frequency:
 
-    Flat (x = 0) → 600 Hz. Right (x = 1024) → 1000 Hz. Left (x = -1024) → 200 Hz.
+      `freq = 600 + x * 400 // 1024`
+
+      * Left (x = -1024) → **200 Hz**
+      * Flat (x = 0) → **600 Hz**
+      * Right (x = 1024) → **1000 Hz**
+    visual:
+      type: scale
+      min: -1024
+      max: 1024
+      map: [2, 10]
+      map_label: pitch (× 100 Hz)
+      caption: More tilt to the right means a higher note.
+      marks:
+        - {at: -1024, label: "-1024"}
+        - {at: 0, label: "0"}
+        - {at: 1024, label: "1024"}
 circuit:
   intro: >-
     You'll wire a piezo buzzer between pin 0 and ground. It's a short circuit
@@ -164,28 +213,17 @@ code:
             display.show(Image.MUSIC_CROTCHET)
   walkthrough:
     - lines: "1-2"
-      explain: "`from microbit import *` gets the display, buttons and accelerometer. `import music` adds the sound tools."
+      explain: "`from microbit import *` gets the buttons and sensors. `import music` adds sound."
     - lines: "7-10"
-      explain: >-
-        `was_gesture('shake')` is True if the micro:bit was shaken since the last
-        time we asked. Then it plays a built-in melody and goes back to the music note picture.
-    - lines: "12-14"
-      explain: >-
-        While A is held, read the tilt and turn it into a frequency: 200 Hz
-        tilted left, 600 Hz flat, 1000 Hz tilted right.
-    - lines: "15"
-      explain: >-
-        A really hard shake can make x bigger than 1024. `max()` and `min()`
-        keep the frequency between 100 and 2000 Hz.
-    - lines: "16"
-      explain: "`music.pitch(freq, 50)` plays that note for 50 ms. The loop repeats, so you hear a smooth slide."
+      explain: If it was shaken since the last check, show a face and play a tune.
+    - lines: "12-16"
+      explain: While A is held, tilt sets the pitch. Keep it 100-2000 Hz. Play it for 50 ms.
     - lines: "18-22"
-      explain: Button B turns off the built-in speaker so only your buzzer on pin 0 makes sound.
+      explain: Button B turns off the built-in speaker. Now only the buzzer on pin 0 plays.
   try_it:
-    - Swap music.POWER_UP for another built-in melody, like music.NYAN or music.WAWAWAWAA.
-    - Change 400 to 800 in the freq line. How does the theremin's range change?
-    - Use accelerometer.get_y() instead of get_x() so you tilt forward and back.
-    - "Write your own alarm tune as a list of notes, like `music.play(['C5:2', 'G4:2', 'C5:2', 'G4:2'])`."
+    - Swap `music.POWER_UP` for another tune, like `music.NYAN`.
+    - Change 400 to 800 in the freq line. How does the range change?
+    - Use `get_y()` instead of `get_x()`. Now tilt forward and back.
 debug:
   story: >-
     Leo built a "don't touch my stuff" alarm. It should scream when somebody
@@ -231,11 +269,22 @@ quiz:
       - It returns 'flat'
     answer: 0
     explain: Flat means no tilt left or right, so x is close to 0. Tilting right goes toward 1024, left toward -1024.
+    visual:
+      type: scale
+      min: -1024
+      max: 1024
+      caption: The get_x() number line.
+      zones:
+        - {from: -1024, to: -300, label: "left"}
+        - {from: 300, to: 1024, label: "right"}
+      marks:
+        - {at: -1024, label: "-1024"}
+        - {at: 1024, label: "1024"}
   - question: Which line correctly checks for a shake?
     choices:
-      - if accelerometer.was_gesture(shake)
-      - "if accelerometer.was_gesture('shake'):"
-      - "if accelerometer.shake == True:"
+      - "`if accelerometer.was_gesture(shake)`"
+      - "`if accelerometer.was_gesture('shake'):`"
+      - "`if accelerometer.shake == True:`"
     answer: 1
     explain: The gesture name is text, so it needs quotes, and an if line ends with a colon.
   - question: What happens to the sound if you make the frequency number bigger?
@@ -262,13 +311,13 @@ quiz:
 challenge:
   title: Motion-Powered Music Machine
   prompt: >-
-    Invent a gadget where **movement makes sound**. It could be a bike-bell for
-    your backpack, a game that beeps when you tilt too far, a "magic wand" with
-    sound effects, or a new musical instrument. Make it surprising!
+    Invent a gadget where **movement makes sound**. Try a backpack bike-bell,
+    a game that beeps when you tilt too far, or a "magic wand" with sound
+    effects. Make it surprising!
   levels:
-    - "Mild: Give each gesture its own sound - 'left', 'right', 'face down' and 'shake' all play different melodies."
-    - "Medium: Make a steady-hand game - tilt more than 300 either way and the buzzer buzzes and you lose a life (show lives on the display)."
-    - "Spicy: Make the theremin play only real notes (a scale) instead of sliding, or use get_y() to control how long each note lasts."
+    - "Mild: Give 'left', 'right', 'face down' and 'shake' each their own melody."
+    - "Medium: Make a steady-hand game. Tilt past 300 either way and the buzzer buzzes. You lose a life. Show lives on the display."
+    - "Spicy: Make the theremin play only real notes from a scale, or use get_y() to set how long each note lasts."
   submit_prompt: What does your gadget do, which motions does it react to, and how did you turn motion into sound?
 teacher_notes: |
   **Common problems**

@@ -223,9 +223,9 @@ quiz:
       type: leds
       image: HAPPY
     choices:
-      - display.show(image.happy)
-      - display.show(Image.happy)
-      - display.show(Image.HAPPY)
+      - "`display.show(image.happy)`"
+      - "`display.show(Image.happy)`"
+      - "`display.show(Image.HAPPY)`"
     answer: 2
     explain: Python is case-sensitive. It's Image with a capital I and the picture name in CAPITALS.
   - question: How does Python know which lines are inside a while True loop?

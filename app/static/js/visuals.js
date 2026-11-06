@@ -177,7 +177,7 @@
       const x = 10 + i * (bw + gap);
       b += `<rect x="${x}" y="14" width="${bw}" height="86" rx="14" fill="#fff" stroke="${s.color || TEAL}" stroke-width="2.5"/>`;
       b += t(x + bw / 2, 52, s.icon || '', 'class="vz-icon" text-anchor="middle"');
-      wrap(s.label, 13).forEach((line, j) => { b += t(x + bw / 2, 74 + j * 14, line, 'class="vz-label" text-anchor="middle"'); });
+      wrap(s.label, 13).forEach((line, j) => { b += t(x + bw / 2, 74 + j * 14, line, `class="vz-label" text-anchor="middle"${line.length > 13 ? ` textLength="${bw - 10}" lengthAdjust="spacingAndGlyphs"` : ''}`); });
       if (i < n - 1) b += `<line x1="${x + bw + 3}" y1="57" x2="${x + bw + gap - 5}" y2="57" stroke="${MUTED}" stroke-width="2.5" marker-end="url(#vzflow)"/>`;
     });
     if (v.loop && n > 1) {
@@ -216,7 +216,7 @@
 
   // ---------------------------------------------------------------- scale (number line, zones, mapping)
   function scale(v) {
-    const min = v.min ?? 0, max = v.max ?? 1023, W = 340, x0 = 20, x1 = 320;
+    const min = v.min ?? 0, max = v.max ?? 1023, W = 340, x0 = 26, x1 = 314;
     const X = (n) => x0 + (x1 - x0) * (n - min) / (max - min);
     let b = '', H = 90;
     (v.zones || []).forEach((z) => {
@@ -226,7 +226,8 @@
     b += `<line x1="${x0}" y1="48" x2="${x1}" y2="48" stroke="${INK}" stroke-width="2"/>`;
     const marks = v.marks || [{ at: min }, { at: max }];
     marks.forEach((m) => {
-      b += `<line x1="${X(m.at)}" y1="44" x2="${X(m.at)}" y2="54" stroke="${INK}" stroke-width="2"/>` + t(X(m.at), 68, m.label ?? m.at, 'class="vz-label" text-anchor="middle"');
+      const anchor = m.at <= min ? 'start' : m.at >= max ? 'end' : 'middle';
+      b += `<line x1="${X(m.at)}" y1="44" x2="${X(m.at)}" y2="54" stroke="${INK}" stroke-width="2"/>` + t(X(m.at) + (anchor === 'start' ? -4 : anchor === 'end' ? 4 : 0), 68, m.label ?? m.at, `class="vz-label" text-anchor="${anchor}"`);
       if (m.pointer) b += `<path d="M${X(m.at)} 22 l-6 -10 h12 z" fill="${RED}"/>`;
     });
     if (v.map) {
@@ -242,7 +243,7 @@
       });
       if (v.map_label) b += t(x1, 106, v.map_label, 'class="vz-label" text-anchor="end" fill="#0b7f7f"');
     }
-    if (v.label) b += t(x0, 14, v.label, 'class="vz-label"');
+    if (v.label) { b += t(W / 2, H + 4, v.label, 'class="vz-label" text-anchor="middle" fill="#5d6680"'); H += 18; }
     return svg(W, H, b, v.alt || `number line from ${min} to ${max}`);
   }
 

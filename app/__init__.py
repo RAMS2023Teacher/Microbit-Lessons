@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 import click
@@ -87,7 +88,17 @@ def create_app(test_config=None):
 
     @app.template_filter("md")
     def md_filter(text):
-        return Markup(md_lib.markdown(text or "", extensions=["fenced_code", "tables", "sane_lists"]))
+        parts = re.split(r"(```.*?```)", str(text or ""), flags=re.S)
+        item = re.compile(r"^[ \t]*(?:[*-]|\d+\.) ")
+        for i in range(0, len(parts), 2):   # only outside code fences
+            out = []
+            for line in parts[i].split("\n"):
+                # a list that starts right under a paragraph line needs a blank line first
+                if item.match(line) and out and out[-1].strip() and not item.match(out[-1]):
+                    out.append("")
+                out.append(line)
+            parts[i] = "\n".join(out)
+        return Markup(md_lib.markdown("".join(parts), extensions=["fenced_code", "tables", "sane_lists"]))
 
     @app.context_processor
     def inject():

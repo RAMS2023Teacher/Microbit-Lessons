@@ -10,10 +10,10 @@ big_idea: >-
   if/elif/else to choose a move - and remembering where it last saw the line
   helps it find its way back.
 objectives:
-  - Wire two IR line sensor modules to P1 and P2, powered from the micro:bit's 3V
-  - Read the sensors with read_digital() and test what "on the line" looks like
-  - Use if/elif/else to choose straight, left, right or search
-  - Use a state variable (last_seen) to remember which way the line went
+  - Wire two line sensors to P1 and P2
+  - Test what each sensor reads over black tape
+  - Use if/elif/else to pick the robot's move
+  - Remember the line's side with a state variable
 vocabulary:
   - term: IR reflectance sensor
     definition: A sensor that shines invisible infrared light down and measures how much bounces back. White floor reflects a lot; black tape reflects very little.
@@ -26,12 +26,12 @@ vocabulary:
   - term: Threshold
     definition: The brightness level where the sensor switches between 0 and 1. The little knob on the module adjusts it.
 materials:
-  - Your robot from lesson 14 (chassis, 2 TT motors, DRV8833 driver, 4×AA pack, breadboard, micro:bit + 2×AAA holder)
-  - 2 IR line sensor modules (TCRT5000 style, pins VCC, GND, OUT)
-  - 6 extra jumper wires (female-male for the sensor pins)
-  - Black electrical tape (about 19 mm wide) on white paper or a light floor for the track
-  - Small screwdriver for the sensor's adjustment knob
-  - Tape or zip ties to mount the sensors at the front, 5-10 mm above the floor
+  - Your robot from lesson 14
+  - 2 IR line sensor modules (VCC, GND, OUT)
+  - 6 jumper wires (female-male)
+  - Black electrical tape on white paper
+  - Small screwdriver
+  - Tape or zip ties for mounting
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
   - {key: learn, name: Learn, minutes: 4}
@@ -45,58 +45,72 @@ video:
   note: Watch the robot's path closely. It doesn't drive perfectly straight - it wiggles, correcting itself over and over.
 warmup:
   prompt: >-
-    Imagine walking along a line on the floor with your eyes closed, but you
-    can feel the tape with your two feet. What rules would you follow? What
-    would you do if you lost the line?
+    Imagine walking along a line on the floor with your eyes closed. You can
+    feel the tape with your two feet. What rules would you follow? What if you
+    lost the line?
 learn:
-  - |
-    ### Eyes on the floor
-    An **IR line sensor** has two parts: an **infrared LED** that shines down,
-    and a **sensor** that measures what bounces back.
+  - text: |
+      ### Eyes on the floor
+      An **IR line sensor** shines invisible **infrared** light down. Then it measures what bounces back.
 
-    * **White** floor → lots of light bounces back.
-    * **Black** tape → the light is soaked up.
+      * **White** floor → lots of light bounces back.
+      * **Black** tape → the light is soaked up.
 
-    A chip on the module turns that into a **digital** signal on **OUT**. On
-    most modules, OUT is **1 over black** and **0 over white** - but some are
-    the other way! We'll **test yours** before trusting it.
-  - |
-    ### Two sensors, four situations
-    Mount the two sensors close together at the front, so both sit **over the
-    tape** when the robot is centered.
+      The **OUT** pin gives a **digital** 0 or 1. Most give **1 over black**, but some are the opposite. **Test yours!**
+    visual:
+      type: compare
+      items:
+        - {icon: "⬜", title: "White floor", text: "Light bounces back. OUT is 0 on most modules."}
+        - {icon: "⬛", title: "Black tape", text: "Light is soaked up. OUT is 1 on most modules."}
+  - text: |
+      ### Two sensors, four situations
+      Mount the two sensors close together at the front.
+      When the robot is centered, both sit **over the tape**.
 
-    | left | right | what it means | move |
-    |---|---|---|---|
-    | line | line | centered | **straight** |
-    | line | – | line is drifting left | **turn left** |
-    | – | line | line is drifting right | **turn right** |
-    | – | – | **lost it!** | search |
+      Four situations, four moves. That's a job for **if / elif / elif / else**.
+    visual:
+      type: compare
+      items:
+        - {icon: "⬆️", title: "Both see the line", text: "Centered. Go straight."}
+        - {icon: "⬅️", title: "Only left sees it", text: "Line drifting left. Turn left."}
+        - {icon: "➡️", title: "Only right sees it", text: "Line drifting right. Turn right."}
+        - {icon: "❓", title: "Neither sees it", text: "Lost it! Search."}
+  - text: |
+      ### Remembering: state
+      Both sensors lost the line. Which way should the robot search? It needs a **memory**.
 
-    That's a perfect job for **if / elif / elif / else**.
-  - |
-    ### Remembering: state
-    When both sensors lose the line, which way should the robot search? It
-    needs a **memory**. A variable called `last_seen` stores `'left'` or
-    `'right'` every time only one sensor sees the line. When it's lost, the
-    robot **spins toward the side it saw last**.
+      * Only one sensor sees the line? Save that side in `last_seen`.
+      * Lost? Spin **toward the side it saw last**.
 
-    A value that the program keeps between loops is called **state**.
-  - |
-    ### Sense → decide → act → repeat
-    The loop runs about **100 times a second**. Each time it **reads** the
-    sensors, **decides** with if/elif/else, and **drives**. Lots of tiny
-    corrections make a smooth path. Slower speeds give the code more time to
-    react - start slow, then speed up.
+      A value the program keeps between loops is called **state**.
+    visual:
+      type: flow
+      steps:
+        - {icon: "⬅️", label: "only left sees the line"}
+        - {icon: "💾", label: "last_seen = 'left'"}
+        - {icon: "❓", label: "lost? spin left"}
+  - text: |
+      ### Sense → decide → act → repeat
+      The loop runs about **100 times a second**.
+      Lots of tiny corrections make a smooth path.
+
+      Slow speeds give the code more time to react. **Start slow**, then speed up.
+    visual:
+      type: flow
+      loop: true
+      loop_label: about 100 times a second
+      steps:
+        - {icon: "👀", label: "sense: read both sensors"}
+        - {icon: "🤔", label: "decide: if/elif/else"}
+        - {icon: "🚗", label: "act: drive()"}
 circuit:
   intro: >-
-    Start with your lesson 14 robot wiring (steps 1-2 recap it), then add two
-    line sensors. The sensors are small, so they get power from the micro:bit's
-    3V pin - not from the battery pack. Build with USB unplugged and both
-    battery packs off.
+    Start with your lesson 14 wiring (steps 1-2 recap it). Then add two line
+    sensors. They get power from the micro:bit's 3V pin, not the battery pack.
   safety:
     - Build with the micro:bit unplugged and both battery packs off.
-    - The red rail carries the micro:bit's 3V for the sensors. Battery pack + goes ONLY to the driver's VM - never to the red rail or 3V.
-    - Double-check VCC and GND on each sensor before powering up. Swapping them can damage the module.
+    - The red rail carries 3V for the sensors. Battery + goes ONLY to the driver's VM, never to the red rail.
+    - Check VCC and GND on each sensor before powering up. Swapping them can damage it.
   steps:
     - title: Ground rail
       instruction: >-
@@ -106,13 +120,15 @@ circuit:
       add:
         - {type: wire, from: mb.GND, to: T-1, color: black}
     - title: Driver wiring from lesson 14
-      instruction: >-
-        This is your lesson 14 wiring - check each one is still there:
-        driver **GND** → **T-5**; battery **–** → **T-3**; battery **+** →
-        driver **VM**; **P13 → AIN1**, **P14 → AIN2** (left motor);
-        **P15 → BIN1**, **P16 → BIN2** (right motor); left motor on
-        **AOUT1/AOUT2**; right motor on **BOUT1/BOUT2**.
-      check: Does the lesson 14 square program still drive both wheels forward? (Test with wheels in the air.)
+      instruction: |
+        Check that your lesson 14 wiring is still there:
+
+        * driver **GND** → **T-5**, battery **–** → **T-3**
+        * battery **+** → driver **VM**
+        * **P13 → AIN1**, **P14 → AIN2** (left motor)
+        * **P15 → BIN1**, **P16 → BIN2** (right motor)
+        * left motor → **AOUT1/AOUT2**, right motor → **BOUT1/BOUT2**
+      check: With the wheels in the air, does the lesson 14 program still drive both wheels forward?
       add:
         - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, BIN1, BIN2, AOUT1, AOUT2, BOUT1, BOUT2]}
         - {type: battery, id: bat1, label: "4×AA 6V"}
@@ -137,10 +153,12 @@ circuit:
       add:
         - {type: wire, from: mb.3V, to: T+1, color: red}
     - title: Left line sensor
-      instruction: >-
-        For the **left** sensor: a **red** wire from its **VCC** to **T+5**,
-        a **black** wire from its **GND** to **T-7**, and a **yellow** wire
-        from its **OUT** to the breakout's **P1**.
+      instruction: |
+        For the **left** sensor:
+
+        * **red**: its **VCC** → **T+5**
+        * **black**: its **GND** → **T-7**
+        * **yellow**: its **OUT** → the breakout's **P1**
       check: VCC on red rail, GND on blue rail, OUT on P1?
       add:
         - {type: module, id: sensor_l, label: "IR line sensor (left)", terminals: [VCC, GND, OUT]}
@@ -148,10 +166,12 @@ circuit:
         - {type: wire, from: sensor_l.GND, to: T-7, color: black}
         - {type: wire, from: sensor_l.OUT, to: mb.P1, color: yellow}
     - title: Right line sensor
-      instruction: >-
-        For the **right** sensor: a **red** wire from **VCC** to **T+9**, a
-        **black** wire from **GND** to **T-11**, and a **green** wire from
-        **OUT** to **P2**.
+      instruction: |
+        For the **right** sensor:
+
+        * **red**: **VCC** → **T+9**
+        * **black**: **GND** → **T-11**
+        * **green**: **OUT** → **P2**
       check: VCC on red rail, GND on blue rail, OUT on P2?
       add:
         - {type: module, id: sensor_r, label: "IR line sensor (right)", terminals: [VCC, GND, OUT]}
@@ -159,15 +179,12 @@ circuit:
         - {type: wire, from: sensor_r.GND, to: T-11, color: black}
         - {type: wire, from: sensor_r.OUT, to: mb.P2, color: green}
     - title: Mount and test the sensors
-      instruction: >-
-        Tape the sensors to the front of the chassis, pointing **down**, about
-        **5-10 mm** above the floor and about **1 cm apart** - close enough
-        that both fit over the black tape. Plug in USB and run
-        `display.scroll(pin1.read_digital())` in a loop. Slide white paper and
-        black tape under the left sensor and watch the number (and the
-        module's little LED) change. Repeat for P2.
+      instruction: |
+        * Tape the sensors to the front, pointing **down**, **5-10 mm** above the floor and **1 cm apart**.
+        * Plug in USB. Run `display.scroll(pin1.read_digital())` in a loop.
+        * Slide white paper, then black tape, under the left sensor. Watch the number. Repeat for P2.
       check: Does each sensor give one value over black and a different value over white?
-      tip: If a sensor never changes, turn the tiny knob on the module slowly with a screwdriver until its LED switches as you cross the tape.
+      tip: Never changes? Slowly turn the module's tiny knob until its LED switches over the tape.
   verify:
     connected:
       - [mb.GND, drv1.GND, bat1.minus, sensor_l.GND, sensor_r.GND]
@@ -252,31 +269,22 @@ code:
         sleep(10)
   walkthrough:
     - lines: "3-5"
-      explain: "**LINE** says what the sensor reads over black. If your test showed 0 over black, just change this one number. SPEED starts slow so the code has time to react."
-    - lines: "7-21"
-      explain: The same set_motor() and drive() from lesson 14.
-    - lines: "23"
-      explain: "**last_seen** is the robot's memory (its **state**). It starts as 'left', but the loop will update it."
+      explain: "**LINE** is what the sensor reads over black. Got 0 over black? Change this one number."
     - lines: "30-31"
       explain: "**Sense.** Read both sensors. Each gives 0 or 1."
-    - lines: "33-49"
-      explain: "**Decide and act.** The order matters: we check \"both see the line\" first, because if we checked `left == LINE` first, it would also be true when both see it."
-    - lines: "38, 42"
-      explain: Every time only one sensor sees the line, we **update the state** so we know which way it went.
+    - lines: "33-42"
+      explain: "**Decide and act.** Check \"both\" first: `left == LINE` is also true when both see the line."
     - lines: "44-49"
-      explain: Lost! Spin on the spot toward the side we saw last. As soon as a sensor finds the tape again, the loop goes back to following.
-    - lines: "51-54"
-      explain: Button B is the emergency stop. break leaves the loop.
+      explain: Lost! Spin toward last_seen, the side we saw last. That memory is the robot's **state**.
   try_it:
     - Make a gentle oval track first. Then add a sharp corner. Where does your robot lose the line?
     - Raise SPEED by 50 at a time. What's the fastest speed that still finishes a lap?
-    - Instead of drive(0, SPEED) for a turn, try drive(SPEED // 3, SPEED). Smoother or worse?
-    - Play a sound with music.pitch(880, 50) whenever the robot is lost.
+    - For a turn, try drive(SPEED // 3, SPEED) instead of drive(0, SPEED). Smoother or worse?
 debug:
   story: >-
-    Sam's robot never drives straight and never turns right - it just keeps
-    curving left. And when it loses the line it always spins left, even when
-    the line went right. There are **two** kinds of bugs. Fix them and press **Check my fix**.
+    Sam's robot never drives straight and never turns right. It just keeps
+    curving left. When it loses the line, it always spins left, even when the
+    line went right. There are **two** kinds of bugs. Fix them and press **Check my fix**.
   buggy_code: |
     from microbit import *
 
@@ -372,12 +380,17 @@ quiz:
   - question: Why do we check "both sensors see the line" BEFORE checking "left sees the line"?
     choices:
       - Python always checks the right sensor first
-      - If left == LINE came first, it would also catch the case where both see the line, so the robot would never go straight
+      - "\"left == LINE\" is also true when both see it"
       - It makes the code run faster
       - It doesn't matter what order they're in
     answer: 1
     explain: if/elif stops at the first true condition. "left == LINE" is also true when both see it, so the most specific check must come first.
   - question: Only the right sensor sees the black line. Which way should the robot turn?
+    visual:
+      type: compare
+      items:
+        - {icon: "⬜", title: "Left sensor", text: "Sees white floor"}
+        - {icon: "⬛", title: "Right sensor", text: "Sees the black line"}
     choices:
       - Left
       - Right
@@ -388,11 +401,11 @@ quiz:
   - question: What is last_seen used for?
     choices:
       - Counting how many laps the robot did
-      - Remembering which side the line was on, so the robot knows which way to search when it's lost
+      - Remembering which side the line was on
       - Storing the battery level
       - Making the sensors brighter
     answer: 1
-    explain: last_seen is the robot's state - a memory that lasts between loops.
+    explain: last_seen is the robot's state - a memory that lasts between loops. When it's lost, it searches toward that side.
   - question: Where do the line sensors get their power?
     choices:
       - The 4×AA battery pack's + wire
@@ -412,13 +425,13 @@ quiz:
 challenge:
   title: Track Masters
   prompt: >-
-    Design a track with black tape and tune your robot to conquer it. Give
-    your track a name and at least one tricky feature. Then challenge another
-    team's robot to try it!
+    Design a track with black tape and tune your robot to beat it. Give your
+    track a name and at least one tricky part. Then dare another team's robot
+    to try it!
   levels:
     - "Mild: Tune SPEED and SEARCH until your robot finishes a full lap of an oval without help."
-    - "Medium: Add an S-bend and a sharp corner. Make the robot play a sound and show a sad face when it's lost, and a happy face when it finds the line again."
-    - "Spicy: Time trial! Use running_time() to time a lap (press A at the start, B at the finish) and scroll the lap time - fastest robot wins. Extra spicy: add a 5 cm gap in the tape and make the robot drive straight for a moment before it starts searching, so it can jump the gap."
+    - "Medium: Add an S-bend and a sharp corner. Show a sad face when it's lost and a happy face when it finds the line."
+    - "Spicy: Time a lap with `running_time()` and scroll it. Extra spicy: add a 5 cm gap in the tape. Drive straight briefly, then search."
   submit_prompt: What was the trickiest part of your track, and what did you change in the code to get through it?
 teacher_notes: |
   * **Test the sensors before driving.** Many modules give 1 over black, some give 0. The LINE constant handles either - students just change one number.

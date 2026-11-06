@@ -9,10 +9,10 @@ big_idea: >-
   A servo turns to an exact angle based on how long each electrical pulse is,
   so code can point it anywhere from 0° to 180°.
 objectives:
-  - Explain how pulse length (0.5 ms to 2.5 ms) sets a servo's angle
-  - Power a servo from its own battery pack with a shared ground to the micro:bit
-  - Use pin0.set_analog_period(20) and write_analog() to send servo pulses
-  - Write a function that converts an angle into a write_analog value
+  - Explain how pulse length sets a servo's angle
+  - Power a servo from batteries with a shared ground
+  - Send servo pulses with write_analog()
+  - Write an angle-to-number function
 vocabulary:
   - term: Servo motor
     definition: A motor with a built-in controller that turns to a chosen angle and holds it there.
@@ -20,18 +20,18 @@ vocabulary:
     definition: How long each ON part of the signal lasts. For a servo, a longer pulse means a bigger angle.
   - term: Period
     definition: The time for one full ON + OFF cycle. Servos expect one pulse every 20 ms.
-  - term: Shared (common) ground
-    definition: Connecting the GND of two power sources together so they agree on what "0 volts" means.
+  - term: Shared ground
+    definition: Connecting the GND of two power sources together so they agree on what "0 volts" means. Also called a common ground.
   - term: Function
     definition: A named block of code that takes an input and can return an answer, like angle_to_value(90).
 materials:
   - micro:bit V2 + USB cable
   - Edge-connector breakout board
   - Half-size breadboard
-  - 1 SG90 micro servo (with a horn - the plastic arm)
-  - 1 battery pack, 4×AA (6 V) with on/off switch, or 3×AA (4.5 V)
-  - 5 male-to-male jumper wires
-  - Paper, tape and markers for a pointer dial (optional)
+  - 1 SG90 micro servo with its plastic arm
+  - "1 battery pack with switch: 4×AA (6 V) or 3×AA"
+  - 5 male-to-male jumpers
+  - Paper and tape (optional)
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
   - {key: learn, name: Learn, minutes: 5}
@@ -48,58 +48,101 @@ warmup:
     A normal motor just spins and spins. Can you think of a machine that needs
     a motor to turn to an exact spot and stop there? What is it pointing or moving?
 learn:
-  - |
-    ### What's inside a servo?
-    A **servo** has a small motor, gears, and a tiny circuit that **knows its own
-    angle**. You tell it an angle, and it turns there and **holds**. Servos steer
-    RC cars, move robot arms and open the flaps on model planes.
+  - text: |
+      ### What's inside a servo?
+      A **servo** has a motor, gears and a tiny circuit that **knows its own angle**.
+      Tell it an angle. It turns there and **holds**.
 
-    The SG90 has three wires:
-    * **Orange** (or yellow) - **signal**
-    * **Red** - **power** (+)
-    * **Brown** (or black) - **ground** (–)
-  - |
-    ### Pulses set the angle
-    Every **20 ms** the servo looks for a short ON **pulse**. How long the pulse
-    lasts tells it where to point:
+      The SG90 has three wires:
+      * **Orange** (or yellow): **signal**
+      * **Red**: **power** (+)
+      * **Brown** (or black): **ground** (–)
+    visual:
+      type: part
+      part: servo
+      caption: The SG90's three wire colors.
+  - text: |
+      ### Pulses set the angle
+      Every **20 ms** the servo looks for a short ON **pulse**.
+      How long the pulse lasts tells it where to point.
 
-    | pulse | angle |
-    |---|---|
-    | 0.5 ms | 0° |
-    | 1.5 ms | 90° (middle) |
-    | 2.5 ms | 180° |
+      * **0.5 ms** → 0°
+      * **1.5 ms** → 90° (the middle)
+      * **2.5 ms** → 180°
+    visual:
+      type: dial
+      caption: Longer pulse, bigger angle.
+      marks:
+        - {angle: 0, label: "0° · 0.5 ms"}
+        - {angle: 90, label: "90° · 1.5 ms", pointer: true}
+        - {angle: 180, label: "180° · 2.5 ms"}
+  - text: |
+      ### It's PWM again
+      This is **PWM**, just like dimming an LED!
 
-    This is **PWM**, just like dimming an LED! `pin0.set_analog_period(20)` makes
-    one cycle 20 ms long. Then `write_analog()` sets how much of it is ON.
-  - |
-    ### From angle to a number
-    `write_analog()` takes **0 to 1023**, where 1023 means ON for the whole 20 ms.
+      * `pin0.set_analog_period(20)` makes each cycle **20 ms** long.
+      * `write_analog()` sets how much of each cycle is ON.
 
-    * 0.5 ms out of 20 ms → 0.5 ÷ 20 × 1023 ≈ **26** (0°)
-    * 2.5 ms out of 20 ms → 2.5 ÷ 20 × 1023 ≈ **128** (180°)
+      A servo only needs a **thin** slice of ON time.
+    visual:
+      type: wave
+      duty: [2.5, 7.5, 12.5]
+      values: [26, 77, 128]
+      axis: "time →   (one pulse every 20 ms)"
+      caption: "0°, 90° and 180°: the pulse gets a little longer each time."
+      alt: Three pulse trains with 2.5, 7.5 and 12.5 percent on-time, for 0, 90 and 180 degrees.
+  - text: |
+      ### From angle to a number
+      `write_analog()` takes **0 to 1023**. 1023 means ON for the whole 20 ms.
 
-    So the servo only uses the numbers from about **26 to 128**. A **function**
-    can do this math for us every time: `angle_to_value(90)` → **77**.
-  - |
-    ### Why a separate battery?
-    A servo can suddenly gulp a lot of current when it moves - more than the
-    micro:bit can give. That can make the micro:bit **reset** or act strangely.
-    So the servo gets its **own battery pack**.
+      * 0.5 ÷ 20 × 1023 ≈ **26** (0°)
+      * 2.5 ÷ 20 × 1023 ≈ **128** (180°)
 
-    But the signal only makes sense if both sides agree on "0 volts". That's why
-    we connect the battery's **–** to the micro:bit's **GND**: a **shared ground**.
-    The battery's **+** must **never** touch the micro:bit's 3V.
+      So a servo only uses about **26 to 128**. A **function** does this math
+      for us: `angle_to_value(90)` → **77**.
+    visual:
+      type: flow
+      steps:
+        - {icon: "📐", label: "angle 90°"}
+        - {icon: "⏱️", label: "1.5 ms pulse"}
+        - {icon: "🔢", label: "write_analog(77)"}
+  - text: |
+      ### Why a separate battery?
+      A moving servo can suddenly gulp a lot of **current**. That's more than
+      the micro:bit can give. It can make the micro:bit **reset**.
+
+      So the servo gets its **own battery pack**.
+      Battery **+** must **never** touch the micro:bit's 3V.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔌", title: "micro:bit 3V pin", text: "Too little current. A servo can make it reset."}
+        - {icon: "🔋", title: "Battery pack", text: "Gives the servo its big bursts of current."}
+  - text: |
+      ### Share the ground
+      The signal only makes sense if both sides agree on "0 volts".
+
+      * Join battery **–** to micro:bit **GND**.
+      * That's a **shared ground**.
+      * Battery + stays on its own rail.
+    visual:
+      type: circuit
+      caption: The black wire on the right joins the two ground rails.
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: battery, id: bat1, label: "4×AA 6V"}
+        - {type: wire, from: bat1.plus, to: B+1, color: red}
+        - {type: wire, from: bat1.minus, to: B-1, color: black}
+        - {type: wire, from: T-30, to: B-30, color: black}
 circuit:
   intro: >-
-    You'll use the top rails for the micro:bit and the bottom rails for the
-    battery pack, then join the two ground rails. The servo gets power from the
-    battery and its signal from P0. Keep the USB cable unplugged and the battery
-    pack switched OFF until the last step.
+    The micro:bit uses the **top** rails. The battery uses the **bottom**
+    rails. One wire joins the two grounds.
   safety:
-    - Build with the micro:bit unplugged and the battery pack switched off (or a battery out).
-    - Battery + goes only to the bottom red (B+) rail. Never connect battery + to the micro:bit's 3V or any pin.
-    - Don't power the servo from the micro:bit's 3V pin - it can reset or damage the board.
-    - Keep fingers clear of the servo arm when it moves, and don't force the arm by hand.
+    - Build with USB unplugged and the battery pack off until the last step.
+    - Battery + goes only on the bottom red (B+) rail. Never to 3V or a pin.
+    - Never power the servo from the 3V pin. It can reset or damage the board.
+    - Keep fingers clear of the moving arm. Don't force it by hand.
   steps:
     - title: micro:bit ground on the top rail
       instruction: >-
@@ -114,8 +157,8 @@ circuit:
         With the battery pack **switched OFF**, connect its **red** wire to
         **B+1** on the bottom **red (+) rail** and its **black** wire to **B-1**
         on the bottom **blue (–) rail**.
-      check: Is battery + in the BOTTOM red rail - not the top rail and not near the micro:bit?
-      tip: If your battery pack has bare wires, ask your teacher to twist them onto jumper pins.
+      check: Is battery + in the BOTTOM red rail, away from the micro:bit?
+      tip: Bare wires? Ask your teacher to twist them onto jumper pins.
       add:
         - {type: battery, id: bat1, label: "4×AA 6V"}
         - {type: wire, from: bat1.plus, to: B+1, color: red}
@@ -185,31 +228,22 @@ code:
         sleep(150)
   walkthrough:
     - lines: "3"
-      explain: Servos expect a pulse every 20 ms, so we set the PWM period to 20 milliseconds.
-    - lines: "5-8"
-      explain: >-
-        The function turns an angle into a pulse length (0.5 to 2.5 ms), then
-        into a number from 0-1023. `return` hands the answer back. 0° → 26, 90° → 77, 180° → 128.
-    - lines: "10-11"
-      explain: A second, tiny function so the loop can just say set_angle(angle).
+      explain: Servos want one pulse every 20 ms, so we set the PWM period to 20 ms.
+    - lines: "5-11"
+      explain: "`angle_to_value` turns an angle into a number and `return`s it: 0° → 26, 90° → 77, 180° → 128."
     - lines: "13-14"
-      explain: Start in the middle so the servo doesn't slam to one end when the program starts.
-    - lines: "17-20"
-      explain: Hold A or B to change the angle by 10° each time around the loop.
-    - lines: "21"
-      explain: "`max()` and `min()` keep the angle between 0 and 180 so we never ask for an impossible position."
-    - lines: "23"
-      explain: A short wait gives the servo time to move and makes the steps easy to control.
+      explain: Start in the middle (90°) so the servo doesn't slam to one end.
+    - lines: "16-23"
+      explain: Hold A or B to move 10°. `max()` and `min()` keep the angle from 0 to 180.
   try_it:
-    - Change the step from 10 to 1. Then to 45. Which feels better to control?
-    - "Make the servo sweep by itself: `for a in range(0, 181, 10):` then `set_angle(a)` and `sleep(100)`."
-    - "Add `display.scroll(angle)` when both buttons are pressed to show the current angle."
-    - Tape a paper dial behind the servo arm and mark 0°, 90° and 180°. Is your servo accurate?
+    - Change the step from 10 to 1. Then to 45. Which is easier to control?
+    - "Make it sweep: `for a in range(0, 181, 10):` then `set_angle(a)` and `sleep(100)`."
+    - Tape a paper dial behind the arm. Mark 0°, 90° and 180°. Is your servo accurate?
 debug:
   story: >-
-    Maya wants button A to point her servo to 0° and button B to 180°. Instead
-    she gets an error on A, and B makes the servo buzz and push against its end.
-    There are **two** bugs. Find them, fix them, and press **Check my fix**.
+    Maya wants button A to point her servo to 0° and button B to 180°. A gives
+    an error. B makes the servo buzz and push against its end. Find the **two**
+    bugs, fix them, and press **Check my fix**.
   buggy_code: |
     from microbit import *
 
@@ -260,7 +294,7 @@ quiz:
     explain: A short pulse (0.5 ms) means 0°, a long pulse (2.5 ms) means 180°, and 1.5 ms is the middle.
   - question: Why does the servo get its own battery pack?
     choices:
-      - The micro:bit's 3V pin can't safely supply the current a moving servo needs
+      - The 3V pin can't safely give a servo enough current
       - Servos only work with AA batteries
       - It makes the servo spin forever
     answer: 0
@@ -275,7 +309,7 @@ quiz:
   - question: What does pin0.set_analog_period(20) do?
     choices:
       - Turns the servo 20 degrees
-      - Makes each PWM cycle 20 ms long, the timing servos expect
+      - Makes each PWM cycle 20 ms long
       - Waits 20 seconds
     answer: 1
     explain: Servos look for one pulse every 20 ms, so we make the PWM cycle exactly that long.
@@ -287,17 +321,30 @@ quiz:
       - "1023"
     answer: 2
     explain: 90° is a 1.5 ms pulse. 1.5 ÷ 20 × 1023 ≈ 77.
+    visual:
+      type: dial
+      caption: "The middle: a 1.5 ms pulse every 20 ms."
+      marks:
+        - {angle: 0}
+        - {angle: 90, pointer: true}
+        - {angle: 180}
 challenge:
   title: Servo Gadget
   prompt: >-
-    Use your servo to build a gadget that **points, waves or moves something**.
-    Ideas - a mood meter that points to happy/meh/sad, a waving robot hand, a
-    flag that pops up when you win a game, or a gauge that shows the light level.
-    Cardboard, tape and markers welcome!
+    Build a gadget that **points, waves or moves something**. Try a mood
+    meter, a waving robot hand, or a flag that pops up when you win.
+    Cardboard and tape welcome!
   levels:
-    - "Mild: Make a dial with 3 labeled spots and use buttons A and B to point to each one."
-    - "Medium: Use a sensor you know (a potentiometer or photoresistor on P1) to control the angle - turn the knob, the servo follows."
-    - "Spicy: Make a waving hand that sweeps back and forth when you shake the micro:bit, or a gauge that shows temperature() as an angle."
+    - "Mild: Make a dial with 3 labeled spots. Use buttons A and B to point to each one."
+    - "Medium: Put a potentiometer or photoresistor on P1. Turn the knob, and the servo follows."
+    - "Spicy: Make a hand that waves when you shake the micro:bit, or a gauge that shows temperature() as an angle."
+  visual:
+    type: dial
+    caption: A mood meter needs just three angles.
+    marks:
+      - {angle: 20, label: "sad"}
+      - {angle: 90, label: "meh"}
+      - {angle: 160, label: "happy", pointer: true}
   submit_prompt: What does your servo gadget do, and how does your code decide which angle to send?
 teacher_notes: |
   **Common problems**

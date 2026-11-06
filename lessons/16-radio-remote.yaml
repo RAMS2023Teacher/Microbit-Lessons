@@ -9,10 +9,10 @@ big_idea: >-
   Two micro:bits can talk by radio: one sends short command messages, the
   other listens and drives - and stops by itself if the messages stop coming.
 objectives:
-  - Send and receive radio messages with radio.send() and radio.receive()
-  - Use radio.config(group=...) so teams don't control each other's robots
-  - Turn accelerometer tilt into commands F, L, R and S
-  - Add a safety stop that halts the robot when no message arrives for 500 ms
+  - Send and receive messages by radio
+  - Use a radio group so teams stay apart
+  - Turn tilt into the commands F, L, R and S
+  - Add a fail-safe stop after 500 ms of silence
 vocabulary:
   - term: Radio
     definition: The micro:bit's built-in wireless chip. It sends short messages through the air to other micro:bits nearby.
@@ -25,11 +25,11 @@ vocabulary:
   - term: Accelerometer
     definition: The sensor that measures tilt and movement. get_x() is left/right tilt, get_y() is forward/back tilt.
 materials:
-  - 2 micro:bit V2 boards + USB cable (one controller, one on the robot)
-  - 2 battery holders (2×AAA), one for each micro:bit
-  - Your robot from lesson 14 (chassis, 2 TT motors, DRV8833 driver, 4×AA pack, breadboard, breakout)
-  - A sticky note to label the controller with your team's radio group number
-  - Cones, cups or tape for a driving course
+  - 2 micro:bit V2 boards + USB cable
+  - 2 battery holders (2×AAA)
+  - Your robot from lesson 14
+  - A sticky note for your group number
+  - Cups, cones or tape for a course
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
   - {key: learn, name: Learn, minutes: 6}
@@ -46,36 +46,69 @@ warmup:
     Think of a remote-controlled toy, a drone, or a TV remote. What should
     happen if the remote's batteries die while the toy is moving? Why?
 learn:
-  - |
-    ### Two micro:bits, two programs
-    Today you need **two** programs:
+  - text: |
+      ### Two micro:bits, two programs
+      Today you need **two** programs:
 
-    * The **controller** (in your hand) reads **tilt** and sends a one-letter
-      command with `radio.send()`.
-    * The **robot** listens with `radio.receive()` and calls `drive()`.
+      * The **controller** (in your hand) reads **tilt**. It sends a one-letter command with `radio.send()`.
+      * The **robot** listens with `radio.receive()` and calls `drive()`.
 
-    | message | meaning |
-    |---|---|
-    | `'F'` | forward |
-    | `'L'` | spin left |
-    | `'R'` | spin right |
-    | `'S'` | stop |
-  - |
-    ### Groups keep teams apart
-    Every micro:bit in the room can hear every other one! `radio.config(group=12)`
-    puts your pair on **channel 12**. A micro:bit only hears messages from its
-    **own group**. Your teacher will give each team a different number - write
-    it on a sticky note on your controller. **Both** micro:bits must use the
-    same number.
-  - |
-    ### Fail-safe: stop if the messages stop
-    What if the controller's batteries die while the robot is driving forward?
-    The last command was `'F'`... so it would drive forever!
+      | message | meaning |
+      |---|---|
+      | `'F'` | forward |
+      | `'L'` | spin left |
+      | `'R'` | spin right |
+      | `'S'` | stop |
+    visual:
+      type: flow
+      steps:
+        - {icon: "🎮", label: "controller reads tilt"}
+        - {icon: "📡", label: "radio.send('F')"}
+        - {icon: "🤖", label: "robot: radio.receive()"}
+        - {icon: "🚗", label: "drive(700, 700)"}
+  - text: |
+      ### Groups keep teams apart
+      Every micro:bit in the room can hear every other one!
 
-    The fix: the controller sends a command **every 100 ms**. The robot
-    remembers **when** it last heard one using `running_time()` (milliseconds
-    since it started). If more than **500 ms** go by with no message, it
-    **stops by itself**. Real robots, drones and lawnmowers all have a fail-safe like this.
+      * `radio.config(group=12)` puts your pair on **channel 12**.
+      * A micro:bit only hears its **own group**.
+      * **Both** micro:bits must use the same number.
+
+      Your teacher gives each team a number. Write it on a sticky note on your controller.
+    visual:
+      type: compare
+      items:
+        - {icon: "✅", title: "Group 12 → group 12", text: "Same channel. The robot hears you."}
+        - {icon: "🔇", title: "Group 12 → group 8", text: "Different channels. The robot hears nothing."}
+  - text: |
+      ### What if the messages stop?
+      The controller's batteries die while the robot drives forward.
+      The last command was `'F'`... so it would drive **forever**!
+
+      A **fail-safe** fixes this. It makes a machine go to a **safe** state when something goes wrong.
+      Real robots, drones and lawnmowers all have one.
+    visual:
+      type: compare
+      items:
+        - {icon: "😱", title: "No fail-safe", text: "Keeps doing the last command. Drives away!"}
+        - {icon: "🛑", title: "With a fail-safe", text: "No messages? It stops by itself."}
+  - text: |
+      ### The 500 ms safety timer
+      * The controller sends a command **every 100 ms**.
+      * The robot notes **when** it last heard one with `running_time()` (milliseconds since it started).
+      * No message for more than **500 ms**? The robot **stops**.
+    visual:
+      type: scale
+      label: ms since the last message
+      min: 0
+      max: 1000
+      zones:
+        - {from: 0, to: 500, label: "keep driving", color: "#dff4f4"}
+        - {from: 500, to: 1000, label: "STOP", color: "#fde2e2"}
+      marks:
+        - {at: 0, label: "message heard", pointer: true}
+        - {at: 500, label: "500"}
+        - {at: 1000, label: "1000"}
   - |
     ### The robot's program
     Flash this onto the **robot's** micro:bit. Change the group to your team's number.
@@ -121,33 +154,48 @@ learn:
             display.show(Image.NO)
         sleep(20)
     ```
-  - |
-    ### What kind of network is this?
-    A **network** connects devices so they can send each other messages.
-    * **Wired**: signals travel through a cable (Ethernet, USB). Fast and reliable, but you're tied to the cable.
-    * **Wireless**: signals travel through the air as radio waves (Wi-Fi, Bluetooth, micro:bit radio). You can move around, but the range is short and everyone nearby shares the airwaves.
-    * **Local area network (LAN)**: devices in one place, like your school's Wi-Fi.
-    * **Wide area network (WAN)**: networks joined across cities and countries. The internet is the biggest one.
-    * **Mobile**: phones talk to cell towers, which hand you on to the next tower as you move.
+  - text: |
+      ### Wired or wireless?
+      A **network** connects devices so they can send each other messages.
 
-    Your two micro:bits make a tiny **wireless local network** with no router.
-    Every micro:bit in the same group hears every message (a **broadcast**),
-    and that's why each team needs its own group number.
+      Messages travel through a **cable** or through the **air**.
+      Wireless lets you move around.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔌", title: "Wired", text: "Through a cable (Ethernet, USB). Fast and reliable, but you're tied down."}
+        - {icon: "📡", title: "Wireless", text: "Radio waves (Wi-Fi, Bluetooth, micro:bit radio). Short range, shared airwaves."}
+  - text: |
+      ### Small and big networks
+      Networks also come in different **sizes**.
+
+      Your two micro:bits make a tiny **wireless local network**, with no router.
+      Every micro:bit in the same group hears every message. That's a **broadcast**.
+      So each team needs its own group number.
+    visual:
+      type: compare
+      items:
+        - {icon: "🏫", title: "LAN (local area network)", text: "Devices in one place, like your school's Wi-Fi."}
+        - {icon: "🌍", title: "WAN (wide area network)", text: "Networks joined across cities and countries. The internet is the biggest."}
+        - {icon: "📱", title: "Mobile", text: "Phones talk to cell towers that hand you on as you move."}
 circuit:
   intro: >-
-    The robot's wiring is exactly the same as lesson 14 - no new parts! Use
-    these steps to check every connection before you drive. The controller
-    micro:bit needs no wiring at all, just its 2×AAA battery holder.
+    The robot's wiring is the same as lesson 14. No new parts! Check every
+    connection before you drive. The controller needs no wiring, just its
+    2×AAA battery holder.
   safety:
     - Check wiring with the micro:bit unplugged and the 4×AA pack switched off.
     - Battery pack red (+) goes ONLY to the driver's VM. Never to the micro:bit's 3V.
-    - Test the first time with the robot's wheels in the air, in case it drives off unexpectedly.
+    - The first time, test with the wheels in the air.
   steps:
     - title: Shared ground
-      instruction: >-
-        Check: a **black** wire from the breakout's **GND** to **T-1**, the
-        driver's **GND** to **T-5**, and the 4×AA pack's **black (–)** to **T-3**.
-        Battery **red (+)** goes to the driver's **VM**.
+      instruction: |
+        Check these wires:
+
+        * **black**: breakout **GND** → **T-1**
+        * **black**: driver **GND** → **T-5**
+        * **black**: 4×AA pack **black (–)** → **T-3**
+        * **red**: battery **red (+)** → driver **VM**
       check: Do all three grounds meet in the blue rail, and is battery + only on VM?
       add:
         - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, BIN1, BIN2, AOUT1, AOUT2, BOUT1, BOUT2]}
@@ -157,9 +205,11 @@ circuit:
         - {type: wire, from: bat1.minus, to: T-3, color: black}
         - {type: wire, from: bat1.plus, to: drv1.VM, color: red}
     - title: Control wires
-      instruction: >-
-        Check: **P13 → AIN1** and **P14 → AIN2** (left motor), **P15 → BIN1**
-        and **P16 → BIN2** (right motor).
+      instruction: |
+        Check:
+
+        * **P13 → AIN1** and **P14 → AIN2** (left motor)
+        * **P15 → BIN1** and **P16 → BIN2** (right motor)
       check: Are all four control wires on the right pins?
       add:
         - {type: wire, from: mb.P13, to: drv1.AIN1, color: yellow}
@@ -167,11 +217,12 @@ circuit:
         - {type: wire, from: mb.P15, to: drv1.BIN1, color: blue}
         - {type: wire, from: mb.P16, to: drv1.BIN2, color: purple}
     - title: Motors and micro:bit power
-      instruction: >-
-        Check: left motor on **AOUT1/AOUT2**, right motor on **BOUT1/BOUT2**.
-        Plug a **2×AAA holder** into the robot micro:bit's battery socket, and
-        another into the controller micro:bit.
-      check: Did both wheels go forward with the lesson 14 code? If one went backward, swap that motor's two wires.
+      instruction: |
+        * Check: left motor on **AOUT1/AOUT2**, right motor on **BOUT1/BOUT2**.
+        * Plug a **2×AAA holder** into the robot micro:bit's battery socket.
+        * Plug another into the controller micro:bit.
+      check: Did both wheels go forward with the lesson 14 code?
+      tip: If one went backward, swap that motor's two wires.
       add:
         - {type: dcmotor, id: motor_l}
         - {type: dcmotor, id: motor_r}
@@ -228,29 +279,23 @@ code:
         display.show(command)
         sleep(100)               # send 10 times a second
   walkthrough:
-    - lines: "2"
-      explain: The radio module isn't included in `from microbit import *`, so we import it separately.
     - lines: "4-5"
-      explain: "**config(group=12)** chooses your team's channel. **on()** switches the radio on - without it nothing is sent."
+      explain: "**config(group=12)** picks your team's channel. **on()** switches the radio on. Without it, nothing is sent."
     - lines: "7"
-      explain: A "dead zone". Small wobbles in your hand (under 300) don't count, so the robot stops when you hold the controller flat.
-    - lines: "10-11"
-      explain: Read the tilt. Tilting right makes x positive, left makes x negative. Tilting the logo edge down makes y positive.
-    - lines: "13-20"
-      explain: Turn the tilt into one letter. Turning is checked first so you can steer even while tipping forward a bit.
+      explain: A **dead zone**. Small wobbles (under 300) don't count, so holding it flat means stop.
+    - lines: "10-20"
+      explain: "Tilt right: x is positive. Tip the logo edge down: y is positive. Turns are checked first."
     - lines: "22-24"
-      explain: Send the letter, show it so you can see what you're sending, and repeat 10 times a second. Sending often keeps the robot's fail-safe from kicking in.
+      explain: Send the letter 10 times a second. Steady messages keep the fail-safe from stopping the robot.
   try_it:
-    - Add a 'B' command for backward (tilt toward you, y < -TILT) - and add it to the robot program too.
-    - Press button A for a "turbo" command 'T' that drives at 1023 on the robot.
-    - Switch off the controller while the robot drives (wheels in the air!). Does the fail-safe stop it? How long does it take?
-    - "Make the robot say hello: when it gets a new message 'H' from button B, play music.play(music.POWER_UP)."
+    - Add a 'B' command to go back (tilt toward you, y < -TILT). Add it to the robot program too.
+    - Press button A to send a turbo command 'T'. The robot drives at 1023.
+    - Switch off the controller while the robot drives (wheels up!). Does the fail-safe stop it?
 debug:
   story: >-
-    Ana flashed this onto her robot. At first it ignores the controller
-    completely. After she fixed that, the robot only twitches - and when she
-    turned the controller off, the robot drove away across the room!
-    There are **two** bugs. Fix them and press **Check my fix**.
+    Ana flashed this onto her robot. At first it ignores the controller. After
+    she fixed that, the robot only twitches. And when she turned the controller
+    off, it drove across the room! There are **two** bugs. Fix them and press **Check my fix**.
   buggy_code: |
     from microbit import *
     import radio
@@ -357,12 +402,18 @@ quiz:
   - question: Why does the controller send a command every 100 ms, even when the command hasn't changed?
     choices:
       - The radio switches off if you don't use it
-      - So the robot knows the controller is still there, and the fail-safe doesn't stop it
+      - So the robot knows the controller is still there
       - To make the batteries last longer
       - Python requires a sleep(100)
     answer: 1
     explain: The robot stops if it hears nothing for 500 ms. Regular messages are like a heartbeat saying "I'm still here".
   - question: "In the robot's code, what does running_time() - last_heard measure?"
+    visual:
+      type: flow
+      steps:
+        - {icon: "📩", label: "last message at 2000 ms"}
+        - {icon: "⏱️", label: "now: 2300 ms"}
+        - {icon: "🧮", label: "2300 - 2000 = ?"}
     choices:
       - How fast the robot is going
       - How many messages arrived
@@ -371,6 +422,17 @@ quiz:
     answer: 2
     explain: running_time() is "now" in milliseconds. Subtracting the time of the last message gives how long it has been quiet.
   - question: The controller is flat on the table. Which command does it send?
+    visual:
+      type: scale
+      label: x and y tilt
+      min: -1000
+      max: 1000
+      zones:
+        - {from: -300, to: 300, label: "dead zone", color: "#dff4f4"}
+      marks:
+        - {at: -300, label: "-300"}
+        - {at: 0, label: "flat", pointer: true}
+        - {at: 300, label: "300"}
     choices:
       - "'F'"
       - "'L'"
@@ -378,24 +440,24 @@ quiz:
       - "'S'"
     answer: 3
     explain: Flat means x and y are both close to 0 - inside the dead zone - so the else branch sends 'S' for stop.
-  - question: Your controller and robot micro:bits talking by radio are an example of...
+  - question: Your two micro:bits talk by radio. What kind of network is that?
     choices:
       - A wired network
       - A wireless local network
       - A wide area network, like the internet
-      - A mobile cell-phone network
+      - A mobile phone network
     answer: 1
     explain: The messages travel through the air (wireless) over a short distance in one room (local). There's no cable, router or cell tower.
 challenge:
   title: Robot Grand Prix
   prompt: >-
-    Set up a course with cups, cones or tape and race your remote-controlled
-    robot. Make your controller and robot programs better so you can drive
-    faster and more precisely than everyone else.
+    Set up a course with cups, cones or tape. Race your remote-control robot!
+    Improve both programs so you can drive faster and steer better than
+    everyone else.
   levels:
-    - "Mild: Add a backward 'B' command and drive through a slalom of 3 cups without knocking any over."
-    - "Medium: Make speed depend on how far you tilt - send a letter for the direction and a number for the speed (for example 'F8'), and use int() on the robot to read the number. Then race another team on the same course."
-    - "Spicy: Robot soccer! Two teams, a ping-pong ball and two goals. Add a button-controlled \"kick\" (a quick forward burst) and a horn with music.pitch(). Every team keeps its own radio group."
+    - "Mild: Add a backward 'B' command. Drive through a slalom of 3 cups without knocking any over."
+    - "Medium: Tilt more to go faster. Send a letter and a number, like 'F8'. On the robot, use int() to read the number."
+    - "Spicy: Robot soccer! Use a ping-pong ball and two goals. Add a button \"kick\" (a quick burst forward) and a horn with `music.pitch()`."
   submit_prompt: What did you add to your controller or robot, and how did it help on the course?
 teacher_notes: |
   * **Give every team a different radio group** (for example their table number plus 10) and write it on the board. Most "my robot is possessed" problems are two teams on the same group. Groups go from 0 to 255.
@@ -416,4 +478,4 @@ standards:  # Massachusetts DLCS framework (2016), grades 6-8
   - code: 6-8.CS.a.5
     how: Teams show a remote-controlled robot completing a course.
   - code: 6-8.CS.c.1
-    how: "A Learn card compares wired, wireless, local, wide area and mobile networks, and students classify their own micro:bit radio link."
+    how: "Two Learn cards compare wired, wireless, local, wide area and mobile networks, and students classify their own micro:bit radio link."
