@@ -11,7 +11,7 @@ LID = "blink-external-led"
 
 def test_all_lessons_valid():
     lessons = L.all_lessons()
-    assert len(lessons) == 16
+    assert sum(1 for l in lessons if l["unit"] <= 4) == 16   # core course; unit 5 is the Robot Sprint
     for lesson in lessons:
         assert L.validate_lesson(lesson) == [], lesson["id"]
 

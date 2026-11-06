@@ -18,6 +18,7 @@ UNITS = {
     2: {"title": "Sensing the World", "blurb": "Buttons, light, temperature, knobs and motion."},
     3: {"title": "Making Things Move", "blurb": "Sound, servos, DC motors and motor drivers."},
     4: {"title": "Robots", "blurb": "Build, program and remote-control a two-wheel robot."},
+    5: {"title": "Robot Sprint", "blurb": "A 6-lesson motors + sensors project. Start any time: no earlier lessons needed."},
 }
 
 REQUIRED = ["id", "unit", "order", "title", "duration_minutes", "big_idea",
@@ -119,6 +120,9 @@ def validate_lesson(data: dict) -> list[str]:
             errs += check_visual(q["visual"], f"quiz {i} visual")
     if data["challenge"].get("visual"):
         errs += check_visual(data["challenge"]["visual"], "challenge visual")
+    for i, step in enumerate((data.get("circuit") or {}).get("steps") or [], 1):
+        if step.get("visual"):
+            errs += check_visual(step["visual"], f"circuit step {i} visual")
     if "circuit" in data and data["circuit"]:
         errs += [f"circuit: {e}" for e in check_circuit(data["circuit"])]
     from .standards import by_code
@@ -146,7 +150,7 @@ def _load_all() -> tuple[dict, ...]:
         lessons.append(data)
     lessons.sort(key=lambda l: (l["unit"], l["order"]))
     for i, lesson in enumerate(lessons, 1):
-        lesson["number"] = i
+        lesson["number"] = lesson.get("label") or i   # e.g. "S1" for sprint lessons
     return tuple(lessons)
 
 

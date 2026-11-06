@@ -2,7 +2,7 @@
 {% block title %}Lessons · {{ site_name }}{% endblock %}
 {% block content %}
 <h1>Lesson library</h1>
-<p class="muted">16 lessons · each designed for about 35 minutes.</p>
+<p class="muted">{{ units|sum(attribute='lessons', start=[])|length }} lessons · each designed for about 35 minutes.</p>
 {% for u in units %}
 <section class="unit-block">
   <h2><span class="unit-num">Unit {{ u.number }}</span> {{ u.title }}</h2>

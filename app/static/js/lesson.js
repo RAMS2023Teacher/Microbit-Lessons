@@ -187,7 +187,9 @@
     function show(i) {
       cur = i;
       const s = steps[i];
-      Breadboard.render($('breadboard'), L.circuit, i);
+      if ($('bb-legend')) $('bb-legend').hidden = !!s.visual;
+      if (s.visual) { $('breadboard').innerHTML = ''; Visuals.render($('breadboard'), s.visual); }
+      else Breadboard.render($('breadboard'), L.circuit, i);
       $('step-count').textContent = `Step ${i + 1} of ${steps.length}`;
       $('step-title').textContent = s.title;
       $('step-text').innerHTML = md(s.instruction);

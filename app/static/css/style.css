@@ -360,7 +360,8 @@ thead th small, tbody th small { display: block; color: var(--muted); font-weigh
 .map-node.locked { color: var(--muted); }
 .map-node.locked .node-disc > span { background: #eef0f5; border-color: #cfd5e2; font-size: 1.1rem; filter: grayscale(1); }
 @keyframes beckon { 0%, 100% { box-shadow: 0 3px 0 rgba(16,25,53,.18), 0 0 0 0 rgba(255,210,63,.7); } 50% { box-shadow: 0 3px 0 rgba(16,25,53,.18), 0 0 0 10px rgba(255,210,63,0); } }
-.unit-1 { --unit: #f5b700; } .unit-2 { --unit: #0fa3a3; } .unit-3 { --unit: #f9733d; } .unit-4 { --unit: #7c5cff; }
+.unit-1 { --unit: #f5b700; } .unit-2 { --unit: #0fa3a3; } .unit-3 { --unit: #f9733d; } .unit-4 { --unit: #7c5cff; } .unit-5 { --unit: #e5397b; }
+.map-unit-label { position: absolute; transform: translate(-50%, -100%); font-weight: 800; font-size: .8rem; color: #b0245c; background: #fde7ef; border-radius: 99px; padding: 3px 10px; white-space: nowrap; }
 .map-me { position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center; pointer-events: none; animation: bob 2.2s ease-in-out infinite; }
 .map-me span { font-size: .7rem; font-weight: 800; background: var(--navy); color: var(--accent); border-radius: 99px; padding: 0 7px; margin-top: -4px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }

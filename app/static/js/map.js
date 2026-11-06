@@ -8,7 +8,7 @@
   const COL = 150, ROW = 132, PADX = 90, PADY = 70;
   const byId = {};
   M.nodes.forEach((n) => { byId[n.id] = n; });
-  const W = PADX * 2 + 4.2 * COL;
+  const W = PADX * 2 + Math.max(4.2, ...M.nodes.map((n) => n.x)) * COL;
   const H = PADY * 2 + Math.max(...M.nodes.map((n) => n.y)) * ROW + 40;
   const px = (n) => [PADX + n.x * COL, PADY + n.y * ROW];
   map.style.aspectRatio = `${W} / ${H}`;
@@ -56,6 +56,19 @@
     a.addEventListener('click', () => select(n));
     map.appendChild(a);
   });
+
+  // label the Robot Sprint trail
+  const sprint = M.nodes.filter((n) => n.unit === 5);
+  if (sprint.length) {
+    const top = sprint.reduce((a, n) => (n.y < a.y ? n : a));
+    const [x, y] = px(top);
+    const lab = document.createElement('div');
+    lab.className = 'map-unit-label';
+    lab.style.left = (100 * x / W) + '%';
+    lab.style.top = (100 * (y - 46) / H) + '%';
+    lab.textContent = '🏎️ Robot Sprint · start any time';
+    map.appendChild(lab);
+  }
 
   // the student's robot stands on the current lesson
   if (window.ME && M.current && byId[M.current]) {

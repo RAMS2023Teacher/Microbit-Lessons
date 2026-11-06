@@ -74,12 +74,19 @@ TREE = {
     "robot-drive":         {"requires": ["motor-driver"], "pos": (2.3, 8)},
     "line-follower":       {"requires": ["robot-drive", "light-sensor"], "pos": (1.2, 9.1)},
     "radio-remote":        {"requires": ["robot-drive", "motion-and-sound"], "pos": (3.2, 9.1)},
+    # Robot Sprint: its own trail on the right, open from the start
+    "sprint-servo-skills":  {"requires": [], "pos": (5.6, 0)},
+    "sprint-sensor-lab":    {"requires": ["sprint-servo-skills"], "pos": (5.6, 1.3)},
+    "sprint-sense-decide-act": {"requires": ["sprint-sensor-lab"], "pos": (5.6, 2.6)},
+    "sprint-build-the-bot": {"requires": ["sprint-sense-decide-act"], "pos": (5.6, 3.9)},
+    "sprint-mission-day":   {"requires": ["sprint-build-the-bot"], "pos": (5.6, 5.2)},
+    "sprint-showcase":      {"requires": ["sprint-mission-day"], "pos": (5.6, 6.5)},
 }
 
 
 def tree() -> dict:
     """TREE plus any lessons added later (chained after the previous lesson)."""
-    t = {k: dict(v) for k, v in TREE.items()}
+    t = {k: dict(v) for k, v in TREE.items() if L.get_lesson(k)}
     prev, row = None, max((v["pos"][1] for v in TREE.values()), default=-1)
     for lesson in L.all_lessons():
         lid = lesson["id"]
@@ -158,7 +165,8 @@ BADGES = [
     ("unit-2", "📡", "Sense-ational", "Complete every lesson in Unit 2: Sensing the World."),
     ("unit-3", "⚙️", "Mover & Shaker", "Complete every lesson in Unit 3: Making Things Move."),
     ("unit-4", "🤖", "Robot Wrangler", "Complete every lesson in Unit 4: Robots."),
-    ("graduate", "🎓", "Graduate", "Complete all the lessons."),
+    ("unit-5", "🏎️", "Sprint Champion", "Complete every lesson in the Robot Sprint."),
+    ("graduate", "🎓", "Graduate", "Complete all 16 core lessons."),
     ("teachers-pick", "🍎", "Teacher's Pick", "Given by your teacher for great work."),
 ]
 BADGE_BY_ID = {b[0]: {"id": b[0], "icon": b[1], "name": b[2], "desc": b[3]} for b in BADGES}
@@ -200,7 +208,8 @@ def _badge_checks(user, progress: list[Progress], xp_keys: set[str]) -> set[str]
         ids = [l["id"] for l in lessons.values() if l["unit"] == unit]
         if ids and all(i in done for i in ids):
             earned.add(f"unit-{unit}")
-    if lessons and all(i in done for i in lessons):
+    core = [i for i, l in lessons.items() if l["unit"] <= 4]
+    if core and all(i in done for i in core):
         earned.add("graduate")
     class_ids = [c.id for c in user.classes]
     if class_ids and done:

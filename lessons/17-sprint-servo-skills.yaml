@@ -1,0 +1,322 @@
+id: sprint-servo-skills
+label: S1
+unit: 5
+order: 17
+title: "Sprint 1: Servo Skills"
+subtitle: Point an arm and spin a wheel with servos
+duration_minutes: 35
+level: Robot Sprint
+big_idea: >-
+  A servo listens to a pulse: the length of the pulse says where to point (180°
+  servo) or how fast to spin (continuous servo).
+objectives:
+  - Plug a servo into the sensor shield
+  - Tell a 180° servo from a continuous servo
+  - Point a servo to any angle
+  - Make a wheel servo go, reverse and stop
+vocabulary:
+  - term: Servo
+    definition: A small motor with gears and a circuit inside, so it can be told exactly what to do.
+  - term: Continuous servo
+    definition: A servo that spins all the way around like a wheel. The pulse sets its speed.
+  - term: Pulse
+    definition: A short ON signal. Servos read how long it lasts.
+  - term: Calibrate
+    definition: Test and adjust until the numbers match real life.
+materials:
+  - micro:bit V2 + USB cable
+  - Keyestudio sensor shield (KS0360)
+  - 6×AA battery holder with batteries
+  - 1 servo of each kind (180° and continuous)
+  - Small screwdriver (optional, for a servo's trim screw)
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: circuit, name: Plug it in, minutes: 5}
+  - {key: code, name: Code it, minutes: 10}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Two kinds of servos
+  note: Watch the difference between a servo that points and one that spins.
+warmup:
+  prompt: >-
+    Robots need parts that point (like an arm) and parts that spin (like a
+    wheel). Name one robot job for each.
+learn:
+  - text: |
+      ### Python in 30 seconds
+      You already know the micro:bit. Today's code uses three Python tools:
+
+      * `while True:` repeats forever.
+      * `if ...:` makes a choice.
+      * `def name():` makes a recipe you can call by name.
+
+      Lines inside each one are **indented** by 4 spaces.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔁", title: "while True:", text: "repeat forever"}
+        - {icon: "🤔", title: "if ...:", text: "make a choice"}
+        - {icon: "📦", title: "def go():", text: "a recipe with a name"}
+  - text: |
+      ### Two kinds of servos
+      They look the same, but they act differently.
+
+      * A **180° servo** points to an angle and holds it. Use it for arms, doors and flags.
+      * A **continuous servo** spins like a wheel. Use it to drive.
+
+      The label may say **FS90R** or **360** on a continuous one.
+    visual:
+      type: compare
+      items:
+        - {icon: "📐", title: "180° servo", text: "points and holds: arms, doors"}
+        - {icon: "🛞", title: "Continuous servo", text: "spins: wheels"}
+  - text: |
+      ### Meet the sensor shield
+      Every pin gets a 3-pin header: **G** (ground), **V** (power), **S** (signal).
+
+      * Servo wires: **brown → G**, **red → V**, **orange → S**.
+      * Set jumper **V2 to 5V** for servos.
+      * Servos need the **battery pack** in the DC jack. USB alone is too weak.
+    visual:
+      type: board
+      board: shield
+      jumpers: {V1: "3.3V", V2: "5V"}
+      power: "6×AA"
+      plugs:
+        - {pin: 13, device: "Servo", kind: servo}
+  - text: |
+      ### Pulses set the angle
+      Every **20 ms** the servo gets a short pulse. A longer pulse means a bigger angle.
+
+      In code, `write_analog` sets the pulse:
+
+      * **26** → 0°
+      * **77** → 90°
+      * **128** → 180°
+    visual:
+      type: dial
+      caption: "write_analog values for a 180° servo"
+      marks:
+        - {angle: 0, label: "0° · 26"}
+        - {angle: 90, label: "90° · 77", pointer: true}
+        - {angle: 180, label: "180° · 128"}
+  - text: |
+      ### Continuous servos: speed, not angle
+      The same numbers mean something else on a wheel servo.
+
+      * About **77** → **stop**
+      * Lower → spin one way
+      * Higher → spin the other way
+
+      Every servo's stop point is a little different. You'll **calibrate** yours.
+    visual:
+      type: scale
+      min: 51
+      max: 102
+      zones:
+        - {from: 51, to: 74, label: "spin ↺", color: "#dbe4ff"}
+        - {from: 74, to: 80, label: "stop", color: "#fde2e2"}
+        - {from: 80, to: 102, label: "spin ↻", color: "#dff4f4"}
+      marks:
+        - {at: 51, label: "51 fast"}
+        - {at: 77, label: "77", pointer: true}
+        - {at: 102, label: "102 fast"}
+circuit:
+  intro: >-
+    You'll plug one servo into pin 13 of the sensor shield and power it from the
+    battery pack.
+  safety:
+    - Unplug the battery pack before you plug in or move a servo.
+    - Brown wire to G. A backwards servo can be damaged.
+    - The two small chips on the shield get hot. Don't touch them.
+  steps:
+    - title: Set the jumpers
+      instruction: >-
+        Find jumpers **V1** and **V2** on the shield. Set **V2 to 5V** (servo
+        row). Set **V1 to 3.3V** (sensor row). Ask your teacher if you can't
+        find them.
+      check: Is V2 on 5V and V1 on 3.3V?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        caption: "V1 is next to pins 0-10. V2 is next to pins 11-20."
+    - title: Plug in the micro:bit
+      instruction: >-
+        Slide the micro:bit into the shield's slot, **LED screen facing out**.
+        Push it all the way in.
+      check: Is the micro:bit pushed in straight and all the way?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+    - title: Plug in the servo
+      instruction: >-
+        Start with your **180° servo**. Plug it into header **13**: **brown on
+        G**, red on V, **orange on S**.
+      check: Is the brown wire on G, at pin 13?
+      tip: If your servo has black, red and white wires, black goes on G.
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 13, device: "Servo", kind: servo}
+    - title: Power it up
+      instruction: >-
+        Plug the **6×AA battery pack** into the black DC jack. Plug in the
+        **USB cable** too, so you can send code.
+      check: Is the shield's power light on?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 13, device: "Servo", kind: servo}
+code:
+  intro: >-
+    This program points the servo left, up and right. Send it, then watch: does
+    your servo **stop** at each spot, or **keep spinning**?
+  starter: |
+    from microbit import *
+
+    SERVO = pin13
+    SERVO.set_analog_period(20)
+
+    def angle(deg):
+        # 0 degrees -> 26, 180 degrees -> 128
+        SERVO.write_analog(26 + deg * 102 // 180)
+
+    while True:
+        angle(0)
+        display.show(Image.ARROW_W)
+        sleep(1000)
+        angle(90)
+        display.show(Image.ARROW_N)
+        sleep(1000)
+        angle(180)
+        display.show(Image.ARROW_E)
+        sleep(1000)
+  walkthrough:
+    - lines: "3-4"
+      explain: Name the servo's pin. Then send one pulse every **20 ms**. That's what servos expect.
+    - lines: "6-8"
+      explain: A **function** turns an angle into a pulse number. `//` keeps it a whole number.
+    - lines: "10-19"
+      explain: Point left, up, right, waiting 1 second at each. The arrows show where it should point.
+  try_it:
+    - Swap in the **continuous servo**. If it keeps spinning, put a tape label on it.
+    - "On the continuous servo, replace the loop with `SERVO.write_analog(77)`. Try 75 or 79 until it stops dead."
+    - "Then try `write_analog(60)` and `write_analog(95)`. Which way does each spin?"
+debug:
+  story: >-
+    Riley's servo should swing from 0° to 180° and back. Instead it twitches or
+    doesn't move at all. Find **three** bugs.
+  buggy_code: |
+    from microbit import *
+
+    SERVO = pin13
+
+    def angle(deg):
+        SERVO.write_analog(26 + deg * 102 / 180)
+
+    while True:
+        angle(0)
+        sleep(1000)
+        angle(180)
+  hints:
+    - Servos need a pulse every 20 ms. Which line sets that up?
+    - "`/` makes a decimal like 77.5. write_analog only takes whole numbers."
+    - After angle(180), how long does the loop wait before going back to 0?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "set_analog_period\\(\\s*20\\s*\\)", message: "Servos need one pulse every 20 ms: add SERVO.set_analog_period(20)."}
+    - {type: contains, pattern: "//|int\\(", message: "write_analog needs a whole number. Use // instead of /."}
+    - {type: contains, pattern: "angle\\(\\s*180\\s*\\)\\s*\\n\\s*sleep\\(", message: "After angle(180), wait with sleep(), or the loop jumps straight back to 0."}
+  solution: |
+    from microbit import *
+
+    SERVO = pin13
+    SERVO.set_analog_period(20)
+
+    def angle(deg):
+        SERVO.write_analog(26 + deg * 102 // 180)
+
+    while True:
+        angle(0)
+        sleep(1000)
+        angle(180)
+        sleep(1000)
+  reflection_prompt: Which bug made the servo do nothing at all, and how could you tell?
+quiz:
+  - question: Which servo wire goes to G (ground)?
+    choices:
+      - Brown
+      - Red
+      - Orange
+    answer: 0
+    explain: Brown is ground, red is power and orange is the signal.
+  - question: Your servo keeps spinning instead of stopping at an angle. What kind is it?
+    choices:
+      - A continuous servo
+      - A 180° servo
+      - A broken servo
+    answer: 0
+    explain: Continuous servos spin. The pulse sets their speed, not their angle.
+  - question: Which write_analog value points a 180° servo to the middle?
+    visual:
+      type: dial
+      marks:
+        - {angle: 0, label: "0°"}
+        - {angle: 90, label: "90°", pointer: true}
+        - {angle: 180, label: "180°"}
+    choices:
+      - "26"
+      - "77"
+      - "128"
+      - "1023"
+    answer: 1
+    explain: 26 is 0°, 77 is 90° and 128 is 180°.
+  - question: Why must servos get power from the battery pack?
+    choices:
+      - USB can't give enough current, so the micro:bit may reset
+      - Batteries make servos spin backwards
+      - USB only works for the LED screen
+    answer: 0
+    explain: A moving servo gulps current. USB alone can't keep up, so the micro:bit restarts.
+challenge:
+  title: Servo Show
+  prompt: >-
+    Make your servo do something useful or silly. Use buttons A and B to
+    control it!
+  levels:
+    - "Mild: Button A points to 0°. Button B points to 180°."
+    - "Medium: Make a smooth sweep: a for loop that moves 5° at a time."
+    - "Spicy: Add a second servo on P14. Make the two servos wave in opposite directions."
+  submit_prompt: What does your servo do, and which part of your code was hardest to get right?
+  visual:
+    type: leds
+    caption: "Show which way the servo points."
+    frames: [ARROW_W, ARROW_N, ARROW_E]
+teacher_notes: |
+  * **Setup:** see `docs/ROBOT_SPRINT_HARDWARE.md`. Set V2 to 5V and V1 to 3.3V before class, and label continuous servos with tape once students find them.
+  * **The micro:bit resets when a servo moves:** the battery pack is missing or low. USB alone can't power servos.
+  * **Continuous servo won't stop at 77:** that's normal. Each servo stops at a slightly different value (often 74-80). Some have a trim screw to adjust it.
+  * **Servo only jitters:** check that `set_analog_period(20)` runs, and that the orange wire is on S at pin 13.
+  * **Fast finishers:** have them write `def smooth(start, end):` that steps 2° at a time, then use it in the Spicy challenge.
+  * **Students who need a quick win:** the starter runs as-is. Changing the three angles to make it "wave" counts as a win.
+standards:
+  - code: 6-8.CS.a.4
+    how: Servos are actuators; students control a 180° servo's angle and a continuous servo's speed with pulses.
+  - code: 6-8.CT.a.2
+    how: An angle() function turns any angle into the right pulse number and is reused for every move.
+  - code: 6-8.CT.b.5
+    how: Pulse values only work from about 26 to 128, and write_analog needs whole numbers, so students handle the boundaries.
+  - code: 6-8.CS.a.7
+    how: Students diagnose servo problems such as resets from weak power, a wrong pin or a missing pulse period.
+  - code: 6-8.CT.d.6
+    how: Students fix three bugs (missing period, decimal pulse, missing wait), then calibrate a continuous servo's stop value by trying, testing and adjusting.

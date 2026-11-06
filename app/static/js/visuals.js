@@ -8,7 +8,8 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const INK = '#17203a', MUTED = '#5d6680', TEAL = '#0fa3a3', YELLOW = '#ffd23f', RED = '#ef4444', LINE = '#c9cfdd';
   const svg = (w, h, body, label) => `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)}" xmlns="${NS}">${body}</svg>`;
-  const t = (x, y, s, o) => `<text x="${x}" y="${y}" ${o || ''}>${esc(s)}</text>`;
+  // fill="..." on text becomes an inline style so it beats the .vz-* CSS colors
+  const t = (x, y, s, o) => `<text x="${x}" y="${y}" ${(o || '').replace(/\bfill="([^"]+)"/, 'style="fill:$1"')}>${esc(s)}</text>`;
 
   // ---------------------------------------------------------------- leds
   const IMAGES = {
@@ -298,7 +299,88 @@
     return svg(W, H, b, v.alt || `line graph of ${pts.length} readings`);
   }
 
-  const R = { leds, part, circuit, flow, wave, scale, compare, bits, dial, graph };
+
+  // ---------------------------------------------------------------- board (Keyestudio KS0360 shield / KS4033 motor board)
+  const KIND = { servo: ['#795548', '#e53935', '#fb8c00', '🦾'], sensor: ['#263238', '#e53935', '#fdd835', '👁️'],
+    ultrasonic: ['#263238', '#e53935', '#1e88e5', '📡'], output: ['#263238', '#e53935', '#43a047', '💡'] };
+  function board(v) {
+    return v.board === 'motor' ? motorBoard(v) : shieldBoard(v);
+  }
+  function shieldBoard(v) {
+    const W = 520, H = 330, X0 = 40, Y0 = 70, BW = 360, BH = 190;
+    const rows = { V1: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], V2: [11, 12, 13, 14, 15, 16, 19, 20] };
+    const DISPLAY = [3, 4, 6, 7, 10];
+    const plugs = v.plugs || [];
+    const used = Object.fromEntries(plugs.map((p) => [p.pin, p]));
+    let b = `<rect x="${X0}" y="${Y0}" width="${BW}" height="${BH}" rx="10" fill="#1b1b1b"/>`;
+    b += `<rect x="${X0 + BW - 18}" y="${Y0 + 20}" width="34" height="${BH - 40}" rx="4" fill="#3b4366"/>` + t(X0 + BW + 26, Y0 + BH / 2, 'micro:bit', `class="vz-label" transform="rotate(90 ${X0 + BW + 26} ${Y0 + BH / 2})" text-anchor="middle"`);
+    b += t(X0 + 14, Y0 + 22, 'Keyestudio sensor shield', 'class="vz-chip"');
+    const header = (pin, x, y, row) => {
+      const p = used[pin], dim = DISPLAY.includes(pin) && !p;
+      let o = `<rect x="${x - 11}" y="${y}" width="22" height="46" rx="3" fill="${p ? '#fff3c4' : '#2a2a2a'}" stroke="${p ? '#ffd23f' : '#444'}" stroke-width="${p ? 3 : 1}" opacity="${dim ? 0.45 : 1}"/>`;
+      ['G', 'V', 'S'].forEach((n, k) => { o += `<rect x="${x - 4}" y="${y + 5 + k * 13}" width="8" height="8" fill="${['#111', '#e53935', '#fdd835'][k]}" opacity="${dim ? 0.4 : 0.9}"/>`; });
+      o += t(x, y + (row === 'V1' ? -6 : 60), pin, `class="vz-label" text-anchor="middle" fill="${p ? '#b77900' : '#ccc'}"`);
+      return o;
+    };
+    rows.V1.forEach((pin, i) => { b += header(pin, X0 + 30 + i * 30, Y0 + 40, 'V1'); });
+    rows.V2.forEach((pin, i) => { b += header(pin, X0 + 30 + i * 30, Y0 + 120, 'V2'); });
+    b += t(X0 + 14, Y0 + 104, 'G V S', 'class="vz-tiny" fill="#aaa"');
+    // jumpers
+    const J = v.jumpers || {};
+    [['V1', X0 + BW - 150], ['V2', X0 + BW - 92]].forEach(([n, x]) => {
+      if (!J[n]) return;
+      const five = /5/.test(J[n]);
+      b += `<rect x="${x}" y="${Y0 + 93}" width="52" height="20" rx="4" fill="${five ? '#e53935' : '#1e88e5'}"/>` + t(x + 26, Y0 + 107, `${n}: ${J[n]}`, 'class="vz-tiny" fill="#fff" text-anchor="middle"');
+    });
+    // power
+    if (v.power) {
+      b += `<rect x="${X0 - 30}" y="${Y0 + BH - 50}" width="34" height="26" rx="4" fill="#111" stroke="#666"/>` + t(X0 - 13, Y0 + BH - 32, 'DC', 'class="vz-tiny" fill="#ccc" text-anchor="middle"');
+      b += t(X0 - 30, Y0 + BH + 22, '🔋 ' + v.power, 'class="vz-label"');
+    }
+    // devices plugged in
+    plugs.forEach((p, i) => {
+      const row = rows.V1.includes(p.pin) ? 'V1' : 'V2';
+      const idx = rows[row].indexOf(p.pin);
+      const hx = X0 + 30 + idx * 30, hy = row === 'V1' ? Y0 + 40 : Y0 + 166;
+      const dx = 20 + i * (W - 40) / Math.max(plugs.length, 1) + ((W - 40) / Math.max(plugs.length, 1)) / 2;
+      const dy = row === 'V1' ? 20 : H - 26;
+      const [c1, c2, c3, icon] = KIND[p.kind] || KIND.sensor;
+      [c1, c2, c3].forEach((c, k) => {
+        b += `<path d="M${hx - 4 + k * 4} ${hy + (row === 'V1' ? 0 : 0)} C${hx - 4 + k * 4} ${(hy + dy) / 2} ${dx - 4 + k * 4} ${(hy + dy) / 2} ${dx - 4 + k * 4} ${dy + (row === 'V1' ? 12 : -12)}" fill="none" stroke="${c}" stroke-width="2.5"/>`;
+      });
+      b += `<rect x="${dx - 58}" y="${dy - 12}" width="116" height="24" rx="12" fill="#fff" stroke="${TEAL}" stroke-width="2"/>`;
+      const label = `${icon} ${p.device} · P${p.pin}`;
+      b += t(dx, dy + 5, label, `class="vz-label" text-anchor="middle"${label.length > 17 ? ' textLength="106" lengthAdjust="spacingAndGlyphs"' : ''}`);
+    });
+    return svg(W, H, b, v.alt || `sensor shield with ${plugs.map((p) => `${p.device} on pin ${p.pin}`).join(', ')}`);
+  }
+  function motorBoard(v) {
+    const W = 520, H = 300, X0 = 150, Y0 = 56, BW = 230, BH = 170;
+    let b = `<rect x="${X0}" y="${Y0}" width="${BW}" height="${BH}" rx="10" fill="#1b1b1b"/>`;
+    b += `<rect x="${X0 - 16}" y="${Y0 + 20}" width="34" height="${BH - 40}" rx="4" fill="#3b4366"/>` + t(X0 - 26, Y0 + BH / 2, 'micro:bit', `class="vz-label" transform="rotate(-90 ${X0 - 26} ${Y0 + BH / 2})" text-anchor="middle"`);
+    b += t(X0 + 30, Y0 + 24, 'Keyestudio motor board', 'class="vz-chip"');
+    const terms = ['G', 'VM', 'A1', 'A2', 'B1', 'B2'];
+    const tx = X0 + BW, ty = (i) => Y0 + 40 + i * 22;
+    b += `<rect x="${tx - 6}" y="${Y0 + 30}" width="30" height="${terms.length * 22 + 4}" rx="3" fill="#1e88e5"/>`;
+    terms.forEach((n, i) => { b += `<circle cx="${tx + 9}" cy="${ty(i) + 2}" r="5" fill="#cfd8dc"/>` + t(tx - 12, ty(i) + 6, n, 'class="vz-tiny" fill="#fff" text-anchor="end"'); });
+    const motors = v.motors || [];
+    motors.forEach((m) => {
+      const a = m.port === 'B' ? 4 : 2, my = m.port === 'B' ? 190 : 40;
+      b += `<rect x="440" y="${my}" width="70" height="46" rx="18" fill="#ffd54f" stroke="#c99a00"/>` + t(475, my + 28, m.device || ('motor ' + m.port), `class="vz-label" text-anchor="middle"${(m.device || '').length > 9 ? ' textLength="62" lengthAdjust="spacingAndGlyphs"' : ''}`);
+      b += `<path d="M${tx + 9} ${ty(a) + 2} C420 ${ty(a)} 420 ${my + 14} 440 ${my + 14}" stroke="#e53935" stroke-width="3" fill="none"/>`;
+      b += `<path d="M${tx + 9} ${ty(a + 1) + 2} C425 ${ty(a + 1)} 425 ${my + 32} 440 ${my + 32}" stroke="#263238" stroke-width="3" fill="none"/>`;
+    });
+    if (v.power) {
+      const bx = X0 + 40, by = H - 40;
+      b += `<rect x="${bx}" y="${by}" width="120" height="30" rx="5" fill="#424242"/>` + t(bx + 60, by + 20, '🔋 ' + v.power, 'class="vz-label" fill="#fff" text-anchor="middle"');
+      b += `<path d="M${tx + 9} ${ty(1) + 2} C${tx + 60} ${ty(1)} ${tx + 40} ${by + 8} ${bx + 120} ${by + 8}" stroke="#e53935" stroke-width="3" fill="none"/>`;
+      b += `<path d="M${tx + 9} ${ty(0) + 2} C${tx + 50} ${ty(0)} ${tx + 30} ${by + 22} ${bx + 120} ${by + 22}" stroke="#263238" stroke-width="3" fill="none"/>`;
+    }
+    b += t(10, 26, 'Motor A = P12 + P13', 'class="vz-label"') + t(10, 44, 'Motor B = P15 + P16', 'class="vz-label"');
+    return svg(W, H, b, v.alt || 'motor driver board with motors and battery');
+  }
+
+  const R = { leds, part, circuit, flow, wave, scale, compare, bits, dial, graph, board };
 
   function render(el, v) {
     const fn = R[v.type];

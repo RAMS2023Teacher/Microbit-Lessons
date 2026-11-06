@@ -84,6 +84,30 @@ def check_visual(v, where="visual") -> list[str]:
         pts = v.get("points") or []
         if not 2 <= len(pts) <= 40 or not all(isinstance(p, (int, float)) for p in pts):
             errs.append(f"{where}: graph needs 2-40 numeric points")
+    elif t == "board":
+        kind = v.get("board")
+        if kind not in ("shield", "motor"):
+            errs.append(f"{where}: board must be 'shield' (KS0360) or 'motor' (KS4033)")
+        if kind == "shield":
+            pins = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20}
+            seen = set()
+            for p in v.get("plugs") or []:
+                if p.get("pin") not in pins:
+                    errs.append(f"{where}: shield pin {p.get('pin')!r} is not on the board")
+                if p.get("pin") in seen:
+                    errs.append(f"{where}: two devices on pin {p.get('pin')}")
+                seen.add(p.get("pin"))
+                if not p.get("device") or len(str(p["device"])) > 20:
+                    errs.append(f"{where}: each plug needs a device name of 20 characters or fewer")
+                if p.get("kind", "sensor") not in ("servo", "sensor", "ultrasonic", "output"):
+                    errs.append(f"{where}: plug kind must be servo, sensor, ultrasonic or output")
+            for k, val in (v.get("jumpers") or {}).items():
+                if k not in ("V1", "V2") or val not in ("3.3V", "5V"):
+                    errs.append(f"{where}: jumpers look like {{V1: '3.3V', V2: '5V'}}")
+        if kind == "motor":
+            for m in v.get("motors") or []:
+                if m.get("port") not in ("A", "B"):
+                    errs.append(f"{where}: motor port must be A or B")
     else:
         errs.append(f"{where}: unknown visual type {t!r}")
     return errs
