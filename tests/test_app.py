@@ -55,6 +55,10 @@ def test_full_flow(client, app):
     assert b"Blink an External LED" in r.data
     r = client.get(f"/lessons/{LID}")
     assert r.status_code == 200 and b"Teacher answer key" not in r.data
+    # every Learn card reaches the page; lesson.js shows them one at a time
+    assert r.data.count(b'class="learn-card"') == len(L.get_lesson(LID)["learn"])
+    # lesson.js pages through the overview plus every tracked section
+    assert r.data.count(b"data-step") == len(L.section_keys(L.get_lesson(LID))) + 1
 
     # progress
     assert client.post(f"/api/lessons/{LID}/save", json={"warmup_answer": "use a pin"}).json["sections"]["warmup"]
