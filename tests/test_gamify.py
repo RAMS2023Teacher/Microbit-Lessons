@@ -106,3 +106,14 @@ def test_old_database_gets_new_columns(tmp_path):
     app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{path}"})
     with app.app_context():
         assert User.query.filter_by(username="old").one().xp == 0
+
+
+def test_standards_pages(client):
+    from app import standards as STD
+    assert len(STD.by_code()) == 67
+    for lesson in L.all_lessons():
+        assert STD.for_lesson(lesson), lesson["id"]
+    register_teacher(client)
+    r = client.get("/teacher/standards")
+    assert r.status_code == 200 and b"6-8.CT.b.1" in r.data and b"Not addressed" in r.data
+    assert b"Massachusetts DLCS standards" in client.get(f"/lessons/{LID}").data

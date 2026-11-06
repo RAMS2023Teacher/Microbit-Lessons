@@ -367,3 +367,13 @@ teacher_notes: |
   * Floors matter: carpet needs more speed and longer turn times than a smooth floor. Let teams calibrate on the surface they'll be judged on.
   * Always test with the wheels lifted first. Robots driving off desks is a rite of passage - but an expensive one.
   * Extension: use a for loop to make spirals by increasing FORWARD_TIME each side.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.5
+    how: Teams build a two-wheel robot and show it driving a planned path.
+  - code: 6-8.CT.b.3
+    how: Break a path (a square, a dance, an obstacle course) into drive and turn steps, each in its own function.
+  - code: 6-8.CT.b.4
+    how: Different combinations of wheel speeds give different ways to turn and reach the same goal.
+  - code: 6-8.CT.d.6
+    how: Calibrate timing by trying, measuring and adjusting until the square closes.

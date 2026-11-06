@@ -385,3 +385,13 @@ teacher_notes: |
   * **Robot stutters or stops randomly:** the controller may be too far away or sending too slowly, or the batteries are low (the 4×AA pack, the robot's 2×AAA or the controller's 2×AAA). The fail-safe makes low batteries show up as "stops by itself" - that's the safe way to fail.
   * The robot program lives in the Learn section because the starter box holds one program. Students can copy it into a second editor tab.
   * Radio is not private: any micro:bit in the same group can listen. Good discussion starter about security - a Spicy extension is a "secret password" letter at the start of each message.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.c.3
+    how: Tilt is turned into one-letter messages (F, L, R, S) and sent by radio between two micro:bits.
+  - code: 6-8.CT.b.3
+    how: 'The system is split into two programs: the controller (sensing and sending) and the robot (receiving and driving).'
+  - code: 6-8.CT.b.5
+    how: A safety stop handles the case where messages stop arriving, using a 500 ms time limit.
+  - code: 6-8.CS.a.5
+    how: Teams show a remote-controlled robot completing a course.

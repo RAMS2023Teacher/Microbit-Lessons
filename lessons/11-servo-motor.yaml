@@ -319,3 +319,13 @@ teacher_notes: |
   **Extensions**
   * Two servos on P0 and P1 make a pan-tilt head. Both run from the same battery rail.
   * Talk about how a servo uses **feedback**: it measures its own position and corrects it.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: A servo is an actuator controlled by pulse length; students use it in a control system.
+  - code: 6-8.CT.a.2
+    how: "An angle-to-value function turns 'point to 90\xB0' into a reusable command."
+  - code: 6-8.CT.b.5
+    how: "Servo pulses only work within a range (about 0-180\xB0), so students keep inputs inside it."
+  - code: 6-8.CS.a.7
+    how: 'Diagnose power problems: a separate battery pack, a shared ground, jitter from low batteries.'

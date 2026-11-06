@@ -328,3 +328,13 @@ teacher_notes: |
   **Extensions**
   * Compare readings from two micro:bits with `radio`.
   * Discuss why scientists take many readings and average them instead of trusting one.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.6
+    how: The micro:bit's temperature sensor collects readings that students summarize and present.
+  - code: 6-8.CT.c.5
+    how: Gather and organize readings in a list and summarize them with min, max and average; the challenge logs data with the log module.
+  - code: 6-8.CT.c.4
+    how: Display summary values; in the challenge, look at the logged data as a table and chart (MY_DATA.HTM).
+  - code: 6-8.CT.b.1
+    how: A loop collects readings; a threshold conditional turns on a too-hot warning LED.

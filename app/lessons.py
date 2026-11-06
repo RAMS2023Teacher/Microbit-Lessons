@@ -107,6 +107,15 @@ def validate_lesson(data: dict) -> list[str]:
             errs.append("debug: the buggy code passes every check (checks are too weak)")
     if "circuit" in data and data["circuit"]:
         errs += [f"circuit: {e}" for e in check_circuit(data["circuit"])]
+    from .standards import by_code
+    table = by_code()
+    if not data.get("standards"):
+        errs.append("add 'standards' (MA DLCS codes this lesson addresses, each with a 'how')")
+    for st in data.get("standards") or []:
+        if st.get("code") not in table:
+            errs.append(f"standards: unknown code {st.get('code')!r} (see app/standards.yaml)")
+        elif not st.get("how"):
+            errs.append(f"standards: {st['code']} needs a 'how' explaining what in the lesson meets it")
     if not data["challenge"].get("levels"):
         errs.append("challenge: add 'levels' (mild / medium / spicy ideas)")
     return errs

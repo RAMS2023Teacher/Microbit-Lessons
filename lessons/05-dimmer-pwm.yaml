@@ -255,3 +255,13 @@ teacher_notes: |
   * Our eyes don't see brightness in a straight line: the change from 0 to 100 looks bigger than 900 to 1023.
     Curious students can try squaring the number (`b * b // 1023`) for a smoother-looking fade.
   * Early finishers: `import random` for the candle challenge; `random.randint(200, 1023)`.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CT.b.1
+    how: for loops with range() count up and down to fade an LED, nested inside a forever loop.
+  - code: 6-8.CT.b.5
+    how: write_analog only accepts 0-1023, and range() stops before its stop value, so students reason about the end points.
+  - code: 6-8.CT.b.2
+    how: Predict how changing the step size or the wait changes the speed and smoothness of the fade.
+  - code: 6-8.CS.a.4
+    how: PWM is how a digital controller makes an output look like it's in between on and off.

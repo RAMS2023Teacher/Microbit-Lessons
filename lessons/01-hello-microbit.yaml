@@ -194,3 +194,13 @@ teacher_notes: |
   * The three most common bugs today: missing quotes, lowercase image names, and mixed indentation. Encourage students to use the Tab key or 4 spaces consistently.
   * Point out that `display.scroll("Hello!")` is *outside* the loop, so it runs only once. Ask: "How could you make it scroll every time?"
   * Early finishers: show `button_a.is_pressed()` with an `if` inside the loop as a preview, or let them browse the built-in Image list (Image.GIRAFFE, Image.GHOST, Image.PACMAN...).
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CT.b.1
+    how: A while True loop repeats a scroll-and-picture animation forever.
+  - code: 6-8.CT.d.3
+    how: 'Name Badge Animation challenge: students write a program that meets a goal they choose.'
+  - code: 6-8.CT.d.6
+    how: Debug challenge with three bugs (missing quotes, Image.heart, bad indentation), fixed by testing and retrying.
+  - code: 6-8.CS.a.7
+    how: 'Troubleshoot getting code onto the device: the MICROBIT drive, USB cables (some are charge-only) and re-flashing.'

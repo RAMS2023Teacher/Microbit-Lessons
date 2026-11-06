@@ -407,3 +407,26 @@ thead th small, tbody th small { display: block; color: var(--muted); font-weigh
   .hero-card { grid-template-columns: auto 1fr; } .hero-badges { grid-column: 1 / -1; grid-template-columns: repeat(6, 40px); }
 }
 @media (max-width: 560px) { .avatar-builder { grid-template-columns: 1fr; } .avatar-stage { align-items: center; } .level-ladder { grid-template-columns: 1fr; } }
+
+/* standards */
+.std-code { display: inline-block; font: 700 .78rem var(--mono); padding: 2px 7px; border-radius: 6px; background: #e8edf8; color: var(--ink); white-space: nowrap; }
+.strand-CT { background: #dff4f4; color: #0b6b6b; } .strand-CS { background: #fff1d6; color: #8a5a00; }
+.strand-CAS { background: #f1e8ff; color: #5b3aa6; } .strand-DTC { background: #e6efff; color: #1d4ed8; }
+.standards-box summary { cursor: pointer; font-weight: 700; }
+.std-list { list-style: none; padding: 0; margin: 10px 0 0; }
+.std-list > li { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.std-list > li > .std-code { align-self: start; justify-self: start; }
+.std-list > li b { font-weight: 600; display: block; }
+.std-list small { display: block; }
+.std-how { display: block; margin-top: 3px; font-size: .92rem; color: var(--teal-d); }
+.std-list li.uncovered { opacity: .6; }
+.std-evidence { margin: 4px 0 0; padding-left: 1.1em; font-size: .9rem; }
+.tag.std { font-family: var(--mono); background: #dff4f4; color: #0b6b6b; }
+.std-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px; }
+.std-stat { margin: 0; display: flex; flex-direction: column; } .std-stat b { font-size: 1.6rem; }
+.std-matrix th, .std-matrix td { padding: 5px 6px; } .std-matrix td { text-align: center; color: var(--teal-d); }
+.std-matrix td.hit { background: #e7f6f6; font-weight: 800; }
+.std-matrix tbody th { min-width: 320px; font-weight: 400; }
+.std-topic h2 small { font-size: .85rem; font-weight: 400; }
+@media (max-width: 700px) { .std-summary { grid-template-columns: 1fr 1fr; } .std-list > li { grid-template-columns: 1fr; } }
+@media print { .topbar, .footer, .btn { display: none !important; } .card { box-shadow: none; break-inside: avoid; } }

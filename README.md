@@ -33,6 +33,7 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 - A page per student showing their code, debug attempts, hints used, quiz history and challenge code. You can leave feedback, which the student sees at the top of the lesson. You can also re-open a debug challenge, reset a password, or export the gradebook to CSV.
 - An **answer key and teacher notes** on every lesson, visible only to teachers.
 - Each student's avatar, level, XP and badges show in the gradebook and on their page. You can give **bonus XP** with a reason, and optionally the 🍎 Teacher's Pick badge.
+- **Standards alignment**: every lesson is aligned to the **Massachusetts DLCS framework (2016), grades 6–8**, with a line on how the lesson meets each standard. Teachers get a **Standards** page with a lessons × standards grid, coverage by strand, and the standards the course doesn't address. It's printable for administrators. The standard text is quoted exactly from the DESE framework in `app/standards.yaml`.
 - A **Videos** page where you paste a YouTube, Google Drive, Vimeo or .mp4 link for any lesson. Until you add one, the lesson shows "Video coming soon".
 
 ## The course

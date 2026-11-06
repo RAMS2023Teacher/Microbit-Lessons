@@ -429,3 +429,15 @@ teacher_notes: |
   * The sensors run from the micro:bit's 3V. Make sure no one moves the battery + wire to the red rail - the verify step on the circuit page checks that it isn't.
   * The "jump the gap" Spicy idea needs a second piece of state: the time the robot first got lost (lost_since = running_time()). Drive straight while running_time() - lost_since is small, then search.
   * Extension: use pin1.read_analog() on an analog-output sensor (if your modules have an AO pin) for smoother proportional steering.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: IR sensors, a decision program and the motors form a complete sense, decide, act control loop.
+  - code: 6-8.CS.a.5
+    how: Teams show a robot that follows a track on its own.
+  - code: 6-8.CT.b.1
+    how: if/elif/else inside a loop picks straight, left, right or search.
+  - code: 6-8.CT.b.2
+    how: Reason through all four sensor combinations to predict what the robot will do.
+  - code: 6-8.CT.d.4
+    how: The solution uses a loop, conditionals, expressions, variables (including the last_seen state) and functions.

@@ -281,3 +281,13 @@ teacher_notes: |
   * Leftover traffic-light LEDs on P1 or P2 will confuse the button reading - make sure only the button is on P1.
   * Early finishers: introduce `and`/`or` (`if button_a.is_pressed() and pin1.read_digital() == 0:`).
   * `import random` is needed for the Medium challenge (`random.randint(1000, 4000)`).
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: A pushbutton is a sensor input; the program decides whether to turn on the LED output.
+  - code: 6-8.CT.b.1
+    how: if/else, inside a loop, decides what to do based on whether a button is pressed.
+  - code: 6-8.CT.b.2
+    how: Predict the output for each input, including why a pressed button with a pull-up reads 0.
+  - code: 6-8.CT.d.6
+    how: Debug = vs == and a missing set_pull by testing and changing one thing at a time.

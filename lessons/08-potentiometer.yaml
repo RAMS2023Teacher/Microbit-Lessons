@@ -285,3 +285,13 @@ teacher_notes: |
     reaches 5 for any reading of 854 or more.
   * Nested loops are new for many students - trace the bar code on the board for bars = 2 before running it.
   * Extension: write a reusable function `def scale(value, new_max): return value * (new_max + 1) // 1024`.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CT.d.4
+    how: Variables, expressions (value * 6 // 1024), loops and conditionals together turn a knob reading into a bar graph.
+  - code: 6-8.CT.b.2
+    how: Predict the scaled value and the bar graph for different knob positions.
+  - code: 6-8.CT.b.5
+    how: Scaling 0-1023 down to 0-5 with integer division keeps the result inside the display's rows.
+  - code: 6-8.CS.a.4
+    how: A knob (sensor input) sets an LED's brightness (actuator output).

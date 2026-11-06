@@ -22,6 +22,7 @@
       <a href="{{ url_for('student.playground') }}">Editor</a>
       {% if current_user.is_teacher %}
         <a href="{{ url_for('teacher.home') }}">My classes</a>
+        <a href="{{ url_for('teacher.standards') }}">Standards</a>
         <a href="{{ url_for('teacher.videos') }}">Videos</a>
       {% else %}
         <a href="{{ url_for('student.dashboard') }}">Dashboard</a>

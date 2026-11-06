@@ -17,6 +17,7 @@
         <span class="tag">⏱ {{ l.duration_minutes }} min</span>
         {% if l.circuit %}<span class="tag">⚡ circuit</span>{% endif %}
         <span class="tag">{{ l.level }}</span>
+        {% for st in (l.standards or [])[:3] %}<span class="tag std">{{ st.code }}</span>{% endfor %}
       </div>
       {% if pct.get(l.id) is not none %}<span class="meter"><i style="width:{{ pct[l.id] }}%"></i></span>{% endif %}
     </a>

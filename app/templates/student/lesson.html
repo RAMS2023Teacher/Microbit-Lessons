@@ -87,6 +87,19 @@
     </div>
   </section>
 
+  {% if standards %}
+  <details class="card standards-box" {{ 'open' if is_teacher }}>
+    <summary>🎯 Massachusetts DLCS standards in this lesson <small class="muted">({{ standards|length }})</small></summary>
+    <ul class="std-list">
+      {% for s in standards %}
+      <li><span class="std-code strand-{{ s.strand }}">{{ s.code }}</span>
+        <div><b>{{ s.text }}</b><small class="muted">{{ s.strand_name }} · {{ s.topic }}</small>
+          <span class="std-how">In this lesson: {{ s.how }}</span></div></li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+
   <section class="card step-section" id="warmup">
     <h2><span class="sec-num">1</span> Warm-up</h2>
     <p class="prompt">{{ lesson.warmup.prompt }}</p>

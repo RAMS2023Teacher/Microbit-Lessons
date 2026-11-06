@@ -9,6 +9,7 @@ from flask_login import current_user
 
 from . import gamify
 from . import lessons as L
+from . import standards as STD
 from .auth import teacher_required
 from .models import Assignment, Classroom, LessonVideo, Progress, User, db, new_join_code
 from .videos import all_video_urls, embed_info
@@ -286,3 +287,18 @@ def videos():
         flash("Videos saved.", "success")
         return redirect(url_for("teacher.videos"))
     return render_template("teacher/videos.html", units=L.lessons_by_unit(), urls=all_video_urls())
+
+
+@bp.route("/standards")
+@teacher_required
+def standards():
+    cov = STD.coverage()
+    strands = []
+    for code, name in STD.framework()["strands"].items():
+        topics = [t for t in cov if t["strand"] == code]
+        strands.append({"code": code, "name": name, "covered": sum(t["covered"] for t in topics),
+                        "total": sum(len(t["items"]) for t in topics)})
+    return render_template("teacher/standards.html", fw=STD.framework(), coverage=cov, strands=strands,
+                           lessons=L.all_lessons(),
+                           total=sum(len(t["items"]) for t in cov),
+                           covered=sum(t["covered"] for t in cov))
