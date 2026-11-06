@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 from .circuits import check_circuit
+from .visuals import check_visual
 
 LESSON_DIR = Path(__file__).resolve().parent.parent / "lessons"
 
@@ -105,6 +106,19 @@ def validate_lesson(data: dict) -> list[str]:
         bug = run_checks(dbg["buggy_code"], dbg["checks"])
         if all(r["ok"] for r in bug):
             errs.append("debug: the buggy code passes every check (checks are too weak)")
+    for i, card in enumerate(data["learn"], 1):
+        if isinstance(card, dict):
+            if not card.get("text"):
+                errs.append(f"learn {i}: a card written as a mapping needs 'text'")
+            if card.get("visual"):
+                errs += check_visual(card["visual"], f"learn {i} visual")
+        elif not isinstance(card, str):
+            errs.append(f"learn {i}: must be Markdown text or {{text, visual}}")
+    for i, q in enumerate(data["quiz"], 1):
+        if q.get("visual"):
+            errs += check_visual(q["visual"], f"quiz {i} visual")
+    if data["challenge"].get("visual"):
+        errs += check_visual(data["challenge"]["visual"], "challenge visual")
     if "circuit" in data and data["circuit"]:
         errs += [f"circuit: {e}" for e in check_circuit(data["circuit"])]
     from .standards import by_code
@@ -128,6 +142,7 @@ def _load_all() -> tuple[dict, ...]:
         with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         data["_file"] = path.name
+        data["learn"] = [c if isinstance(c, dict) else {"text": c} for c in data.get("learn", [])]
         lessons.append(data)
     lessons.sort(key=lambda l: (l["unit"], l["order"]))
     for i, lesson in enumerate(lessons, 1):
@@ -165,7 +180,8 @@ def neighbors(lesson_id: str):
 def public_view(lesson: dict) -> dict:
     """Lesson data safe to send to the browser (no answers or solutions)."""
     view = {k: v for k, v in lesson.items() if k not in ("quiz", "debug")}
-    view["quiz"] = [{"question": q["question"], "choices": q["choices"]} for q in lesson["quiz"]]
+    view["quiz"] = [{"question": q["question"], "choices": q["choices"], "visual": q.get("visual")}
+                    for q in lesson["quiz"]]
     view["debug"] = {k: v for k, v in lesson["debug"].items() if k not in ("solution", "checks")}
     return view
 

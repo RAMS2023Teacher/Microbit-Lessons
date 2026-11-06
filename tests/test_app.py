@@ -1,3 +1,5 @@
+import re
+
 from app import lessons as L
 from app.circuits import check_circuit
 from app.models import Progress, User
@@ -56,7 +58,7 @@ def test_full_flow(client, app):
     r = client.get(f"/lessons/{LID}")
     assert r.status_code == 200 and b"Teacher answer key" not in r.data
     # every Learn card reaches the page; lesson.js shows them one at a time
-    assert r.data.count(b'class="learn-card"') == len(L.get_lesson(LID)["learn"])
+    assert len(re.findall(rb'class="learn-card[ "]', r.data)) == len(L.get_lesson(LID)["learn"])
     # lesson.js pages through the overview plus every tracked section
     assert r.data.count(b"data-step") == len(L.section_keys(L.get_lesson(LID))) + 1
 

@@ -65,7 +65,7 @@
         <h2>Today you will…</h2>
         <ul class="checklist">{% for o in lesson.objectives %}<li>{{ o }}</li>{% endfor %}</ul>
         <h3>You'll need</h3>
-        <ul class="materials">{% for m in lesson.materials %}<li>{{ m }}</li>{% endfor %}</ul>
+        <ul class="materials-chips">{% for m in lesson.materials %}<li><span aria-hidden="true">{{ m|material_icon }}</span>{{ m }}</li>{% endfor %}</ul>
       </div>
       <div>
         <div class="video-box">
@@ -81,8 +81,8 @@
         </div>
         {% if lesson.video and lesson.video.note %}<p class="muted small">{{ lesson.video.note }}</p>{% endif %}
         {% if lesson.vocabulary %}
-        <h3>Vocabulary</h3>
-        <dl class="vocab">{% for v in lesson.vocabulary %}<dt>{{ v.term }}</dt><dd>{{ v.definition }}</dd>{% endfor %}</dl>
+        <h3>Key words <small class="muted">tap a word to see what it means</small></h3>
+        <div class="vocab-chips">{% for v in lesson.vocabulary %}<details class="vocab-chip"><summary>{{ v.term }}</summary><span>{{ v.definition }}</span></details>{% endfor %}</div>
         {% endif %}
       </div>
     </div>
@@ -111,7 +111,10 @@
     <h2><span class="sec-num">2</span> Learn</h2>
     <div class="step-count" id="learn-count" aria-live="polite"></div>
     <div class="learn-cards" id="learn-cards">
-      {% for block in lesson.learn %}<div class="learn-card" tabindex="-1">{{ block|md }}</div>{% endfor %}
+      {% for card in lesson.learn %}<div class="learn-card{{ ' has-visual' if card.visual }}" tabindex="-1">
+        <div class="learn-text">{{ card.text|md }}</div>
+        {% if card.visual %}<figure class="vz" data-visual='{{ card.visual|tojson }}'></figure>{% endif %}
+      </div>{% endfor %}
     </div>
     <div class="learn-nav">
       <button type="button" class="btn ghost" id="learn-prev" hidden>← Back</button>
@@ -124,11 +127,15 @@
   {% if lesson.circuit %}
   <section data-step class="card step-section" id="circuit">
     <h2><span class="sec-num">3</span> Build the circuit</h2>
-    {% if lesson.circuit.intro %}<p>{{ lesson.circuit.intro }}</p>{% endif %}
-    {% if lesson.circuit.safety %}
-    <div class="safety"><b>⚠ Safety first</b><ul>{% for s in lesson.circuit.safety %}<li>{{ s }}</li>{% endfor %}</ul></div>
-    {% endif %}
-    <div class="builder">
+    <div class="circuit-ready" id="circuit-ready">
+      {% if lesson.circuit.intro %}<p class="prompt">{{ lesson.circuit.intro }}</p>{% endif %}
+      {% if lesson.circuit.safety %}
+      <div class="safety"><b>⚠ Safety first</b><ul>{% for s in lesson.circuit.safety %}<li>{{ s }}</li>{% endfor %}</ul></div>
+      {% endif %}
+      <ul class="materials-chips">{% for m in lesson.materials %}<li><span aria-hidden="true">{{ m|material_icon }}</span>{{ m }}</li>{% endfor %}</ul>
+      <button type="button" class="btn" id="circuit-start">🔧 I have my parts. Start building →</button>
+    </div>
+    <div class="builder" id="builder" hidden>
       <div class="bb-wrap"><div id="breadboard" class="bb" aria-label="Breadboard diagram"></div>
         <div class="bb-legend muted small">New parts glow. Hover a part to see its name. Holes a–e in a column are connected; so are f–j.</div>
       </div>
@@ -153,13 +160,21 @@
     <h2><span class="sec-num">{{ n }}</span> Code it</h2>
     {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
     {{ editor("ed-code", state.code, "code", lesson.id, reset_code=lesson.code.starter) }}
+    <div class="code-tools" role="tablist">
+      {% if lesson.code.walkthrough %}<button type="button" class="pill" data-panel="walk" aria-expanded="false">🔍 How does it work?</button>{% endif %}
+      {% if lesson.code.try_it %}<button type="button" class="pill" data-panel="try" aria-expanded="false">🧪 Try a change</button>{% endif %}
+    </div>
     {% if lesson.code.walkthrough %}
-    <h3>How it works</h3>
-    <ul class="walkthrough">{% for w in lesson.code.walkthrough %}<li><code class="lines">line {{ w.lines }}</code> {{ w.explain|md }}</li>{% endfor %}</ul>
+    <div class="mini-stepper" id="panel-walk" hidden>
+      {% for w in lesson.code.walkthrough %}<div class="mini-card" data-lines="{{ w.lines }}" hidden><code class="lines">line {{ w.lines }}</code> {{ w.explain|md }}</div>{% endfor %}
+      <div class="mini-nav"><button type="button" class="btn small ghost" data-mini="prev">←</button><span class="muted small" data-mini="count"></span><button type="button" class="btn small ghost" data-mini="next">→</button></div>
+    </div>
     {% endif %}
     {% if lesson.code.try_it %}
-    <h3>Try it</h3>
-    <ol class="try-it">{% for t in lesson.code.try_it %}<li>{{ t|md }}</li>{% endfor %}</ol>
+    <div class="mini-stepper" id="panel-try" hidden>
+      {% for t in lesson.code.try_it %}<div class="mini-card" hidden><b>Idea {{ loop.index }}:</b> {{ t|md }}</div>{% endfor %}
+      <div class="mini-nav"><button type="button" class="btn small ghost" data-mini="prev">←</button><span class="muted small" data-mini="count"></span><button type="button" class="btn small ghost" data-mini="next">Another idea →</button></div>
+    </div>
     {% endif %}
     <button type="button" class="btn" id="code-done">✓ I ran my code</button>
   </section>
@@ -186,24 +201,36 @@
     <form id="quiz-form">
       {% for q in view.quiz %}{% set qi = loop.index0 %}
       <fieldset class="q" data-q="{{ qi }}">
-        <legend>{{ loop.index }}. {{ q.question|md }}</legend>
+        <legend><span class="q-num">Question {{ loop.index }} of {{ view.quiz|length }}</span>{{ q.question|md }}</legend>
+        {% if q.visual %}<figure class="vz" data-visual='{{ q.visual|tojson }}'></figure>{% endif %}
         {% for c in q.choices %}
         <label class="choice"><input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}"> <span>{{ c|md }}</span></label>
         {% endfor %}
         <div class="explain" hidden></div>
       </fieldset>
       {% endfor %}
-      <div class="row"><button class="btn" type="submit">Submit answers</button><span id="quiz-score" class="score"></span></div>
+      <div class="quiz-nav">
+        <button type="button" class="btn ghost" id="quiz-prev">← Back</button>
+        <ol class="step-dots" id="quiz-dots"></ol>
+        <button type="button" class="btn" id="quiz-next">Next question →</button>
+        <button class="btn" type="submit" id="quiz-submit">Submit answers</button>
+      </div>
+      <div id="quiz-score" class="score" role="status"></div>
     </form>
   </section>
 
   <section data-step class="card step-section challenge" id="challenge">
     <h2><span class="sec-num">{{ n + 3 }}</span> Challenge: {{ lesson.challenge.title }} 🚀</h2>
     {{ lesson.challenge.prompt|md }}
+    {% if lesson.challenge.visual %}<figure class="vz" data-visual='{{ lesson.challenge.visual|tojson }}'></figure>{% endif %}
+    <div class="level-picker" role="tablist" aria-label="Pick a level">
+      {% for lv in lesson.challenge.levels %}{% set parts = lv.split(':', 1) %}
+      <button type="button" role="tab" class="level-tab level-{{ loop.index }}" data-level="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ '🌶' * loop.index }} {{ parts[0] if parts|length > 1 else ['Mild','Medium','Spicy'][loop.index0 % 3] }}</button>
+      {% endfor %}
+    </div>
     <div class="levels">
-      {% for lv in lesson.challenge.levels %}
-        {% set parts = lv.split(':', 1) %}
-        <div class="level level-{{ loop.index }}"><b>{{ parts[0] if parts|length > 1 else ['Mild','Medium','Spicy'][loop.index0 % 3] }}</b><span>{{ (parts[1] if parts|length > 1 else lv)|md }}</span></div>
+      {% for lv in lesson.challenge.levels %}{% set parts = lv.split(':', 1) %}
+      <div class="level level-{{ loop.index }}" data-level="{{ loop.index0 }}" role="tabpanel" {{ '' if loop.first else 'hidden' }}>{{ (parts[1] if parts|length > 1 else lv)|md }}</div>
       {% endfor %}
     </div>
     {{ editor("ed-challenge", state.challenge_code, "challenge", lesson.id ~ "-challenge") }}
@@ -238,5 +265,6 @@
 <script src="{{ url_for('static', filename='js/microbit.js') }}"></script>
 <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
 <script src="{{ url_for('static', filename='js/breadboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/visuals.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lesson.js') }}"></script>
 {% endblock %}

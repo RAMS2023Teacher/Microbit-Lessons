@@ -133,3 +133,58 @@ earlier step than any wire that uses its terminals.
 
 The validator automatically rejects a part whose legs are shorted together and any
 3V-to-GND short.
+
+## Keep screens light (readability rules)
+
+Students see one small piece of a lesson at a time, so keep each piece short.
+Check your lesson with `python tools/readability_report.py --detail`. It counts
+the words on every screen and estimates a reading grade level.
+
+| Piece | Limit |
+|---|---|
+| Any one screen | **≤ 80 words**, reading grade **≤ 6.5** |
+| Learn card | **≤ 60 words**, one idea, a `###` heading, short sentences, bullets over paragraphs. Most cards should have a `visual`. |
+| Objectives | 3–4 items, **≤ 10 words** each, starting with a verb ("Wire an LED to pin 0") |
+| Circuit step | **≤ 45 words** of instruction; `tip` and `check` one short sentence each |
+| Code `walkthrough` explain / `try_it` idea | **≤ 20 words** each, at most 4 walkthrough items and 3 ideas |
+| Quiz question + choices | **≤ 50 words** together; choices ≤ 10 words each |
+| Challenge `prompt` | **≤ 35 words**; each level **≤ 25 words** |
+| Debug `story` | **≤ 45 words** |
+
+Write for a 6th grader: everyday words, one idea per sentence, and define a
+technical word in the sentence where it first appears.
+
+## Visual aids (`visual:`)
+
+A Learn card can be plain Markdown, or a mapping with `text` and `visual`:
+
+```yaml
+learn:
+  - text: |
+      ### Pins are switches
+      ...
+    visual:
+      type: compare
+      items:
+        - {icon: "💡", title: "write_digital(1)", text: "ON: 3 volts"}
+        - {icon: "⚫", title: "write_digital(0)", text: "OFF: 0 volts"}
+```
+
+Quiz questions (`quiz[n].visual`) and the challenge (`challenge.visual`) can have one too.
+Every visual can have a `caption` (≤ 14 words) and an `alt` (screen-reader text).
+Pick the visual that shows the idea; a picture that only decorates doesn't help.
+
+| type | shows | fields |
+|---|---|---|
+| `leds` | the micro:bit 5×5 display | `image: HEART` (a name, **quoted if it's "YES" or "NO"**) or a pattern `"09090:99999:99999:09990:00900"` (0-9 brightness per LED); or `frames: [...]` (up to 4) for an animation |
+| `part` | one component, large, with labeled legs | `part:` led, resistor, button, ldr, potentiometer, transistor, diode, buzzer, servo, dcmotor, battery. Extras: `color` (led), `ohms` (resistor), `pins: [E, B, C]` + `label` (transistor), `label` (battery), `labels: {...}` to override a callout (e.g. `labels: {left: "3V", wiper: "P2", right: "GND"}` for a potentiometer) |
+| `circuit` | a small breadboard picture, cropped to the parts used | `add: [...]`: the same parts and wires as circuit steps (checked by the validator) |
+| `flow` | boxes and arrows | `steps: [{icon, label}]` (2-5, labels ≤ 26 characters), `loop: true` and `loop_label` to draw a repeat arrow |
+| `wave` | PWM on/off signals and how bright they look | `duty: [10, 50, 100]` (percent), optional `values: [102, 512, 1023]` |
+| `scale` | a number line, with zones or a mapping to a smaller range | `min`, `max`, `marks: [{at, label, pointer}]`, `zones: [{from, to, label, color}]`, `map: [0, 5]` + `map_label` |
+| `compare` | 2-4 side-by-side cards | `items: [{icon, title, text}]` (text ≤ 12 words) |
+| `bits` | a number in binary | `value`, `bits` (1-10) |
+| `dial` | a servo angle | `marks: [{angle, label, pointer}]` (0-180) |
+| `graph` | a line chart of readings | `points: [...]`, optional `line: {y, label}` for a threshold, `x_label`, `y_label`, `min`, `max` |
+
+The validator checks every visual. Look at the lesson in a browser after adding one.

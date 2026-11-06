@@ -56,7 +56,8 @@
     return { boxes, height: y };
   }
 
-  function render(container, circuit, stepIndex) {
+  function render(container, circuit, stepIndex, opts) {
+    opts = opts || {};
     const steps = circuit.steps || [];
     const { boxes, height } = layoutOffboard(steps);
     const W = Object.keys(boxes).length ? OFF_X + 190 : BX + BW + 20;
@@ -111,7 +112,7 @@
     const partLayer = el('g', {}, svg);
     const wireLayer = el('g', {}, svg);
     const shown = steps.slice(0, stepIndex + 1);
-    svg.classList.toggle('has-old', stepIndex > 0);
+    svg.classList.toggle('has-old', stepIndex > 0 && !opts.plain);
     const placed = new Set();
     shown.forEach((s) => (s.add || []).forEach((p) => { if (p.id) placed.add(p.id); }));
     for (const id in boxes) {
@@ -119,6 +120,7 @@
       b.terms.forEach((t, i) => { termXY[id + '.' + t] = [b.x, b.y + 30 + i * 20]; });
     }
 
+    const used = [];
     function pos(addr) {
       return holeXY(addr) || pinXY[addr] || termXY[addr] || boardTermXY[addr] || null;
     }
@@ -128,12 +130,13 @@
     }));
 
     shown.forEach((s, si) => {
-      const isNew = si === stepIndex;
+      const isNew = si === stepIndex && !opts.plain;
       (s.add || []).forEach((p) => {
         const cls = 'part' + (isNew ? ' new' : '');
         if (p.type === 'wire') {
           const a = pos(p.from), b = pos(p.to);
           if (!a || !b) return;
+          used.push(a, b);
           const g = el('g', { class: cls }, wireLayer);
           el('title', {}, g).textContent = `${p.color || 'red'} wire: ${p.from} → ${p.to}`;
           const dx = b[0] - a[0], dy = b[1] - a[1];
@@ -151,12 +154,23 @@
           el('circle', { cx: a[0], cy: a[1], r: 3.2, class: 'wire-end' }, g);
           el('circle', { cx: b[0], cy: b[1], r: 3.2, class: 'wire-end' }, g);
         } else if (BOARD_TERMS[p.type]) {
+          BOARD_TERMS[p.type].forEach((t) => { const xy = holeXY(p[t] || ''); if (xy) used.push(xy); });
           drawBoardPart(partLayer, p, cls);
         } else if (boxes[p.id]) {
+          const bx = boxes[p.id];
+          used.push([bx.x, bx.y], [bx.x + 170, bx.y + bx.h]);
           drawBox(offLayer, boxes[p.id], cls);
         }
       });
     });
+    if (opts.crop && used.length) {
+      const xs = used.map((q) => q[0]), ys = used.map((q) => q[1]);
+      let x0 = Math.min(...xs) - 34, x1 = Math.max(...xs) + 34, y0 = Math.min(...ys) - 44, y1 = Math.max(...ys) + 30;
+      if (xs.some((x) => x < BX)) x0 = Math.min(x0, 4);            // include the micro:bit breakout labels
+      if (x1 - x0 < 260) { const c = (x0 + x1) / 2; x0 = c - 130; x1 = c + 130; }
+      if (y1 - y0 < 150) { const c = (y0 + y1) / 2; y0 = c - 75; y1 = c + 75; }
+      svg.setAttribute('viewBox', `${Math.max(0, x0)} ${Math.max(0, y0)} ${x1 - Math.max(0, x0)} ${y1 - Math.max(0, y0)}`);
+    }
     return svg;
   }
 

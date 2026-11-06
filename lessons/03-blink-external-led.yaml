@@ -9,10 +9,10 @@ big_idea: >-
   A micro:bit pin is a switch your code controls: write 1 to send 3 volts out
   of the pin, write 0 to turn it off.
 objectives:
-  - Build an LED circuit on a breadboard controlled by pin 0
-  - Use pin0.write_digital() to turn an output on and off
-  - Use a while True loop and sleep() to make a repeating pattern
-  - Store timing in a variable so it is easy to change
+  - Wire an LED to pin 0
+  - Turn the LED on and off with code
+  - Make it blink forever with a loop
+  - Use a variable to change the speed
 vocabulary:
   - term: Digital output
     definition: A pin that is either fully ON (1, about 3 volts) or fully OFF (0, 0 volts).
@@ -45,24 +45,58 @@ warmup:
     Last time you lit an LED straight from the 3V pin. It stayed on all the time.
     What would you need to change so a program could turn it on and off?
 learn:
-  - |
-    ### Pins are switches
-    The gold strips along the bottom of the micro:bit are **pins**. When your
-    code runs `pin0.write_digital(1)`, pin 0 connects to about **3 volts**.
-    When it runs `pin0.write_digital(0)`, pin 0 drops to **0 volts**.
+  - text: |
+      ### Pins are switches
+      The gold strips on the micro:bit are **pins**. Your code can switch them.
 
-    So instead of wiring the LED to **3V** (always on), we wire it to **P0**
-    (on only when the code says so).
-  - |
-    ### The breadboard's secret wiring
-    Inside a breadboard, the five holes **a–e** in one numbered column are
-    connected. So are **f–j**. The long rails marked **+** and **–** run the
-    whole length of the board. Two legs in the *same* column are connected;
-    legs in *different* columns are not.
-  - |
-    ### The path of the electricity
-    **P0 → resistor → LED long leg (+) → LED short leg (–) → GND.**
-    Electricity needs a complete loop back to GND. If the loop has a gap, nothing lights.
+      * `pin0.write_digital(1)` → pin 0 is **ON** (3 volts)
+      * `pin0.write_digital(0)` → pin 0 is **OFF** (0 volts)
+
+      Wire the LED to **P0** and your code decides when it lights.
+    visual:
+      type: compare
+      items:
+        - {icon: "💡", title: "write_digital(1)", text: "ON: 3 volts"}
+        - {icon: "⚫", title: "write_digital(0)", text: "OFF: 0 volts"}
+  - text: |
+      ### The breadboard's secret wiring
+      Hidden metal strips join the holes.
+
+      * Holes **a–e** in one column are joined.
+      * Holes **f–j** in one column are joined.
+      * The **+** and **–** rails run the whole length.
+
+      Two legs in the **same column** are connected.
+    visual:
+      type: circuit
+      caption: "The black wire joins GND to the blue (–) rail."
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: wire, from: a5, to: e5, color: green}
+  - text: |
+      ### Electricity needs a loop
+      It flows out of **P0**, through the resistor and LED, and back to **GND**.
+
+      A gap anywhere in the loop means **no light**.
+    visual:
+      type: flow
+      loop: true
+      loop_label: back to the start
+      steps:
+        - {icon: "🔌", label: "P0"}
+        - {icon: "〰️", label: "resistor"}
+        - {icon: "💡", label: "LED + → –"}
+        - {icon: "⏚", label: "GND"}
+  - text: |
+      ### Which LED leg is which?
+      An LED only works **one way round**.
+
+      * The **long leg (+)** goes toward P0.
+      * The **short leg (–)** goes toward GND. Its side of the rim is flat.
+    visual:
+      type: part
+      part: led
+      color: red
 circuit:
   intro: >-
     You'll build the loop P0 → resistor → LED → GND. Unplug the USB cable
@@ -196,13 +230,17 @@ quiz:
 challenge:
   title: Secret Signal
   prompt: >-
-    Use your blinking LED to send a message. Invent a code - or use Morse code -
-    and program the LED to flash a word. Can a partner decode it?
+    Send a secret message with your LED! Use Morse code or make up your own.
+    Can a partner decode it?
   levels:
     - "Mild: Flash an SOS: 3 short, 3 long, 3 short."
     - "Medium: Use variables `dot` and `dash` for the times and spell your initials."
     - "Spicy: Add a second LED on pin 1 that lights between letters, or make button A start the message."
   submit_prompt: What message did your LED send, and how does your code make dots and dashes?
+  visual:
+    type: leds
+    caption: "Bonus: show a picture when the message is done."
+    frames: ["YES", "HAPPY"]
 teacher_notes: |
   * The most common problem is a backwards LED. Have students swap the legs before anything else.
   * If nothing lights, test the LED by moving the yellow wire from P0 to 3V. If it lights now, it's a code problem.

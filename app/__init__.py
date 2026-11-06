@@ -70,6 +70,21 @@ def create_app(test_config=None):
     def not_found(e):
         return render_template("error.html", code=404, message="We couldn't find that page."), 404
 
+    @app.template_filter("material_icon")
+    def material_icon(text):
+        t = (text or "").lower()
+        for keys, icon in (
+            (("micro:bit",), "🟦"), (("battery",), "🔋"), (("servo",), "🦾"), (("motor driver", "driver"), "🎛️"),
+            (("motor", "wheel", "chassis"), "⚙️"), (("transistor",), "🔺"), (("diode",), "➡️"),
+            (("buzzer", "speaker", "headphone"), "🔊"), (("potentiometer", "knob"), "🎚️"),
+            (("photoresistor", "ldr", "light sensor"), "☀️"), (("sensor",), "👁️"),
+            (("button",), "🔘"), (("led",), "💡"), (("resistor",), "〰️"), (("breakout",), "🔌"),
+            (("breadboard",), "🧩"), (("wire", "jumper", "cable"), "🧵"), (("tape", "paper", "marker", "track"), "📏"),
+        ):
+            if any(k in t for k in keys):
+                return icon
+        return "🧰"
+
     @app.template_filter("md")
     def md_filter(text):
         return Markup(md_lib.markdown(text or "", extensions=["fenced_code", "tables", "sane_lists"]))

@@ -108,6 +108,62 @@
   const edChal = MakerEditor.mount($('ed-challenge'), { onSend: () => api('/sent', {}) });
   edChal.onChange(saveCode('challenge_code'));
 
+  // ----- code: "How does it work?" and "Try a change", one item at a time -----
+  (function codePanels() {
+    let marks = [];
+    function clearMarks() { marks.forEach((h) => edCode.cm.removeLineClass(h, 'background', 'cm-explain-line')); marks = []; }
+    function highlight(range) {
+      clearMarks();
+      if (!range) return;
+      const [a, b] = String(range).split('-').map((n) => parseInt(n, 10));
+      for (let ln = a; ln <= (b || a); ln++) {
+        if (ln >= 1 && ln <= edCode.cm.lineCount()) marks.push(edCode.cm.addLineClass(ln - 1, 'background', 'cm-explain-line'));
+      }
+    }
+    function stepper(panel) {
+      const cards = [...panel.querySelectorAll('.mini-card')];
+      let cur = 0;
+      const show = (i) => {
+        cur = Math.max(0, Math.min(cards.length - 1, i));
+        cards.forEach((c, j) => { c.hidden = j !== cur; });
+        panel.querySelector('[data-mini=count]').textContent = `${cur + 1} of ${cards.length}`;
+        panel.querySelector('[data-mini=prev]').disabled = cur === 0;
+        panel.querySelector('[data-mini=next]').disabled = cur === cards.length - 1;
+        highlight(cards[cur].dataset.lines);
+      };
+      panel.querySelector('[data-mini=prev]').addEventListener('click', () => show(cur - 1));
+      panel.querySelector('[data-mini=next]').addEventListener('click', () => show(cur + 1));
+      return show;
+    }
+    const shows = {};
+    document.querySelectorAll('.code-tools .pill').forEach((btn) => {
+      const panel = $('panel-' + btn.dataset.panel);
+      shows[btn.dataset.panel] = stepper(panel);
+      btn.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') !== 'true';
+        document.querySelectorAll('.code-tools .pill').forEach((b) => {
+          b.setAttribute('aria-expanded', 'false');
+          $('panel-' + b.dataset.panel).hidden = true;
+        });
+        clearMarks();
+        if (open) { btn.setAttribute('aria-expanded', 'true'); panel.hidden = false; shows[btn.dataset.panel](0); }
+      });
+    });
+  })();
+
+  // ----- challenge: pick one level at a time -----
+  document.querySelectorAll('.level-tab').forEach((tab) => tab.addEventListener('click', () => {
+    document.querySelectorAll('.level-tab').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+    document.querySelectorAll('.levels .level').forEach((p) => { p.hidden = p.dataset.level !== tab.dataset.level; });
+  }));
+
+  // ----- circuit: "get ready" screen before step 1 -----
+  if ($('circuit-ready')) {
+    const start = () => { $('circuit-ready').hidden = true; $('builder').hidden = false; };
+    $('circuit-start').addEventListener('click', start);
+    if ((S.circuit_steps || []).length) start();
+  }
+
   // ----- circuit stepper -----
   if (L.circuit && $('breadboard')) {
     const steps = L.circuit.steps;
@@ -201,6 +257,34 @@
 
   // ----- quiz -----
   const form = $('quiz-form');
+  const qs = [...form.querySelectorAll('fieldset.q')];
+  let qCur = 0;
+  const qDots = $('quiz-dots');
+  qs.forEach((_, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = i + 1;
+    b.setAttribute('aria-label', `Question ${i + 1}`);
+    b.addEventListener('click', () => showQ(i));
+    li.appendChild(b); qDots.appendChild(li);
+  });
+  function showQ(i) {
+    qCur = Math.max(0, Math.min(qs.length - 1, i));
+    qs.forEach((q, j) => { q.hidden = j !== qCur; });
+    $('quiz-prev').disabled = qCur === 0;
+    $('quiz-next').hidden = qCur === qs.length - 1;
+    $('quiz-submit').hidden = qCur !== qs.length - 1;
+    [...qDots.children].forEach((li, j) => {
+      li.classList.toggle('current', j === qCur);
+      li.classList.toggle('checked', !!qs[j].querySelector('input:checked'));
+      li.classList.toggle('right', qs[j].classList.contains('right'));
+      li.classList.toggle('wrong', qs[j].classList.contains('wrong'));
+    });
+  }
+  $('quiz-prev').addEventListener('click', () => showQ(qCur - 1));
+  $('quiz-next').addEventListener('click', () => showQ(qCur + 1));
+  form.addEventListener('change', () => { showQ(qCur); });
+  showQ(0);
   function showQuiz(res, answers) {
     let score = 0;
     res.results.forEach((r, i) => {
@@ -216,7 +300,8 @@
         if (inp) inp.checked = true;
       }
     });
-    $('quiz-score').textContent = `${score} / ${res.total}` + (score === res.total ? ' 🌟' : ' — change your answers and try again!');
+    $('quiz-score').textContent = `${score} / ${res.total}` + (score === res.total ? ' 🌟' : ' — tap the red numbers to see what to fix, then submit again!');
+    if (typeof showQ === 'function') showQ(res.results.findIndex((r) => !r.correct) >= 0 ? res.results.findIndex((r) => !r.correct) : 0);
   }
   if (S.quiz_results) showQuiz(S.quiz_results, S.quiz_answers);
   form.addEventListener('submit', async (e) => {
