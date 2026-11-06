@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, jsonify, request
 from flask_login import current_user, login_required
 
+from . import gamify
 from . import lessons as L
 from .models import Progress, db, utcnow
 
@@ -32,7 +33,10 @@ def _finish(lesson, p, **extra):
     if pct == 100 and not p.completed_at:
         p.completed_at = utcnow()
     db.session.commit()
-    return jsonify({"ok": True, "sections": p.sections, "percent": pct, **extra})
+    rewards = gamify.sync_rewards(current_user)
+    return jsonify({"ok": True, "sections": p.sections, "percent": pct, "rewards": rewards,
+                    "lesson_xp": gamify.lesson_xp(current_user, lesson["id"]),
+                    "stars": gamify.lesson_stars(lesson, p), **extra})
 
 
 @bp.post("/lessons/<lesson_id>/save")
@@ -121,3 +125,14 @@ def challenge(lesson_id):
     p.challenge_submitted_at = utcnow()
     p.mark("challenge")
     return _finish(lesson, p)
+
+
+@bp.post("/avatar")
+@login_required
+def save_avatar():
+    avatar, err = gamify.clean_avatar(current_user, request.get_json(silent=True) or {})
+    if err:
+        return jsonify({"ok": False, "error": err}), 400
+    current_user.avatar = avatar
+    db.session.commit()
+    return jsonify({"ok": True, "avatar": avatar, "rewards": gamify.sync_rewards(current_user)})

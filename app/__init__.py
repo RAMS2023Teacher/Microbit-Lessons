@@ -21,6 +21,18 @@ def load_user(uid):
     return db.session.get(User, int(uid))
 
 
+def _add_missing_columns():
+    """Tiny migration: add columns introduced after a database was created."""
+    from sqlalchemy import inspect, text
+    insp = inspect(db.engine)
+    cols = {c["name"] for c in insp.get_columns("user")}
+    with db.engine.begin() as conn:
+        if "xp" not in cols:
+            conn.execute(text('ALTER TABLE "user" ADD COLUMN xp INTEGER NOT NULL DEFAULT 0'))
+        if "avatar" not in cols:
+            conn.execute(text('ALTER TABLE "user" ADD COLUMN avatar JSON'))
+
+
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
@@ -64,10 +76,16 @@ def create_app(test_config=None):
 
     @app.context_processor
     def inject():
-        return {"site_name": app.config["SITE_NAME"]}
+        from flask_login import current_user
+        from .gamify import avatar_of, level_info
+        ctx = {"site_name": app.config["SITE_NAME"], "avatar_of": avatar_of, "level_info": level_info}
+        if current_user.is_authenticated and not current_user.is_teacher:
+            ctx["me_level"] = level_info(current_user.xp or 0)
+        return ctx
 
     with app.app_context():
         db.create_all()
+        _add_missing_columns()
 
     @app.cli.command("seed-demo")
     def seed_demo():

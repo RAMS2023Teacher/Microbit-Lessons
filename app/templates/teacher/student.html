@@ -3,11 +3,31 @@
 {% block content %}
 <a class="muted small" href="{{ url_for('teacher.classroom', cid=c.id) }}">← {{ c.name }}</a>
 <div class="page-head">
-  <div><h1>{{ s.display_name }}</h1><p class="muted">username <b>{{ s.username }}</b> · joined {{ s.created_at.strftime('%b %-d, %Y') }}</p></div>
+  <div class="who big"><span data-avatar='{{ avatar_of(s)|tojson }}' data-size="72"></span>
+    <div><h1>{{ s.display_name }}</h1><p class="muted">username <b>{{ s.username }}</b> · joined {{ s.created_at.strftime('%b %-d, %Y') }}<br>
+    Level {{ level.level }} {{ level.title }} · {{ level.xp }} XP · {{ badges|selectattr('earned')|list|length }} badges</p></div></div>
   <div class="row">
     <form method="post" action="{{ url_for('teacher.reset_password', cid=c.id, sid=s.id) }}" onsubmit="return confirm('Give {{ s.display_name }} a new temporary password?')">{{ csrf() }}<button class="btn small ghost">Reset password</button></form>
     <form method="post" action="{{ url_for('teacher.remove_student', cid=c.id, sid=s.id) }}" onsubmit="return confirm('Remove from this class? Their account and work are kept.')">{{ csrf() }}<button class="btn small danger">Remove from class</button></form>
   </div>
+</div>
+<div class="grid-2">
+<section class="card">
+  <h2>Badges</h2>
+  <div class="mini-badges">{% for b in badges if b.earned %}<span class="mini-badge" title="{{ b.name }}: {{ b.desc }}">{{ b.icon }}</span>{% else %}<span class="muted">None yet.</span>{% endfor %}</div>
+</section>
+<section class="card">
+  <h2>Give a shout-out</h2>
+  <form method="post" action="{{ url_for('teacher.bonus', cid=c.id, sid=s.id) }}" class="bonus-form">
+    {{ csrf() }}
+    <div class="row">
+      <label class="field"><span>Bonus XP</span><input type="number" name="amount" min="0" max="200" step="5" value="25"></label>
+      <label class="field grow"><span>Reason (student sees it)</span><input name="reason" maxlength="120" placeholder="Helped a classmate debug"></label>
+    </div>
+    <label class="check small"><input type="checkbox" name="badge" value="1"> Also award the 🍎 Teacher's Pick badge</label>
+    <button class="btn small">Give bonus</button>
+  </form>
+</section>
 </div>
 {% for it in items %}{% set l = it.lesson %}{% set p = it.p %}
 <details class="card student-lesson" id="{{ l.id }}" {{ 'open' if loop.first }}>

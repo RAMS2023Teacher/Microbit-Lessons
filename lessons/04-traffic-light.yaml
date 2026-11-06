@@ -322,3 +322,13 @@ teacher_notes: |
   * The "yellow without parentheses" bug is sneaky: it's valid Python, so there's no error. Use it to discuss the difference between naming a function and calling it.
   * P0, P1 and P2 are also touch pins, but they work fine as digital outputs.
   * Extension: introduce parameters with `def light(r, y, g):` that sets all three pins at once.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CT.a.2
+    how: Define red(), yellow(), green() and all_off(), then reuse them to build any light sequence.
+  - code: 6-8.CT.d.2
+    how: The main loop calls functions by name, so the pin details stay hidden inside them.
+  - code: 6-8.CT.b.3
+    how: Break a traffic signal down into separate light states and the timing between them.
+  - code: 6-8.CT.e.1
+    how: Model a real traffic light, deciding which real-world details to copy (order, timing) and which to ignore.

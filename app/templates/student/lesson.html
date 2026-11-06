@@ -35,6 +35,13 @@
     <h1>{{ lesson.title }}</h1>
     {% if lesson.subtitle %}<p class="subtitle">{{ lesson.subtitle }}</p>{% endif %}
     <div class="big-idea"><b>Big idea</b> {{ lesson.big_idea }}</div>
+    {% if not is_teacher %}
+    <div class="lesson-rewards">
+      <span class="xp-chip">⚡ <b id="lesson-xp">{{ lesson_xp }}</b> / {{ xp_possible }} XP</span>
+      <span class="stars-chip" id="lesson-stars" title="Stars: fix the bug · perfect quiz · submit the challenge">{{ '★' * stars }}{{ '☆' * (3 - stars) }}</span>
+      <a class="small" href="{{ url_for('student.lesson_map') }}">🗺️ Map</a>
+    </div>
+    {% endif %}
   </header>
 
   {% if state.feedback %}
@@ -79,6 +86,18 @@
         {% endif %}
       </div>
     </div>
+    {% if standards %}
+    <details class="standards-box" {{ 'open' if is_teacher }}>
+      <summary>🎯 Massachusetts DLCS standards in this lesson <small class="muted">({{ standards|length }})</small></summary>
+      <ul class="std-list">
+        {% for s in standards %}
+        <li><span class="std-code strand-{{ s.strand }}">{{ s.code }}</span>
+          <div><b>{{ s.text }}</b><small class="muted">{{ s.strand_name }} · {{ s.topic }}</small>
+            <span class="std-how">In this lesson: {{ s.how }}</span></div></li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
   </section>
 
   <section data-step class="card step-section" id="warmup">

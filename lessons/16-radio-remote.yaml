@@ -32,9 +32,9 @@ materials:
   - Cones, cups or tape for a driving course
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 5}
+  - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Check the robot wiring, minutes: 3}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: code, name: Code it, minutes: 9}
   - {key: debug, name: Debug, minutes: 5}
   - {key: quiz, name: Check for understanding, minutes: 2}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
@@ -121,6 +121,18 @@ learn:
             display.show(Image.NO)
         sleep(20)
     ```
+  - |
+    ### What kind of network is this?
+    A **network** connects devices so they can send each other messages.
+    * **Wired**: signals travel through a cable (Ethernet, USB). Fast and reliable, but you're tied to the cable.
+    * **Wireless**: signals travel through the air as radio waves (Wi-Fi, Bluetooth, micro:bit radio). You can move around, but the range is short and everyone nearby shares the airwaves.
+    * **Local area network (LAN)**: devices in one place, like your school's Wi-Fi.
+    * **Wide area network (WAN)**: networks joined across cities and countries. The internet is the biggest one.
+    * **Mobile**: phones talk to cell towers, which hand you on to the next tower as you move.
+
+    Your two micro:bits make a tiny **wireless local network** with no router.
+    Every micro:bit in the same group hears every message (a **broadcast**),
+    and that's why each team needs its own group number.
 circuit:
   intro: >-
     The robot's wiring is exactly the same as lesson 14 - no new parts! Use
@@ -366,6 +378,14 @@ quiz:
       - "'S'"
     answer: 3
     explain: Flat means x and y are both close to 0 - inside the dead zone - so the else branch sends 'S' for stop.
+  - question: Your controller and robot micro:bits talking by radio are an example of...
+    choices:
+      - A wired network
+      - A wireless local network
+      - A wide area network, like the internet
+      - A mobile cell-phone network
+    answer: 1
+    explain: The messages travel through the air (wireless) over a short distance in one room (local). There's no cable, router or cell tower.
 challenge:
   title: Robot Grand Prix
   prompt: >-
@@ -385,3 +405,15 @@ teacher_notes: |
   * **Robot stutters or stops randomly:** the controller may be too far away or sending too slowly, or the batteries are low (the 4×AA pack, the robot's 2×AAA or the controller's 2×AAA). The fail-safe makes low batteries show up as "stops by itself" - that's the safe way to fail.
   * The robot program lives in the Learn section because the starter box holds one program. Students can copy it into a second editor tab.
   * Radio is not private: any micro:bit in the same group can listen. Good discussion starter about security - a Spicy extension is a "secret password" letter at the start of each message.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.c.3
+    how: Tilt is turned into one-letter messages (F, L, R, S) and sent by radio between two micro:bits.
+  - code: 6-8.CT.b.3
+    how: 'The system is split into two programs: the controller (sensing and sending) and the robot (receiving and driving).'
+  - code: 6-8.CT.b.5
+    how: A safety stop handles the case where messages stop arriving, using a 500 ms time limit.
+  - code: 6-8.CS.a.5
+    how: Teams show a remote-controlled robot completing a course.
+  - code: 6-8.CS.c.1
+    how: "A Learn card compares wired, wireless, local, wide area and mobile networks, and students classify their own micro:bit radio link."

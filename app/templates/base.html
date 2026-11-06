@@ -18,16 +18,25 @@
   <nav>
     <a href="{{ url_for('student.catalog') }}">Lessons</a>
     {% if current_user.is_authenticated %}
+      <a href="{{ url_for('student.lesson_map') }}">Map</a>
       <a href="{{ url_for('student.playground') }}">Editor</a>
       {% if current_user.is_teacher %}
         <a href="{{ url_for('teacher.home') }}">My classes</a>
+        <a href="{{ url_for('teacher.standards') }}">Standards</a>
         <a href="{{ url_for('teacher.videos') }}">Videos</a>
       {% else %}
         <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
       {% endif %}
       <details class="usermenu">
-        <summary>{{ current_user.display_name }}</summary>
+        <summary>
+          {% if me_level %}
+          <span class="nav-avatar" data-avatar='{{ avatar_of(current_user)|tojson }}' data-size="30"></span>
+          <span class="nav-xp"><b id="nav-level">Lv {{ me_level.level }}</b><span class="nav-xp-bar"><i id="nav-xp-fill" style="width:{{ me_level.pct }}%"></i></span></span>
+          {% endif %}
+          {{ current_user.display_name }}
+        </summary>
         <div>
+          {% if me_level %}<a href="{{ url_for('student.profile') }}">My robot &amp; badges</a>{% endif %}
           <a href="{{ url_for('auth.change_password') }}">Change password</a>
           <form method="post" action="{{ url_for('auth.logout') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -53,6 +62,9 @@
   Built for young makers · Python + micro:bit + circuits ·
   <a href="https://microbit.org" target="_blank" rel="noopener">microbit.org</a>
 </footer>
+<script src="{{ url_for('static', filename='js/avatar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/rewards.js') }}"></script>
+{% if rewards %}<script>window.addEventListener('load', () => showRewards({{ rewards|tojson }}));</script>{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

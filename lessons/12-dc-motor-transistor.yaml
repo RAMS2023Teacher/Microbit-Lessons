@@ -321,3 +321,13 @@ teacher_notes: |
   **Extensions**
   * Compare with lesson 3: the pin drove the LED directly - why is that fine for an LED but not a motor?
   * Use a photoresistor so the motor speeds up when it gets brighter (a "solar" fan).
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: An NPN transistor lets a weak control signal switch a motor's power; a flyback diode protects the circuit.
+  - code: 6-8.CS.a.7
+    how: 'Diagnose power and connection problems: transistor pin order, a shared ground, battery polarity.'
+  - code: 6-8.CT.b.5
+    how: Speed values must stay within 0-1023; the debug challenge adds that limit.
+  - code: 6-8.CT.d.6
+    how: Fix write_digital being used for speed control and the missing limit, then test again.

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Lesson map · {{ site_name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Maker Map</h1>
+    <p class="muted">Follow the trail from your first blink to a radio-controlled robot. Finish a lesson to unlock the paths after it.</p>
+  </div>
+  {% if not current_user.is_teacher %}
+  <a class="level-chip card" href="{{ url_for('student.profile') }}">
+    <span data-avatar='{{ avatar_of(current_user)|tojson }}' data-size="52"></span>
+    <span><b>Level {{ level.level }} · {{ level.title }}</b>
+      <span class="xpbar"><i style="width:{{ level.pct }}%"></i></span>
+      <small class="muted">{{ level.xp }} XP{% if not level.max %} · {{ level.next - level.xp }} to next level{% endif %}</small></span>
+  </a>
+  {% endif %}
+</div>
+<div class="map-layout">
+  <div class="map-scroll card">
+    <div class="map" id="map" aria-label="Lesson map"></div>
+  </div>
+  <aside class="map-side">
+    <div class="card map-detail" id="map-detail" aria-live="polite"></div>
+    <div class="card map-legend">
+      <h3>Legend</h3>
+      <ul>
+        <li><span class="dot complete"></span> Complete</li>
+        <li><span class="dot progress"></span> In progress</li>
+        <li><span class="dot open"></span> Unlocked — ready to go</li>
+        <li><span class="dot locked"></span> Locked</li>
+        <li>📌 Assigned by your teacher</li>
+        <li>★ Stars: bug fixed · perfect quiz · challenge done</li>
+      </ul>
+      <h3>Units</h3>
+      <ul>{% for n, u in data.units.items() %}<li><span class="dot unit-{{ n }}"></span> {{ u.title }}</li>{% endfor %}</ul>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.MAP = {{ data|tojson }};
+  window.ME = {{ (avatar_of(current_user) if not current_user.is_teacher else none)|tojson }};
+  window.LESSON_URL = {{ url_for('student.lesson', lesson_id='__ID__')|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

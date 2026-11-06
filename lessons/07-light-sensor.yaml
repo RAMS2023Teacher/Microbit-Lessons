@@ -290,3 +290,13 @@ teacher_notes: |
   * Classroom lights are bright - students may need to cup hands tightly or use a cardboard tube to make it "night."
   * `display.read_light_level()` is a quick no-wiring alternative (0-255). Its first reading after startup can be 0, so read it a couple of times.
   * Extension: introduce `elif` for three levels, or *hysteresis* (on below 250, off above 350) to stop flicker near the threshold.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: A photoresistor voltage divider (sensor), a threshold rule (control) and an LED (actuator) make an automatic night light.
+  - code: 6-8.CS.a.6
+    how: Measure light with the built-in sensor and with the photoresistor, and compare the readings.
+  - code: 6-8.CT.b.1
+    how: A conditional with a threshold, inside a loop, switches the light on when it gets dark.
+  - code: 6-8.CT.b.5
+    how: Choosing a threshold value, and which way to compare, decides whether the night light works correctly.

@@ -18,12 +18,22 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 - Open-ended **Mild / Medium / Spicy** challenges with a write-up to submit.
 - A 35-minute class timer that highlights which part of the lesson you should be on.
 
+**Gamification**
+- **The Maker Map** is a skill tree of all 16 lessons. Finishing a lesson lights up the trail and unlocks the lessons that branch off it. For example, the line-following robot needs both *Drive Your Robot* and *Light Sensor*. Lessons a teacher assigns are always unlocked. The student's robot stands on the lesson they're working on, and each lesson can earn ★★★: fix the bug, get a perfect quiz, and submit the challenge.
+- **XP and 12 levels**, from *Spark* to *Robotics Ace*. Students earn XP for every part of a lesson, plus bonuses for fixing a bug without hints and for a perfect quiz on the first try.
+- **20 badges**, such as Bug Squasher, Hardware Hacker, Early Bird, one per unit, and Teacher's Pick.
+- **A robot avatar builder** with 7 kinds of parts (body, color, eyes, mouth, antenna, accessory, background) and an optional name. Some parts unlock at higher levels or with certain badges.
+- Pop-ups celebrate XP, new badges and level-ups. Rewards are given only once, and any work a student did earlier still counts.
+- All the rules (XP values, levels, badges, the skill tree and avatar unlocks) are at the top of `app/gamify.py`.
+
 **For teachers**
 - Create classes and assign lessons with due dates and notes.
 - A **gradebook** for each class: % complete, best quiz score, debug fixed, challenge submitted, and late work.
 - **Side-by-side class responses** for each assignment, covering warm-ups, debug reflections and challenge write-ups. These are good for class discussion.
 - A page per student showing their code, debug attempts, hints used, quiz history and challenge code. You can leave feedback, which the student sees at the top of the lesson. You can also re-open a debug challenge, reset a password, or export the gradebook to CSV.
 - An **answer key and teacher notes** on every lesson, visible only to teachers.
+- Each student's avatar, level, XP and badges show in the gradebook and on their page. You can give **bonus XP** with a reason, and optionally the 🍎 Teacher's Pick badge.
+- **Standards alignment**: every lesson is aligned to the **Massachusetts DLCS framework (2016), grades 6–8**, with a line on how the lesson meets each standard. Teachers get a **Standards** page with a lessons × standards grid, coverage by strand, and the standards the course doesn't address. It's printable for administrators. The standard text is quoted exactly from the DESE framework in `app/standards.yaml`.
 - A **Videos** page where you paste a YouTube, Google Drive, Vimeo or .mp4 link for any lesson. Until you add one, the lesson shows "Video coming soon".
 
 ## The course

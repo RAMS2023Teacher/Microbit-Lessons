@@ -50,6 +50,7 @@ python tools/validate_lessons.py
 | `quiz` | 3–6 items `{question, choices: [..], answer: <0-based index>, explain}` |
 | `challenge` | `{title, prompt, levels: ["Mild: …", "Medium: …", "Spicy: …"], submit_prompt}` — open-ended and fun |
 | `teacher_notes` | Markdown: common problems, troubleshooting, extensions |
+| `standards` | Massachusetts DLCS (2016) grade 6–8 standards: a list of `{code, how}`. `code` must be in `app/standards.yaml` (e.g. `6-8.CT.b.1`); `how` is one sentence on what in the lesson meets it. Only list standards the lesson really teaches or assesses. |
 
 ## `debug`
 

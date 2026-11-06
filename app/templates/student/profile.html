@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}My robot · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>My robot &amp; badges</h1>
+<div class="profile-grid">
+  <section class="card builder-card">
+    <h2>Build your robot</h2>
+    <div class="avatar-builder">
+      <div class="avatar-stage">
+        <div id="avatar-preview"></div>
+        <label class="field"><span>Robot name</span>
+          <input id="avatar-name" maxlength="20" value="{{ avatar.name }}" placeholder="e.g. Sparky"></label>
+        <button type="button" class="btn wide" id="avatar-save">Save my robot</button>
+        <button type="button" class="btn ghost wide small" id="avatar-random">🎲 Surprise me</button>
+        <p class="save-status small" id="avatar-status" role="status"></p>
+      </div>
+      <div class="avatar-parts">
+        <div class="part-tabs" role="tablist">
+          {% for key, label in parts.items() %}
+          <button type="button" role="tab" class="part-tab{{ ' active' if loop.first }}" data-part="{{ key }}">{{ label }}</button>
+          {% endfor %}
+        </div>
+        <div class="part-options" id="part-options"></div>
+        <p class="muted small">🔒 Locked parts unlock as you level up and earn badges.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card level-card">
+    <h2>Level {{ level.level }}: {{ level.title }}</h2>
+    <div class="xpbar big"><i style="width:{{ level.pct }}%"></i></div>
+    <p class="muted">{{ level.xp }} XP{% if not level.max %} · {{ level.next - level.xp }} XP to level {{ level.level + 1 }}{% else %} · max level!{% endif %}</p>
+    <ol class="level-ladder">
+      {% for need, title in levels %}
+      <li class="{{ 'reached' if level.xp >= need }}{{ ' here' if loop.index == level.level }}"><b>{{ loop.index }}</b> {{ title }} <small>{{ need }} XP</small></li>
+      {% endfor %}
+    </ol>
+    <details>
+      <summary>How do I earn XP?</summary>
+      <table class="xp-table">
+        <tr><td>Warm-up answered</td><td>+{{ xp_table.warmup }}</td></tr>
+        <tr><td>Learn cards read</td><td>+{{ xp_table.learn }}</td></tr>
+        <tr><td>Circuit built (every step checked)</td><td>+{{ xp_table.circuit }}</td></tr>
+        <tr><td>Code sent to your micro:bit</td><td>+{{ xp_table.code }}</td></tr>
+        <tr><td>Bug fixed</td><td>+{{ xp_table.debug }} (+{{ xp_table.clean_fix }} with no hints)</td></tr>
+        <tr><td>Quiz done</td><td>+{{ xp_table.quiz }} (+{{ xp_table.quiz_perfect }} perfect, +{{ xp_table.quiz_first_try }} perfect first try)</td></tr>
+        <tr><td>Challenge submitted</td><td>+{{ xp_table.challenge }}</td></tr>
+        <tr><td>Whole lesson complete</td><td>+{{ xp_table.complete }}</td></tr>
+        <tr><td>Every badge</td><td>+{{ xp_table.badge }}</td></tr>
+      </table>
+    </details>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Badges <small class="muted">{{ badges|selectattr('earned')|list|length }} / {{ badges|length }}</small></h2>
+  <div class="badge-grid">
+    {% for b in badges %}
+    <div class="badge-tile{{ ' locked' if not b.earned }}" title="{{ b.desc }}">
+      <span class="badge-icon">{{ b.icon if b.earned else '🔒' }}</span>
+      <b>{{ b.name }}</b>
+      <small>{{ b.desc }}</small>
+      {% if b.earned %}<small class="earned">Earned {{ b.earned_at.strftime('%b %-d') }}</small>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>Recent XP</h2>
+  <ul class="xp-history">
+    {% for e in history %}<li><b>+{{ e.amount }}</b> {{ e.reason }} <small class="muted">{{ e.created_at.strftime('%b %-d') }}</small></li>
+    {% else %}<li class="muted">No XP yet — start a lesson on the <a href="{{ url_for('student.lesson_map') }}">map</a>!</li>{% endfor %}
+  </ul>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.AVATAR = {{ avatar|tojson }};
+  window.CATALOG = {{ catalog|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

@@ -1,7 +1,26 @@
 {% extends "base.html" %}{% from "_forms.html" import csrf %}
 {% block title %}Dashboard · {{ site_name }}{% endblock %}
 {% block content %}
-<h1>Hi {{ current_user.display_name }} 👋</h1>
+<section class="card hero-card">
+  <a class="hero-avatar" href="{{ url_for('student.profile') }}" title="Customize your robot">
+    <span data-avatar='{{ avatar_of(current_user)|tojson }}' data-size="110"></span>
+    <small>✏️ Customize</small>
+  </a>
+  <div class="hero-card-main">
+    <h1>Hi {{ current_user.display_name }} 👋</h1>
+    {% set av = avatar_of(current_user) %}{% if av.name %}<p class="muted">…and your robot <b>{{ av.name }}</b></p>{% endif %}
+    <div class="level-line"><b>Level {{ level.level }} · {{ level.title }}</b>
+      <span class="muted small">{{ level.xp }} XP{% if not level.max %} · {{ level.next - level.xp }} to level {{ level.level + 1 }}{% endif %}</span></div>
+    <div class="xpbar big"><i style="width:{{ level.pct }}%"></i></div>
+    <div class="row">
+      <a class="btn" href="{{ url_for('student.lesson_map') }}">🗺️ Open the Maker Map</a>
+      <a class="btn ghost" href="{{ url_for('student.profile') }}">🏅 Badges ({{ badges|length }}{% if badges|length >= 6 %}+{% endif %} / {{ badge_total }})</a>
+    </div>
+  </div>
+  <div class="hero-badges">
+    {% for b in badges %}<span class="mini-badge" title="{{ b.name }}: {{ b.desc }}">{{ b.icon }}</span>{% else %}<span class="muted small">Earn badges by finishing lessons!</span>{% endfor %}
+  </div>
+</section>
 <div class="grid-2">
   <section class="card">
     <h2>My assignments</h2>

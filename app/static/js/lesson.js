@@ -14,6 +14,9 @@
     });
     const data = await r.json().catch(() => ({}));
     if (data.sections) updateProgress(data.sections);
+    if (data.rewards && window.showRewards) showRewards(data.rewards);
+    if (typeof data.lesson_xp === 'number' && $('lesson-xp')) $('lesson-xp').textContent = data.lesson_xp;
+    if (typeof data.stars === 'number' && $('lesson-stars')) $('lesson-stars').textContent = '★'.repeat(data.stars) + '☆'.repeat(3 - data.stars);
     if (!r.ok && !data.error) data.error = 'Could not save (are you still logged in?)';
     return data;
   }

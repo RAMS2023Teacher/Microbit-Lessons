@@ -207,3 +207,13 @@ teacher_notes: |
   * The most common problem is a backwards LED. Have students swap the legs before anything else.
   * If nothing lights, test the LED by moving the yellow wire from P0 to 3V. If it lights now, it's a code problem.
   * Early finishers: introduce `for i in range(3):` for the SOS challenge.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: A micro:bit pin acts as a control output that switches an external LED on and off.
+  - code: 6-8.CT.b.1
+    how: A forever loop of on, wait, off, wait makes the blink; the challenge uses repetition to send Morse code.
+  - code: 6-8.CT.d.5
+    how: Trace the loop line by line to explain why the LED looks always on when the second sleep is missing.
+  - code: 6-8.CT.d.6
+    how: Fix two bugs (Sleep with a capital S, a missing wait), then test on the hardware.

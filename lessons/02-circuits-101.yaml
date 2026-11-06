@@ -272,3 +272,13 @@ teacher_notes: |
   * The 3V pin measures about 3.0-3.3 V depending on USB vs battery. The ~2 V LED drop varies by color (red ~1.8 V, blue/white ~3 V). A **blue or white LED may glow very dimly or not at all** from 3V - red, yellow or green work best today.
   * The `round()` function and `str()` are new - it's fine if students treat them as "magic" for now.
   * Extension: if you have a multimeter, let early finishers measure the real voltage across the resistor and compare with their calculation.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CT.e.1
+    how: 'The water-in-pipes model of voltage, current and resistance: what it explains and which details it leaves out.'
+  - code: 6-8.CT.b.2
+    how: Predict how the current changes when the resistor changes, then check the prediction with Ohm's law in code.
+  - code: 6-8.CT.c.2
+    how: Python stores the current as a decimal number; str() turns it into text before it can be joined to a label.
+  - code: 6-8.CS.a.7
+    how: 'Diagnose a circuit that won''t light: a broken loop, a backwards LED, a loose connection.'

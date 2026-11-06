@@ -288,3 +288,13 @@ teacher_notes: |
   **Extensions**
   * `accelerometer.get_values()` returns (x, y, z) together.
   * Use `radio` so shaking one micro:bit sets off the alarm on another.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: The accelerometer (sensor) and the buzzer or speaker (actuators) make a shake alarm and a tilt theremin.
+  - code: 6-8.CT.b.1
+    how: Gesture conditionals and a forever loop choose which sound to play.
+  - code: 6-8.CT.b.2
+    how: Predict the pitch that a given amount of tilt will produce once it is mapped to a frequency.
+  - code: 6-8.CT.d.3
+    how: 'Motion-Powered Music Machine challenge: design a program that reacts to motion in a planned way.'

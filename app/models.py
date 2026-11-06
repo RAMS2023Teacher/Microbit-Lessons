@@ -26,6 +26,8 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(10), nullable=False, default="student")
     created_at = db.Column(db.DateTime, default=utcnow)
+    xp = db.Column(db.Integer, default=0, nullable=False, server_default="0")
+    avatar = db.Column(db.JSON)
 
     classes = db.relationship("Classroom", secondary=enrollments, back_populates="students")
     progress = db.relationship("Progress", back_populates="user", cascade="all, delete-orphan")
@@ -119,3 +121,20 @@ class LessonVideo(db.Model):
     lesson_id = db.Column(db.String(80), primary_key=True)
     url = db.Column(db.String(500), nullable=False)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class XPEvent(db.Model):
+    """One XP award. ``key`` is unique per user so awards are never doubled."""
+    __table_args__ = (db.UniqueConstraint("user_id", "key"),)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    key = db.Column(db.String(120), nullable=False)
+    amount = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.String(200), default="")
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+
+class UserBadge(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
+    badge_id = db.Column(db.String(40), primary_key=True)
+    earned_at = db.Column(db.DateTime, default=utcnow)

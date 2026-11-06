@@ -339,3 +339,13 @@ teacher_notes: |
   * P13 and P14 are also the SPI pins, but they work as normal pins as long as you don't use the spi module.
   * The default PWM period is 20 ms. If motors stutter at low speeds, advanced students can try `pin13.set_analog_period(1)` and `pin14.set_analog_period(1)`.
   * Keep the same wiring for lesson 14 if you can - it adds a second motor on the B side.
+
+standards:  # Massachusetts DLCS framework (2016), grades 6-8
+  - code: 6-8.CS.a.4
+    how: 'An H-bridge motor driver is a control system: two input pins set the motor''s direction and speed.'
+  - code: 6-8.CT.d.2
+    how: forward(), backward() and stop() hide the pin-level details of the driver's truth table.
+  - code: 6-8.CT.b.2
+    how: Predict what the motor does for each combination of AIN1 and AIN2 inputs.
+  - code: 6-8.CT.d.6
+    how: Debug a missing colon and a copy-pasted backward() function.

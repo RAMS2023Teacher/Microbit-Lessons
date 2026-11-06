@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Standards alignment · {{ site_name }}{% endblock %}
+{% block main_class %}container wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Standards alignment</h1>
+    <p class="muted">{{ fw.framework }} · grades {{ fw.grade_span }} ·
+      <a href="{{ fw.source }}" target="_blank" rel="noopener">official framework (PDF)</a></p>
+  </div>
+  <button class="btn ghost small" onclick="window.print()">🖨 Print</button>
+</div>
+
+<div class="std-summary">
+  {% for st in strands %}
+  <div class="card std-stat strand-{{ st.code }}"><b>{{ st.covered }} / {{ st.total }}</b><span>{{ st.name }} [{{ st.code }}]</span></div>
+  {% endfor %}
+</div>
+<p class="muted small">This course is a hands-on micro:bit, circuits and Python course, so it focuses on <b>Computational Thinking</b> and <b>Computing Systems</b>. The Computing and Society and Digital Tools and Collaboration standards (internet safety, copyright, research, online publishing) need to be covered elsewhere in your Digital Literacy curriculum. All {{ covered }} of the {{ total }} grade 6–8 standards that the lessons address are listed below.</p>
+
+<section class="card">
+  <h2>Lessons × standards</h2>
+  <div class="table-scroll">
+  <table class="std-matrix">
+    <thead><tr><th>Standard</th>{% for l in lessons %}<th title="{{ l.title }}"><a href="{{ url_for('student.lesson', lesson_id=l.id) }}">{{ l.number }}</a></th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for t in coverage if t.covered %}{% for s in t["items"] if s.lessons %}
+      <tr><th><span class="std-code strand-{{ t.strand }}">{{ s.code }}</span> <small>{{ s.text|truncate(70) }}</small></th>
+      {% set ids = s.lessons|map(attribute='lesson')|map(attribute='id')|list %}
+      {% for l in lessons %}<td class="{{ 'hit' if l.id in ids }}">{{ '●' if l.id in ids }}</td>{% endfor %}</tr>
+    {% endfor %}{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="muted small">Column numbers are lessons; hover for the title. ● = the lesson addresses this standard.</p>
+</section>
+
+{% for t in coverage %}
+<section class="card std-topic">
+  <h2><span class="std-code strand-{{ t.strand }}">{{ t.code }}</span> {{ t.topic }} <small class="muted">{{ t.strand_name }} · {{ t.covered }}/{{ t["items"]|length }} addressed</small></h2>
+  <ul class="std-list">
+  {% for s in t["items"] %}
+    <li class="{{ 'uncovered' if not s.lessons }}"><span class="std-code strand-{{ t.strand }}">{{ s.code }}</span>
+      <div><b>{{ s.text }}</b>
+      {% if s.lessons %}
+        <ul class="std-evidence">{% for h in s.lessons %}<li><a href="{{ url_for('student.lesson', lesson_id=h.lesson.id) }}">{{ h.lesson.number }}. {{ h.lesson.title }}</a> — {{ h.how }}</li>{% endfor %}</ul>
+      {% else %}<small class="muted">Not addressed in this course.</small>{% endif %}
+      </div></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}
