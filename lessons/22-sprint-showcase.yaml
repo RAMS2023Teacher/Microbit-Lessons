@@ -1,0 +1,397 @@
+id: sprint-showcase
+label: S6
+unit: 5
+order: 22
+title: "Sprint 6: Test, Upgrade, Showcase"
+subtitle: Make your robot reliable, add an upgrade and show it off
+duration_minutes: 35
+level: Robot Sprint
+big_idea: >-
+  Engineers test one thing at a time, so every change they make is one they
+  understand.
+objectives:
+  - Test one thing and change one number at a time
+  - Fix common robot bugs
+  - Add an upgrade to your robot
+  - Give a 30-second demo and reflect
+vocabulary:
+  - term: Test plan
+    definition: A list of small tests you run one at a time.
+  - term: Variable
+    definition: A name that holds a number, like TURN_MS, so you change it in one place.
+  - term: Upgrade
+    definition: A new part or feature you add to something that already works.
+  - term: Reflection
+    definition: Thinking back on what you did, what worked and what you'd change.
+materials:
+  - Your robot or gadget from Sprint 5
+  - micro:bit V2 + USB cable
+  - 6×AA battery holder with batteries
+  - "Upgrades: 180° servo + ultrasonic sensor, a second micro:bit, or a KS4033 board with 2 DC motors"
+  - Masking tape and a ruler for test runs
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 2}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: circuit, name: Upgrade wiring, minutes: 3}
+  - {key: code, name: Code it, minutes: 8}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: challenge, name: Showcase, minutes: 8}
+video:
+  title: Testing like an engineer
+  note: Watch how the tester changes just one thing between runs.
+warmup:
+  prompt: >-
+    Your robot worked yesterday, but today it turns too far. Name two things
+    that might have changed.
+learn:
+  - text: |
+      ### Test one thing at a time
+      If you change three things and it works, you won't know which one fixed it.
+
+      * Pick **one** test, like "turn 90°".
+      * Change **one** number.
+      * Run it and watch.
+      * Write down what happened.
+
+      Repeat until it works every time.
+    visual:
+      type: flow
+      loop: true
+      loop_label: "until it works"
+      steps:
+        - {icon: "🎯", label: "Pick one test"}
+        - {icon: "🔢", label: "Change one number"}
+        - {icon: "▶️", label: "Run it"}
+        - {icon: "📝", label: "Write what happened"}
+  - text: |
+      ### Keep a test log
+      A test log is three short columns. It stops you from trying the same
+      thing twice.
+
+      * **Changed:** TURN_MS from 500 to 450
+      * **Happened:** the corner was square
+      * **Keep it?** Yes
+
+      Do at least **three** rows today.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔢", title: "Changed", text: "TURN_MS 500 to 450"}
+        - {icon: "👀", title: "Happened", text: "corner was square"}
+        - {icon: "✅", title: "Keep it?", text: "yes"}
+  - text: |
+      ### The finish line
+      Your showcase is a **30-second demo**:
+
+      1. Say your mission in one sentence.
+      2. Show your robot or gadget doing it.
+      3. Name one bug you fixed and how.
+
+      Then write a short **reflection**: what worked, and what you'd do next.
+    visual:
+      type: flow
+      steps:
+        - {icon: "🗣️", label: "Say your mission"}
+        - {icon: "🤖", label: "Show it work"}
+        - {icon: "🐞", label: "Name one bug you fixed"}
+        - {icon: "📝", label: "Reflect"}
+  - text: |
+      ### Upgrade: a scanning head
+      Put the **ultrasonic sensor** on a **180° servo** on **P15**. Now the robot
+      can look left, ahead and right.
+
+      * Trig on **P2**. Echo on **P1** through a **divider** (it makes 5 V safe).
+      * Distance in cm = echo time ÷ 58.
+
+      Unplug the crash sensor first: it uses P1 too.
+    visual:
+      type: board
+      board: shield
+      jumpers: {V1: "3.3V", V2: "5V"}
+      power: "6×AA"
+      plugs:
+        - {pin: 1, device: "Echo via divider", kind: ultrasonic}
+        - {pin: 2, device: "Ultrasonic Trig", kind: ultrasonic}
+        - {pin: 13, device: "Left wheel", kind: servo}
+        - {pin: 14, device: "Right wheel", kind: servo}
+        - {pin: 15, device: "Head servo", kind: servo}
+  - text: |
+      ### Upgrade: a radio remote
+      A **second micro:bit** becomes the remote. It sends short messages like
+      `"L"` or `"F"`. The robot reads them and drives.
+
+      Both need the **same group** number, or they can't hear each other:
+
+      ```python
+      radio.on()
+      radio.config(group=7)
+      ```
+    visual:
+      type: compare
+      items:
+        - {icon: "🎮", title: "Remote", text: "radio.send(\"L\") when A is pressed"}
+        - {icon: "📻", title: "Same group", text: "radio.config(group=7) on both"}
+        - {icon: "🤖", title: "Robot", text: "radio.receive() then drive()"}
+  - text: |
+      ### Upgrade: DC motors
+      The **KS4033** board drives two DC motors. It's a different board, so it
+      replaces the shield.
+
+      * **Motor A:** P13 + P12. **Motor B:** P15 + P16.
+      * One pin gets `write_analog(speed)`, the other gets 0.
+      * Swap them to reverse. Both 0 = stop.
+    visual:
+      type: board
+      board: motor
+      power: "4×AA (6V)"
+      motors:
+        - {port: A, device: "left motor"}
+        - {port: B, device: "right motor"}
+circuit:
+  intro: >-
+    These steps are only for upgrades. Pick **one**. Unplug the battery pack
+    before you change any wiring.
+  safety:
+    - Unplug the battery pack before you change any wiring.
+    - Never wire the ultrasonic Echo straight to P1. Use the divider.
+    - The KS4033 replaces the shield. Don't try to stack them.
+  steps:
+    - title: "Head: add a servo on P15"
+      instruction: >-
+        Plug a **180° servo** into header **15**: **brown on G**, orange on S.
+        Fix it to the front of the chassis, facing up, so it can turn the
+        sensor left and right.
+      check: Is the head servo on pin 15, brown on G?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+          - {pin: 15, device: "Head servo", kind: servo}
+    - title: "Head: add the ultrasonic sensor"
+      instruction: >-
+        Unplug any crash sensor. Power the sensor from a **V** pin in the
+        **11-20 row** (5 V). Wire **Trig to P2**. Wire **Echo through the
+        divider to P1**. Your teacher will show you the divider.
+      check: Does Echo go through the two resistors before P1?
+      tip: The divider is 1 kΩ from Echo to P1, then 2 kΩ from P1 to G.
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 1, device: "Echo via divider", kind: ultrasonic}
+          - {pin: 2, device: "Ultrasonic Trig", kind: ultrasonic}
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+          - {pin: 15, device: "Head servo", kind: servo}
+    - title: "DC motors: the KS4033 board"
+      instruction: >-
+        Plug the micro:bit into the **KS4033**. Wire the left motor to **Motor
+        A** and the right motor to **Motor B**. Connect a **4×AA (6V)** pack.
+      check: Are both motors on the KS4033 and the pack connected?
+      tip: If a motor spins the wrong way, swap its two wires.
+      visual:
+        type: board
+        board: motor
+        power: "4×AA (6V)"
+        motors:
+          - {port: A, device: "left motor"}
+          - {port: B, device: "right motor"}
+code:
+  intro: >-
+    This is a **test bench**. Each button runs one test. The screen shows what
+    the IR sensor sees. Run each test, then tune **one** number.
+  starter: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77       # your stop numbers
+    STOP_R = 77
+    TURN_MS = 450     # Test 2: change only this number
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)
+
+    drive(0, 0)
+    while True:
+        if button_a.was_pressed():     # Test 1: straight line
+            drive(60, 60)
+            sleep(2000)
+            drive(0, 0)
+        if button_b.was_pressed():     # Test 2: one 90 degree turn
+            drive(60, -60)
+            sleep(TURN_MS)
+            drive(0, 0)
+        if pin0.read_digital() == 0:   # Test 3: does the sensor see?
+            display.show(Image.SQUARE)
+        else:
+            display.show(Image.ARROW_N)
+        sleep(20)
+  walkthrough:
+    - lines: "7-9"
+      explain: All the numbers you tune live at the top, so you change each in **one** place.
+    - lines: "17-20"
+      explain: "Test 1: drive straight for 2 seconds, then **stop**. Does it curve? Nudge one STOP number."
+    - lines: "21-24"
+      explain: "Test 2: one turn. Mark the floor with tape and tune TURN_MS until it's a square corner."
+    - lines: "25-28"
+      explain: "Test 3: a square means the sensor sees something. An arrow means all clear."
+  try_it:
+    - Change TURN_MS by 25 at a time. Write each try in your test log.
+    - "Test 1 curves? Change STOP_L or STOP_R by 1, never both at once."
+    - Add Test 4 for your mission's sensor, like pin8 for the line sensor.
+debug:
+  story: >-
+    Ava's demo bot should drive forward until it sees the wall, then stop and
+    show a tick. It won't start, it spins instead of driving, and it never
+    stops. Find **three** classic robot bugs.
+  buggy_code: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77
+    STOP_R = 78
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R + right * 25 // 100)
+
+    drive(0, 0)
+    display.show(Image.HAPPY)
+    while not button_a.was_pressed():
+        sleep(20)
+    while pin0.read_digital() == 0:
+        drive(60, 60)
+        sleep(20)
+    display.show(Image.YES)
+  hints:
+    - The IR sensor reads 0 when something is in front. Should it drive while it reads 0?
+    - The wheels are mirrored. Should both wheels add to their stop number?
+    - The loop ends at the wall. What tells the wheels to stop?
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: "RIGHT\\.write_analog\\(\\s*STOP_R\\s*\\+\\s*right", message: "The right wheel is mirrored: use STOP_R - right ... so both wheels roll forward."}
+    - {type: contains, pattern: "pin0\\.read_digital\\(\\)\\s*(==\\s*1|!=\\s*0)|while\\s+pin0\\.read_digital\\(\\)\\s*:", message: "Drive while the sensor reads 1 (all clear). 0 means the wall is there."}
+    - {type: contains, pattern: "drive\\(\\s*0\\s*,\\s*0\\s*\\)\\s*\\n\\s*display\\.show\\(\\s*Image\\.YES", message: "After the loop, call drive(0, 0) so the robot stops at the wall."}
+  solution: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77
+    STOP_R = 78
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)
+
+    drive(0, 0)
+    display.show(Image.HAPPY)
+    while not button_a.was_pressed():
+        sleep(20)
+    while pin0.read_digital() == 1:
+        drive(60, 60)
+        sleep(20)
+    drive(0, 0)
+    display.show(Image.YES)
+  reflection_prompt: Which of the three bugs would be hardest to spot during a live demo, and why?
+quiz:
+  - question: Your robot's turn is too short. What should you do next?
+    choices:
+      - Change only TURN_MS, then test again
+      - Change TURN_MS and both STOP numbers
+      - Rewrite the whole program
+    answer: 0
+    explain: Change one number at a time, so you know what made the difference.
+  - question: You tell the robot to go forward, but it spins in a circle. What is the most likely bug?
+    choices:
+      - One wheel isn't mirrored in drive()
+      - The batteries are too new
+      - The IR sensor is unplugged
+    answer: 0
+    explain: If both wheels add to their stop number, they push opposite ways and the robot spins.
+  - question: Your remote micro:bit sends messages, but the robot never gets them. What should you check first?
+    choices:
+      - Both use the same radio.config(group=...) number
+      - The robot has a crash sensor
+      - The remote's wheels are calibrated
+    answer: 0
+    explain: Radios only hear messages from the same group. Set the same group number on both.
+  - question: On the KS4033 board, how do you make Motor A spin the other way?
+    visual:
+      type: board
+      board: motor
+      power: "4×AA (6V)"
+      motors:
+        - {port: A, device: "Motor A"}
+    choices:
+      - Swap which pin gets the speed and which gets 0
+      - Give both pins the same speed
+      - Unplug the battery pack
+    answer: 0
+    explain: One pin gets the speed and the other gets 0. Swap them to reverse. Both 0 means stop.
+  - question: The ultrasonic echo takes 580 µs. How far away is the wall?
+    visual:
+      type: flow
+      steps:
+        - {icon: "⏱️", label: "Echo: 580 µs"}
+        - {icon: "➗", label: "Divide by 58"}
+        - {icon: "📏", label: "Distance in cm"}
+    choices:
+      - 10 cm
+      - 58 cm
+      - 580 cm
+    answer: 0
+    explain: Distance in cm = echo time ÷ 58. So 580 ÷ 58 = 10 cm.
+challenge:
+  title: Showcase
+  prompt: >-
+    Get your robot demo-ready. Give your 30-second demo, then write your
+    reflection. Done early? Add an upgrade.
+  levels:
+    - "Mild: Give your 30-second demo: say your mission, show it work, and name one bug you fixed."
+    - "Medium: Fill three rows of your test log, one number each, and keep the best value. Then demo."
+    - "Spicy: Scanning head: point P15 left, ahead and right, measure each distance, then turn toward the most open way."
+  submit_prompt: "Your reflection: What worked? What bug did you fix? What would you upgrade next?"
+  visual:
+    type: flow
+    steps:
+      - {icon: "🗣️", label: "Say your mission"}
+      - {icon: "🤖", label: "Show it work"}
+      - {icon: "🐞", label: "Name one bug you fixed"}
+teacher_notes: |
+  * **Setup:** see `docs/ROBOT_SPRINT_HARDWARE.md`. Tape a start line and a 90° corner on the floor for test runs. Fresh batteries change turn times, so warn students to re-test after swapping.
+  * **Showcase flow:** run demos in small groups or as a gallery walk so every student demos in about 10 minutes. A gadget (Mission D) demo counts the same as a robot.
+  * **Reflection:** the challenge's submit box is the reflection. Look for a named bug and a specific next step.
+  * **Common bugs:** a wheel not mirrored (robot spins), no `drive(0, 0)` at the end (robot keeps going), and flipped sensor logic (IR and crash read 0 when triggered; the line sensor reads 1 on black).
+  * **Scanning head:** the ultrasonic sensor is a 5 V module. Use the divider (Echo → 1 kΩ → P1, P1 → 2 kΩ → GND) on a small breadboard. Power it from a V pin on the 11-20 row. Read `pin1.read_digital()` once at the start to put Echo in input mode. Use the `distance_cm()` function from the hardware doc. The crash sensor also uses P1, so only one can be plugged in.
+  * **Head servo:** P15 is a 180° servo: 26 = 0°, 77 = 90°, 128 = 180°. The sprint keeps to 3 servos at a time (two wheels and the head).
+  * **Radio remote:** both micro:bits need `radio.on()` and the same `radio.config(group=...)`. Give each team its own group number (0-255) so remotes don't drive the wrong robot.
+  * **DC motors (KS4033):** Motor A = P13 + P12, Motor B = P15 + P16, 4×AA (6V). Forward is `pin13.write_analog(speed)` with `pin12.write_digital(0)`; swap to reverse; both 0 = stop. Have students test this, and swap a motor's wires if it spins the wrong way.
+  * **Fast finishers:** the Spicy scanning head needs a function that returns three distances and picks the biggest. Radio plus scanning (the remote shows the distance) is a further stretch.
+  * **Students who need a quick win:** the test bench runs as-is. One perfect corner, logged in the test log, counts as a win.
+standards:
+  - code: 6-8.CS.a.5
+    how: Students demonstrate their robot or gadget completing its mission in a 30-second showcase demo.
+  - code: 6-8.CT.d.6
+    how: Students follow a test plan, changing one number at a time and logging the result, and fix three robot bugs.
+  - code: 6-8.CS.a.4
+    how: Upgrades add a servo-mounted ultrasonic sensor, a radio remote or DC motors on a motor driver board.
+  - code: 6-8.CS.a.7
+    how: Students diagnose common robot problems such as a wheel not mirrored, a missing stop or flipped sensor logic.
+  - code: 6-8.CT.b.3
+    how: The test bench breaks the robot into separate tests (straight line, one turn, sensor) checked one at a time.

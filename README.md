@@ -44,6 +44,9 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 | 2 Sensing the World | 6 Buttons & inputs · 7 Light sensor night light · 8 Potentiometers · 9 Temperature data |
 | 3 Making Things Move | 10 Motion & sound · 11 Servo motor · 12 DC motor + transistor · 13 Motor driver |
 | 4 Robots | 14 Drive your robot · 15 Line follower · 16 Radio remote control |
+| 5 Robot Sprint *(stand-alone)* | S1 Servo skills · S2 Sensor lab · S3 Sense → decide → act · S4 Build the bot · S5 Mission day · S6 Test, upgrade, showcase |
+
+**Robot Sprint** is a 6-lesson motors and sensors project for classes that already know micro:bit basics. It can start at any time and doesn't need the core lessons. It's written for the Keyestudio KS0360 sensor shield, the KS4009 45-in-1 sensor kit, 180° and continuous servos, a two-servo robot chassis and, optionally, the KS4033 motor board. Setup, pin map and wiring safety notes are in [docs/ROBOT_SPRINT_HARDWARE.md](docs/ROBOT_SPRINT_HARDWARE.md).
 
 Lessons are YAML files in `lessons/`. See [docs/LESSON_FORMAT.md](docs/LESSON_FORMAT.md) for how to edit them or write new ones.
 

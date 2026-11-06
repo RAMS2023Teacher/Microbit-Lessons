@@ -352,7 +352,7 @@ quiz:
         - {icon: "⬛", title: "1 = black", text: "curve one way"}
         - {icon: "⬜", title: "0 = white", text: "curve the other way"}
     choices:
-      - One sensor only knows black or white, so it keeps crossing the edge
+      - It only knows black or white, so it crosses the edge
       - The wheels are not calibrated
       - Zig-zags are faster than straight lines
     answer: 0
