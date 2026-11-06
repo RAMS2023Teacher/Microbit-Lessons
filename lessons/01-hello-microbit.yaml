@@ -9,10 +9,10 @@ big_idea: >-
   A micro:bit is a tiny computer that follows your Python instructions one
   line at a time, from top to bottom.
 objectives:
-  - Name the main parts of the micro:bit (LED display, buttons, pins, USB port)
-  - Use display.scroll() and display.show() to put words and pictures on the LEDs
-  - Use sleep() and a while True loop to make an animation that repeats forever
-  - Flash a Python program onto a real micro:bit
+  - Name the main parts of the micro:bit
+  - Show words and pictures on the LEDs
+  - Repeat an animation forever with a loop
+  - Flash a program onto a real micro:bit
 vocabulary:
   - term: Program
     definition: A list of instructions a computer follows in order.
@@ -39,60 +39,104 @@ video:
   note: Look for the 25 red LEDs, buttons A and B, and the gold pins along the bottom edge.
 warmup:
   prompt: >-
-    Computers are hiding everywhere - not just in laptops and phones. List as
-    many things as you can think of that have a tiny computer inside. Which
-    one surprised you the most?
+    Computers hide everywhere, not just in laptops and phones. List as many
+    things as you can that have a tiny computer inside. Which one surprised
+    you most?
 learn:
-  - |
-    ### Meet the micro:bit
-    The micro:bit is a **tiny computer** about the size of a credit card.
-    On the front you'll find:
+  - text: |
+      ### Meet the micro:bit
+      It's a **tiny computer**, about the size of a credit card.
 
-    * **25 red LEDs** in a 5×5 grid - the **display**
-    * **Button A** and **Button B**
-    * A **gold edge** with **pins** for connecting wires (we'll use these soon!)
+      On the front:
+      * **25 red LEDs** in a 5×5 grid: the **display**
+      * **Button A** and **Button B**
+      * Gold **pins** along the bottom edge
 
-    On the back: a **USB port**, a **speaker**, a **microphone** and sensors
-    that can feel motion and temperature.
-  - |
-    ### Code is a list of instructions
-    A **program** is a list of instructions. The micro:bit runs them **in
-    order, top to bottom**. Every program starts with:
+      On the back: a **USB port**, a **speaker**, a **microphone**, and sensors for motion and temperature.
+    visual:
+      type: leds
+      image: HAPPY
+      caption: "The 5×5 LED display sits between buttons A and B."
+  - text: |
+      ### Code is a list of steps
+      A **program** is a list of instructions. The micro:bit runs them **in order, top to bottom**.
 
-    `from microbit import *`
+      The first line is always `from microbit import *`. It loads the micro:bit toolbox, so Python knows `display`, `Image` and `sleep`.
+    visual:
+      type: flow
+      caption: "Python runs one line at a time, top to bottom."
+      steps:
+        - {icon: "📦", label: "from microbit import *"}
+        - {icon: "💬", label: "display.scroll(\"Hi!\")"}
+        - {icon: "❤️", label: "display.show(Image.HEART)"}
+  - text: |
+      ### Words and pictures
+      * `display.scroll("Hi!")` slides text across the LEDs. Text is called a **string**. It needs **quote marks**.
+      * `display.show(Image.HEART)` shows a picture.
+      * Image names are in **CAPITAL LETTERS**.
+    visual:
+      type: leds
+      caption: "scroll shows letters one by one. show draws a picture."
+      frames: ["90009:90009:99999:90009:90009", "00900:00000:00900:00900:00900", "HEART"]
+  - text: |
+      ### Waiting with sleep()
+      `sleep()` pauses the program. It counts in **milliseconds** (ms).
 
-    That line loads the micro:bit toolbox, so Python knows words like
-    `display`, `Image` and `sleep`.
-  - |
-    ### Words, pictures and waiting
-    * `display.scroll("Hi!")` slides text across the LEDs. The text is a
-      **string**, so it needs **quote marks**.
-    * `display.show(Image.HEART)` shows a picture. Image names are in
-      **CAPITAL LETTERS**.
-    * `sleep(1000)` waits **1000 milliseconds** = 1 second.
-  - |
-    ### Forever loops and indentation
-    `while True:` means "repeat forever." The lines that belong to the loop
-    are **indented** (pushed in by 4 spaces). Python uses indentation to know
-    what's inside the loop - so spacing really matters!
+      * `sleep(500)` waits half a second.
+      * `sleep(1000)` waits **1 second**.
+      * `sleep(2000)` waits 2 seconds.
+    visual:
+      type: scale
+      min: 0
+      max: 2000
+      caption: "1000 milliseconds = 1 second."
+      marks:
+        - {at: 0, label: "0"}
+        - {at: 500, label: "500 = ½ s"}
+        - {at: 1000, label: "1000 = 1 s", pointer: true}
+        - {at: 2000, label: "2000 = 2 s"}
+  - text: |
+      ### Forever loops
+      `while True:` means **repeat forever**.
 
-    **Flashing:** when your code is ready, click **Send to micro:bit** under the
-    editor. The very first time, click **Download .hex** and drag the file
-    onto the **MICROBIT** drive instead - that puts Python on the micro:bit. The
-    yellow light on the back blinks while it copies, then your code runs.
-  - |
-    ### Free code you can look inside
-    The Python on your micro:bit is called **MicroPython**, and it's
-    **open source**: anyone can read its code, change it and share it, as long
-    as they follow its **license** (MicroPython uses the MIT License, which
-    mostly asks you to keep the credit).
+      * Lines inside the loop are **indented**. That means pushed in by 4 spaces.
+      * Python uses the spaces to know what's inside the loop.
+      * End the `while` line with a **colon** `:`.
+    visual:
+      type: flow
+      loop: true
+      loop_label: repeat forever
+      steps:
+        - {icon: "❤️", label: "show big heart"}
+        - {icon: "⏱️", label: "sleep(500)"}
+        - {icon: "💗", label: "show small heart"}
+        - {icon: "⏱️", label: "sleep(500)"}
+  - text: |
+      ### Flashing your code
+      **Flashing** copies your program onto the micro:bit.
 
-    A lot of software is **proprietary**: the company keeps the code secret,
-    and its license only lets you *use* the program, not change or share it.
-    * Open source: MicroPython, Firefox, Linux
-    * Proprietary: Microsoft Word, most video games
+      * Click **Send to micro:bit** under the editor.
+      * **First time only:** click **Download .hex**. Drag the file onto the **MICROBIT** drive. This puts Python on it.
+      * The yellow light on the back blinks while it copies. Then your code runs!
+    visual:
+      type: flow
+      steps:
+        - {icon: "⌨️", label: "write your code"}
+        - {icon: "📤", label: "Send to micro:bit"}
+        - {icon: "🟡", label: "yellow light blinks"}
+        - {icon: "▶️", label: "your code runs"}
+  - text: |
+      ### Free code you can look inside
+      **MicroPython** is **open source**. Anyone can read, change and share its code. They just follow its **license**. Its MIT License mostly asks you to keep the credit.
 
-    Before you copy someone's code, pictures or music, check the license!
+      **Proprietary** code is kept secret. You can *use* it, but not change or share it.
+
+      Check the license before you copy code, pictures or music!
+    visual:
+      type: compare
+      items:
+        - {icon: "🔓", title: "Open source", text: "MicroPython, Firefox, Linux"}
+        - {icon: "🔒", title: "Proprietary", text: "Microsoft Word, most video games"}
 code:
   intro: >-
     This program says hello once, then animates a beating heart forever.
@@ -111,17 +155,16 @@ code:
     - lines: "1"
       explain: Loads the micro:bit toolbox so Python knows display, Image and sleep.
     - lines: "3"
-      explain: Scrolls the **string** "Hello!" across the display one time. The quotes tell Python it's text.
+      explain: Scrolls the **string** "Hello!" across the display once. The quotes tell Python it's text.
     - lines: "5"
       explain: "`while True:` starts a loop that repeats forever. Don't forget the colon `:` at the end."
     - lines: "6-9"
       explain: >-
-        These four lines are **indented**, so they're inside the loop. Big heart,
-        wait half a second, small heart, wait. Over and over = a heartbeat!
+        These lines are **indented**, so they're inside the loop. Big heart,
+        wait, small heart, wait. That's a heartbeat!
   try_it:
     - Change "Hello!" to your own name.
-    - Make the heart beat faster by changing both 500s to 200.
-    - Swap the hearts for other pictures, like Image.HAPPY and Image.SAD, or Image.DUCK.
+    - Make the heart beat faster. Change both 500s to 200.
     - Delete one of the sleep() lines. What happens to the animation? Why?
 debug:
   story: >-
@@ -175,7 +218,10 @@ quiz:
       - 0.2 seconds
     answer: 0
     explain: sleep() counts in milliseconds. 1000 ms = 1 second, so 2000 ms = 2 seconds.
-  - question: Which line is written correctly?
+  - question: Which line shows this face?
+    visual:
+      type: leds
+      image: HAPPY
     choices:
       - display.show(image.happy)
       - display.show(Image.happy)
@@ -192,7 +238,7 @@ quiz:
     explain: Indented lines after the colon belong to the loop. Lines that line up with "while" are outside it.
   - question: MicroPython is open source. What does that mean?
     choices:
-      - Anyone can read, change and share its code, following its license
+      - Anyone can read, change and share its code
       - It costs money every time you use it
       - Only the company that made it can see the code
       - It only works on laptops with the lid open
@@ -201,14 +247,17 @@ quiz:
 challenge:
   title: Name Badge Animation
   prompt: >-
-    Turn your micro:bit into a wearable name badge that shows off who you are.
-    Mix scrolling words with pictures and timing to make it your own - there's
-    no single right answer!
+    Turn your micro:bit into a name badge that shows who you are. Mix
+    scrolling words, pictures and timing. There's no single right answer!
   levels:
     - "Mild: Scroll your name, then show a picture you like, inside a while True loop."
-    - "Medium: Make a 3-picture animation (like a wink, a beating heart, or a clock with Image.CLOCK1, Image.CLOCK2...) that tells a tiny story."
-    - "Spicy: Design your own picture with Image(\"09090:99999:99999:09990:00900\") (numbers 0-9 are brightness) and add it to your badge."
+    - "Medium: Make a 3-picture animation that tells a tiny story, like a wink or a beating heart."
+    - "Spicy: Design your own picture with Image(\"09090:99999:99999:09990:00900\"). Each number 0-9 is one LED's brightness."
   submit_prompt: What does your badge show, and which line of code are you most proud of?
+  visual:
+    type: leds
+    caption: "Spicy: this pattern of numbers draws a heart."
+    image: "09090:99999:99999:09990:00900"
 teacher_notes: |
   * **Flashing problems:** make sure the micro:bit shows up as a **MICROBIT** drive. Some USB cables are charge-only - swap the cable if the drive never appears.
   * If the display shows a **scrolling error message** (like "SyntaxError line 6"), the code reached the micro:bit but has a bug. Read the line number with the class - this is a great teaching moment.

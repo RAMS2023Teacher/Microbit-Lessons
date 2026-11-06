@@ -10,10 +10,10 @@ big_idea: >-
   like the highest, lowest and average temperature - and react when something
   goes wrong.
 objectives:
-  - Read the micro:bit's built-in temperature sensor with temperature()
-  - Store readings in a list with append() and keep the list from growing forever
-  - Use min(), max(), sum() and len() to summarize data
-  - Build a "too hot" warning LED on pin 0 that turns on above a threshold
+  - Read the temperature with temperature()
+  - Store readings in a list with append()
+  - Find the low, high and average of a list
+  - Light a warning LED when it gets too hot
 vocabulary:
   - term: List
     definition: One variable that holds many values in order, like readings = [21, 22, 22, 23].
@@ -49,55 +49,103 @@ warmup:
     A weather reporter says "Today's high was 24 and the low was 15." How do
     you think they know that? What would a machine need to remember to figure it out?
 learn:
-  - |
-    ### The micro:bit has a thermometer
-    `temperature()` gives back the temperature in **degrees Celsius** as a whole
-    number, like `22`. The sensor is inside the micro:bit's main **processor chip**,
-    so it reads the chip's temperature. It's usually a degree or two **warmer**
-    than the room, because the chip makes a little heat while it works.
+  - text: |
+      ### The micro:bit has a thermometer
+      `temperature()` gives the temperature in **degrees Celsius**, as a whole number like `22`.
 
-    Try it: `display.scroll(temperature())`. Then put your thumb on the back of
-    the micro:bit for 30 seconds and try again.
-  - |
-    ### Lists remember many values
-    A normal variable holds **one** value. A **list** holds lots of them, in order:
+      The sensor is inside the main **processor chip**. The chip makes a little heat while it works. So it often reads a degree or two **warmer** than the room.
+    visual:
+      type: compare
+      items:
+        - {icon: "🏠", title: "Room: 21 °C", text: "The air around you"}
+        - {icon: "🔲", title: "temperature(): 22 °C", text: "The chip, a little warmer"}
+  - text: |
+      ### Try it: warm it up
+      Show the temperature: `display.scroll(temperature())`
 
-    ```python
-    readings = []          # an empty list
-    readings.append(21)    # now [21]
-    readings.append(23)    # now [21, 23]
-    len(readings)          # 2 - how many are in the list
-    ```
+      Then put your thumb on the back of the micro:bit for **30 seconds**. Try again. Did the number go up?
+    visual:
+      type: graph
+      points: [22, 22, 22, 23, 23, 23, 24]
+      x_label: "seconds of thumb warmth →"
+      y_label: "°C"
+      min: 20
+      max: 26
+      caption: "A warm thumb raises the reading slowly."
+  - text: |
+      ### Lists remember many values
+      A normal variable holds **one** value. A **list** holds lots of them, in order.
 
-    Square brackets `[ ]` make a list. `.append()` adds to the **end**.
-  - |
-    ### Python's data tools
-    Once your readings are in a list, Python can summarize them for you:
+      ```python
+      readings = []          # an empty list
+      readings.append(21)    # now [21]
+      readings.append(23)    # now [21, 23]
+      len(readings)          # 2 - how many are in the list
+      ```
 
-    * `min(readings)` - the **lowest** value
-    * `max(readings)` - the **highest** value
-    * `sum(readings) / len(readings)` - the **average**
+      Square brackets `[ ]` make a list. `.append()` adds to the **end**.
+    visual:
+      type: flow
+      steps:
+        - {icon: "📭", label: "readings = []"}
+        - {icon: "➕", label: "append(21) → [21]"}
+        - {icon: "➕", label: "append(23) → [21, 23]"}
+  - text: |
+      ### Python's data tools
+      Once your readings are in a list, Python can sum them up for you:
 
-    The micro:bit has limited memory, so we keep only the **newest 30** readings.
-    `readings.pop(0)` removes the **oldest** one (the one at position 0).
-  - |
-    ### A warning light with a threshold
-    A **threshold** is a cut-off. If the temperature is **at or above** `HOT`,
-    the program turns on the red LED on pin 0. Otherwise it turns it off.
-    That's just `if` / `else` with `pin0.write_digital()` - things you already know!
-  - |
-    ### Bonus: save your data with `log`
-    The micro:bit V2 can **save readings** even after you unplug it. Each
-    `log.add()` adds a row to a table stored on the micro:bit:
+      * `min(readings)`: the **lowest** value
+      * `max(readings)`: the **highest** value
+      * `sum(readings) / len(readings)`: the **average**
+    visual:
+      type: graph
+      points: [21, 22, 22, 23, 24, 23, 22]
+      y_label: "°C"
+      min: 20
+      max: 25
+      caption: "Here min is 21, max is 24, and the average is about 22.4."
+  - text: |
+      ### Keep only the newest 30
+      The micro:bit has **limited memory**. So we keep only the **newest 30** readings.
 
-    ```python
-    import log
-    log.set_labels('temp', timestamp=log.SECONDS)
-    log.add(temp=temperature())
-    ```
+      `readings.pop(0)` removes the **oldest** one. That is the one at position 0, the front of the list.
+    visual:
+      type: flow
+      steps:
+        - {icon: "➕", label: "append: new one at end"}
+        - {icon: "🔢", label: "more than 30?"}
+        - {icon: "🗑️", label: "pop(0): drop the oldest"}
+  - text: |
+      ### A warning light with a threshold
+      A **threshold** is a cut-off.
 
-    Plug the micro:bit into a computer, open the **MICROBIT** drive and
-    double-click **MY_DATA.HTM** to see your table and a chart.
+      * Temperature **at or above** `HOT`? Turn the red LED on pin 0 **on**.
+      * Otherwise, turn it **off**.
+
+      That's just `if` / `else` with `pin0.write_digital()`. You already know this!
+    visual:
+      type: graph
+      points: [24, 25, 25, 26, 27, 29, 30, 29, 27, 26]
+      line: {y: 28, label: "HOT = 28"}
+      y_label: "°C"
+      caption: "Red dots are above HOT, so the warning LED is on."
+  - text: |
+      ### Bonus: save your data with `log`
+      The micro:bit V2 can **save readings**, even after you unplug it. Each `log.add()` adds a row to a table.
+
+      ```python
+      import log
+      log.set_labels('temp', timestamp=log.SECONDS)
+      log.add(temp=temperature())
+      ```
+
+      Plug it into a computer. Open the **MICROBIT** drive. Double-click **MY_DATA.HTM** to see a table and a chart.
+    visual:
+      type: flow
+      steps:
+        - {icon: "💾", label: "log.add() saves a row"}
+        - {icon: "🔌", label: "Unplug: data stays"}
+        - {icon: "📊", label: "Open MY_DATA.HTM"}
 circuit:
   intro: >-
     This is the same LED circuit you built before: P0 → resistor → LED → GND.
@@ -179,38 +227,23 @@ code:
 
         sleep(1000)
   walkthrough:
-    - lines: "3"
-      explain: >-
-        `HOT` is the **threshold**. It's in capital letters to show it's a
-        setting you choose once and don't change while the program runs.
-    - lines: "4"
-      explain: "`[]` makes an **empty list**. It's made **before** the loop so it only happens once."
+    - lines: "3-4"
+      explain: "`HOT` is your **threshold**. `[]` makes an **empty list**, once, before the loop."
     - lines: "7-10"
-      explain: >-
-        Read the temperature, add it to the end of the list, and if the list
-        has more than 30 readings, remove the oldest one with `pop(0)`.
+      explain: Read the temperature and add it to the end. Over 30 readings? `pop(0)` drops the oldest.
     - lines: "12-17"
-      explain: "`if` / `else` with a threshold: the LED and the face show whether it's too hot."
-    - lines: "19-21"
-      explain: >-
-        `min()` and `max()` search the whole list for you. `str()` turns the number
-        into text so it can be joined to "Lo " and "Hi ".
-    - lines: "22-24"
-      explain: >-
-        The average is the total divided by how many readings there are.
-        `round(average, 1)` keeps one decimal place, like 23.4.
-    - lines: "26"
-      explain: One reading per second. Change it to collect data faster or slower.
+      explain: "`if` / `else` with the threshold: the LED and the face show if it's too hot."
+    - lines: "19-24"
+      explain: "`min()` and `max()` give Lo and Hi. The average is the total divided by how many."
   try_it:
-    - Set HOT to one degree above the room's temperature. Hold the micro:bit in your hand until the LED turns on.
+    - Set HOT one degree above the room's temperature. Warm the micro:bit in your hand until the LED turns on.
     - Press A right away, then again after warming it. How do Lo and Hi change?
-    - "Add a button: when you press both A and B (`button_a.is_pressed() and button_b.is_pressed()`), clear the list with `readings = []`."
-    - "Bonus (V2 data logging): add `import log`, then `log.set_labels('temp', timestamp=log.SECONDS)` before the loop, and `log.add(temp=t)` inside it. Open MY_DATA.HTM afterwards."
+    - "When A and B are both pressed (`button_a.is_pressed() and button_b.is_pressed()`), clear the list with `readings = []`."
 debug:
   story: >-
-    Priya's temperature tracker always says the low, the high and the average
-    are all the **same number** - and then it crashes with an error. There are
-    **two** bugs. Find them, fix them, and press **Check my fix**.
+    Priya's temperature tracker crashes with an error. Even once it runs, the
+    low and the high are always the **same number**. There are **two** bugs.
+    Fix them and press **Check my fix**.
   buggy_code: |
     from microbit import *
 
@@ -261,6 +294,13 @@ debug:
   reflection_prompt: Why did the low and high always match when the list was created inside the loop?
 quiz:
   - question: After this code runs, what is in the list? `nums = []` then `nums.append(5)` then `nums.append(8)`
+    visual:
+      type: flow
+      steps:
+        - {icon: "📭", label: "nums = []"}
+        - {icon: "➕", label: "nums.append(5)"}
+        - {icon: "➕", label: "nums.append(8)"}
+        - {icon: "❓", label: "nums is now…?"}
     choices:
       - "[8, 5]"
       - "[5, 8]"
@@ -278,7 +318,7 @@ quiz:
     explain: The sum is 66 and there are 3 readings, so the average is 66 / 3 = 22.0.
   - question: Why is the micro:bit's temperature often a little higher than the room?
     choices:
-      - The sensor is inside the processor chip, which warms up as it works
+      - The sensor is in the chip, which warms up
       - The LED on pin 0 heats it up
       - Celsius numbers are always higher
     answer: 0
@@ -286,11 +326,21 @@ quiz:
   - question: What happens if you put readings = [] inside the while True loop?
     choices:
       - Nothing different
-      - The list is emptied every loop, so it only ever holds one reading
+      - It's emptied every loop, so it holds one reading
       - The program runs faster and saves more data
     answer: 1
     explain: Every pass through the loop makes a brand-new empty list, wiping out the old readings.
   - question: With HOT = 28, when does `if t >= HOT:` turn the LED on?
+    visual:
+      type: scale
+      min: 24
+      max: 32
+      marks:
+        - {at: 24, label: "24"}
+        - {at: 26, label: "26"}
+        - {at: 28, label: "HOT = 28", pointer: true}
+        - {at: 30, label: "30"}
+        - {at: 32, label: "32"}
     choices:
       - Only when t is exactly 28
       - When t is 28 or more
@@ -300,13 +350,12 @@ quiz:
 challenge:
   title: Mini Weather Station
   prompt: >-
-    Turn your micro:bit into a science instrument. Run an experiment: how fast
-    does it warm up in your hand, cool down near a window, or change inside a
-    backpack? Collect the data, then show it off in a creative way.
+    Turn your micro:bit into a science instrument! How fast does it warm up in
+    your hand, or cool down near a window? Collect the data, then show it off.
   levels:
     - "Mild: Add a blue or green LED on pin 1 that lights when it's too cold (below a COLD threshold)."
-    - "Medium: Use the V2 log module to record the temperature every 5 seconds during an experiment, then open MY_DATA.HTM and describe the chart."
-    - "Spicy: Show a live bar graph - light up more rows of the display as it gets warmer - and make the LED blink faster the hotter it gets."
+    - "Medium: Use the V2 log module to record the temperature every 5 seconds. Open MY_DATA.HTM and describe the chart."
+    - "Spicy: Show a live bar graph that grows as it gets warmer. Make the LED blink faster the hotter it gets."
   submit_prompt: What experiment did you run, what did your data show, and which list tools (append, min, max, average) did you use?
 teacher_notes: |
   **Common problems**

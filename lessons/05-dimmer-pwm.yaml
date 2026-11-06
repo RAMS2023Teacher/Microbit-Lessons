@@ -9,10 +9,10 @@ big_idea: >-
   A pin can only be on or off, but by flicking it on and off super fast we can
   make an LED look any brightness we want.
 objectives:
-  - Explain PWM as switching a pin on and off very fast
-  - Use pin0.write_analog() with numbers from 0 to 1023 to set LED brightness
-  - Use a for loop with range(start, stop, step) to count up and count down
-  - Make an LED fade smoothly up and down forever
+  - Explain PWM as switching a pin on and off fast
+  - Set LED brightness with write_analog (0 to 1023)
+  - Count up and down with for loops and range()
+  - Make an LED fade up and down forever
 vocabulary:
   - term: PWM (Pulse Width Modulation)
     definition: Turning a pin on and off so fast that your eye only sees the average - a dimmer light.
@@ -45,57 +45,117 @@ video:
 warmup:
   prompt: >-
     A light switch is only ON or OFF. But a dimmer knob lets you pick
-    "a little bit on." How do you think a dimmer could work if electricity can
-    only be on or off?
+    "a little bit on." How could a dimmer work if a pin can only be on or off?
 learn:
-  - |
-    ### On, off... and in between?
-    `write_digital` only knows **1** (on) and **0** (off). But what if you
-    blink an LED **so fast** your eyes can't keep up? Your brain sees the
-    **average**. On half the time looks **half bright**. On a tenth of the
-    time looks **dim**.
+  - text: |
+      ### On, off... and in between?
+      `write_digital` only knows **1** (on) and **0** (off).
 
-    This trick is called **PWM** - Pulse Width Modulation.
-  - |
-    ### write_analog: 0 to 1023
-    ```python
-    pin0.write_analog(0)      # always off
-    pin0.write_analog(256)    # on 25% of the time - dim
-    pin0.write_analog(512)    # on 50% - about half
-    pin0.write_analog(1023)   # always on - full brightness
-    ```
-    The fraction of time the pin is on is the **duty cycle**. The micro:bit
-    does all the fast blinking for you - your code just picks a number.
-  - |
-    ### for loops and range()
-    A **for loop** runs once for each number:
-    ```python
-    for n in range(0, 10, 2):
-        display.scroll(n)       # 0, 2, 4, 6, 8
-    ```
-    `range(start, stop, step)` **stops before** `stop` - 10 is never shown!
-    To count **down**, use a **negative step**: `range(10, 0, -2)` gives
-    10, 8, 6, 4, 2.
-  - |
-    ### Putting it together: a fade
-    Count from 0 up to 1023 and give each number to `write_analog`. The LED
-    gets a tiny bit brighter each time. Then count back down. That's a
-    **fade**, like a "breathing" light on a sleeping laptop.
-  - |
-    ### Why 1023? Counting in binary
-    Computers store every number in **binary** (base 2), using only **0s and 1s**.
-    Each digit is a **bit**, and every extra bit doubles how many numbers you can make.
+      But what if you blink an LED **so fast** your eyes can't keep up? Your brain sees the **average**.
 
-    | bits | how many numbers | biggest |
-    |---|---|---|
-    | 1 | 2 | 1 |
-    | 8 | 256 | 255 |
-    | 10 | 1024 | **1023** |
+      * On half the time looks **half bright**.
+      * On a tenth of the time looks **dim**.
 
-    `write_analog` uses **10 bits**, so it goes from 0 to 1023. Fully on is
-    `1111111111` (all ten bits on). Programmers also write numbers in
-    **hexadecimal** (base 16): 1023 is `0x3ff`. Try `display.scroll(bin(1023))`
-    and `display.scroll(hex(1023))`.
+      This trick is called **PWM** (Pulse Width Modulation).
+    visual:
+      type: wave
+      duty: [10, 50, 100]
+      caption: "Same 3 volts when on. More on-time looks brighter."
+  - text: |
+      ### write_analog: 0 to 1023
+      `pin0.write_analog(n)` makes PWM on pin 0.
+
+      * **0** is always off.
+      * **512** is on about half the time.
+      * **1023** is always on: full brightness.
+
+      The fraction of time the pin is on is the **duty cycle**. The micro:bit does the fast blinking for you!
+    visual:
+      type: wave
+      duty: [0, 25, 50, 100]
+      values: [0, 256, 512, 1023]
+  - text: |
+      ### for loops and range()
+      A **for loop** runs once for each number.
+
+      ```python
+      for n in range(0, 10, 2):
+          display.scroll(n)
+      ```
+
+      `range(start, stop, step)` starts at 0 and adds 2 each time. It **stops before** `stop`, so 10 is never shown!
+    visual:
+      type: flow
+      caption: "range(0, 10, 2) makes 0, 2, 4, 6, 8. No 10!"
+      steps:
+        - {icon: "0️⃣", label: "n = 0"}
+        - {icon: "2️⃣", label: "n = 2"}
+        - {icon: "4️⃣", label: "n = 4"}
+        - {icon: "6️⃣", label: "n = 6"}
+        - {icon: "8️⃣", label: "n = 8"}
+  - text: |
+      ### Counting down
+      To count **down**, use a **negative step**.
+
+      `range(10, 0, -2)` gives 10, 8, 6, 4, 2.
+
+      It still **stops before** the stop number, so 0 is never reached.
+    visual:
+      type: scale
+      min: 0
+      max: 10
+      caption: "range(10, 0, -2) steps down by 2 and stops before 0."
+      marks:
+        - {at: 0, label: "0 (stop)"}
+        - {at: 2, label: "2", pointer: true}
+        - {at: 4, label: "4", pointer: true}
+        - {at: 6, label: "6", pointer: true}
+        - {at: 8, label: "8", pointer: true}
+        - {at: 10, label: "10 (start)", pointer: true}
+  - text: |
+      ### Putting it together: a fade
+      * Count **up** from 0 to 1023. Give each number to `write_analog`. The LED gets a tiny bit brighter each time.
+      * Then count back **down**.
+
+      That's a **fade**, like the "breathing" light on a sleeping laptop.
+    visual:
+      type: flow
+      loop: true
+      loop_label: repeat forever
+      steps:
+        - {icon: "🌑", label: "start at 0 (off)"}
+        - {icon: "📈", label: "count up, get brighter"}
+        - {icon: "🌕", label: "1023 (full)"}
+        - {icon: "📉", label: "count down, get dimmer"}
+  - text: |
+      ### Why 1023? Counting in binary
+      Computers store numbers in **binary**, using only **0s and 1s**. Each digit is a **bit**.
+
+      * Every extra bit **doubles** how many numbers you can make.
+      * 8 bits make 256 numbers (0 to 255).
+      * 10 bits make 1024 numbers: **0 to 1023**.
+
+      `write_analog` uses **10 bits**. All ten bits on = 1023.
+    visual:
+      type: bits
+      value: 1023
+      bits: 10
+      caption: "1023 in binary is 1111111111: all ten bits on."
+  - text: |
+      ### One number, three ways
+      Programmers can write the same number in different **bases** (ways of counting).
+
+      * **Binary** is base 2.
+      * **Hexadecimal** (hex) is base 16.
+
+      Try `display.scroll(bin(1023))` and `display.scroll(hex(1023))`.
+    visual:
+      type: compare
+      caption: "Python shows binary as 0b1111111111 and hex as 0x3ff."
+      items:
+        - {icon: "🔟", title: "Base 10", text: "1023"}
+        - {icon: "💻", title: "Binary (base 2)", text: "1111111111"}
+        - {icon: "🔣", title: "Hex (base 16)", text: "0x3ff"}
 circuit:
   intro: >-
     It's the same LED circuit as Lesson 3: P0 → resistor → LED → GND. If it's
@@ -126,7 +186,7 @@ circuit:
       instruction: >-
         Add a **yellow** wire from **P0** to **a10**. Add a **black** wire from
         **a15** to the **blue (–) rail** at **T-15**.
-      check: Trace the loop - P0, resistor, LED, ground. Is it complete?
+      check: Is the loop (P0, resistor, LED, ground) complete?
       add:
         - {type: wire, from: mb.P0, to: a10, color: yellow}
         - {type: wire, from: a15, to: T-15, color: black}
@@ -157,29 +217,25 @@ code:
   walkthrough:
     - lines: "3-4"
       explain: Two **variables** control the speed. Change them once and the whole fade changes.
-    - lines: "7"
-      explain: >-
-        Counts 0, 8, 16, ... up to 1016. We say **1024** as the stop because
-        range stops *before* the stop number.
-    - lines: "8-9"
-      explain: Sets the brightness to the current number, then waits a moment so you can see it.
-    - lines: "10"
-      explain: >-
-        Counts **down** from 1023 with a **negative step** (`-step`). The stop
-        is **-1** so the count gets all the way down near 0.
     - lines: "6"
       explain: "`while True:` repeats the fade up + fade down forever."
+    - lines: "7-9"
+      explain: >-
+        Counts 0, 8, 16 ... up to 1016, setting each brightness. The stop is
+        1024 because range stops *before* it.
+    - lines: "10-12"
+      explain: >-
+        Counts **down** from 1023 with a **negative step** (`-step`). The stop
+        is **-1**, so it gets close to 0.
   try_it:
     - Change step to 1, then to 64. What happens to the fade?
     - Make the LED fade up slowly but drop down fast (use two different waits).
-    - Add display.show(Image.HEART) after fading up and display.clear() after fading down.
     - Try pin0.write_analog(50) on its own. How dim can you go before it looks off?
 debug:
   story: >-
-    Alex wants a breathing light, but the micro:bit stops with an error about
-    the value, and even after that's fixed the LED never fades back down -
-    it just jumps from bright to dark. There are **two** bugs. Find them, fix
-    them, and press **Check my fix**.
+    Alex wants a breathing light. First the micro:bit stops with an error
+    about the value. After that's fixed, the LED never fades down. It just
+    jumps from bright to dark. Find the **two** bugs, then press **Check my fix**.
   buggy_code: |
     from microbit import *
 
@@ -211,6 +267,14 @@ debug:
   reflection_prompt: Why did range(1023, 0, 8) never run at all? What did you change to fix it?
 quiz:
   - question: What does pin0.write_analog(512) do to the LED?
+    visual:
+      type: scale
+      min: 0
+      max: 1023
+      marks:
+        - {at: 0, label: "0"}
+        - {at: 512, label: "512", pointer: true}
+        - {at: 1023, label: "1023"}
     choices:
       - Turns it fully on
       - Makes it about half as bright
@@ -237,7 +301,7 @@ quiz:
   - question: Why does a PWM LED look dim instead of blinking?
     choices:
       - The resistor gets hotter
-      - It blinks too fast for your eyes, so you see the average
+      - It blinks too fast; your eyes see the average
       - The pin sends out less voltage
     answer: 1
     explain: The pin is still only on (3 V) or off (0 V), but switching very fast makes your brain see an in-between brightness.
@@ -250,8 +314,12 @@ quiz:
     answer: 2
     explain: write_analog goes from 0 (always off) to 1023 (always on).
   - question: Why is the biggest write_analog value 1023?
+    visual:
+      type: bits
+      value: 1023
+      bits: 10
     choices:
-      - It uses 10 bits, and 10 bits can make 1024 different numbers (0 to 1023)
+      - "10 bits make 1024 numbers: 0 to 1023"
       - The pin can send up to 1023 volts
       - The number was picked at random
       - The LED has 1023 tiny lights inside
@@ -260,13 +328,12 @@ quiz:
 challenge:
   title: Mood Lighting
   prompt: >-
-    Design a light show with your dimmable LED. Make it calm, creepy, exciting -
-    your choice! Use for loops and write_analog to create a pattern nobody
-    else in class has.
+    Design a light show for your LED. Make it calm, creepy or exciting! Use
+    for loops and write_analog to make a pattern nobody else has.
   levels:
-    - "Mild: Make a heartbeat - two quick fades up and down, then a pause."
-    - "Medium: Make a candle flicker using random.randint to pick a new brightness every few milliseconds."
-    - "Spicy: Use button A to switch between two or more light modes (calm fade, flicker, strobe), shown on the display as 1, 2, 3."
+    - "Mild: Make a heartbeat. Do two quick fades up and down, then pause."
+    - "Medium: Make a candle flicker. Use random.randint to pick a new brightness every few ms."
+    - "Spicy: Use button A to switch light modes, like fade, flicker and strobe. Show the mode number: 1, 2 or 3."
   submit_prompt: Describe your light show and explain how your for loop or random numbers change the brightness.
 teacher_notes: |
   * **"value must be 0 or 1" error:** a student used `write_digital` with a brightness number.

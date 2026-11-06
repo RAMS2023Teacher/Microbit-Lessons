@@ -9,10 +9,10 @@ big_idea: >-
   An analog input gives a whole range of numbers instead of just 0 or 1, so
   the micro:bit can measure how bright it is and decide what to do.
 objectives:
-  - Explain the difference between digital (0 or 1) and analog (0-1023) inputs
-  - Measure light with display.read_light_level() and with a photoresistor on pin 1
-  - Build a voltage divider from a photoresistor and a 10 kΩ resistor
-  - Use a threshold and if/else to turn on an LED automatically when it gets dark
+  - Compare digital and analog inputs
+  - Measure light with the built-in sensor and an LDR
+  - Build a voltage divider with a photoresistor
+  - Use a threshold to turn on a night light
 vocabulary:
   - term: Analog input
     definition: A pin reading that can be any number from 0 (0 volts) to 1023 (3 volts).
@@ -49,36 +49,93 @@ warmup:
     Streetlights turn on by themselves when it gets dark. How do you think a
     streetlight "knows" it's night? What would it need to measure?
 learn:
-  - |
-    ### Digital vs. analog
-    A button is **digital**: pressed or not, **0 or 1**. Light isn't like that -
-    it can be a little dim, very dim, or super bright. An **analog** input
-    gives a number from **0 to 1023**:
-    ```python
-    value = pin1.read_analog()    # 0 = 0 volts ... 1023 = 3 volts
-    ```
-  - |
-    ### The micro:bit can already sense light!
-    The 5×5 LEDs can work backwards as a light sensor:
-    ```python
-    level = display.read_light_level()   # 0 (dark) to 255 (bright)
-    ```
-    It's handy, but you can't move it or point it somewhere. Today we also
-    build our own sensor we can put anywhere.
-  - |
-    ### The photoresistor
-    A **photoresistor (LDR)** is a resistor that changes with light.
-    **Bright → low resistance. Dark → high resistance.** But the micro:bit
-    can't read resistance - it reads **voltage**. So we need one more trick...
-  - |
-    ### The voltage divider
-    **3V → LDR → P1 → 10 kΩ resistor → GND.** The two resistors share the 3
-    volts like a tug-of-war. In bright light the LDR is weak (low
-    resistance), so P1 is pulled **up** toward 3V - a **big number**. In the
-    dark the LDR is strong (high resistance), so the 10 kΩ pulls P1 **down**
-    toward GND - a **small number**.
+  - text: |
+      ### Digital vs. analog
+      * A button is **digital**: pressed or not, **0 or 1**.
+      * Light can be dim, very dim, or super bright. An **analog** input gives a number from **0 to 1023**.
 
-    **Bright = big number. Dark = small number.**
+      ```python
+      value = pin1.read_analog()    # 0 = 0 volts ... 1023 = 3 volts
+      ```
+    visual:
+      type: compare
+      items:
+        - {icon: "🔘", title: "Digital", text: "Only 0 or 1, like a button"}
+        - {icon: "🌗", title: "Analog", text: "Any number from 0 to 1023, like light"}
+  - text: |
+      ### The micro:bit can already sense light!
+      The 5×5 LEDs can work backwards as a light sensor:
+      ```python
+      level = display.read_light_level()   # 0 (dark) to 255 (bright)
+      ```
+      But you can't move it or point it. Today we also build a sensor we can put **anywhere**.
+    visual:
+      type: scale
+      min: 0
+      max: 255
+      label: "display.read_light_level()"
+      marks:
+        - {at: 0, label: "0 dark"}
+        - {at: 255, label: "255 bright"}
+  - text: |
+      ### The photoresistor
+      A **photoresistor (LDR)** is a resistor that changes with light.
+
+      * **Bright** → low resistance
+      * **Dark** → high resistance
+
+      But the micro:bit can't read resistance. It reads **voltage**. So we need one more trick...
+    visual:
+      type: part
+      part: ldr
+  - text: |
+      ### The voltage divider
+      Two resistors share the 3 volts, like a **tug-of-war**:
+
+      **3V → LDR → P1 → 10 kΩ → GND**
+
+      P1 sits in the middle. It reads the voltage where the two parts meet.
+    visual:
+      type: circuit
+      caption: "P1 (green) connects where the LDR and the 10 kΩ meet."
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: wire, from: mb.3V, to: T+1, color: red}
+        - {type: ldr, id: ldr1, a: d20, b: d22}
+        - {type: resistor, id: r2, a: b22, b: b26, ohms: 10000}
+        - {type: wire, from: T+20, to: a20, color: red}
+        - {type: wire, from: mb.P1, to: a22, color: green}
+        - {type: wire, from: a26, to: T-26, color: black}
+  - text: |
+      ### Who wins the tug-of-war?
+      * **Bright:** the LDR is weak (low resistance). P1 is pulled **up** toward 3V.
+      * **Dark:** the LDR is strong (high resistance). The 10 kΩ pulls P1 **down** toward GND.
+
+      **Bright = big number. Dark = small number.**
+    visual:
+      type: compare
+      items:
+        - {icon: "☀️", title: "Bright", text: "Low resistance, so a big number"}
+        - {icon: "🌙", title: "Dark", text: "High resistance, so a small number"}
+  - text: |
+      ### Pick a threshold
+      A **threshold** is a cut-off number.
+
+      * Reading **below** it? It's dark. Turn the night light **on**.
+      * Reading **above** it? It's bright. Turn it **off**.
+
+      Every room is different, so test first. That's called **calibrating**.
+    visual:
+      type: scale
+      min: 0
+      max: 1023
+      zones:
+        - {from: 0, to: 300, label: "dark: LED on", color: "#d9dcf2"}
+        - {from: 300, to: 1023, label: "bright: LED off", color: "#fff3c4"}
+      marks:
+        - {at: 0, label: "0"}
+        - {at: 300, label: "threshold 300", pointer: true}
+        - {at: 1023, label: "1023"}
 circuit:
   intro: >-
     You'll keep the LED on pin 0 and add a light sensor on pin 1. This time we
@@ -136,7 +193,7 @@ circuit:
         Add a **green** wire from **P1** to **a22** (the middle, where the two
         parts meet). Add a **black** wire from **a26** to the **blue (–) rail**
         at **T-26**.
-      check: "Trace it: 3V → photoresistor → (P1) → 10 kΩ → GND. Does P1 connect to the middle?"
+      check: Does the green P1 wire sit in column 22, where the two parts meet?
       add:
         - {type: wire, from: T+20, to: a20, color: red}
         - {type: wire, from: mb.P1, to: a22, color: green}
@@ -178,21 +235,17 @@ code:
         sleep(100)
   walkthrough:
     - lines: "3"
-      explain: The **threshold** is the cut-off between "day" and "night." Every room is different, so you'll tune it.
+      explain: The **threshold** is the cut-off between "day" and "night." You'll tune it for your room.
     - lines: "6"
-      explain: Reads the voltage on pin 1 as a number from 0 to 1023. Bright = big, dark = small.
+      explain: Reads pin 1 as a number from 0 to 1023. Bright = big, dark = small.
     - lines: "7-12"
-      explain: >-
-        If the reading is **less than** the threshold, it's dark, so the LED
-        turns on. Otherwise it's bright, so the LED turns off.
+      explain: Reading **less than** the threshold? It's dark, so the LED turns on. Otherwise it turns off.
     - lines: "14-15"
-      explain: >-
-        Press A to scroll the reading. Check it in normal light and with your
-        hand cupped over the sensor, then pick a threshold in between.
+      explain: Press A to scroll the reading. Try normal light and a covered sensor, then pick in between.
   try_it:
-    - Press A in normal light, then with the sensor covered. Set threshold halfway between the two numbers.
-    - Use pin0.write_analog() so the LED gets brighter the darker it gets (hint - 1023 - light).
-    - Swap pin1.read_analog() for display.read_light_level(). Remember it only goes up to 255 - what threshold works now?
+    - Press A in normal light, then with the sensor covered. Set threshold halfway between.
+    - Use pin0.write_analog() so the LED gets brighter as it gets darker. Hint - 1023 - light.
+    - Use display.read_light_level() instead. It only goes up to 255. What threshold works now?
 debug:
   story: >-
     Priya's night light does the **opposite** of what it should - and it
@@ -259,11 +312,18 @@ quiz:
   - question: Why do we need the 10 kΩ resistor?
     choices:
       - To protect the LED
-      - To make a voltage divider, so a change in resistance becomes a change in voltage
+      - To make a voltage divider that turns light into voltage
       - To make the micro:bit run faster
     answer: 1
     explain: The micro:bit measures voltage, not resistance. The two resistors together turn light into a voltage on P1.
   - question: Your readings are about 600 in normal light and 150 when covered. Which threshold is the best choice?
+    visual:
+      type: scale
+      min: 0
+      max: 1023
+      marks:
+        - {at: 150, label: "150 covered", pointer: true}
+        - {at: 600, label: "600 normal light", pointer: true}
     choices:
       - "50"
       - "375"
@@ -273,13 +333,13 @@ quiz:
 challenge:
   title: Smart Light Gadget
   prompt: >-
-    Invent a gadget that reacts to light. It could be a night light, a
-    sunrise alarm, a "someone opened the cookie jar" detector, or something
-    totally new. Calibrate it for your room and show it off.
+    Invent a gadget that reacts to light: a night light, a sunrise alarm, a
+    cookie-jar detector, or something new. Calibrate it for your room and show
+    it off.
   levels:
-    - "Mild: Show a different picture for bright, medium and dark using if / elif / else and two thresholds."
+    - "Mild: Show a different picture for bright, medium and dark. Use if / elif / else and two thresholds."
     - "Medium: Make the LED fade brighter as the room gets darker using write_analog."
-    - "Spicy: Build a cookie-jar alarm - when the sensor suddenly sees light, play a sound with music.play(music.BA_DING) and count how many times the jar was opened."
+    - "Spicy: Cookie-jar alarm! When the sensor suddenly sees light, play `music.play(music.BA_DING)` and count how many times the jar opened."
   submit_prompt: What does your gadget do, what threshold(s) did you choose, and how did you pick them?
 teacher_notes: |
   * **Reading stuck near 0:** the red wire from T+20 is missing, or the 3V wire isn't in the red rail.

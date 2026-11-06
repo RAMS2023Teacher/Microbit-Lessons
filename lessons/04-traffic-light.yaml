@@ -9,10 +9,10 @@ big_idea: >-
   A function is a named recipe of instructions - define it once with def, then
   run it any time just by calling its name.
 objectives:
-  - Build a circuit with three LEDs, each on its own pin with its own resistor
+  - Wire three LEDs, each with its own pin and resistor
   - Define functions with def and call them by name
-  - Sequence outputs with sleep() to make realistic timing
-  - Find and fix bugs in functions (missing colon, wrong pin, missing call)
+  - Time a light sequence with sleep()
+  - Find and fix bugs in functions
 vocabulary:
   - term: Function
     definition: A named block of code that does one job. You create it with def.
@@ -45,37 +45,81 @@ video:
 warmup:
   prompt: >-
     Think about a traffic light near your school. What order do the colors go
-    in, and about how long does each one stay on? Why do you think yellow is
-    the shortest?
+    in? About how long does each one stay on? Why is yellow the shortest?
 learn:
-  - |
-    ### Three LEDs, three pins
-    Last lesson, one LED was controlled by **P0**. Today each LED gets its
-    **own pin**: red on **P0**, yellow on **P1**, green on **P2**. Each LED
-    also needs its **own 220 Ω resistor**.
+  - text: |
+      ### Three LEDs, three pins
+      Last lesson, one LED was on **P0**. Today each LED gets its **own pin**:
 
-    All three short legs (cathodes) go to the same **ground rail**. Sharing
-    ground is totally fine - every loop still ends at GND.
-  - |
-    ### Functions: name your recipes
-    Turning on "red" takes several lines: turn the others off, turn red on.
-    Instead of typing those lines every time, wrap them in a **function**:
+      * **Red** on **P0**
+      * **Yellow** on **P1**
+      * **Green** on **P2**
 
-    ```python
-    def red():
-        all_off()
-        pin0.write_digital(1)
-    ```
+      Each LED also needs its **own 220 Ω resistor**.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔴", title: "Red", text: "P0 + its own resistor"}
+        - {icon: "🟡", title: "Yellow", text: "P1 + its own resistor"}
+        - {icon: "🟢", title: "Green", text: "P2 + its own resistor"}
+  - text: |
+      ### One shared ground rail
+      All three short legs (**cathodes**) go to the same **ground rail**. That's the long **–** strip on the breadboard.
 
-    `def` **defines** the function. The indented lines are its recipe. Don't
-    forget the **colon** `:` at the end of the `def` line!
-  - |
-    ### Defining isn't doing
-    Defining a function is like writing a recipe on a card - nothing gets
-    cooked yet. To run it you must **call** it: `red()`.
+      Sharing ground is fine. Every loop still ends at **GND**.
+    visual:
+      type: circuit
+      caption: "Three black wires join each short leg to the blue (–) rail."
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: led, id: led_red, anode: e9, cathode: e10, color: red}
+        - {type: led, id: led_yellow, anode: e17, cathode: e18, color: yellow}
+        - {type: led, id: led_green, anode: e25, cathode: e26, color: green}
+        - {type: wire, from: a10, to: T-10, color: black}
+        - {type: wire, from: a18, to: T-18, color: black}
+        - {type: wire, from: a26, to: T-26, color: black}
+  - text: |
+      ### Functions: name your recipes
+      Turning on red takes two steps: turn the others off, then turn red on. Wrap those lines in a **function**:
 
-    The **parentheses** `()` matter. `red` on its own just *names* the recipe;
-    `red()` actually *does* it.
+      ```python
+      def red():
+          all_off()
+          pin0.write_digital(1)
+      ```
+
+      `def` **defines** the function. The indented lines are its recipe. End the `def` line with a **colon** `:`.
+    visual:
+      type: compare
+      items:
+        - {icon: "😩", title: "No function", text: "Type the same lines every time"}
+        - {icon: "😎", title: "With a function", text: "Write red() and it's done"}
+  - text: |
+      ### Defining isn't doing
+      Defining a function is like writing a recipe card. Nothing gets cooked yet.
+
+      To run it, you must **call** it: `red()`.
+
+      The **parentheses** `()` matter!
+    visual:
+      type: compare
+      items:
+        - {icon: "📝", title: "red", text: "Only names the recipe. Nothing happens."}
+        - {icon: "▶️", title: "red()", text: "Calls the function. The red LED turns on!"}
+  - text: |
+      ### A sequence in a loop
+      A **sequence** is steps in a set order. The main loop calls the functions one after another.
+
+      * `sleep()` sets how long each light stays on.
+      * Then the loop starts over.
+    visual:
+      type: flow
+      loop: true
+      loop_label: repeat forever
+      steps:
+        - {icon: "🟢", label: "green() for 3 s"}
+        - {icon: "🟡", label: "yellow() for 1 s"}
+        - {icon: "🔴", label: "red() for 3 s"}
 circuit:
   intro: >-
     You'll build three copies of the LED loop from last time, side by side:
@@ -95,10 +139,9 @@ circuit:
         - {type: wire, from: mb.GND, to: T-1, color: black}
     - title: Three resistors
       instruction: >-
-        Put the three 220 Ω resistors in row **c**: the first from **c5** to
-        **c9**, the second from **c13** to **c17**, the third from **c21** to
-        **c25**.
-      check: Does each resistor have its two legs in two different columns, with no resistors sharing a column?
+        Put the three 220 Ω resistors in row **c**. Use **c5** to **c9**,
+        **c13** to **c17**, and **c21** to **c25**.
+      check: Is each resistor across two columns, with no column shared?
       add:
         - {type: resistor, id: r1, a: c5, b: c9, ohms: 220}
         - {type: resistor, id: r2, a: c13, b: c17, ohms: 220}
@@ -131,11 +174,11 @@ circuit:
         - {type: wire, from: a26, to: T-26, color: black}
     - title: Signal wires
       instruction: >-
-        Connect each resistor's left column to a pin: a **red** wire from
-        **P0** to **a5** (red LED), a **yellow** wire from **P1** to **a13**
-        (yellow LED), and a **green** wire from **P2** to **a21** (green LED).
-      check: Trace each loop - pin, resistor, LED, ground rail. Are all three complete and separate?
-      tip: Matching wire colors to LED colors makes it much easier to spot a wrong pin.
+        Wire each resistor's left column to a pin. Run a **red** wire from
+        **P0** to **a5**. Run a **yellow** wire from **P1** to **a13**. Run a
+        **green** wire from **P2** to **a21**.
+      check: Is each loop (pin, resistor, LED, ground rail) complete and separate?
+      tip: Matching wire colors to LED colors makes a wrong pin easy to spot.
       add:
         - {type: wire, from: mb.P0, to: a5, color: red}
         - {type: wire, from: mb.P1, to: a13, color: yellow}
@@ -158,8 +201,8 @@ circuit:
       - [mb.P0, mb.P2]
 code:
   intro: >-
-    This program defines a function for each light, then calls them in order
-    inside a loop - just like a real traffic light.
+    Each light gets its own function. The loop calls them in order, just
+    like a real traffic light.
   starter: |
     from microbit import *
 
@@ -189,26 +232,26 @@ code:
         sleep(3000)
   walkthrough:
     - lines: "3-6"
-      explain: "`all_off()` turns every LED off. The other functions use it so only one light is ever on."
+      explain: "`all_off()` turns every LED off. The other functions use it so only one light is on."
     - lines: "8-10"
       explain: >-
-        `red()` is a function that calls another function! It turns everything
-        off, then turns on pin 0. Nothing happens yet - it's only **defined**.
+        `red()` turns everything off, then turns on pin 0. It's only
+        **defined** here, so nothing happens yet.
     - lines: "12-18"
       explain: Same recipe for yellow (pin 1) and green (pin 2).
     - lines: "20-26"
       explain: >-
-        Here's where the functions are **called**. Green for 3 seconds, yellow
-        for 1, red for 3 - then the loop starts over.
+        The functions are **called** here. Green for 3 seconds, yellow for 1,
+        red for 3. Then the loop repeats.
   try_it:
     - Change the timing so green stays on for 5 seconds.
-    - Add a `red_yellow()` function that turns on red AND yellow together (some countries do this before green).
+    - Add a `red_yellow()` function that lights red and yellow together.
     - Make yellow blink 3 times before going to red.
 debug:
   story: >-
-    Alex built a traffic light, but Python won't run the code. After fixing
-    that, the yellow light **never** turns on and green seems to stay on too
-    long. There are **three** bugs. Find them, fix them, and press **Check my fix**.
+    Alex built a traffic light, but Python won't run the code. After that's
+    fixed, yellow **never** turns on, and green stays on too long. Find the
+    **three** bugs, then press **Check my fix**.
   buggy_code: |
     from microbit import *
 
@@ -291,6 +334,15 @@ quiz:
     answer: 2
     explain: You call a function with its exact name plus parentheses. green with no () does nothing, and Green() is a different (unknown) name.
   - question: The green LED is wired to P2. Which line turns it on?
+    visual:
+      type: circuit
+      caption: "The green LED's loop starts at P2."
+      add:
+        - {type: wire, from: mb.GND, to: T-1, color: black}
+        - {type: resistor, id: r3, a: c21, b: c25, ohms: 220}
+        - {type: led, id: led_green, anode: e25, cathode: e26, color: green}
+        - {type: wire, from: a26, to: T-26, color: black}
+        - {type: wire, from: mb.P2, to: a21, color: green}
     choices:
       - pin0.write_digital(1)
       - pin2.write_digital(1)
@@ -299,7 +351,7 @@ quiz:
     explain: Match the pin number in your code to the pin your wire goes to. 1 means on.
   - question: Why does each LED need its own resistor?
     choices:
-      - So each LED's current is limited no matter which ones are on
+      - To limit each LED's current, whichever ones are on
       - Because resistors make LEDs change color
       - It doesn't - one resistor is always enough
     answer: 0
@@ -307,14 +359,21 @@ quiz:
 challenge:
   title: Light Show Remix
   prompt: >-
-    Your three LEDs can do way more than a traffic light! Use functions to
-    invent a new light pattern - a pedestrian crossing, a party light, a
-    racing start, or something totally your own.
+    Your three LEDs can do more than a traffic light! Use functions to invent
+    a new pattern: a crosswalk, a party light, a race start, or your own idea.
   levels:
-    - "Mild: Make an F1 race start - red, then red + yellow, then all three, then all off and GO with display.show(Image.YES)."
-    - "Medium: Add a pedestrian button - when button_a.is_pressed(), the light goes to red and the display shows a walking person (try Image.STICKFIGURE) for 5 seconds."
-    - "Spicy: Write a function with a parameter, like def flash(pin, times):, and use it to build a whole light show."
+    - "Mild: Make a race start. Red, then red + yellow, then all three. Then all off, and show Image.YES for GO!"
+    - "Medium: Add a crosswalk button. When button_a.is_pressed(), go to red. Show Image.STICKFIGURE for 5 seconds."
+    - "Spicy: Write a function with parameters, like def flash(pin, times):. Use it to build a whole light show."
   submit_prompt: What pattern did you make, and which function are you proudest of? Why did using functions help?
+  visual:
+    type: flow
+    caption: "Mild: a race start, one step at a time."
+    steps:
+      - {icon: "🔴", label: "red"}
+      - {icon: "🟡", label: "red + yellow"}
+      - {icon: "🟢", label: "all three"}
+      - {icon: "✅", label: "all off, show GO!"}
 teacher_notes: |
   * **One LED won't light?** Swap it into a working spot to test it, check its polarity, then check that its resistor is in the right column. Matching wire colors to LED colors makes wrong-pin mistakes obvious.
   * **Two LEDs light together?** Usually a resistor or LED leg is in the wrong column, joining two loops. Check that columns 5-10, 13-18 and 21-26 don't touch each other.

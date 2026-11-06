@@ -9,10 +9,10 @@ big_idea: >-
   Electricity only flows around a complete loop, and a resistor controls how
   much current flows so an LED glows safely instead of burning out.
 objectives:
-  - Explain voltage, current and resistance using the water-pipe analogy
-  - Build a complete circuit that lights an LED from the micro:bit's 3V pin
-  - Use Ohm's law (I = V / R) to calculate the current through a resistor
-  - Store numbers in Python variables and do math with them
+  - Explain voltage, current and resistance with water pipes
+  - Light an LED from the 3V pin
+  - Calculate current with Ohm's law (I = V / R)
+  - Do math with numbers stored in Python variables
 vocabulary:
   - term: Circuit
     definition: A complete loop that electricity can flow around, from + back to -.
@@ -49,38 +49,108 @@ warmup:
     When you flip a light switch, the light comes on instantly. What do you
     think is actually happening inside the wires? Draw or describe your guess.
 learn:
-  - |
-    ### A circuit is a loop
-    Electricity needs a **complete loop** - a **circuit** - from the **+**
-    side of a power source, through the parts, and back to the **–** side
-    (called **GND**, short for ground). If there's a gap anywhere, nothing flows.
-  - |
-    ### Think of water in pipes
-    * **Voltage** is the **push** - like water pressure. The micro:bit's 3V
-      pin pushes with about **3 volts**.
-    * **Current** is **how much flows** - like gallons per second. Measured in
-      **milliamps (mA)**.
-    * **Resistance** **slows the flow** - like a skinny section of pipe.
-      Measured in **ohms (Ω)**.
+  - text: |
+      ### A circuit is a loop
+      Electricity needs a **complete loop**. That loop is called a **circuit**.
 
-    More push → more flow. More resistance → less flow.
-  - |
-    ### Ohm's law
-    Those three are linked by one tiny formula:
+      * It flows out of the **+** side (the 3V pin).
+      * It goes through the parts.
+      * It comes back to the **–** side, called **GND** (ground).
 
-    **I = V / R** (current = voltage ÷ resistance)
+      A gap anywhere means **nothing flows**.
+    visual:
+      type: flow
+      loop: true
+      loop_label: back to the start
+      steps:
+        - {icon: "🔋", label: "3V (+)"}
+        - {icon: "〰️", label: "resistor"}
+        - {icon: "💡", label: "LED"}
+        - {icon: "⏚", label: "GND (–)"}
+  - text: |
+      ### Think of water in pipes
+      * **Voltage** is the **push**, like water pressure. The 3V pin pushes with about **3 volts**.
+      * **Current** is **how much flows**. We measure it in **milliamps (mA)**.
+      * **Resistance** **slows the flow**, like a skinny pipe. We measure it in **ohms (Ω)**.
 
-    An LED "uses up" about **2 volts** of the push. So the resistor only sees
-    what's left: about **3.3 V − 2 V = 1.3 V**. With a 220 Ω resistor:
-    1.3 ÷ 220 ≈ **0.006 A = 6 mA**. That's a safe, happy LED.
-  - |
-    ### LEDs have a + and a –
-    An LED is a one-way street (this is called **polarity**):
-    * **Long leg = anode (+)** - goes toward the power.
-    * **Short leg = cathode (–)** - goes toward GND. The rim is flat on this side.
+      More push → more flow. More resistance → less flow.
+    visual:
+      type: compare
+      items:
+        - {icon: "💪", title: "Voltage (V)", text: "The push, like water pressure"}
+        - {icon: "🌊", title: "Current (I)", text: "How much flows"}
+        - {icon: "🚰", title: "Resistance (R)", text: "Slows the flow, like a skinny pipe"}
+  - text: |
+      ### Where the water model breaks
+      Every model leaves things out. Water pipes are **like** a circuit, not the same.
 
-    Without a **resistor**, nothing slows the current down - the LED could
-    pull too much current and **burn out**. The resistor is its bodyguard.
+      * Cut a water pipe and water spills. Cut a wire and **nothing leaks out**. It just stops.
+      * Wires are already full of tiny charges, so a light turns on **instantly**.
+
+      Models help us think, but always check them against real life.
+    visual:
+      type: compare
+      items:
+        - {icon: "✅", title: "Model matches", text: "push, flow, skinny pipe"}
+        - {icon: "❌", title: "Model misses", text: "cut wires don't leak; the flow starts instantly"}
+  - text: |
+      ### Ohm's law
+      One tiny formula links all three:
+
+      **I = V / R** (current = voltage ÷ resistance)
+
+      * A **bigger** resistor means **less** current.
+      * A **smaller** resistor means **more** current.
+
+      Most LEDs are happiest under about **20 mA**.
+    visual:
+      type: scale
+      min: 0
+      max: 30
+      label: "current (mA) with 1.3 V across the resistor"
+      caption: "Smaller resistor, more current. 47 Ω is too much!"
+      zones:
+        - {from: 0, to: 20, label: "safe for the LED", color: "#dff4e4"}
+        - {from: 20, to: 30, label: "too much", color: "#fde0dc"}
+      marks:
+        - {at: 1.3, label: "1 kΩ"}
+        - {at: 6, label: "220 Ω", pointer: true}
+        - {at: 13, label: "100 Ω"}
+        - {at: 28, label: "47 Ω"}
+  - text: |
+      ### Do the math
+      The 3V pin gives about **3.3 V**. An LED "uses up" about **2 V**.
+
+      So the resistor gets what's left: **3.3 − 2 = 1.3 V**.
+
+      With a 220 Ω resistor: 1.3 ÷ 220 ≈ **0.006 A**. That's **6 mA**, a safe, happy LED.
+    visual:
+      type: flow
+      steps:
+        - {icon: "🔋", label: "3.3 V from the pin"}
+        - {icon: "💡", label: "LED uses about 2 V"}
+        - {icon: "〰️", label: "1.3 V left for resistor"}
+        - {icon: "🧮", label: "1.3 ÷ 220 ≈ 6 mA"}
+  - text: |
+      ### LEDs have a + and a –
+      An LED only works **one way round**. This is called **polarity**.
+
+      * **Long leg = anode (+).** It goes toward the power.
+      * **Short leg = cathode (–).** It goes toward GND. The rim is flat on this side.
+    visual:
+      type: part
+      part: led
+      color: red
+  - text: |
+      ### The resistor is a bodyguard
+      Without a **resistor**, nothing slows the current down. The LED could pull too much current and **burn out**.
+
+      A resistor has no + or –. Either way round works.
+    visual:
+      type: compare
+      items:
+        - {icon: "😊", title: "With a 220 Ω resistor", text: "About 6 mA: a safe glow"}
+        - {icon: "🔥", title: "No resistor", text: "Too much current: the LED can burn out"}
 circuit:
   intro: >-
     You'll build the loop 3V → resistor → LED → GND. There's no code
@@ -98,7 +168,7 @@ circuit:
         at **T+1**. Run a **black** wire from the breakout's **GND** pin to the
         top **blue (–) rail** at **T-1**.
       check: Is the red wire in the + rail and the black wire in the – rail (not both in the same rail)?
-      tip: The two rails are separate strips. Mixing them up is the #1 way to make a short circuit.
+      tip: Mixing up the two separate rails is the #1 way to make a short circuit.
       add:
         - {type: wire, from: mb.3V, to: T+1, color: red}
         - {type: wire, from: mb.GND, to: T-1, color: black}
@@ -114,16 +184,16 @@ circuit:
         Put the LED's **long leg (+, anode)** in **e14**, the same column as the
         resistor's right leg. Put the **short leg (–, cathode)** in **e15**.
       check: Is the long leg in column 14 and the short leg in column 15?
-      tip: Can't tell which leg is longer? Look for the flat edge on the LED's rim - that's the short (–) side.
+      tip: The flat edge on the LED's rim marks the short (–) leg.
       add:
         - {type: led, id: led1, anode: e14, cathode: e15, color: red}
     - title: Close the loop
       instruction: >-
-        Add a **red** wire from the **red (+) rail** at **T+10** to **a10** (the
-        resistor's left column). Add a **black** wire from **a15** (the LED's
-        short-leg column) to the **blue (–) rail** at **T-15**. Now plug in the
-        USB cable - the LED should light up!
-      check: Trace the loop with your finger - 3V, + rail, resistor, LED, – rail, GND. Is it complete?
+        Add a **red** wire from the **red (+) rail** at **T+10** to **a10**
+        (the resistor's column). Add a **black** wire from **a15** (the LED's
+        short leg) to the **blue (–) rail** at **T-15**. Plug in the USB cable.
+        The LED should light!
+      check: "Can you trace a full loop: 3V, resistor, LED, GND?"
       add:
         - {type: wire, from: T+10, to: a10, color: red}
         - {type: wire, from: a15, to: T-15, color: black}
@@ -157,27 +227,24 @@ code:
         sleep(1000)
   walkthrough:
     - lines: "3-5"
-      explain: Three **variables** store numbers with names that explain what they mean.
+      explain: Three **variables** store numbers. Their names explain what they mean.
     - lines: "7"
-      explain: The resistor gets whatever voltage the LED doesn't use. Python does the subtraction for you.
-    - lines: "8"
-      explain: Ohm's law! `/` means divide. The answer is in amps - a very small number, about 0.0059.
-    - lines: "9"
-      explain: "`*` means multiply. 1 amp = 1000 milliamps, so this turns 0.0059 A into 5.9 mA."
+      explain: The resistor gets the voltage the LED doesn't use. Python does the subtraction.
+    - lines: "8-9"
+      explain: "Ohm's law! `/` divides, giving about 0.0059 A. `*` 1000 turns that into 5.9 mA."
     - lines: "11-13"
       explain: >-
-        `round(milliamps, 1)` keeps one decimal place. `str()` turns the number
-        into text so it can be joined to "mA: " with `+`.
+        `round(milliamps, 1)` keeps one decimal. `str()` turns the number into
+        text so `+` can join it to "mA: ".
   try_it:
     - Change resistor_ohms to 1000 (brown-black-red). Does the current go up or down?
-    - Try 100 Ω and then 47 Ω. Most LEDs are happiest under about 20 mA - which values are safe?
-    - Make the program scroll the resistor_volts too.
-    - "Ask a teacher for a 1 kΩ resistor and swap it into your circuit. Does the LED get dimmer, like your math predicted?"
+    - Try 100 Ω, then 47 Ω. LEDs like under 20 mA. Which values are safe?
+    - Swap a 1 kΩ resistor into your circuit. Does the LED get dimmer, like your math said?
 debug:
   story: >-
-    Sam's current calculator crashes with a **TypeError**, and once Sam fixed
-    that, it said the current was **0.0** mA - way too small! There are
-    **two** bugs. Find them, fix them, and press **Check my fix**.
+    Sam's current calculator crashes with a **TypeError**. After that's fixed,
+    it says the current is **0.0** mA. That's way too small! Find the **two**
+    bugs, then press **Check my fix**.
   buggy_code: |
     from microbit import *
 
@@ -242,6 +309,11 @@ quiz:
     answer: 1
     explain: More resistance means less current, so the LED glows more dimly.
   - question: Which LED leg should connect toward the + side (3V)?
+    visual:
+      type: part
+      part: led
+      color: red
+      labels: {anode: "long leg", cathode: "short leg", flat: "flat edge"}
     choices:
       - The short leg (cathode)
       - The long leg (anode)
@@ -251,21 +323,25 @@ quiz:
   - question: 'Why does display.scroll("mA: " + 5.9) cause an error?'
     choices:
       - The micro:bit can't show decimals
-      - "You can't join text and a number with + - use str(5.9)"
+      - "Text and numbers can't join with +. Use str(5.9)"
       - scroll() only works with pictures
     answer: 1
     explain: Python won't glue a string and a number together. str() turns the number into text first.
 challenge:
   title: Resistor Detective
   prompt: >-
-    Engineers use math to predict what a circuit will do *before* they build
-    it. Use your Python calculator to become a resistor detective - predict,
-    then test, then explain!
+    Engineers use math to guess what a circuit will do *before* they build
+    it. Be a resistor detective. Predict, then test, then explain!
   levels:
-    - "Mild: Calculate the current for 3 different resistors (like 100, 220 and 1000 Ω) and write down your predictions: brighter or dimmer?"
-    - "Medium: Change your code to work backwards - given a target current (like 10 mA), calculate the resistance you'd need with R = V / I."
-    - "Spicy: Make button A cycle through a list of resistor values like [100, 220, 470, 1000] and scroll the current for each one."
+    - "Mild: Find the current for 100, 220 and 1000 Ω. Predict each one: brighter or dimmer?"
+    - "Medium: Work backwards. Pick a target, like 10 mA. Find the resistor you need with R = V / I."
+    - "Spicy: Make button A step through a list like [100, 220, 470, 1000]. Scroll the current for each one."
   submit_prompt: Which resistor values did you test, what did your math predict, and did the real LED agree?
+  visual:
+    type: part
+    part: resistor
+    ohms: 1000
+    labels: {note: "1 kΩ = 1000 Ω: brown-black-red"}
 teacher_notes: |
   * **LED won't light?** In order: (1) is the LED backwards? swap its legs; (2) is the resistor in different columns, not both legs in one column? (3) are both wires in the correct rails? (4) is the USB plugged in?
   * Students often put the red and black wires in the same rail. This is a direct 3V-to-GND short - check every board before they plug in.
@@ -275,7 +351,7 @@ teacher_notes: |
 
 standards:  # Massachusetts DLCS framework (2016), grades 6-8
   - code: 6-8.CT.e.1
-    how: 'The water-in-pipes model of voltage, current and resistance: what it explains and which details it leaves out.'
+    how: 'The water-in-pipes model of voltage, current and resistance, plus a card on where the model breaks (cut wires do not leak; the flow starts instantly).'
   - code: 6-8.CT.b.2
     how: Predict how the current changes when the resistor changes, then check the prediction with Ohm's law in code.
   - code: 6-8.CT.c.2
