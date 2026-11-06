@@ -1,0 +1,411 @@
+id: sprint-mission-day
+label: S5
+unit: 5
+order: 21
+title: "Sprint 5: Mission Day"
+subtitle: Pick a mission and make your robot sense and react
+duration_minutes: 35
+level: Robot Sprint
+big_idea: >-
+  A robot mission is one loop: sense the world, decide what it means, and act
+  with the wheels.
+objectives:
+  - Pick one robot mission and plan it
+  - Plug a sensor into the right shield pin
+  - Read a sensor to decide how to drive
+  - Reach the four mission milestones
+vocabulary:
+  - term: Sensor
+    definition: A part that measures something, like a wall in front or a dark line below.
+  - term: Mission
+    definition: The one job you choose for your robot today.
+  - term: Milestone
+    definition: A checkpoint that shows you are part of the way there.
+  - term: Random
+    definition: Picked by chance, so it can be different every time.
+materials:
+  - Your robot from Sprint 4 (or the gadget kit for Mission D)
+  - micro:bit V2 + USB cable
+  - 6×AA battery holder with batteries
+  - "Sensors: IR obstacle, line tracking or crash sensor"
+  - Black electrical tape (Mission B)
+  - A 180° servo (Mission D)
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 2}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: circuit, name: Plug it in, minutes: 4}
+  - {key: code, name: Code it, minutes: 12}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 5}
+video:
+  title: Four robot missions
+  note: Watch each robot. Which sensor do you think it uses?
+warmup:
+  prompt: >-
+    A robot vacuum never gets stuck in a corner for long. What do you think it
+    does when it bumps into something?
+learn:
+  - text: |
+      ### Pick your mission
+      Today **you** choose the job. Every mission uses the same loop:
+      **sense, decide, act**.
+
+      * **A.** Obstacle Avoider
+      * **B.** Edge Explorer
+      * **C.** Bump Bot
+      * **D.** Gadget (no robot needed)
+
+      The starter code runs Mission A, so start there if you can't pick.
+    visual:
+      type: compare
+      items:
+        - {icon: "👀", title: "A. Obstacle Avoider", text: "IR sensor on P0 sees a wall"}
+        - {icon: "〰️", title: "B. Edge Explorer", text: "line sensor on P8 follows tape"}
+        - {icon: "💥", title: "C. Bump Bot", text: "crash sensor on P1 feels a bump"}
+        - {icon: "⚙️", title: "D. Gadget", text: "a sensor moves a servo, no wheels"}
+  - text: |
+      ### Your four milestones
+      Check them off in order. Show your teacher each one.
+
+      1. **Drives:** the wheels (or servo) move.
+      2. **Senses:** the screen changes when the sensor sees something.
+      3. **Reacts:** the robot does the right move by itself.
+      4. **Polish:** tune the numbers until it works every time.
+    visual:
+      type: flow
+      steps:
+        - {icon: "1️⃣", label: "Drives"}
+        - {icon: "2️⃣", label: "Senses"}
+        - {icon: "3️⃣", label: "Reacts"}
+        - {icon: "4️⃣", label: "Polish"}
+  - text: |
+      ### A. Obstacle Avoider
+      The **IR obstacle sensor** on P0 shines invisible light. It reads **0**
+      when something is in front.
+
+      * Clear (1): drive forward.
+      * Blocked (0): back up, then turn.
+
+      Turn the sensor's small knob to change how far it sees.
+    visual:
+      type: flow
+      loop: true
+      loop_label: "forever"
+      steps:
+        - {icon: "👀", label: "Read pin 0"}
+        - {icon: "🤔", label: "0 = something there?"}
+        - {icon: "↩️", label: "Yes: back up and turn"}
+        - {icon: "⬆️", label: "No: drive forward"}
+  - text: |
+      ### B. Edge Explorer
+      You have **one** line sensor on P8. It reads **1 on black** and **0 on
+      white**.
+
+      Follow the **edge** of the tape by zig-zagging:
+
+      * On black: curve one way.
+      * On white: curve back the other way.
+
+      The robot keeps crossing the edge, so it wiggles along it.
+    visual:
+      type: compare
+      items:
+        - {icon: "⬛", title: "Reads 1 (black)", text: "drive(50, 10): curve right, off the tape"}
+        - {icon: "⬜", title: "Reads 0 (white)", text: "drive(10, 50): curve left, back to tape"}
+  - text: |
+      ### C. Bump Bot
+      The **crash sensor** on P1 is a switch. It reads **0 when pressed**.
+
+      * Drive forward until it bumps.
+      * Back up for a moment.
+      * Turn for a **random** time, so it tries a new way each time.
+
+      `random.randint(300, 900)` picks a number from 300 to 900.
+    visual:
+      type: flow
+      loop: true
+      loop_label: "forever"
+      steps:
+        - {icon: "⬆️", label: "Drive forward"}
+        - {icon: "💥", label: "Pin 1 reads 0?"}
+        - {icon: "⬇️", label: "Back up"}
+        - {icon: "🎲", label: "Turn a random time"}
+  - text: |
+      ### D. Gadget Mission
+      No robot? Build a **machine** that reacts. A sensor triggers a servo.
+
+      * IR sensor on **P0** sees a hand.
+      * A **180° servo** on **P13** swings open.
+
+      Ideas: a candy door, a flag that waves hello, or a trap that snaps shut.
+    visual:
+      type: board
+      board: shield
+      jumpers: {V1: "3.3V", V2: "5V"}
+      power: "6×AA"
+      plugs:
+        - {pin: 0, device: "IR obstacle", kind: sensor}
+        - {pin: 13, device: "Servo A (180°)", kind: servo}
+circuit:
+  intro: >-
+    Keep your wheels on P13 and P14. Add **only** the sensor for your mission.
+    Each sensor has pins labeled **G**, **V** and **S**: match them to the
+    header.
+  safety:
+    - Unplug the battery pack before you plug in a sensor.
+    - Match G to G. A backwards sensor can be damaged.
+    - V1 must be on 3.3V. Sensors on pins 0-10 run at 3.3 volts.
+  steps:
+    - title: "Mission A: IR obstacle sensor"
+      instruction: >-
+        Plug the **IR obstacle sensor** into header **0**: G to G, V to V, S to
+        S. Point it forward, at the front of the robot.
+      check: Is the sensor on pin 0, facing forward?
+      tip: Skip to your own mission's step if you picked B, C or D.
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+    - title: "Mission B: line sensor"
+      instruction: >-
+        Plug the **line tracking sensor** into header **8**. Fix it under the
+        front, facing down, **0-3 cm** above the floor. Put a long strip of
+        **black tape** on a white floor or paper.
+      check: Is the sensor on pin 8, close to the floor?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 8, device: "Line sensor", kind: sensor}
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+    - title: "Mission C: crash sensor"
+      instruction: >-
+        Plug the **crash sensor** into header **1**. Fix it on the front so its
+        switch hits the wall first.
+      check: Does the switch stick out past the front of the robot?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 1, device: "Crash sensor", kind: sensor}
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+    - title: "Mission D: gadget"
+      instruction: >-
+        Plug a **180° servo** into header **13** (brown on G). Plug the **IR
+        obstacle sensor** into header **0**. Tape the servo to a box or card.
+      check: Is the servo on 13 and the sensor on 0?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+          - {pin: 13, device: "Servo A (180°)", kind: servo}
+code:
+  intro: >-
+    This template runs **Mission A**. Put in your stop numbers from Sprint 4,
+    then press **A** to start and **B** to stop. Wave your hand in front of it!
+  starter: |
+    from microbit import *
+    import random
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77   # your stop numbers from Sprint 4
+    STOP_R = 77
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)
+
+    def mission():
+        # Mission A: IR sensor on P0 reads 0 when something is in front
+        if pin0.read_digital() == 0:
+            display.show(Image.NO)
+            drive(-50, -50)   # back up
+            sleep(600)
+            drive(50, -50)    # spin right
+            sleep(400)
+        else:
+            display.show(Image.ARROW_N)
+            drive(50, 50)     # all clear: go
+
+    running = False
+    drive(0, 0)
+    display.show(Image.HAPPY)
+    while True:
+        if button_a.was_pressed():
+            running = True
+        if button_b.was_pressed():
+            running = False
+            drive(0, 0)
+            display.show(Image.SQUARE)
+        if running:
+            mission()
+        sleep(20)
+  walkthrough:
+    - lines: "11-13"
+      explain: Your **drive()** from Sprint 4. Speeds go from -100 to 100.
+    - lines: "15-25"
+      explain: "**Sense:** read pin 0. **Decide:** with if. **Act:** back up and turn, or drive on."
+    - lines: "27-39"
+      explain: A starts the mission and B stops it. Only the code inside mission() changes for each mission.
+  try_it:
+    - "Mission B: in mission(), if pin8.read_digital() == 1 use drive(50, 10), else drive(10, 50)."
+    - "Mission C: if pin1.read_digital() == 0, back up, then turn for random.randint(300, 900) ms."
+    - "Mission D: delete the wheel code. When pin0 reads 0, write_analog(128) on pin13, else write_analog(26)."
+debug:
+  story: >-
+    Mo wrote a Bump Bot. It should drive until it bumps, then back up and turn
+    a random amount. Instead it shows an error, acts bumped when nothing is
+    there, and never really backs up. Find **three** bugs.
+  buggy_code: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77
+    STOP_R = 77
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)
+
+    while True:
+        if pin1.read_digital() == 1:
+            drive(-50, -50)
+            drive(50, -50)
+            sleep(random.randint(300, 900))
+        else:
+            drive(50, 50)
+        sleep(20)
+  hints:
+    - The code uses random. What line does every program that uses random need?
+    - The crash sensor reads 0 when pressed. What does the if check?
+    - After drive(-50, -50), how long does the robot back up before it turns?
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: "^\\s*(import\\s+random|from\\s+random\\s+import)", message: "random is a module: add import random at the top."}
+    - {type: contains, pattern: "pin1\\.read_digital\\(\\)\\s*(==\\s*0|!=\\s*1|<\\s*1)|not\\s+pin1\\.read_digital\\(\\)", message: "The crash sensor reads 0 when pressed. Check for == 0."}
+    - {type: contains, pattern: "drive\\(\\s*-\\s*\\d+\\s*,\\s*-\\s*\\d+\\s*\\)\\s*\\n\\s*sleep\\(", message: "After backing up, sleep() for a moment, or the turn starts right away."}
+  solution: |
+    from microbit import *
+    import random
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77
+    STOP_R = 77
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)
+
+    while True:
+        if pin1.read_digital() == 0:
+            drive(-50, -50)
+            sleep(500)
+            drive(50, -50)
+            sleep(random.randint(300, 900))
+        else:
+            drive(50, 50)
+        sleep(20)
+  reflection_prompt: Which bug made the robot back up all the time, and how did the sensor's 0 and 1 cause it?
+quiz:
+  - question: The IR obstacle sensor on P0 reads 0. What does that mean?
+    choices:
+      - Something is in front of it
+      - Nothing is in front of it
+      - The sensor is unplugged
+    answer: 0
+    explain: The IR obstacle sensor reads 0 when something is in front and 1 when it's clear.
+  - question: The line sensor on P8 reads 1. Where is it?
+    choices:
+      - Over the black tape
+      - Over the white floor
+      - Under bright light
+    answer: 0
+    explain: The line sensor reads 1 on black (or with nothing below it) and 0 on white.
+  - question: Why does the Edge Explorer zig-zag instead of driving straight?
+    visual:
+      type: compare
+      items:
+        - {icon: "⬛", title: "1 = black", text: "curve one way"}
+        - {icon: "⬜", title: "0 = white", text: "curve the other way"}
+    choices:
+      - One sensor only knows black or white, so it keeps crossing the edge
+      - The wheels are not calibrated
+      - Zig-zags are faster than straight lines
+    answer: 0
+    explain: With one sensor, the robot only knows which side of the edge it's on. So it keeps swapping.
+  - question: Why does the Bump Bot turn for a random time?
+    choices:
+      - So it tries new paths and doesn't get stuck
+      - So the batteries last longer
+      - Because the crash sensor needs it
+    answer: 0
+    explain: A turn that is the same every time can trap the robot in a loop between two walls.
+  - question: Which milestone should you get working first?
+    choices:
+      - Drives
+      - Senses
+      - Reacts
+      - Polish
+    answer: 0
+    explain: If the wheels don't move yet, nothing else can work. Build up one milestone at a time.
+challenge:
+  title: Mission Complete
+  prompt: >-
+    Get your mission as far up the milestones as you can. Then make it smarter.
+  levels:
+    - "Mild: Reach milestone 3: your robot or gadget reacts to the sensor all by itself."
+    - "Medium: Polish it: show a different icon for each move, and tune your times until it works 5 runs in a row."
+    - "Spicy: Rewrite mission() with no sleep(). Use running_time() and a mode variable, so the robot can react even mid-turn."
+  submit_prompt: Which mission did you pick, which milestone did you reach, and what was the hardest part?
+  visual:
+    type: flow
+    steps:
+      - {icon: "1️⃣", label: "Drives"}
+      - {icon: "2️⃣", label: "Senses"}
+      - {icon: "3️⃣", label: "Reacts"}
+      - {icon: "4️⃣", label: "Polish"}
+teacher_notes: |
+  * **Setup:** see `docs/ROBOT_SPRINT_HARDWARE.md`. V1 must be on 3.3V for every sensor. Lay out black electrical tape on white paper or a light floor before class for Mission B.
+  * **Milestone check-ins:** walk the room and initial each student's milestone. It keeps low-motivation students moving and gives fast finishers a clear target.
+  * **IR sensor sees nothing or always sees something:** turn its potentiometer. Its range is about 2-40 cm. Shiny or black surfaces reflect less IR.
+  * **Line sensor always reads 1:** it is too high. It must be 0-3 cm above the floor. Turn its knob until the LED switches right at the tape's edge.
+  * **Edge Explorer loses the line:** slow it down, or swap the two drive() lines so it follows the other edge.
+  * **Bump Bot:** the crash sensor is on P1, which the ultrasonic Echo also uses in Sprint 6. Only one can be plugged in at a time.
+  * **Mission D** is for students without a chassis, or who prefer building a machine. The servo on P13 here is a 180° servo: 26 = 0°, 128 = 180°.
+  * **Fast finishers:** the Spicy no-sleep() rewrite is a real state machine. Ask them to store `turn_until = running_time() + random.randint(300, 900)` and check it each loop. Combining missions A and B (IR on P0 plus line on P8) is another stretch.
+  * **Students who need a quick win:** the starter runs Mission A as-is. Seeing the screen flip from arrow to X when they wave a hand is milestone 2.
+standards:
+  - code: 6-8.CS.a.5
+    how: Students choose a mission and design a robot or gadget that uses a sensor to complete it.
+  - code: 6-8.CS.a.4
+    how: Students use an IR, line or crash sensor and servo actuators in a sense, decide, act control loop.
+  - code: 6-8.CT.b.4
+    how: Four missions show different algorithms (avoid, zig-zag edge follow, bump and random turn) for moving around a space.
+  - code: 6-8.CT.d.3
+    how: Students write a mission() loop that reads a sensor and drives the wheels to reach their mission goal.
+  - code: 6-8.CT.d.6
+    how: Students work through four milestones and fix three Bump Bot bugs, testing and tuning numbers each time.

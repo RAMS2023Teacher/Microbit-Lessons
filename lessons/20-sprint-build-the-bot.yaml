@@ -1,0 +1,402 @@
+id: sprint-build-the-bot
+label: S4
+unit: 5
+order: 20
+title: "Sprint 4: Build the Bot"
+subtitle: Mount two wheel servos and drive a square
+duration_minutes: 35
+level: Robot Sprint
+big_idea: >-
+  A drive(left, right) function hides the messy pulse numbers, so moving the
+  robot is as easy as saying how fast each wheel should go.
+objectives:
+  - Mount and plug in two wheel servos
+  - Find the stop value for each wheel
+  - Write a drive function with speeds from -100 to 100
+  - Drive a square using timed moves
+vocabulary:
+  - term: Chassis
+    definition: The frame of the robot. The wheels, servos and board bolt onto it.
+  - term: Calibrate
+    definition: Test and adjust until the numbers match real life.
+  - term: Mirrored
+    definition: Flipped, like your reflection. The two wheel servos face opposite ways.
+  - term: Function
+    definition: A named recipe of code you can use again and again.
+materials:
+  - micro:bit V2 + USB cable
+  - Keyestudio sensor shield (KS0360)
+  - 6×AA battery holder with batteries
+  - Robot chassis parts and screws
+  - 2 continuous servos (wheels)
+  - Small screwdriver
+  - A cup or box to prop the robot up
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 2}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Build it, minutes: 8}
+  - {key: code, name: Code it, minutes: 10}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 4}
+video:
+  title: A two-wheel robot drives a square
+  note: Watch how the robot turns. What do the two wheels do?
+warmup:
+  prompt: >-
+    A robot has two wheels and no steering wheel. How do you think it turns
+    left?
+learn:
+  - text: |
+      ### Today's plan
+      By the end of class, your robot drives a square.
+
+      * **Build:** put the wheel servos on the chassis.
+      * **Tune:** find the number that makes each wheel stop.
+      * **Code:** write one `drive()` function.
+      * **Go:** drive a square.
+    visual:
+      type: flow
+      steps:
+        - {icon: "🔧", label: "Build"}
+        - {icon: "🎯", label: "Tune each stop"}
+        - {icon: "📦", label: "Write drive()"}
+        - {icon: "⬜", label: "Drive a square"}
+  - text: |
+      ### Each wheel has its own stop
+      In Sprint 1, about **77** made a wheel servo stop. But no two servos are
+      the same.
+
+      * Your left wheel might stop at **76**.
+      * Your right wheel might stop at **79**.
+
+      Write down **both** numbers. Your code will use them.
+    visual:
+      type: scale
+      min: 70
+      max: 84
+      caption: "Example stop values. Yours will be different."
+      zones:
+        - {from: 75, to: 80, label: "stop zone", color: "#fde2e2"}
+      marks:
+        - {at: 76, label: "left 76", pointer: true}
+        - {at: 79, label: "right 79", pointer: true}
+  - text: |
+      ### The wheels are mirrored
+      The two servos face **opposite ways**, like your two hands.
+
+      So to roll **forward**, one servo spins one way and the other spins
+      the **other** way.
+
+      * Left wheel forward: add to its stop number.
+      * Right wheel forward: take away from its stop number.
+    visual:
+      type: compare
+      items:
+        - {icon: "⬅️", title: "Left wheel (P13)", text: "forward = stop + a bit"}
+        - {icon: "➡️", title: "Right wheel (P14)", text: "forward = stop - a bit"}
+        - {icon: "🔄", title: "Same number on both", text: "the bot just spins in place"}
+  - text: |
+      ### One easy speed scale
+      Pulse numbers are hard to remember. So `drive(left, right)` uses
+      **speeds** instead:
+
+      * **100** = full speed forward
+      * **0** = stop
+      * **-100** = full speed back
+
+      The function turns each speed into the right pulse for that wheel.
+    visual:
+      type: scale
+      min: -100
+      max: 100
+      zones:
+        - {from: -100, to: -5, label: "back", color: "#dbe4ff"}
+        - {from: -5, to: 5, label: "stop", color: "#fde2e2"}
+        - {from: 5, to: 100, label: "forward", color: "#dff4f4"}
+      marks:
+        - {at: -100, label: "-100"}
+        - {at: 0, label: "0", pointer: true}
+        - {at: 100, label: "100"}
+  - text: |
+      ### Moves are just two speeds
+      Every move is a pair of wheel speeds.
+
+      * `drive(60, 60)`: both go forward.
+      * `drive(-60, -60)`: both go back.
+      * `drive(60, -60)`: spin right on the spot.
+      * `drive(0, 0)`: stop.
+    visual:
+      type: compare
+      items:
+        - {icon: "⬆️", title: "drive(60, 60)", text: "forward"}
+        - {icon: "⬇️", title: "drive(-60, -60)", text: "back up"}
+        - {icon: "↻", title: "drive(60, -60)", text: "spin right"}
+        - {icon: "⏹️", title: "drive(0, 0)", text: "stop"}
+  - text: |
+      ### A square is 4 sides and 4 turns
+      The robot has no eyes yet. It moves by **time**.
+
+      * Go forward for 1 second.
+      * Spin for about half a second.
+      * Do that **4 times**, then stop.
+
+      Change the spin time until each corner is square.
+    visual:
+      type: flow
+      loop: true
+      loop_label: "4 times"
+      steps:
+        - {icon: "⬆️", label: "Forward 1 s"}
+        - {icon: "↻", label: "Spin about 0.5 s"}
+        - {icon: "⏹️", label: "Stop at the end"}
+circuit:
+  intro: >-
+    You'll mount the two wheel servos, plug them into pins 13 and 14, and power
+    the shield from the battery pack.
+  safety:
+    - Unplug the battery pack before you plug in or move a servo.
+    - Brown wire to G. A backwards servo can be damaged.
+    - Prop the robot on a cup so the wheels spin in the air while you test.
+  steps:
+    - title: Mount the wheel servos
+      instruction: >-
+        Fix one **continuous servo** to each side of the chassis. Follow your
+        **chassis instructions** or your teacher's demo. Then push a wheel onto
+        each servo.
+      check: Do both wheels turn freely without rubbing?
+      tip: Use the servos you labeled as continuous in Sprint 1.
+    - title: Set up the shield
+      instruction: >-
+        Check the jumpers: **V2 on 5V** and **V1 on 3.3V**. Slide the micro:bit
+        in, **LED screen facing out**. Fix the shield to the chassis.
+      check: Is V2 on 5V and the micro:bit pushed all the way in?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+    - title: Plug in the left wheel
+      instruction: >-
+        Plug the **left** wheel servo into header **13**: **brown on G**, red on
+        V, **orange on S**. Left means left when the robot faces away from you.
+      check: Is the left servo on pin 13, brown on G?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 13, device: "Left wheel", kind: servo}
+    - title: Plug in the right wheel
+      instruction: >-
+        Plug the **right** wheel servo into header **14** the same way:
+        **brown on G**, orange on S.
+      check: Is the right servo on pin 14, brown on G?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+    - title: Power it up
+      instruction: >-
+        Put the robot on a cup so the wheels are off the table. Plug the **6×AA
+        pack** into the DC jack. Plug in **USB** too, so you can send code.
+      check: Is the power light on, with the wheels in the air?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 13, device: "Left wheel", kind: servo}
+          - {pin: 14, device: "Right wheel", kind: servo}
+code:
+  intro: >-
+    Send this program. Press **B**: both wheels should stay still. Then put the
+    robot on the floor and press **A** to drive a square!
+  starter: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+
+    STOP_L = 77   # change to your left wheel's stop number
+    STOP_R = 77   # change to your right wheel's stop number
+
+    def drive(left, right):
+        # speeds: -100 = full back, 0 = stop, 100 = full forward
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)   # mirrored
+
+    def forward(ms):
+        drive(60, 60)
+        sleep(ms)
+
+    def turn_right(ms):
+        drive(60, -60)
+        sleep(ms)
+
+    def stop():
+        drive(0, 0)
+
+    stop()
+    display.show(Image.HAPPY)
+    while True:
+        if button_a.was_pressed():
+            for side in range(4):
+                display.show(Image.ARROW_N)
+                forward(1000)
+                display.show(Image.ARROW_E)
+                turn_right(500)
+            stop()
+            display.show(Image.YES)
+        if button_b.was_pressed():
+            stop()
+            display.show(Image.SQUARE)
+  walkthrough:
+    - lines: "8-9"
+      explain: Your two **stop numbers**. Change each one until that wheel stays dead still.
+    - lines: "11-14"
+      explain: "`drive()` turns speeds into pulses. The right wheel uses **minus** because it is mirrored."
+    - lines: "16-25"
+      explain: Small helper functions name each move, so the main loop reads like a plan.
+    - lines: "30-37"
+      explain: "Button A: four sides and four turns, then **stop**. The arrows show each move."
+  try_it:
+    - Press B. If a wheel creeps, change its STOP number by 1 and try again.
+    - Does the robot go backward? Swap the + and - in drive().
+    - Corners too wide or too tight? Change only the 500 in turn_right(500).
+debug:
+  story: >-
+    Jordan's robot should drive a square when you press A. Instead the code
+    crashes, and after one fix the robot spins in place. Find **three** bugs.
+  buggy_code: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77
+    STOP_R = 79
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 / 100)
+        RIGHT.write_analog(STOP_R + right * 25 / 100)
+
+    drive(0, 0)
+    while True:
+        if button_a.was_pressed():
+            for side in range(3):
+                drive(60, 60)
+                sleep(1000)
+                drive(60, -60)
+                sleep(500)
+            drive(0, 0)
+  hints:
+    - "`/` makes a decimal number. What do servos need?"
+    - The wheels are mirrored. Should both wheels add to their stop number?
+    - How many sides does a square have? Count the loop.
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: "^(?!.*(//|int\\()).*write_analog\\(.*(?<!/)/(?!/)", message: "write_analog needs a whole number. Use // instead of /."}
+    - {type: not_contains, pattern: "RIGHT\\.write_analog\\(\\s*STOP_R\\s*\\+\\s*right", message: "The right wheel is mirrored: use STOP_R - right ... so forward goes the other way."}
+    - {type: contains, pattern: "range\\(\\s*4\\s*\\)|range\\(\\s*0\\s*,\\s*4\\s*\\)", message: "A square has 4 sides: loop 4 times."}
+  solution: |
+    from microbit import *
+
+    LEFT = pin13
+    RIGHT = pin14
+    LEFT.set_analog_period(20)
+    RIGHT.set_analog_period(20)
+    STOP_L = 77
+    STOP_R = 79
+
+    def drive(left, right):
+        LEFT.write_analog(STOP_L + left * 25 // 100)
+        RIGHT.write_analog(STOP_R - right * 25 // 100)
+
+    drive(0, 0)
+    while True:
+        if button_a.was_pressed():
+            for side in range(4):
+                drive(60, 60)
+                sleep(1000)
+                drive(60, -60)
+                sleep(500)
+            drive(0, 0)
+  reflection_prompt: Which bug made the robot spin in place, and why did it do that?
+quiz:
+  - question: "Your code sends write_analog(90) to both wheel servos. What does the robot do?"
+    choices:
+      - It spins in place
+      - It drives straight forward
+      - It stops
+    answer: 0
+    explain: The wheels are mirrored. The same pulse makes them push opposite ways, so the robot spins.
+  - question: You run drive(0, 0) and the left wheel still creeps. What do you change?
+    choices:
+      - The left wheel's STOP number
+      - The right wheel's STOP number
+      - The 20 in set_analog_period
+    answer: 0
+    explain: Each wheel has its own stop number. Nudge STOP_L by 1 until the left wheel is still.
+  - question: What does drive(-100, -100) do?
+    visual:
+      type: scale
+      min: -100
+      max: 100
+      marks:
+        - {at: -100, label: "-100", pointer: true}
+        - {at: 0, label: "0"}
+        - {at: 100, label: "100"}
+    choices:
+      - Full speed backward
+      - Full speed forward
+      - Spin left
+      - Stop
+    answer: 0
+    explain: "-100 is the far end of the scale: full speed back on both wheels."
+  - question: Your square's corners turn too far. What is the best fix?
+    choices:
+      - Make the turn's sleep a little shorter
+      - Make the forward sleep longer
+      - Loop 3 times instead of 4
+    answer: 0
+    explain: The robot turns by time. Less time spinning means a smaller turn.
+challenge:
+  title: Bot Moves
+  prompt: >-
+    Use your drive() function to make the robot do a planned path. Test,
+    tweak one number, and test again.
+  levels:
+    - "Mild: Drive a triangle or a bigger square by changing only the times and the loop count."
+    - "Medium: Add back_up(ms) and turn_left(ms) functions. Use them to drive a figure 8 or a dance."
+    - "Spicy: Write ramp(left, right, ms) that speeds up in 10 small steps. Drive a square that ends where it started."
+  submit_prompt: What path did your robot drive, and which number took the most tries to get right?
+  visual:
+    type: leds
+    caption: "Forward, turn, forward, turn..."
+    frames: [ARROW_N, ARROW_E, ARROW_S, ARROW_W]
+teacher_notes: |
+  * **Setup:** see `docs/ROBOT_SPRINT_HARDWARE.md`. Chassis assembly depends on your 3D-printed parts. Demo one robot first, or hand out your chassis build sheet. Pre-build a few for groups that run slow.
+  * **Prop the robot on a cup** while calibrating. Students find stop values much faster when the robot can't drive off the table.
+  * **Stop values:** each continuous servo stops at a slightly different number (often 74-80). Some have a trim screw. Have students write both numbers on tape on the chassis.
+  * **Robot drives backward:** that's just which way the servos were mounted. Swapping the `+` and `-` in `drive()` fixes it for good.
+  * **Turn times change** with battery level and floor surface. That's normal and a good test-and-tweak moment.
+  * **Fast finishers:** the Spicy ramp() is real algorithm work: a for loop that steps both speeds from 0 to the target. Ask them why ramping makes the square more accurate (less wheel slip).
+  * **Students who need a quick win:** the starter drives a square as-is. Getting B to hold both wheels still counts as a win, and so does one good corner.
+standards:
+  - code: 6-8.CS.a.4
+    how: Students mount two continuous servos as actuators and control the robot's motion with pulse signals.
+  - code: 6-8.CT.a.2
+    how: A drive(left, right) function hides the pulse math and is reused by forward, turn and stop functions.
+  - code: 6-8.CT.b.3
+    how: Students break "drive a square" into parts (stop values, drive, moves, sides and turns) and build each one.
+  - code: 6-8.CT.d.6
+    how: Students calibrate each wheel's stop value and the turn time by changing one number, testing and adjusting.
+  - code: 6-8.CS.a.5
+    how: Students build a two-wheel robot and demonstrate it driving a square path.
