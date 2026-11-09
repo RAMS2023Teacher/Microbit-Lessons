@@ -58,20 +58,25 @@ learn:
       * Tilted all the way **right**: about **1024**
       * Tilted all the way **left**: about **-1024**
 
-      A hard shake can go even bigger!
+      A hard shake can go even bigger! Drag the slider to tilt.
     visual:
-      type: scale
+      type: try
+      kind: sensor
       min: -1024
       max: 1024
-      caption: What get_x() says as you tilt left and right.
-      zones:
-        - {from: -1024, to: -300, label: "tilted left"}
-        - {from: -300, to: 300, label: "flat"}
-        - {from: 300, to: 1024, label: "tilted right"}
-      marks:
-        - {at: -1024, label: "-1024"}
-        - {at: 0, label: "0", pointer: true}
-        - {at: 1024, label: "1024"}
+      start: 0
+      threshold: 300
+      op: ">"
+      read: "accelerometer.get_x()"
+      label: tilt
+      then: "Tilted right: x is past 300."
+      else: "Not tilted right: flat, or tilted left."
+    check:
+      question: You tilt the micro:bit all the way **left**. About what does `get_x()` give?
+      choices: ["-1024", "0", "1024"]
+      answer: 0
+      why: Left is the negative side, so a full tilt left gives about -1024.
+      hint: Flat is the middle of the number line. Which side of zero is left?
   - text: |
       ### Gestures do the math for you
       A **gesture** is a move the micro:bit knows by name.
@@ -87,6 +92,12 @@ learn:
       type: leds
       caption: "Show an arrow for each gesture: 'left', 'right', 'up', 'down'."
       frames: [ARROW_W, ARROW_E, ARROW_N, ARROW_S]
+    check:
+      question: Why does `'shake'` need quotes around it?
+      choices: ["Python needs quotes around every word", "Quotes make it run faster", "The gesture name is text"]
+      answer: 2
+      why: Gesture names are text, and text in Python goes in quotes.
+      hint: Look at the last bullet on the card. What kind of thing is a gesture name?
   - text: |
       ### The music module
       Sound lives in its own module. Put **`import music`** at the top.
@@ -100,29 +111,12 @@ learn:
         - {icon: "🎂", title: "music.play(music.BIRTHDAY)", text: "a built-in tune"}
         - {icon: "🎼", title: "music.play(['C4:4', 'E4:4'])", text: "your own notes"}
         - {icon: "🔔", title: "music.pitch(440, 200)", text: "440 Hz for 200 ms"}
-  - text: |
-      ### Wire a piezo buzzer
-      A **piezo buzzer** is a thin disc that clicks fast to make sound.
-
-      * Its **+ leg** goes to **P0**.
-      * Its other leg goes to **GND**.
-
-      Music sent to pin 0 now plays on the buzzer.
-    visual:
-      type: part
-      part: buzzer
-      labels: {plus: "+ → P0", minus: "– → GND"}
-  - text: |
-      ### Where does the sound come out?
-      On a V2, music plays on **pin 0** *and* the **built-in speaker** at the same time.
-
-      * `speaker.off()`: only the buzzer on pin 0 plays.
-      * `speaker.on()`: the built-in speaker plays again.
-    visual:
-      type: compare
-      items:
-        - {icon: "🔊", title: "speaker.on()", text: "pin 0 and the built-in speaker"}
-        - {icon: "🔈", title: "speaker.off()", text: "only the buzzer on pin 0"}
+    check:
+      question: What line do you need at the top before `music.play()` will work?
+      choices: ["speaker.on()", "import music", "display.show(Image.MUSIC_CROTCHET)"]
+      answer: 1
+      why: Sound lives in its own module, so you have to import music first.
+      hint: The card says sound lives in its own module. How do you bring a module into your program?
   - text: |
       ### Turning tilt into a note
       **Frequency** is how fast a sound shakes, in **hertz (Hz)**. Higher Hz = higher note.
@@ -144,6 +138,12 @@ learn:
         - {at: -1024, label: "-1024"}
         - {at: 0, label: "0"}
         - {at: 1024, label: "1024"}
+    check:
+      question: Which way do you tilt to play a **higher** note?
+      choices: ["Left", "Keep it flat", "Right"]
+      answer: 2
+      why: Tilting right makes x bigger, so the frequency goes up toward 1000 Hz.
+      hint: Higher Hz means a higher note. Which tilt makes x, and so freq, bigger?
 circuit:
   intro: >-
     You'll wire a piezo buzzer between pin 0 and ground. It's a short circuit
@@ -179,6 +179,14 @@ circuit:
       add:
         - {type: wire, from: mb.P0, to: a10, color: yellow}
         - {type: wire, from: a13, to: T-13, color: black}
+  remember:
+    - text: |
+        **Piezo buzzer:** a thin disc that clicks fast to make sound. Its **+ leg** goes to **P0** and its
+        other leg goes to **GND**. Music sent to pin 0 now plays on the buzzer.
+      visual:
+        type: part
+        part: buzzer
+        labels: {plus: "+ → P0", minus: "– → GND"}
   verify:
     connected:
       - [mb.P0, bz1.plus]
@@ -223,6 +231,16 @@ code:
       explain: While A is held, tilt sets the pitch. Keep it 100-2000 Hz. Play it for 50 ms.
     - lines: "18-22"
       explain: Button B turns off the built-in speaker. Now only the buzzer on pin 0 plays.
+  remember:
+    - text: |
+        **Where the sound comes out:** on a V2, music plays on **pin 0** *and* the **built-in speaker**
+        at the same time. `speaker.off()`: only the buzzer on pin 0 plays. `speaker.on()`: the
+        built-in speaker plays again.
+      visual:
+        type: compare
+        items:
+          - {icon: "🔊", title: "speaker.on()", text: "pin 0 and the built-in speaker"}
+          - {icon: "🔈", title: "speaker.off()", text: "only the buzzer on pin 0"}
   try_it:
     - Swap `music.POWER_UP` for another tune, like `music.NYAN`.
     - Change 400 to 800 in the freq line. How does the range change?

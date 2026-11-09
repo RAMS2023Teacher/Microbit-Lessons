@@ -62,6 +62,12 @@ learn:
         - {icon: "🔘", label: "Sense: read pin 1"}
         - {icon: "🤔", label: "Decide: if / else"}
         - {icon: "💡", label: "Act: LED on pin 0"}
+    check:
+      question: Pin 0 lights the LED when your code says so. Is pin 0 an input or an output?
+      choices: ["An input", "An output"]
+      answer: 1
+      why: Pin 0 tells the LED what to do, and a pin that tells is an output.
+      hint: Does pin 0 tell something, or listen for something?
   - text: |
       ### Making choices with if / else
       ```python
@@ -72,24 +78,21 @@ learn:
       ```
       * The `if` line ends with a **colon** `:`.
       * The lines inside are **indented**.
-      * `else` runs when the `if` is not true.
+      * `else` runs when the `if` is not true. Hold the button to try it.
     visual:
-      type: leds
-      frames: [HAPPY, "OFF"]
-      caption: "Holding A shows HAPPY. Letting go clears the screen."
-  - text: |
-      ### One = or two ==?
-      * One `=` **stores** a value: `x = 0`
-      * Two `==` **asks a question**: is x equal to 0?
-
-      Use `==` inside an `if`.
-
-      `presses = presses + 1` isn't math. It means: take the old value, add 1, and store it back.
-    visual:
-      type: compare
-      items:
-        - {icon: "📦", title: "x = 0", text: "Store 0 in x"}
-        - {icon: "❓", title: "x == 0", text: "Ask: is x equal to 0?"}
+      type: try
+      kind: button
+      button: "A"
+      pressed: "HAPPY"
+      released: "OFF"
+      then: "True: the if part runs and shows HAPPY."
+      else: "False: the else part runs and clears the screen."
+    check:
+      question: You let go of button A. Which part of the code runs?
+      choices: ["The else part", "The if part", "Both parts"]
+      answer: 0
+      why: Letting go makes is_pressed() False, so Python skips the if part and runs else.
+      hint: Is the button pressed now? What does is_pressed() answer?
   - text: |
       ### is_pressed vs. was_pressed
       * `button_a.is_pressed()` is **True the whole time** you hold it. Good for "hold to light".
@@ -99,33 +102,36 @@ learn:
       items:
         - {icon: "✋", title: "is_pressed()", text: "True while you hold it down"}
         - {icon: "👆", title: "was_pressed()", text: "True once for each press"}
+    check:
+      question: You want to **count** how many times someone clicks A. Which one do you use?
+      choices: ["is_pressed()", "Either one, they're the same", "was_pressed()"]
+      answer: 2
+      why: was_pressed() is True once per press, so each click adds exactly 1.
+      hint: If someone holds the button for a while, should that count as one click or many?
   - text: |
-      ### Our button goes to GND
-      The button joins **pin 1** to **GND**.
+      ### The button and the pull-up
+      The button joins **pin 1** to **GND**. A pin touching nothing reads **random junk**!
 
+      So turn on the micro:bit's built-in **pull-up resistor**: `pin1.set_pull(pin1.PULL_UP)`.
+
+      * **Not pressed:** the pull-up holds pin 1 at **1**.
       * **Pressed:** pin 1 touches GND, so it reads **0**.
-      * **Not pressed:** pin 1 touches nothing. A loose pin reads **random junk**!
-    visual:
-      type: circuit
-      caption: "Pressing the button connects P1 to GND."
-      add:
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: button, id: btn1, a: e20, b: e22}
-        - {type: wire, from: mb.P1, to: a20, color: green}
-        - {type: wire, from: a22, to: T-22, color: black}
-  - text: |
-      ### The pull-up resistor
-      The micro:bit has a tiny **pull-up resistor** inside. Turn it on with `pin1.set_pull(pin1.PULL_UP)`.
 
-      * It gently pulls pin 1 **up to 1**.
-      * Pressing the button is stronger. It pulls pin 1 **down to 0**.
-
-      **Not pressed = 1. Pressed = 0.** It feels backwards, but most buttons work this way!
+      It feels backwards, but most buttons work this way!
+    more: |
+      **Tug-of-war:** the pull-up resistor only *gently* pulls pin 1 up to 1 (3 volts). Pressing the button
+      connects pin 1 straight to GND, which is stronger, so it pulls pin 1 **down to 0**.
     visual:
       type: compare
       items:
         - {icon: "⬆️", title: "Not pressed: 1", text: "The pull-up holds pin 1 at 3 volts"}
         - {icon: "⬇️", title: "Pressed: 0", text: "The button connects pin 1 to GND"}
+    check:
+      question: The pull-up is on. What does pin 1 read while you **press** the button?
+      choices: ["1", "0", "Random junk"]
+      answer: 1
+      why: Pressing connects pin 1 to GND, which is 0 volts, so it reads 0.
+      hint: When you press, what does the button connect pin 1 to?
 circuit:
   intro: >-
     You'll rebuild the LED on pin 0 from Lesson 3, then add a pushbutton
@@ -193,6 +199,17 @@ code:
   intro: >-
     Hold the breadboard button and the LED lights. Press button A on the
     micro:bit and it counts your presses.
+  remember:
+    - text: |
+        **One = or two ==?** One `=` **stores** a value: `x = 0`. Two `==` **asks a question**: is x
+        equal to 0? Use `==` inside an `if`.
+      visual:
+        type: compare
+        items:
+          - {icon: "📦", title: "x = 0", text: "Store 0 in x"}
+          - {icon: "❓", title: "x == 0", text: "Ask: is x equal to 0?"}
+    - text: |
+        **Adding 1:** `presses = presses + 1` isn't math. It means: take the old value, add 1, and store it back.
   starter: |
     from microbit import *
 

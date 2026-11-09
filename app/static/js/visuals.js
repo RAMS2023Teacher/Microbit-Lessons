@@ -391,6 +391,14 @@
     b += `<line x1="70" y1="77" x2="70" y2="110" stroke="${MUTED}" stroke-width="3"/><line x1="90" y1="77" x2="90" y2="100" stroke="${MUTED}" stroke-width="3"/>`;
     return svg(160, 118, b, label || 'an LED');
   }
+  function fan(level) {   // a motor with a spinning fan blade; faster spin = more power
+    const secs = level > 0.02 ? (0.25 / level).toFixed(2) : 0;
+    let b = `<rect x="40" y="70" width="80" height="44" rx="10" fill="#9aa3b8" stroke="${INK}" stroke-width="2"/>` + t(80, 98, 'MOTOR', 'class="vz-tiny" text-anchor="middle" fill="#fff"');
+    b += `<line x1="120" y1="92" x2="138" y2="92" stroke="${INK}" stroke-width="4"/>`;
+    b += `<g transform="translate(138 92)"><g>${secs ? `<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="${secs}s" repeatCount="indefinite"/>` : ''}` +
+      `<ellipse cx="0" cy="-26" rx="7" ry="24" fill="${TEAL}"/><ellipse cx="0" cy="26" rx="7" ry="24" fill="${TEAL}"/></g><circle r="5" fill="${INK}"/></g>`;
+    return svg(180, 130, b, level > 0.02 ? `motor spinning at ${Math.round(100 * level)}% power` : 'motor stopped');
+  }
   function tryIt(v, box) {
     const k = v.kind;
     const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -423,9 +431,10 @@
           code.textContent = fill(v.code || 'set_angle({value})', v.map ? Math.round(v.map[0] + (v.map[1] - v.map[0]) * n / 180) : n);
           out.textContent = `The servo arm turns to ${n}°.`;
         } else {
-          art.innerHTML = bulb(n / max, `LED at ${Math.round(100 * n / max)}% brightness`);
+          const pct = Math.round(100 * n / max);
+          art.innerHTML = v.show === 'motor' ? fan(n / max) : bulb(n / max, `LED at ${pct}% brightness`);
           code.textContent = fill(v.code || 'pin0.write_analog({value})', n);
-          out.textContent = `${n} out of ${max}: on about ${Math.round(100 * n / max)}% of the time.`;
+          out.textContent = `${n} out of ${max}: on about ${pct}% of the time` + (v.show === 'motor' ? `, so the motor runs at about ${pct}% speed.` : '.');
         }
       };
       r.addEventListener('input', set);
@@ -446,7 +455,8 @@
     } else if (k === 'sensor') {
       const op = v.op || '<', r = slider(v.min, v.max, v.start ?? Math.round((v.min + v.max) / 2), v.label || 'reading');
       const set = () => {
-        const n = +r.value, yes = op === '<' ? n < v.threshold : n > v.threshold;
+        const n = +r.value, T = v.threshold;
+        const yes = op === '<' ? n < T : op === '<=' ? n <= T : op === '>=' ? n >= T : n > T;
         art.innerHTML = scale({ min: v.min, max: v.max, marks: [{ at: v.threshold, label: `${v.threshold}` }, { at: n, label: `${n}${v.unit || ''}` }] });
         code.textContent = `reading = ${v.read}   # ${n}\nif reading ${op} ${v.threshold}:   # ${yes ? 'True' : 'False'}`;
         out.textContent = yes ? v.then : v.else;

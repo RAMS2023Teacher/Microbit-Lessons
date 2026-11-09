@@ -62,6 +62,12 @@ learn:
       type: part
       part: servo
       caption: The SG90's three wire colors.
+    check:
+      question: You tell a servo to go to 45°. What does it do when it gets there?
+      choices: ["Holds that angle", "Keeps spinning like a wheel", "Springs back to 0°"]
+      answer: 0
+      why: A servo knows its own angle, so it turns there and holds.
+      hint: The servo has a tiny circuit that knows its angle. Why would it need to know that?
   - text: |
       ### Pulses set the angle
       Every **20 ms** the servo looks for a short ON **pulse**.
@@ -77,21 +83,38 @@ learn:
         - {angle: 0, label: "0° · 0.5 ms"}
         - {angle: 90, label: "90° · 1.5 ms", pointer: true}
         - {angle: 180, label: "180° · 2.5 ms"}
+    check:
+      question: Which pulse points the arm to the **middle** (90°)?
+      choices: ["0.5 ms", "1.5 ms", "2.5 ms"]
+      answer: 1
+      why: 1.5 ms is halfway between 0.5 ms (0°) and 2.5 ms (180°).
+      hint: The middle angle needs a pulse length in the middle. Which one is halfway?
   - text: |
       ### It's PWM again
       This is **PWM**, just like dimming an LED!
 
       * `pin0.set_analog_period(20)` makes each cycle **20 ms** long.
-      * `write_analog()` sets how much of each cycle is ON.
+      * `write_analog()` sets how much of each cycle is ON, from **0 to 1023**. 1023 means ON the whole 20 ms.
 
-      A servo only needs a **thin** slice of ON time.
+      A servo only needs a **thin** slice: about **26** (0°) to **128** (180°). Drag the slider.
     visual:
-      type: wave
-      duty: [2.5, 7.5, 12.5]
-      values: [26, 77, 128]
-      axis: "time →   (one pulse every 20 ms)"
-      caption: "0°, 90° and 180°: the pulse gets a little longer each time."
-      alt: Three pulse trains with 2.5, 7.5 and 12.5 percent on-time, for 0, 90 and 180 degrees.
+      type: try
+      kind: servo
+      code: "pin0.write_analog({value})"
+      map: [26, 128]
+      start: 90
+    more: |
+      **The math:** the pulse is a fraction of the 20 ms cycle, times 1023.
+
+      * 0.5 ÷ 20 × 1023 ≈ **26** (0°)
+      * 1.5 ÷ 20 × 1023 ≈ **77** (90°)
+      * 2.5 ÷ 20 × 1023 ≈ **128** (180°)
+    check:
+      question: Why does a servo only use `write_analog()` values from about 26 to 128?
+      choices: ["Bigger numbers would break the pin", "The servo can only count to 128", "Its pulse is only a thin slice of each 20 ms cycle"]
+      answer: 2
+      why: Even a 2.5 ms pulse is a small part of 20 ms, so the numbers stay small.
+      hint: What does 1023 mean for the ON time? How much of the cycle does a servo pulse need?
   - text: |
       ### Functions with inputs and answers
       ```python
@@ -101,50 +124,13 @@ learn:
       * `n` is an **input**. You fill it in when you call it: `double(4)`.
       * `return` sends an **answer** back. `double(4)` gives **8**.
 
-      Next, we'll use this to turn an angle into a number.
-  - text: |
-      ### From angle to a number
-      `write_analog()` takes **0 to 1023**. 1023 means ON for the whole 20 ms.
-
-      * 0.5 ÷ 20 × 1023 ≈ **26** (0°)
-      * 2.5 ÷ 20 × 1023 ≈ **128** (180°)
-
-      So a servo only uses about **26 to 128**. A **function** does this math
-      for us: `angle_to_value(90)` → **77**.
-    visual:
-      type: flow
-      steps:
-        - {icon: "📐", label: "angle 90°"}
-        - {icon: "⏱️", label: "1.5 ms pulse"}
-        - {icon: "🔢", label: "write_analog(77)"}
-  - text: |
-      ### Why a separate battery?
-      A moving servo can suddenly gulp a lot of **current**. That's more than
-      the micro:bit can give. It can make the micro:bit **reset**.
-
-      So the servo gets its **own battery pack**.
-      Battery **+** must **never** touch the micro:bit's 3V.
-    visual:
-      type: compare
-      items:
-        - {icon: "🔌", title: "micro:bit 3V pin", text: "Too little current. A servo can make it reset."}
-        - {icon: "🔋", title: "Battery pack", text: "Gives the servo its big bursts of current."}
-  - text: |
-      ### Share the ground
-      The signal only makes sense if both sides agree on "0 volts".
-
-      * Join battery **–** to micro:bit **GND**.
-      * That's a **shared ground**.
-      * Battery + stays on its own rail.
-    visual:
-      type: circuit
-      caption: The black wire on the right joins the two ground rails.
-      add:
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: battery, id: bat1, label: "4×AA 6V"}
-        - {type: wire, from: bat1.plus, to: B+1, color: red}
-        - {type: wire, from: bat1.minus, to: B-1, color: black}
-        - {type: wire, from: T-30, to: B-30, color: black}
+      Our `angle_to_value()` function does the servo math: `angle_to_value(90)` gives **77**.
+    check:
+      question: "`def triple(n): return n * 3`. What does `triple(5)` give?"
+      choices: ["8", "15", "53"]
+      answer: 1
+      why: n is filled in with 5, and return sends back 5 × 3, which is 15.
+      hint: Put the number you passed in where n is. Then do what the return line says.
 circuit:
   intro: >-
     The micro:bit uses the **top** rails. The battery uses the **bottom**
@@ -199,6 +185,19 @@ circuit:
       check: Is the orange servo wire going to P0, and nothing else touching P0?
       add:
         - {type: wire, from: servo1.sig, to: mb.P0, color: yellow}
+  remember:
+    - text: |
+        **Why a separate battery?** A moving servo can suddenly gulp a lot of **current**, more than the
+        micro:bit can give. That can make the micro:bit **reset**. So the servo gets its **own battery
+        pack**. Battery **+** must **never** touch the micro:bit's 3V.
+      visual:
+        type: compare
+        items:
+          - {icon: "🔌", title: "micro:bit 3V pin", text: "Too little current. A servo can make it reset."}
+          - {icon: "🔋", title: "Battery pack", text: "Gives the servo its big bursts of current."}
+    - text: |
+        **Share the ground:** the signal only makes sense if both sides agree on "0 volts". So battery
+        **–** joins micro:bit **GND**. That's a **shared ground**. Battery + stays on its own rail.
   verify:
     connected:
       - [mb.P0, servo1.sig]

@@ -116,8 +116,8 @@ def check_visual(v, where="visual") -> list[str]:
         if kind == "sensor":
             for key in ("min", "max", "threshold"):
                 _num(v, key, errs, where)
-            if v.get("op", "<") not in ("<", ">"):
-                errs.append(f"{where}: sensor 'op' must be < or >")
+            if v.get("op", "<") not in ("<", ">", "<=", ">="):
+                errs.append(f"{where}: sensor 'op' must be <, >, <= or >=")
             if not v.get("read") or not v.get("then") or not v.get("else"):
                 errs.append(f"{where}: sensor needs 'read' (the code that reads it), 'then' and 'else'")
             if isinstance(v.get("min"), (int, float)) and isinstance(v.get("max"), (int, float)) and not v["min"] < v["max"]:
@@ -130,6 +130,8 @@ def check_visual(v, where="visual") -> list[str]:
         if v.get("map") is not None and not (isinstance(v["map"], list) and len(v["map"]) == 2
                                              and all(isinstance(x, (int, float)) for x in v["map"])):
             errs.append(f"{where}: 'map' must be [value at 0°, value at 180°]")
+        if kind == "pwm" and v.get("show", "led") not in ("led", "motor"):
+            errs.append(f"{where}: pwm 'show' must be led or motor")
         if kind == "loop" and v.get("steps") and not 2 <= len(v["steps"]) <= 4:
             errs.append(f"{where}: loop needs 2-4 steps")
         if v.get("code") and "{value}" not in str(v["code"]) and kind in ("pwm", "servo"):

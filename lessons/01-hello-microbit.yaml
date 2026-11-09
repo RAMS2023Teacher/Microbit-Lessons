@@ -52,17 +52,32 @@ learn:
       * **25 red LEDs** in a 5×5 grid: the **display**
       * **Button A** and **Button B**
       * Gold **pins** along the bottom edge
-
-      On the back: a **USB port**, a **speaker**, a **microphone**, and sensors for motion and temperature.
+    more: |
+      **On the back:** a **USB port**, a **speaker**, a **microphone**, and sensors for motion and temperature.
     visual:
       type: leds
       image: HAPPY
       caption: "The 5×5 LED display sits between buttons A and B."
+    check:
+      question: Where does the micro:bit show words and pictures?
+      choices: ["On the gold pins", "On the 25 LEDs", "On button B"]
+      answer: 1
+      why: The 5×5 grid of LEDs is the display, so that's where words and pictures appear.
+      hint: Which part of the micro:bit can light up in a pattern?
   - text: |
       ### Code is a list of steps
       A **program** is a list of instructions. The micro:bit runs them **in order, top to bottom**.
 
       The first line is always `from microbit import *`. It loads the micro:bit toolbox, so Python knows `display`, `Image` and `sleep`.
+    more: |
+      **Free code you can look inside.** The Python on your micro:bit is **MicroPython**. It's **open source**:
+      anyone can read, change and share its code. They just follow its **license**. Its MIT License mostly asks
+      you to keep the credit. Firefox and Linux are open source too.
+
+      **Proprietary** code, like Microsoft Word and most video games, is kept secret. You can *use* it, but not
+      change or share it.
+
+      Check the license before you copy code, pictures or music!
     visual:
       type: flow
       caption: "Python runs one line at a time, top to bottom."
@@ -70,32 +85,12 @@ learn:
         - {icon: "📦", label: "from microbit import *"}
         - {icon: "💬", label: "display.scroll(\"Hi!\")"}
         - {icon: "❤️", label: "display.show(Image.HEART)"}
-  - text: |
-      ### Words and pictures
-      * `display.scroll("Hi!")` slides text across the LEDs. Text is called a **string**. It needs **quote marks**.
-      * `display.show(Image.HEART)` shows a picture.
-      * Image names are in **CAPITAL LETTERS**.
-    visual:
-      type: leds
-      caption: "scroll shows letters one by one. show draws a picture."
-      frames: ["90009:90009:99999:90009:90009", "00900:00000:00900:00900:00900", "HEART"]
-  - text: |
-      ### Waiting with sleep()
-      `sleep()` pauses the program. It counts in **milliseconds** (ms).
-
-      * `sleep(500)` waits half a second.
-      * `sleep(1000)` waits **1 second**.
-      * `sleep(2000)` waits 2 seconds.
-    visual:
-      type: scale
-      min: 0
-      max: 2000
-      caption: "1000 milliseconds = 1 second."
-      marks:
-        - {at: 0, label: "0"}
-        - {at: 500, label: "500 = ½ s"}
-        - {at: 1000, label: "1000 = 1 s", pointer: true}
-        - {at: 2000, label: "2000 = 2 s"}
+    check:
+      question: A program has three lines. Which one does the micro:bit run first?
+      choices: ["The top line", "The bottom line", "All three at the same time"]
+      answer: 0
+      why: Python runs one line at a time, in order, from top to bottom.
+      hint: Think about how you read a page in a book.
   - text: |
       ### Forever loops
       `while True:` means **repeat forever**.
@@ -112,6 +107,12 @@ learn:
         - {icon: "⏱️", label: "sleep(500)"}
         - {icon: "💗", label: "show small heart"}
         - {icon: "⏱️", label: "sleep(500)"}
+    check:
+      question: Which lines does `while True:` repeat forever?
+      choices: ["Every line in the program", "Only the line right after it", "The indented lines under it"]
+      answer: 2
+      why: Python uses the indent to know what's inside the loop, and only those lines repeat.
+      hint: How does Python tell which lines are inside the loop?
   - text: |
       ### Flashing your code
       **Flashing** copies your program onto the micro:bit.
@@ -126,30 +127,28 @@ learn:
         - {icon: "📤", label: "Send to micro:bit"}
         - {icon: "🟡", label: "yellow light blinks"}
         - {icon: "▶️", label: "your code runs"}
-  - text: |
-      ### When Python finds a mistake
-      Everyone's code breaks. An **error message** helps you fix it.
-
-      * It names the **line number**. Look there first, then the line above.
-      * `SyntaxError`: Python can't read it. Check colons and quotes.
-      * `NameError`: Python doesn't know a word. Check spelling and capitals.
-      * `TypeError`: the wrong kind of value, like text + a number.
-  - text: |
-      ### Free code you can look inside
-      **MicroPython** is **open source**. Anyone can read, change and share its code. They just follow its **license**. Its MIT License mostly asks you to keep the credit.
-
-      **Proprietary** code is kept secret. You can *use* it, but not change or share it.
-
-      Check the license before you copy code, pictures or music!
-    visual:
-      type: compare
-      items:
-        - {icon: "🔓", title: "Open source", text: "MicroPython, Firefox, Linux"}
-        - {icon: "🔒", title: "Proprietary", text: "Microsoft Word, most video games"}
+    check:
+      question: The yellow light on the back is blinking. What is happening?
+      choices: ["Your code has a bug", "Your program is being copied over", "The battery is low"]
+      answer: 1
+      why: The yellow light blinks while flashing copies your program onto the micro:bit.
+      hint: Look at the steps in the picture. What comes right after Send to micro:bit?
 code:
   intro: >-
     This program says hello once, then animates a beating heart forever.
     Type it in (or use the starter), flash it, and watch your micro:bit come alive.
+  remember:
+    - text: |
+        **Words and pictures:** `display.scroll("Hi!")` slides text across the LEDs. Text is called a
+        **string**, and it needs **quote marks**. `display.show(Image.HEART)` shows a picture.
+        Image names are in **CAPITAL LETTERS**.
+      visual:
+        type: leds
+        caption: "scroll shows letters one by one. show draws a picture."
+        frames: ["90009:90009:99999:90009:90009", "00900:00000:00900:00900:00900", "HEART"]
+    - text: |
+        **sleep() counts in milliseconds (ms):** `sleep(500)` waits half a second. `sleep(1000)` waits
+        **1 second**. `sleep(2000)` waits 2 seconds.
   starter: |
     from microbit import *
 
@@ -193,6 +192,11 @@ debug:
     Maya wanted her micro:bit to scroll "Hi" and then flash a heart and a smiley
     forever. Instead, Python won't even run it! There are **three** bugs. Find
     them, fix them, and press **Check my fix**.
+  remember:
+    - text: |
+        **Reading error messages:** look at the **line number** first, then the line above.
+        `SyntaxError`: Python can't read it, so check colons and quotes. `NameError`: Python doesn't
+        know a word, so check spelling and capitals. `TypeError`: the wrong kind of value, like text + a number.
   buggy_code: |
     from microbit import *
 
@@ -254,7 +258,7 @@ quiz:
     choices:
       - They are written in capital letters
       - They are indented (pushed in) under the loop
-      - They have a # at the start
+      - "They have a # at the start"
       - They are all on one line
     answer: 1
     explain: Indented lines after the colon belong to the loop. Lines that line up with "while" are outside it.
@@ -308,4 +312,4 @@ standards:  # Massachusetts DLCS framework (2016), grades 6-8
   - code: 6-8.CS.a.7
     how: 'Troubleshoot getting code onto the device: the MICROBIT drive, USB cables (some are charge-only) and re-flashing.'
   - code: 6-8.CAS.b.5
-    how: "A Learn card contrasts open-source licenses (MicroPython, MIT License) with proprietary software, with examples of each."
+    how: "A Learn card's *More about this* section contrasts open-source licenses (MicroPython, MIT License) with proprietary software, with examples of each."

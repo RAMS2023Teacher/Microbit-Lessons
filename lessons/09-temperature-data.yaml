@@ -60,19 +60,16 @@ learn:
       items:
         - {icon: "🏠", title: "Room: 21 °C", text: "The air around you"}
         - {icon: "🔲", title: "temperature(): 22 °C", text: "The chip, a little warmer"}
-  - text: |
-      ### Try it: warm it up
-      Show the temperature: `display.scroll(temperature())`
-
-      Then put your thumb on the back of the micro:bit for **30 seconds**. Try again. Did the number go up?
-    visual:
-      type: graph
-      points: [22, 22, 22, 23, 23, 23, 24]
-      x_label: "seconds of thumb warmth →"
-      y_label: "°C"
-      min: 20
-      max: 26
-      caption: "A warm thumb raises the reading slowly."
+    more: |
+      **Try it: warm it up.** Show the temperature with `display.scroll(temperature())`.
+      Then put your thumb on the back of the micro:bit for **30 seconds** and try again.
+      The reading rises **slowly**, maybe from 22 to 24 °C. Did your number go up?
+    check:
+      question: The room is 21 °C. What will `temperature()` most likely show?
+      choices: ["19", "22", "30"]
+      answer: 1
+      why: The sensor is in the chip, which runs a degree or two warmer than the room.
+      hint: Where is the sensor? Does that place run cooler or warmer than the air, and by a lot or a little?
   - text: |
       ### Lists remember many values
       A normal variable holds **one** value. A **list** holds lots of them, in order.
@@ -91,6 +88,12 @@ learn:
         - {icon: "📭", label: "readings = []"}
         - {icon: "➕", label: "append(21) → [21]"}
         - {icon: "➕", label: "append(23) → [21, 23]"}
+    check:
+      question: "`readings = []`, then `readings.append(4)` and `readings.append(7)`. What is `len(readings)`?"
+      choices: ["2", "7", "11"]
+      answer: 0
+      why: len() counts how many items are in the list, and there are two.
+      hint: len() doesn't add the numbers up or look at the last one. What does it count?
   - text: |
       ### Python's data tools
       Once your readings are in a list, Python can sum them up for you:
@@ -105,19 +108,23 @@ learn:
       min: 20
       max: 25
       caption: "Here min is 21, max is 24, and the average is about 22.4."
-  - text: |
-      ### Keep only the newest 30
-      The micro:bit has **limited memory**. So we keep only the **newest 30** readings.
+    more: |
+      **Bonus: save your data with `log`.** The micro:bit V2 can **save readings**, even after you
+      unplug it. Each `log.add()` adds a row to a table.
 
-      Each item has a **position**, starting at **0**. `readings[0]` is the first one.
+      ```python
+      import log
+      log.set_labels('temp', timestamp=log.SECONDS)
+      log.add(temp=temperature())
+      ```
 
-      `readings.pop(0)` removes the **oldest**, at the front of the list.
-    visual:
-      type: flow
-      steps:
-        - {icon: "➕", label: "append: new one at end"}
-        - {icon: "🔢", label: "more than 30?"}
-        - {icon: "🗑️", label: "pop(0): drop the oldest"}
+      Plug it into a computer. Open the **MICROBIT** drive. Double-click **MY_DATA.HTM** to see a table and a chart.
+    check:
+      question: Which one finds the **highest** reading in the list?
+      choices: ["min(readings)", "len(readings)", "max(readings)"]
+      answer: 2
+      why: max() gives the highest value. min() gives the lowest.
+      hint: Each tool on the card has its own job. Match the jobs one by one.
   - text: |
       ### A warning light with a threshold
       A **threshold** is a cut-off.
@@ -127,28 +134,24 @@ learn:
 
       That's just `if` / `else` with `pin0.write_digital()`. You already know this!
     visual:
-      type: graph
-      points: [24, 25, 25, 26, 27, 29, 30, 29, 27, 26]
-      line: {y: 28, label: "HOT = 28"}
-      y_label: "°C"
-      caption: "Red dots are above HOT, so the warning LED is on."
-  - text: |
-      ### Bonus: save your data with `log`
-      The micro:bit V2 can **save readings**, even after you unplug it. Each `log.add()` adds a row to a table.
-
-      ```python
-      import log
-      log.set_labels('temp', timestamp=log.SECONDS)
-      log.add(temp=temperature())
-      ```
-
-      Plug it into a computer. Open the **MICROBIT** drive. Double-click **MY_DATA.HTM** to see a table and a chart.
-    visual:
-      type: flow
-      steps:
-        - {icon: "💾", label: "log.add() saves a row"}
-        - {icon: "🔌", label: "Unplug: data stays"}
-        - {icon: "📊", label: "Open MY_DATA.HTM"}
+      type: try
+      kind: sensor
+      min: 15
+      max: 35
+      start: 24
+      threshold: 28
+      op: ">="
+      unit: " °C"
+      label: temperature
+      read: "temperature()"
+      then: "At or above HOT: the red LED on pin 0 turns ON."
+      else: "Below HOT: the LED stays off."
+    check:
+      question: HOT is 28 and the reading is **exactly 28**. What does the red LED do?
+      choices: ["Stays off: 28 isn't above HOT", "Turns on: 28 counts"]
+      answer: 1
+      why: The rule is "at or above" HOT, so 28 itself turns the LED on.
+      hint: Read the rule again carefully. Does it say only "above", or something more?
 circuit:
   intro: >-
     This is the same LED circuit you built before: P0 → resistor → LED → GND.
@@ -239,6 +242,17 @@ code:
       explain: "`if` / `else` with the threshold: the LED and the face show if it's too hot."
     - lines: "19-24"
       explain: "`min()` and `max()` give Lo and Hi. The average is the total divided by how many."
+  remember:
+    - text: |
+        **Keep only the newest 30:** the micro:bit has **limited memory**. Each item has a **position**,
+        starting at **0**, so `readings[0]` is the first (oldest) one. `readings.pop(0)` removes it
+        from the front of the list.
+      visual:
+        type: flow
+        steps:
+          - {icon: "➕", label: "append: new one at end"}
+          - {icon: "🔢", label: "more than 30?"}
+          - {icon: "🗑️", label: "pop(0): drop the oldest"}
   try_it:
     - Set HOT one degree above the room's temperature. Warm the micro:bit in your hand until the LED turns on.
     - Press A right away, then again after warming it. How do Lo and Hi change?

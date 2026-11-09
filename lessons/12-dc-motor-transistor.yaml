@@ -63,29 +63,20 @@ learn:
       items:
         - {icon: "📍", title: "micro:bit pin", text: "a few mA at 3 V. Fine for an LED."}
         - {icon: "⚙️", title: "Small motor", text: "100-500 mA, and more than 3 V."}
+    check:
+      question: A pin gives a few mA. About how much current does a small motor need?
+      choices: ["About the same as an LED", "100-500 mA", "Less than an LED"]
+      answer: 1
+      why: A motor needs hundreds of mA, far more than a pin can safely give.
+      hint: The card says a pin is "weak" for a motor. Is the motor's need bigger or smaller?
   - text: |
       ### A transistor is a switch
-      The motor gets its **own battery**. We need a way for the pin to switch
-      that battery on and off.
+      A **transistor** is an electronic switch. A **tiny** current from P0 turns on a **big** current from the motor's **own battery**.
 
-      A **transistor** is an electronic switch. A **tiny** current from P0
-      turns on a **big** current from the battery.
-    visual:
-      type: flow
-      steps:
-        - {icon: "📍", label: "P0: tiny signal"}
-        - {icon: "🔀", label: "transistor switch"}
-        - {icon: "🔋", label: "battery current flows"}
-        - {icon: "⚙️", label: "motor spins"}
-  - text: |
-      ### Three legs
       An **NPN transistor** has three legs:
-
       * **Collector (C)**: the big current comes **in** (from the motor).
       * **Base (B)**: the **control** leg (from P0, through a resistor).
       * **Emitter (E)**: the current goes **out** to ground.
-
-      A little current into the base lets the motor current flow C → E.
     visual:
       type: flow
       caption: The path of the big motor current.
@@ -95,20 +86,16 @@ learn:
         - {icon: "C", label: "collector"}
         - {icon: "E", label: "emitter"}
         - {icon: "⏚", label: "ground"}
-  - text: |
-      ### Which leg is which?
-      Hold the **PN2222A / 2N2222A** with the **flat side facing you**, legs down.
-
-      Left to right: **E - B - C** (Emitter, Base, Collector).
-
-      **Watch out:** some parts stamped **P2N2222A** are the other way round
-      (C - B - E)! Read the letters and check with your teacher.
-    visual:
-      type: part
-      part: transistor
-      pins: [E, B, C]
-      label: PN2222A
-      caption: "Flat side facing you: E - B - C, left to right."
+    more: |
+      **How the switch works:** a little current into the **base** lets the big motor current flow
+      from the **collector** to the **emitter**. No base current, no motor current. That's how a weak
+      pin can switch a strong battery on and off.
+    check:
+      question: Which leg does the big motor current go **out** of, on its way to ground?
+      choices: ["Base", "Collector", "Emitter"]
+      answer: 2
+      why: Current comes in at the collector and goes out the emitter to ground.
+      hint: One leg is only for control. Of the other two, which one is the way in and which is the way out?
   - text: |
       ### The flyback diode
       A motor is full of coiled wire. When it switches off, the coil makes a quick **voltage spike**. It can zap the transistor.
@@ -121,6 +108,12 @@ learn:
       part: diode
       labels: {stripe: "to battery +", anode: "to collector"}
       caption: "The stripe (cathode) faces battery +."
+    check:
+      question: Which way does the diode's **stripe** face?
+      choices: ["Toward battery +", "Toward ground", "Either way works"]
+      answer: 0
+      why: The stripe (cathode) goes to the battery + side, so the diode sits backwards across the motor.
+      hint: A diode only lets current go one way, so direction matters. Check the last bullet.
   - text: |
       ### Speed control with PWM
       `pin0.write_digital(1)` turns the motor fully on.
@@ -128,11 +121,17 @@ learn:
       `pin0.write_analog(512)` switches the transistor on and off very fast.
       The motor gets power about **half** the time, so it spins **slower**.
     visual:
-      type: wave
-      duty: [25, 50, 100]
-      values: [256, 512, 1023]
-      caption: More ON time means more power and a faster motor.
-      alt: "Three PWM signals: 25, 50 and 100 percent on-time. More on-time means a faster motor."
+      type: try
+      kind: pwm
+      show: motor
+      code: "pin0.write_analog({value})"
+      start: 200
+    check:
+      question: Which line makes the motor spin at about **half** speed?
+      choices: ["pin0.write_digital(1)", "pin0.write_analog(512)", "pin0.write_analog(1023)"]
+      answer: 1
+      why: 512 is about half of 1023, so the motor gets power about half the time.
+      hint: Full power is 1023, all the time. Which choice gives power only some of the time?
 circuit:
   intro: >-
     The micro:bit uses the **top** rails. The battery uses the **bottom**
@@ -202,6 +201,17 @@ circuit:
         - {type: dcmotor, id: motor1}
         - {type: wire, from: motor1.a, to: g22, color: red}
         - {type: wire, from: motor1.b, to: a22, color: orange}
+  remember:
+    - text: |
+        **Which transistor leg is which?** Hold the **PN2222A / 2N2222A** with the **flat side facing you**,
+        legs down. Left to right: **E - B - C** (Emitter, Base, Collector). **Watch out:** some parts
+        stamped **P2N2222A** are the other way round (C - B - E)! Read the letters and check with your teacher.
+      visual:
+        type: part
+        part: transistor
+        pins: [E, B, C]
+        label: PN2222A
+        caption: "Flat side facing you: E - B - C, left to right."
   verify:
     connected:
       - [mb.P0, r1.a]

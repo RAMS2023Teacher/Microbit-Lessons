@@ -62,6 +62,12 @@ learn:
       type: wave
       duty: [10, 50, 100]
       caption: "Same 3 volts when on. More on-time looks brighter."
+    check:
+      question: A PWM pin is on only a tenth of the time. What do you see?
+      choices: ["A fast blink", "A dim glow", "Full brightness"]
+      answer: 1
+      why: It switches too fast to see, so your brain sees the average, which is dim.
+      hint: Can your eyes keep up with the blinking? What does your brain see instead?
   - text: |
       ### write_analog: 0 to 1023
       `pin0.write_analog(n)` makes PWM on pin 0.
@@ -70,11 +76,29 @@ learn:
       * **512** is on about half the time.
       * **1023** is always on: full brightness.
 
-      The fraction of time the pin is on is the **duty cycle**. The micro:bit does the fast blinking for you!
+      The fraction of time the pin is on is the **duty cycle**. Drag the slider to try it.
+    more: |
+      **Why 1023? Counting in binary.** Computers store numbers in **binary**, using only **0s and 1s**.
+      Each digit is a **bit**, and every extra bit **doubles** how many numbers you can make.
+      8 bits make 256 numbers (0 to 255). 10 bits make 1024 numbers: **0 to 1023**.
+      `write_analog` uses **10 bits**, so all ten bits on (1111111111) = 1023.
+
+      **One number, three ways.** Programmers can write a number in different **bases** (ways of counting):
+      **base 10** is 1023, **binary** (base 2) is 1111111111, and **hexadecimal** (hex, base 16) is 3ff.
+      Try `display.scroll(bin(1023))` and `display.scroll(hex(1023))`. Python shows binary as
+      `0b1111111111` and hex as `0x3ff`.
     visual:
-      type: wave
-      duty: [0, 25, 50, 100]
-      values: [0, 256, 512, 1023]
+      type: try
+      kind: pwm
+      code: "pin0.write_analog({value})"
+      max: 1023
+      start: 512
+    check:
+      question: Which value makes the LED **fully** bright?
+      choices: ["1", "512", "1023"]
+      answer: 2
+      why: 1023 is the top of the range, so the pin is always on.
+      hint: Is full brightness at the bottom, the middle or the top of the range?
   - text: |
       ### for loops and range()
       A **for loop** runs once for each number.
@@ -94,6 +118,12 @@ learn:
         - {icon: "4️⃣", label: "n = 4"}
         - {icon: "6️⃣", label: "n = 6"}
         - {icon: "8️⃣", label: "n = 8"}
+    check:
+      question: What is the **last** number `range(0, 10, 2)` makes?
+      choices: ["8", "10", "12"]
+      answer: 0
+      why: range stops before the stop number, so 10 is never reached. The last one is 8.
+      hint: Does range ever reach its stop number?
   - text: |
       ### Counting down
       To count **down**, use a **negative step**.
@@ -101,6 +131,10 @@ learn:
       `range(10, 0, -2)` gives 10, 8, 6, 4, 2.
 
       It still **stops before** the stop number, so 0 is never reached.
+    more: |
+      **Putting it together: a fade.** Count **up** from 0 to 1023 and give each number to `write_analog`.
+      The LED gets a tiny bit brighter each time. Then count back **down**. That's a **fade**, like the
+      "breathing" light on a sleeping laptop.
     visual:
       type: scale
       min: 0
@@ -113,50 +147,12 @@ learn:
         - {at: 6, label: "6", pointer: true}
         - {at: 8, label: "8", pointer: true}
         - {at: 10, label: "10 (start)", pointer: true}
-  - text: |
-      ### Putting it together: a fade
-      * Count **up** from 0 to 1023. Give each number to `write_analog`. The LED gets a tiny bit brighter each time.
-      * Then count back **down**.
-
-      That's a **fade**, like the "breathing" light on a sleeping laptop.
-    visual:
-      type: flow
-      loop: true
-      loop_label: repeat forever
-      steps:
-        - {icon: "🌑", label: "start at 0 (off)"}
-        - {icon: "📈", label: "count up, get brighter"}
-        - {icon: "🌕", label: "1023 (full)"}
-        - {icon: "📉", label: "count down, get dimmer"}
-  - text: |
-      ### Why 1023? Counting in binary
-      Computers store numbers in **binary**, using only **0s and 1s**. Each digit is a **bit**.
-
-      * Every extra bit **doubles** how many numbers you can make.
-      * 8 bits make 256 numbers (0 to 255).
-      * 10 bits make 1024 numbers: **0 to 1023**.
-
-      `write_analog` uses **10 bits**. All ten bits on = 1023.
-    visual:
-      type: bits
-      value: 1023
-      bits: 10
-      caption: "1023 in binary is 1111111111: all ten bits on."
-  - text: |
-      ### One number, three ways
-      Programmers can write the same number in different **bases** (ways of counting).
-
-      * **Binary** is base 2.
-      * **Hexadecimal** (hex) is base 16.
-
-      Try `display.scroll(bin(1023))` and `display.scroll(hex(1023))`.
-    visual:
-      type: compare
-      caption: "Python shows binary as 0b1111111111 and hex as 0x3ff."
-      items:
-        - {icon: "🔟", title: "Base 10", text: "1023"}
-        - {icon: "💻", title: "Binary (base 2)", text: "1111111111"}
-        - {icon: "🔣", title: "Hex (base 16)", text: "0x3ff"}
+    check:
+      question: Which range counts **down** from 10?
+      choices: ["range(10, 0, 2)", "range(10, 0, -2)", "range(0, 10, 2)"]
+      answer: 1
+      why: A negative step subtracts each time, so the numbers go down.
+      hint: To go down, should the step add or take away?
 circuit:
   intro: >-
     It's the same LED circuit as Lesson 3: P0 → resistor → LED → GND. If it's
@@ -381,6 +377,6 @@ standards:  # Massachusetts DLCS framework (2016), grades 6-8
   - code: 6-8.CS.a.4
     how: PWM is how a digital controller makes an output look like it's in between on and off.
   - code: 6-8.CT.c.1
-    how: "A Learn card shows the same number in base 10, binary (1023 = 1111111111) and hexadecimal (0x3ff), and students use bin() and hex()."
+    how: "A Learn card's *More about this* section shows the same number in base 10, binary (1023 = 1111111111) and hexadecimal (0x3ff), and students use bin() and hex()."
   - code: 6-8.CT.c.2
     how: "Students see why write_analog stops at 1023: the micro:bit stores it as a 10-bit binary integer."

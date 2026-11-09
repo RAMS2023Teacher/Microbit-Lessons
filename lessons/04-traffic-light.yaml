@@ -63,22 +63,12 @@ learn:
         - {icon: "🔴", title: "Red", text: "P0 + its own resistor"}
         - {icon: "🟡", title: "Yellow", text: "P1 + its own resistor"}
         - {icon: "🟢", title: "Green", text: "P2 + its own resistor"}
-  - text: |
-      ### One shared ground rail
-      All three short legs (**cathodes**) go to the same **ground rail**. That's the long **–** strip on the breadboard.
-
-      Sharing ground is fine. Every loop still ends at **GND**.
-    visual:
-      type: circuit
-      caption: "Three black wires join each short leg to the blue (–) rail."
-      add:
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: led, id: led_red, anode: e9, cathode: e10, color: red}
-        - {type: led, id: led_yellow, anode: e17, cathode: e18, color: yellow}
-        - {type: led, id: led_green, anode: e25, cathode: e26, color: green}
-        - {type: wire, from: a10, to: T-10, color: black}
-        - {type: wire, from: a18, to: T-18, color: black}
-        - {type: wire, from: a26, to: T-26, color: black}
+    check:
+      question: Your code turns on **P1**. Which LED lights?
+      choices: ["Red", "Yellow", "Green"]
+      answer: 1
+      why: The yellow LED is wired to P1, so switching P1 on lights yellow.
+      hint: Each color has its own pin. Find the one on P1.
   - text: |
       ### Functions: name your recipes
       Turning on red takes two steps: turn the others off, then turn red on. Wrap those lines in a **function**:
@@ -95,6 +85,12 @@ learn:
       items:
         - {icon: "😩", title: "No function", text: "Type the same lines every time"}
         - {icon: "😎", title: "With a function", text: "Write red() and it's done"}
+    check:
+      question: Which line starts a function called `green`?
+      choices: ["green()", "green = 1", "def green():"]
+      answer: 2
+      why: "def defines a function: the name, then (), then a colon."
+      hint: Calling a function and defining it look different. Which one writes the recipe?
   - text: |
       ### Defining isn't doing
       Defining a function is like writing a recipe card. Nothing gets cooked yet.
@@ -107,6 +103,12 @@ learn:
       items:
         - {icon: "📝", title: "red", text: "Only names the recipe. Nothing happens."}
         - {icon: "▶️", title: "red()", text: "Calls the function. The red LED turns on!"}
+    check:
+      question: Your loop has the line `red` with no parentheses. What happens?
+      choices: ["Nothing, the function isn't called", "The red LED turns on", "The red LED blinks"]
+      answer: 0
+      why: Without () the name is only mentioned, not called, so the recipe never runs.
+      hint: Look at the two boxes in the picture. What's different about them?
   - text: |
       ### A sequence in a loop
       A **sequence** is steps in a set order. The main loop calls the functions one after another.
@@ -121,6 +123,12 @@ learn:
         - {icon: "🟢", label: "green() for 3 s"}
         - {icon: "🟡", label: "yellow() for 1 s"}
         - {icon: "🔴", label: "red() for 3 s"}
+    check:
+      question: What sets how long the green light stays on?
+      choices: ["The green() function", "The sleep() after green()", "The green LED's resistor"]
+      answer: 1
+      why: green() turns the light on, then sleep() holds it there before the next light.
+      hint: Which command makes the program wait?
 circuit:
   intro: >-
     You'll build three copies of the LED loop from last time, side by side:
@@ -129,6 +137,21 @@ circuit:
     - Always build with the micro:bit unplugged.
     - Never connect 3V straight to GND with a wire - that's a short circuit.
     - Every LED gets its own resistor.
+  remember:
+    - text: |
+        **One shared ground rail:** all three short legs (**cathodes**) go to the same long **–** strip
+        on the breadboard. Sharing ground is fine. Every loop still ends at **GND**.
+      visual:
+        type: circuit
+        caption: "Three black wires join each short leg to the blue (–) rail."
+        add:
+          - {type: wire, from: mb.GND, to: T-1, color: black}
+          - {type: led, id: led_red, anode: e9, cathode: e10, color: red}
+          - {type: led, id: led_yellow, anode: e17, cathode: e18, color: yellow}
+          - {type: led, id: led_green, anode: e25, cathode: e26, color: green}
+          - {type: wire, from: a10, to: T-10, color: black}
+          - {type: wire, from: a18, to: T-18, color: black}
+          - {type: wire, from: a26, to: T-26, color: black}
   steps:
     - title: Ground rail
       instruction: >-

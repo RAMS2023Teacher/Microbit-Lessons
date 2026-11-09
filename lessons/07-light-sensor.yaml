@@ -58,26 +58,21 @@ learn:
       ```python
       value = pin1.read_analog()    # 0 = 0 volts ... 1023 = 3 volts
       ```
+    more: |
+      **The micro:bit can already sense light!** The 5×5 LEDs can work backwards as a light sensor:
+      `level = display.read_light_level()` gives **0 (dark) to 255 (bright)**. But you can't move it or point it,
+      so today we also build a sensor we can put **anywhere**.
     visual:
       type: compare
       items:
         - {icon: "🔘", title: "Digital", text: "Only 0 or 1, like a button"}
         - {icon: "🌗", title: "Analog", text: "Any number from 0 to 1023, like light"}
-  - text: |
-      ### The micro:bit can already sense light!
-      The 5×5 LEDs can work backwards as a light sensor:
-      ```python
-      level = display.read_light_level()   # 0 (dark) to 255 (bright)
-      ```
-      But you can't move it or point it. Today we also build a sensor we can put **anywhere**.
-    visual:
-      type: scale
-      min: 0
-      max: 255
-      label: "display.read_light_level()"
-      marks:
-        - {at: 0, label: "0 dark"}
-        - {at: 255, label: "255 bright"}
+    check:
+      question: Which reading could only come from an **analog** input?
+      choices: ["0", "1", "612"]
+      answer: 2
+      why: A digital input only gives 0 or 1. Any number in between means analog.
+      hint: Which numbers can a digital input give? Which choice is not one of them?
   - text: |
       ### The photoresistor
       A **photoresistor (LDR)** is a resistor that changes with light.
@@ -85,28 +80,16 @@ learn:
       * **Bright** → low resistance
       * **Dark** → high resistance
 
-      But the micro:bit can't read resistance. It reads **voltage**. So we need one more trick...
+      The micro:bit can't read resistance. It reads **voltage**. So we build a **voltage divider**: two resistors share the 3 volts, like a **tug-of-war**, and P1 reads the middle.
     visual:
       type: part
       part: ldr
-  - text: |
-      ### The voltage divider
-      Two resistors share the 3 volts, like a **tug-of-war**:
-
-      **3V → LDR → P1 → 10 kΩ → GND**
-
-      P1 sits in the middle. It reads the voltage where the two parts meet.
-    visual:
-      type: circuit
-      caption: "P1 (green) connects where the LDR and the 10 kΩ meet."
-      add:
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: wire, from: mb.3V, to: T+1, color: red}
-        - {type: ldr, id: ldr1, a: d20, b: d22}
-        - {type: resistor, id: r2, a: b22, b: b26, ohms: 10000}
-        - {type: wire, from: T+20, to: a20, color: red}
-        - {type: wire, from: mb.P1, to: a22, color: green}
-        - {type: wire, from: a26, to: T-26, color: black}
+    check:
+      question: You cover the photoresistor with your hand. Its resistance…
+      choices: ["goes down", "goes up", "stays the same"]
+      answer: 1
+      why: Dark means high resistance, so covering it makes the resistance go up.
+      hint: Is it bright or dark under your hand?
   - text: |
       ### Who wins the tug-of-war?
       * **Bright:** the LDR is weak (low resistance). P1 is pulled **up** toward 3V.
@@ -118,6 +101,12 @@ learn:
       items:
         - {icon: "☀️", title: "Bright", text: "Low resistance, so a big number"}
         - {icon: "🌙", title: "Dark", text: "High resistance, so a small number"}
+    check:
+      question: It gets dark in the room. What happens to the number on P1?
+      choices: ["It gets bigger", "It gets smaller", "It stays at 1023"]
+      answer: 1
+      why: In the dark the 10 kΩ wins the tug-of-war and pulls P1 down toward GND.
+      hint: Who wins the tug-of-war in the dark, and which way do they pull?
   - text: |
       ### Pick a threshold
       A **threshold** is a cut-off number.
@@ -129,27 +118,23 @@ learn:
 
       That's **sense → decide → act**: read the light, choose with `if`, then switch the LED.
     visual:
-      type: scale
+      type: try
+      kind: sensor
       min: 0
       max: 1023
-      zones:
-        - {from: 0, to: 300, label: "dark: LED on", color: "#d9dcf2"}
-        - {from: 300, to: 1023, label: "bright: LED off", color: "#fff3c4"}
-      marks:
-        - {at: 0, label: "0"}
-        - {at: 300, label: "threshold 300", pointer: true}
-        - {at: 1023, label: "1023"}
-  - text: |
-      ### More than two choices: elif
-      ```python
-      if light < 300:
-          display.show("D")
-      elif light < 700:
-          display.show("M")
-      else:
-          display.show("B")
-      ```
-      `elif` means **else if**. Python checks from the top and runs only the **first** match.
+      threshold: 300
+      op: "<"
+      read: "pin1.read_analog()"
+      start: 600
+      label: "light reading"
+      then: "Dark: the night light turns ON."
+      else: "Bright: the night light stays OFF."
+    check:
+      question: Your threshold is 300 and the reading is 150. What does the night light do?
+      choices: ["It stays off", "It blinks", "It turns on"]
+      answer: 2
+      why: 150 is below the threshold, so it's dark and the light turns on.
+      hint: Is 150 above or below the cut-off? Drag the slider to check.
 circuit:
   intro: >-
     You'll keep the LED on pin 0 and add a light sensor on pin 1. This time we
@@ -159,6 +144,21 @@ circuit:
     - Always build with the micro:bit unplugged.
     - Never connect the red (+) rail straight to the blue (–) rail - that's a short circuit.
     - Use the 10 kΩ resistor (brown-black-orange) for the sensor, not the 220 Ω one.
+  remember:
+    - text: |
+        **Voltage divider:** **3V → LDR → P1 → 10 kΩ → GND**. P1 sits in the middle, where the LDR and
+        the 10 kΩ meet, and reads the voltage there.
+      visual:
+        type: circuit
+        caption: "P1 (green) connects where the LDR and the 10 kΩ meet."
+        add:
+          - {type: wire, from: mb.GND, to: T-1, color: black}
+          - {type: wire, from: mb.3V, to: T+1, color: red}
+          - {type: ldr, id: ldr1, a: d20, b: d22}
+          - {type: resistor, id: r2, a: b22, b: b26, ohms: 10000}
+          - {type: wire, from: T+20, to: a20, color: red}
+          - {type: wire, from: mb.P1, to: a22, color: green}
+          - {type: wire, from: a26, to: T-26, color: black}
   steps:
     - title: Power rails
       instruction: >-
@@ -264,6 +264,11 @@ code:
 practice:
   level: "write"
   prompt: "Write it yourself. Show 'D' for dark, 'M' for medium and 'B' for bright. Pick your own two cut-off numbers."
+  remember:
+    - text: |
+        **More than two choices: elif.** `elif` means **else if**. Put it between `if` and `else`.
+        Python checks from the top and runs only the **first** match, e.g.
+        `if light < 300:` … `elif light < 700:` … `else:`
   starter: "from microbit import *\n\nwhile True:\n    light = pin1.read_analog()\n    # choose D, M or B with if, elif and else\n    sleep(100)\n"
   solution: "from microbit import *\n\nwhile True:\n    light = pin1.read_analog()\n    if light < 300:\n        display.show(\"D\")\n    elif light < 700:\n        display.show(\"M\")\n    else:\n        display.show(\"B\")\n    sleep(100)\n"
   hints: ["Check the smallest group first.", "elif goes between if and else."]
