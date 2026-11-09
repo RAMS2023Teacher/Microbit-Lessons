@@ -110,6 +110,17 @@ def delete_class(cid):
     return redirect(url_for("teacher.home"))
 
 
+@bp.post("/classes/<int:cid>/skip-learn")
+@teacher_required
+def skip_learn(cid):
+    c = _own_class(cid)
+    c.skip_learn = request.form.get("skip") == "1"
+    db.session.commit()
+    flash("Learn cards are hidden for this class: you'll teach that part live." if c.skip_learn
+          else "Learn cards are back on for this class.", "info")
+    return redirect(url_for("teacher.classroom", cid=cid))
+
+
 @bp.post("/classes/<int:cid>/assign")
 @teacher_required
 def assign(cid):

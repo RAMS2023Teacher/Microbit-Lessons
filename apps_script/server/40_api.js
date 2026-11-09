@@ -42,15 +42,19 @@ function failing_(results) {
 function api(path, bodyJson) {
   try {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
-    var m = /^\/api\/lessons\/([\w-]+)\/(save|sent|practice|debug|quiz|challenge|partner)$/.exec(path);
+    var m = /^\/api\/lessons\/([\w-]+)\/(save|sent|practice|debug|quiz|challenge|partner|learn-check)$/.exec(path);
     if (path === '/api/avatar') return apiAvatar_(body);
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];
     if (!L) return { status: 404, body: { error: 'No such lesson' } };
     if (m[2] === 'partner') return { status: 200, body: { status: 'none', classmates: [] } };   // partners come later
+    if (m[2] === 'learn-check' && whoIs_().teacher) {      // the teacher can try the checks; nothing is saved
+      var g = gradeLearnCheck_(L, body.card, body.choice);
+      return g ? { status: 200, body: { ok: true, check: g } } : { status: 400, body: { ok: false, error: 'No such check' } };
+    }
     var ctx = student_();
     var p = ctx.rec.progress[L.id] || (ctx.rec.progress[L.id] = newProgress_());
-    return { status: 200, body: API_[m[2]](ctx, L, p, body) };
+    return { status: 200, body: API_[m[2].replace('-', '_')](ctx, L, p, body) };
   } catch (e) {
     if (e && e.status) return { status: e.status, body: { ok: false, error: e.message } };
     return { status: 400, body: { ok: false, error: (e && e.message) || 'Something went wrong.' } };
@@ -59,7 +63,28 @@ function api(path, bodyJson) {
 
 function badRequest_(msg) { var e = new Error(msg); e.status = 400; return e; }
 
+/** A Learn card's quick check, graded here so the answers never reach the browser. Null if there's no check. */
+function gradeLearnCheck_(L, card, choice) {
+  var ck = (L.learn_checks || [])[card];
+  if (typeof card !== 'number' || !ck) return null;
+  var correct = choice === ck.answer;
+  return { correct: correct, why: correct ? ck.why : '', hint: correct ? '' : ck.hint };
+}
+
 var API_ = {
+  learn_check: function (ctx, L, p, d) {
+    var g = gradeLearnCheck_(L, d.card, d.choice);
+    if (!g) throw badRequest_('No such check');
+    p.learn_checks = p.learn_checks || {};
+    var row = p.learn_checks[String(d.card)] || { tries: 0, ok: false };
+    if (!row.ok) {
+      row.tries++;
+      row.ok = g.correct;
+      if (g.correct) row.pick = d.choice;
+    }
+    p.learn_checks[String(d.card)] = row;
+    return finish_(ctx, L, p, { check: g, learn_checks: p.learn_checks });
+  },
   save: function (ctx, L, p, d) {
     ['code', 'practice_code', 'debug_code', 'challenge_code', 'challenge_response', 'debug_reflection'].forEach(function (f) {
       if (d[f] !== undefined) p[f] = text_(d[f]);

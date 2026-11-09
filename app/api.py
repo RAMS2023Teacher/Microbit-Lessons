@@ -65,6 +65,28 @@ def save(lesson_id):
     return _finish(lesson, p)
 
 
+@bp.post("/lessons/<lesson_id>/learn-check")
+@login_required
+def learn_check(lesson_id):
+    """One tap on a Learn card's quick check. Graded here so the answers never reach the browser."""
+    lesson, p = _lesson_and_progress(lesson_id)
+    data = request.get_json(silent=True) or {}
+    card, choice = data.get("card"), data.get("choice")
+    result = L.grade_learn_check(lesson, card, choice)
+    if result is None:
+        abort(400)
+    checks = dict(p.learn_checks or {})
+    row = dict(checks.get(str(card)) or {"tries": 0, "ok": False})
+    if not row["ok"]:
+        row["tries"] += 1
+        row["ok"] = result["correct"]
+        if result["correct"]:
+            row["pick"] = choice
+    checks[str(card)] = row
+    p.learn_checks = checks
+    return _finish(lesson, p, check=result, learn_checks=checks)
+
+
 @bp.post("/lessons/<lesson_id>/sent")
 @login_required
 def sent(lesson_id):

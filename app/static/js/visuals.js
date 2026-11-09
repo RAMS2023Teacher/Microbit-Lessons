@@ -380,7 +380,96 @@
     return svg(W, H, b, v.alt || 'motor driver board with motors and battery');
   }
 
-  const R = { leds, part, circuit, flow, wave, scale, compare, bits, dial, graph, board };
+  // ---------------------------------------------------------------- try (interactive: tap or slide)
+  // Builds its own controls, so it returns null. Kinds: pin, pwm, button, sensor, loop, servo.
+  function bulb(level, label) {
+    const glow = Math.max(0, Math.min(1, level));
+    let b = `<defs><radialGradient id="bulbglow"><stop offset="0" stop-color="${RED}" stop-opacity="${0.75 * glow}"/><stop offset="1" stop-color="${RED}" stop-opacity="0"/></radialGradient></defs>`;
+    b += `<circle cx="80" cy="62" r="56" fill="url(#bulbglow)"/>`;
+    b += `<path d="M58 70 v-22 a22 22 0 0 1 44 0 v22 z" fill="${glow > 0.02 ? RED : '#e7c9c9'}" opacity="${0.35 + 0.65 * glow}" stroke="#b91c1c" stroke-width="2"/>`;
+    b += `<rect x="54" y="70" width="52" height="7" rx="2" fill="#b91c1c" opacity=".7"/>`;
+    b += `<line x1="70" y1="77" x2="70" y2="110" stroke="${MUTED}" stroke-width="3"/><line x1="90" y1="77" x2="90" y2="100" stroke="${MUTED}" stroke-width="3"/>`;
+    return svg(160, 118, b, label || 'an LED');
+  }
+  function tryIt(v, box) {
+    const k = v.kind;
+    const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+    const art = el('div', 'try-art'), controls = el('div', 'try-controls'), code = el('div', 'try-code'), out = el('div', 'try-out');
+    box.append(art, controls, code, out);
+    const btn = (label, on) => { const b = el('button', on ? 'on' : ''); b.type = 'button'; b.textContent = label; controls.appendChild(b); return b; };
+    const slider = (min, max, val, label) => {
+      const r = el('input'); r.type = 'range'; r.min = min; r.max = max; r.value = val; r.setAttribute('aria-label', label);
+      controls.appendChild(r); return r;
+    };
+    const fill = (tpl, value) => String(tpl).replace('{value}', value);
+    if (k === 'pin') {
+      const pin = v.pin ?? 0;
+      const on = btn(v.on_label || `pin${pin}.write_digital(1)`), off = btn(v.off_label || `pin${pin}.write_digital(0)`, true);
+      const set = (high) => {
+        on.classList.toggle('on', high); off.classList.toggle('on', !high);
+        art.innerHTML = bulb(high ? 1 : 0, high ? 'LED on' : 'LED off');
+        code.textContent = high ? on.textContent : off.textContent;
+        out.textContent = high ? `Pin ${pin} is ON (3 volts): the LED lights.` : `Pin ${pin} is OFF (0 volts): the LED is dark.`;
+      };
+      on.addEventListener('click', () => set(true)); off.addEventListener('click', () => set(false));
+      set(false);
+    } else if (k === 'pwm' || k === 'servo') {
+      const servo = k === 'servo', max = servo ? 180 : (v.max || 1023);
+      const r = slider(0, max, v.start ?? (servo ? 90 : 512), servo ? 'angle' : 'brightness');
+      const set = () => {
+        const n = +r.value;
+        if (servo) {
+          art.innerHTML = dial({ marks: [{ angle: 0 }, { angle: 90 }, { angle: 180 }, { angle: n, pointer: true, label: '' }] });
+          code.textContent = fill(v.code || 'set_angle({value})', v.map ? Math.round(v.map[0] + (v.map[1] - v.map[0]) * n / 180) : n);
+          out.textContent = `The servo arm turns to ${n}°.`;
+        } else {
+          art.innerHTML = bulb(n / max, `LED at ${Math.round(100 * n / max)}% brightness`);
+          code.textContent = fill(v.code || 'pin0.write_analog({value})', n);
+          out.textContent = `${n} out of ${max}: on about ${Math.round(100 * n / max)}% of the time.`;
+        }
+      };
+      r.addEventListener('input', set);
+      set();
+    } else if (k === 'button') {
+      const label = v.button || 'A', b = btn(`Hold button ${label}`);
+      const set = (down) => {
+        b.classList.toggle('on', down);
+        art.innerHTML = leds({ image: down ? (v.pressed || 'HAPPY') : (v.released || 'OFF') });
+        code.textContent = `button_${label.toLowerCase()}.is_pressed()  →  ${down ? 'True' : 'False'}`;
+        out.textContent = down ? (v.then || 'True: the if block runs.') : (v.else || 'False: the if block is skipped.');
+      };
+      b.addEventListener('pointerdown', (e) => { e.preventDefault(); set(true); });
+      ['pointerup', 'pointerleave', 'blur'].forEach((ev) => b.addEventListener(ev, () => set(false)));
+      b.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); set(true); } });
+      b.addEventListener('keyup', () => set(false));
+      set(false);
+    } else if (k === 'sensor') {
+      const op = v.op || '<', r = slider(v.min, v.max, v.start ?? Math.round((v.min + v.max) / 2), v.label || 'reading');
+      const set = () => {
+        const n = +r.value, yes = op === '<' ? n < v.threshold : n > v.threshold;
+        art.innerHTML = scale({ min: v.min, max: v.max, marks: [{ at: v.threshold, label: `${v.threshold}` }, { at: n, label: `${n}${v.unit || ''}` }] });
+        code.textContent = `reading = ${v.read}   # ${n}\nif reading ${op} ${v.threshold}:   # ${yes ? 'True' : 'False'}`;
+        out.textContent = yes ? v.then : v.else;
+      };
+      r.addEventListener('input', set);
+      set();
+    } else if (k === 'loop') {
+      const steps = v.steps || ['P0', 'resistor', 'LED', 'GND'];
+      const close = btn('Close the gap', true), open = btn('Make a gap');
+      const set = (closed) => {
+        close.classList.toggle('on', closed); open.classList.toggle('on', !closed);
+        art.innerHTML = flow({ loop: true, loop_label: closed ? 'back to the start' : 'GAP: no path back', steps: steps.map((label, i) => ({ label: !closed && i === steps.length - 1 ? `✂ ${label}` : label })) }) + bulb(closed ? 1 : 0, closed ? 'LED on' : 'LED off');
+        code.hidden = true;
+        out.textContent = closed ? 'Electricity can flow all the way around: the LED lights.' : 'One gap anywhere stops the flow: no light.';
+      };
+      close.addEventListener('click', () => set(true)); open.addEventListener('click', () => set(false));
+      set(true);
+    }
+    if (v.hint !== false) box.appendChild(el('div', 'try-hint', k === 'button' ? 'Press and hold the button.' : k === 'pin' || k === 'loop' ? 'Tap the buttons.' : 'Drag the slider.'));
+    return null;
+  }
+
+  const R = { leds, part, circuit, flow, wave, scale, compare, bits, dial, graph, board, try: tryIt };
 
   function render(el, v) {
     const fn = R[v.type];

@@ -7,6 +7,7 @@ LED_ROW = re.compile(r"^[0-9]{5}(:[0-9]{5}){4}$")
 NAMED_IMAGES = {"HEART", "HEART_SMALL", "HAPPY", "SMILE", "SAD", "YES", "NO", "SQUARE", "DIAMOND",
                 "STICKFIGURE", "ARROW_N", "ARROW_E", "ARROW_W", "ARROW_S", "SKULL", "GHOST", "TARGET",
                 "ALL", "OFF"}
+TRY_KINDS = {"pin", "pwm", "button", "sensor", "loop", "servo"}     # interactive: tap or slide to see what happens
 PARTS = {"led", "resistor", "button", "ldr", "potentiometer", "transistor", "diode", "buzzer",
          "servo", "dcmotor", "battery"}
 
@@ -108,6 +109,31 @@ def check_visual(v, where="visual") -> list[str]:
             for m in v.get("motors") or []:
                 if m.get("port") not in ("A", "B"):
                     errs.append(f"{where}: motor port must be A or B")
+    elif t == "try":
+        kind = v.get("kind")
+        if kind not in TRY_KINDS:
+            errs.append(f"{where}: try 'kind' must be one of {sorted(TRY_KINDS)}")
+        if kind == "sensor":
+            for key in ("min", "max", "threshold"):
+                _num(v, key, errs, where)
+            if v.get("op", "<") not in ("<", ">"):
+                errs.append(f"{where}: sensor 'op' must be < or >")
+            if not v.get("read") or not v.get("then") or not v.get("else"):
+                errs.append(f"{where}: sensor needs 'read' (the code that reads it), 'then' and 'else'")
+            if isinstance(v.get("min"), (int, float)) and isinstance(v.get("max"), (int, float)) and not v["min"] < v["max"]:
+                errs.append(f"{where}: sensor min must be below max")
+        if kind == "button":
+            for key in ("pressed", "released"):
+                img = v.get(key)
+                if img is not None and not (isinstance(img, str) and (img in NAMED_IMAGES or LED_ROW.match(img))):
+                    errs.append(f"{where}: button '{key}' must be an LED image name or pattern")
+        if v.get("map") is not None and not (isinstance(v["map"], list) and len(v["map"]) == 2
+                                             and all(isinstance(x, (int, float)) for x in v["map"])):
+            errs.append(f"{where}: 'map' must be [value at 0°, value at 180°]")
+        if kind == "loop" and v.get("steps") and not 2 <= len(v["steps"]) <= 4:
+            errs.append(f"{where}: loop needs 2-4 steps")
+        if v.get("code") and "{value}" not in str(v["code"]) and kind in ("pwm", "servo"):
+            errs.append(f"{where}: 'code' needs {{value}} where the slider's number goes")
     else:
         errs.append(f"{where}: unknown visual type {t!r}")
     return errs

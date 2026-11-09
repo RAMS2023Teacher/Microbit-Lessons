@@ -97,6 +97,8 @@ def build_data():
             "kind": lesson.get("kind") or "lesson", "section_keys": L.section_keys(lesson),
             "has_debug": bool(dbg), "possible_xp": gamify.possible_xp(lesson),
             "quiz": [{"answer": q["answer"], "explain": q["explain"]} for q in lesson["quiz"]],
+            "learn_checks": [{k: c["check"][k] for k in ("answer", "why", "hint")} if c.get("check") else None
+                             for c in lesson.get("learn") or []],
             "debug": {"buggy_code": dbg["buggy_code"], "checks": dbg["checks"]} if dbg else None,
             "practice": {"checks": prac["checks"]} if prac else None,
             "starter": code.get("starter", ""), "buggy": dbg["buggy_code"] if dbg else "",

@@ -47,79 +47,52 @@ warmup:
     wheel). Name one robot job for each.
 learn:
   - text: |
-      ### Python in 30 seconds
-      You already know the micro:bit. Today's code uses three Python tools:
-
-      * `while True:` repeats forever.
-      * `if ...:` makes a choice.
-      * `def name():` makes a recipe you can call by name.
-
-      Lines inside each one are **indented** by 4 spaces.
-    visual:
-      type: compare
-      items:
-        - {icon: "🔁", title: "while True:", text: "repeat forever"}
-        - {icon: "🤔", title: "if ...:", text: "make a choice"}
-        - {icon: "📦", title: "def go():", text: "a recipe with a name"}
-  - text: |
-      ### Python in 30 more seconds
-      * `speed = 5` stores a number in a **variable**.
-      * `else:` runs when the `if` isn't true. `elif` adds another choice.
-      * `==` asks if two things are equal.
-      * `for i in range(4):` repeats 4 times. `range(0, 20, 5)` counts by 5s.
-      * `def spin(ms):` makes a recipe with an **input**. Call it with `spin(500)`.
-  - text: |
       ### Two kinds of servos
       They look the same, but they act differently.
 
-      * A **180° servo** points to an angle and holds it. Use it for arms, doors and flags.
-      * A **continuous servo** spins like a wheel. Use it to drive.
+      * A **180° servo** points to an angle and **holds** it. Use it for arms, doors and flags.
+      * A **continuous servo** **spins** like a wheel. Use it to drive.
 
-      The label may say **FS90R** or **360** on a continuous one.
+      A continuous one may say **FS90R** or **360** on the label.
     visual:
       type: compare
       items:
         - {icon: "📐", title: "180° servo", text: "points and holds: arms, doors"}
         - {icon: "🛞", title: "Continuous servo", text: "spins: wheels"}
-  - text: |
-      ### Meet the sensor shield
-      Every pin gets a 3-pin header: **G** (ground), **V** (power), **S** (signal).
-
-      * Servo wires: **brown → G**, **red → V**, **orange → S**.
-      * Set jumper **V2 to 5V** for servos.
-      * Servos need the **battery pack** in the DC jack. USB alone is too weak.
-    visual:
-      type: board
-      board: shield
-      jumpers: {V1: "3.3V", V2: "5V"}
-      power: "6×AA"
-      plugs:
-        - {pin: 13, device: "Servo", kind: servo}
+    check:
+      question: Your robot needs a **wheel**. Which servo do you grab?
+      choices: ["180° servo", "Continuous servo"]
+      answer: 1
+      why: Wheels need to keep spinning, and only a continuous servo does that.
+      hint: Which one stops at an angle, and which one keeps going around?
   - text: |
       ### Pulses set the angle
-      Every **20 ms** the servo gets a short pulse. A longer pulse means a bigger angle.
+      Every 20 ms the servo gets a short pulse. A **longer pulse** means a **bigger angle**.
 
-      In code, `write_analog` sets the pulse:
+      `write_analog` sets the pulse: **26** → 0°, **77** → 90°, **128** → 180°.
 
-      * **26** → 0°
-      * **77** → 90°
-      * **128** → 180°
+      Drag the slider and watch the number change.
     visual:
-      type: dial
-      caption: "write_analog values for a 180° servo"
-      marks:
-        - {angle: 0, label: "0° · 26"}
-        - {angle: 90, label: "90° · 77", pointer: true}
-        - {angle: 180, label: "180° · 128"}
+      type: try
+      kind: servo
+      code: "pin13.write_analog({value})"
+      map: [26, 128]
+      start: 90
+    check:
+      question: Which number points the arm **straight up** (90°)?
+      choices: ["26", "77", "128"]
+      answer: 1
+      why: 77 is halfway between 26 (0°) and 128 (180°), so it's 90°.
+      hint: Straight up is halfway between 0° and 180°. Which number is in the middle?
   - text: |
       ### Continuous servos: speed, not angle
-      The same numbers mean something else on a wheel servo.
+      The same numbers mean something else on a wheel servo:
 
-      * About **77** → **stop**
-      * Lower → spin one way
-      * Higher → spin the other way
+      * about **77** → **stop**
+      * lower → spin one way
+      * higher → spin the other way
 
-      Every servo's stop point is a little different. You'll **calibrate** yours.
+      Every servo's stop point is a little different, so you'll **calibrate** yours.
     visual:
       type: scale
       min: 51
@@ -132,6 +105,12 @@ learn:
         - {at: 51, label: "51 fast"}
         - {at: 77, label: "77", pointer: true}
         - {at: 102, label: "102 fast"}
+    check:
+      question: On a **continuous** servo, `write_analog(77)` makes it…
+      choices: ["point to 90°", "stop", "spin as fast as it can"]
+      answer: 1
+      why: On a wheel servo, about 77 means stop. Further from 77 means faster.
+      hint: Look at the scale. What's in the pink zone around 77?
 circuit:
   intro: >-
     You'll plug one servo into pin 13 of the sensor shield and power it from the
@@ -140,6 +119,20 @@ circuit:
     - Unplug the battery pack before you plug in or move a servo.
     - Brown wire to G. A backwards servo can be damaged.
     - The two small chips on the shield get hot. Don't touch them.
+  remember:
+    - text: |
+        **Sensor shield headers:** every pin has 3 rows: **G** (ground), **V** (power), **S** (signal).
+        Servo wires go **brown → G**, **red → V**, **orange → S**.
+    - text: |
+        **Servo power:** set jumper **V2 to 5V**, and plug the **battery pack** into the DC jack.
+        USB alone is too weak to move a servo.
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        power: "6×AA"
+        plugs:
+          - {pin: 13, device: "Servo", kind: servo}
   steps:
     - title: Set the jumpers
       instruction: >-
@@ -189,6 +182,11 @@ code:
   intro: >-
     This program points the servo left, up and right. Send it, then watch: does
     your servo **stop** at each spot, or **keep spinning**?
+  remember:
+    - text: |
+        **Python toolkit:** `while True:` repeats forever. `if …:` / `elif` / `else:` make choices.
+        `for i in range(4):` repeats 4 times. `def spin(ms):` makes a recipe with an input; call it
+        with `spin(500)`. Lines inside each one are **indented** 4 spaces.
   starter: |
     from microbit import *
 

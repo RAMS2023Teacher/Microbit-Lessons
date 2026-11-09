@@ -137,11 +137,26 @@ function lessonState_(L, p, rec, cfg) {
     challenge_code: (p && (p.challenge_code || p.code)) || L.starter,
     challenge_response: (p && p.challenge_response) || '', challenge_submitted: !!(p && p.challenge_submitted_at),
     feedback: rec ? ((cfg.feedback[rec.email] || {})[L.id] || '') : '',
+    learn_checks: (p && p.learn_checks) || {},
+    skip_learn: !!(rec && L.section_keys.indexOf('learn') >= 0 && skipsLearn_(rec, cfg)),
   };
+}
+
+/** True when one of the student's classes has the teacher teaching Learn live. */
+function skipsLearn_(rec, cfg) {
+  return studentClassIds_(rec, cfg).some(function (cid) { return cfg.classes[cid].skip_learn; });
 }
 
 function lessonPage_(lid, rec, cfg, base, teacher) {
   var L = DATA.lessons[lid], pg = page_(lid), p = rec ? rec.progress[lid] : null;
+  if (rec && L.section_keys.indexOf('learn') >= 0 && skipsLearn_(rec, cfg) && !(p && p.sections && p.sections.learn)) {
+    p = rec.progress[lid] || (rec.progress[lid] = newProgress_());     // taught live, so it counts as done
+    mark_(p, 'learn', true);
+    p.updated_at = now_();
+    var got = syncRewards_(rec, cfg);
+    saveStudent_(rec);
+    if (got.xp_gained) base = merge_(base, { rewards: got, level: got.level });
+  }
   var state = lessonState_(L, p, rec, cfg);
   if (p && p.quiz_answers) state.quiz_results = gradeQuiz_(L, p.quiz_answers);
   return { name: 'lesson', title: L.title, editor: true, lesson: true, html: pg.html, mainClass: 'lesson-layout',

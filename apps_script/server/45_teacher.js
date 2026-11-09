@@ -122,6 +122,15 @@ function giveBonus(email, amount, reason, badge) {
   return { ok: true, xp: amount };
 }
 
+/** Hide the Learn cards for a class when the teacher teaches that part live. */
+function setSkipLearn(cid, skip) {
+  var cfg = teacher_();
+  if (!cfg.classes[cid]) throw new Error('No such class.');
+  cfg.classes[cid].skip_learn = !!skip;
+  saveConfig_(cfg);
+  return { ok: true, skip_learn: !!skip };
+}
+
 function saveVideos(map) {
   var cfg = teacher_(), out = {};
   Object.keys(map || {}).forEach(function (lid) {

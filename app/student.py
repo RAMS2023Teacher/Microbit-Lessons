@@ -116,6 +116,13 @@ def lesson(lesson_id):
     if not lesson:
         abort(404)
     p = Progress.query.filter_by(user_id=current_user.id, lesson_id=lesson_id).first()
+    skip_learn = bool(lesson.get("learn")) and not current_user.is_teacher and any(c.skip_learn for c in current_user.classes)
+    if skip_learn and not (p and (p.sections or {}).get("learn")):
+        if not p:       # the teacher taught Learn live, so it counts as done
+            p = Progress(user_id=current_user.id, lesson_id=lesson_id, sections={}, circuit_steps=[])
+            db.session.add(p)
+        p.mark("learn")
+        db.session.commit()
     prev, nxt = L.neighbors(lesson_id)
     starter = lesson["code"]["starter"] if lesson.get("code") else ""      # lab lessons have no Python
     buggy = lesson["debug"]["buggy_code"] if lesson.get("debug") else ""
@@ -138,6 +145,8 @@ def lesson(lesson_id):
         "challenge_response": p.challenge_response if p else "",
         "challenge_submitted": bool(p and p.challenge_submitted_at),
         "feedback": p.feedback if p else "",
+        "learn_checks": (p.learn_checks if p else None) or {},
+        "skip_learn": skip_learn,
     }
     if p and p.quiz_answers is not None:
         state["quiz_results"] = L.grade_quiz(lesson, p.quiz_answers)

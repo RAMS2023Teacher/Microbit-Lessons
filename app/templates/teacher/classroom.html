@@ -97,6 +97,16 @@
     <li><span data-avatar='{{ avatar_of(s)|tojson }}' data-size="26"></span> <a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a> <small class="muted">{{ s.username }} · Lv {{ levels[s.id].level }}</small></li>
     {% else %}<li class="muted">Nobody yet.</li>{% endfor %}
   </ul>
+  <form method="post" action="{{ url_for('teacher.skip_learn', cid=c.id) }}" class="skip-learn-form">
+    <h3>Learn cards</h3>
+    {% if c.skip_learn %}
+    <p class="small">🧑‍🏫 <b>Hidden.</b> You teach the Learn part live; students go straight from the warm-up to the next step (they still get the Learn XP).</p>
+    <input type="hidden" name="skip" value="0"><button class="btn small ghost">Show Learn cards again</button>
+    {% else %}
+    <p class="small muted">Teaching the Learn part yourself as a mini-lesson? Hide the Learn cards for this class.</p>
+    <input type="hidden" name="skip" value="1"><button class="btn small ghost">Skip Learn for this class</button>
+    {% endif %}
+  </form>
   <details class="danger-zone">
     <summary>Delete this class</summary>
     <form method="post" action="{{ url_for('teacher.delete_class', cid=c.id) }}">

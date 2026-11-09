@@ -39,8 +39,13 @@ def _add_missing_columns():
             conn.execute(text("ALTER TABLE progress ADD COLUMN practice_code TEXT"))
         if "practice_solved" not in progress_cols:
             conn.execute(text("ALTER TABLE progress ADD COLUMN practice_solved BOOLEAN DEFAULT 0"))
-        if "screen" not in {c["name"] for c in insp.get_columns("classroom")}:
+        class_cols = {c["name"] for c in insp.get_columns("classroom")}
+        if "screen" not in class_cols:
             conn.execute(text("ALTER TABLE classroom ADD COLUMN screen JSON"))
+        if "skip_learn" not in class_cols:
+            conn.execute(text("ALTER TABLE classroom ADD COLUMN skip_learn BOOLEAN DEFAULT 0"))
+        if "learn_checks" not in progress_cols:
+            conn.execute(text("ALTER TABLE progress ADD COLUMN learn_checks JSON"))
 
 
 def create_app(test_config=None):

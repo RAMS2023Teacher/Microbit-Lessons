@@ -51,6 +51,46 @@
     });
   }
 
+  // ----- read to me (the browser's built-in voice) -----
+  const voice = window.speechSynthesis;
+  let reading = null;
+  function stopReading() {
+    if (voice) voice.cancel();
+    if (reading) { reading.textContent = '🔊 Read to me'; reading.classList.remove('on'); }
+    reading = null;
+  }
+  function textToRead(btn) {
+    const box = btn.closest('.learn-card, .remember-box');
+    if (!box) return '';
+    const copy = box.cloneNode(true);
+    copy.querySelectorAll('button, .lc-feedback[hidden], details:not([open]), figure, .vz, svg').forEach((x) => x.remove());
+    copy.querySelectorAll('.learn-check-choices').forEach((x) => {
+      x.textContent = ' The choices are: ' + [...box.querySelectorAll('.lc-choice')].map((b) => b.textContent).join(', or ') + '.';
+    });
+    return copy.textContent.replace(/[⚡💡🔊]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  document.querySelectorAll('[data-read]').forEach((btn) => {
+    if (!voice) { btn.hidden = true; return; }
+    btn.addEventListener('click', () => {
+      if (reading === btn) { stopReading(); return; }
+      stopReading();
+      const u = new SpeechSynthesisUtterance(textToRead(btn));
+      u.rate = 0.95;
+      u.onend = () => { if (reading === btn) stopReading(); };
+      reading = btn;
+      btn.textContent = '⏹ Stop';
+      btn.classList.add('on');
+      voice.speak(u);
+    });
+  });
+
+  // The teacher teaches Learn live for this class: leave it out (the server already counted it done).
+  if (S.skip_learn && $('learn')) {
+    $('learn').remove();
+    const li = document.querySelector('#agenda li[data-key="learn"]');
+    if (li) li.remove();
+  }
+
   // ----- warm-up & learn -----
   if ($('warmup-answer')) autosave($('warmup-answer'), 'warmup_answer', $('warmup-status'));
   (function learnStepper() {
@@ -65,19 +105,73 @@
       b.type = 'button';
       b.textContent = i + 1;
       b.setAttribute('aria-label', `Card ${i + 1} of ${cards.length}`);
-      b.addEventListener('click', () => show(i, true));
+      b.addEventListener('click', () => {
+        for (let j = 0; j < i; j++) if (!passed(j)) { show(j, true); return; }     // answer the earlier checks first
+        show(i, true);
+      });
       li.appendChild(b);
       dots.appendChild(li);
     });
+    // Quick checks: answer each card's question (graded on the server) before moving on.
+    const checks = S.learn_checks || {};
+    const passed = (i) => !cards[i].querySelector('.learn-check') || !!(checks[i] && checks[i].ok);
+    function showPassed(card, row) {
+      const box = card.querySelector('.learn-check');
+      if (!box) return;
+      box.classList.add('passed');
+      box.querySelectorAll('.lc-choice').forEach((b) => {
+        b.disabled = true;
+        if (row && +b.dataset.choice === row.pick) b.classList.add('right');
+      });
+    }
+    cards.forEach((card, i) => {
+      const box = card.querySelector('.learn-check');
+      if (!box) return;
+      if (passed(i)) {
+        showPassed(card, checks[i]);
+        const fb = box.querySelector('.lc-feedback');
+        fb.hidden = false;
+        fb.className = 'lc-feedback good';
+        fb.textContent = '✓ You got this one.';
+      }
+      box.querySelectorAll('.lc-choice').forEach((b) => b.addEventListener('click', async () => {
+        if (passed(i)) return;
+        box.querySelectorAll('.lc-choice').forEach((x) => { x.disabled = true; });
+        const d = await api('/learn-check', { card: i, choice: +b.dataset.choice });
+        const fb = box.querySelector('.lc-feedback');
+        fb.hidden = false;
+        if (!d.check) {
+          fb.className = 'lc-feedback bad';
+          fb.textContent = d.error || 'Could not check that. Try again.';
+          box.querySelectorAll('.lc-choice:not(.wrong)').forEach((x) => { x.disabled = false; });
+          return;
+        }
+        if (d.learn_checks) Object.assign(checks, d.learn_checks);
+        if (d.check.correct) {
+          checks[i] = checks[i] || { ok: true, pick: +b.dataset.choice };
+          showPassed(card, checks[i]);
+          b.classList.add('right');
+          fb.className = 'lc-feedback good';
+          fb.textContent = '✓ ' + d.check.why;
+        } else {
+          b.classList.add('wrong');
+          fb.className = 'lc-feedback bad';
+          fb.textContent = 'Not quite. ' + d.check.hint + ' Try again.';
+          box.querySelectorAll('.lc-choice:not(.wrong)').forEach((x) => { x.disabled = false; });
+        }
+        show(cur, false);
+      }));
+    });
     function show(i, moved) {
+      if (i !== cur) stopReading();
       cur = i;
       seen.add(i);
       cards.forEach((card, j) => { card.hidden = j !== i; });
-      const last = i === cards.length - 1;
+      const last = i === cards.length - 1, ok = passed(i);
       $('learn-count').textContent = `Card ${i + 1} of ${cards.length}`;
       $('learn-prev').hidden = i === 0;
-      $('learn-next').hidden = last;
-      $('learn-done').hidden = !last;
+      $('learn-next').hidden = last || !ok;
+      $('learn-done').hidden = !last || !ok;
       [...dots.children].forEach((li, j) => {
         li.classList.toggle('current', j === i);
         li.classList.toggle('checked', seen.has(j) && j !== i);

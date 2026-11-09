@@ -300,7 +300,12 @@
     });
     else h.push('<li class="muted">Nobody yet.</li>');
     h.push('</ul><details class="danger-zone"><summary>Delete this class</summary><p class="small">Type <b>' + E(c.name) + '</b> to confirm. Student work is kept.</p>' +
-      '<input id="del-name"> <button class="btn small danger" id="del-go" type="button">Delete class</button></details></section></div>');
+      '<input id="del-name"> <button class="btn small danger" id="del-go" type="button">Delete class</button></details>' +
+      '<div class="skip-learn-form"><h3>Learn cards</h3>' + (c.skip_learn
+        ? '<p class="small">🧑‍🏫 <b>Hidden.</b> You teach the Learn part live; students go straight from the warm-up to the next step (they still get the Learn XP).</p>' +
+          '<button class="btn small ghost" id="skip-learn" data-skip="0" type="button">Show Learn cards again</button>'
+        : '<p class="small muted">Teaching the Learn part yourself as a mini-lesson? Hide the Learn cards for this class.</p>' +
+          '<button class="btn small ghost" id="skip-learn" data-skip="1" type="button">Skip Learn for this class</button>') + '</div></section></div>');
     main.innerHTML = h.join('');
     var $ = function (id) { return document.getElementById(id); };
     $('sp-go').addEventListener('click', function () { act(this, 'assignSprint', [c.id, $('sp-branch').value, $('sp-due').value, $('sp-note').value]); });
@@ -315,6 +320,7 @@
     if ($('gc-unlink')) $('gc-unlink').addEventListener('click', function () {
       if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
+    $('skip-learn').addEventListener('click', function () { act(this, 'setSkipLearn', [c.id, this.dataset.skip === '1']); });
     $('del-go').addEventListener('click', function () { act(this, 'deleteClass', [c.id, $('del-name').value], function () { ML.go('/'); }); });
   };
 

@@ -113,6 +113,80 @@ def _check_lab(lab: dict) -> list[str]:
     return errs
 
 
+LEARN_MAX_CARDS = 4
+LEARN_MAX_WORDS = 60        # per card, not counting the 'more' details
+REMEMBER_IN = ("circuit", "code", "practice", "debug", "lab")
+
+
+def words(md: str) -> int:
+    """Words a student reads in a bit of Markdown (code and symbols don't count as extra)."""
+    return len(re.findall(r"[A-Za-z0-9][\w'’.-]*", re.sub(r"[#*`>|]", " ", str(md or ""))))
+
+
+def _check_learn(cards) -> list[str]:
+    errs = []
+    if len(cards) > LEARN_MAX_CARDS:
+        errs.append(f"learn: keep it to {LEARN_MAX_CARDS} cards or fewer (move details into 'remember' boxes where they're used)")
+    for i, card in enumerate(cards, 1):
+        if not isinstance(card, dict):
+            errs.append(f"learn {i}: must be Markdown text or {{text, visual, check}}")
+            continue
+        if not card.get("text"):
+            errs.append(f"learn {i}: a card written as a mapping needs 'text'")
+        elif words(card["text"]) > LEARN_MAX_WORDS:
+            errs.append(f"learn {i}: {words(card['text'])} words; keep cards to {LEARN_MAX_WORDS} (put extra detail in 'more')")
+        if card.get("visual"):
+            errs += check_visual(card["visual"], f"learn {i} visual")
+        ck = card.get("check")
+        if not ck:
+            errs.append(f"learn {i}: add a 'check' (a one-tap question about this card)")
+            continue
+        choices = ck.get("choices") or []
+        if not ck.get("question") or not 2 <= len(choices) <= 4:
+            errs.append(f"learn {i} check: needs a 'question' and 2-4 'choices'")
+        if not isinstance(ck.get("answer"), int) or isinstance(ck.get("answer"), bool) or not 0 <= ck["answer"] < len(choices):
+            errs.append(f"learn {i} check: 'answer' must be a 0-based index into choices")
+        if not ck.get("why"):
+            errs.append(f"learn {i} check: add 'why', shown when they get it right")
+        if not ck.get("hint"):
+            errs.append(f"learn {i} check: add 'hint', shown when they pick a wrong answer")
+        for key in ("question", "why", "hint"):
+            if words(ck.get(key)) > 30:
+                errs.append(f"learn {i} check: '{key}' is over 30 words")
+    return errs
+
+
+def _check_remember(boxes, where) -> list[str]:
+    errs = []
+    if boxes is None:
+        return errs
+    if not isinstance(boxes, list) or not boxes:
+        return [f"{where}.remember: must be a list of {{text, visual}}"]
+    for i, box in enumerate(boxes, 1):
+        if not isinstance(box, dict) or not box.get("text"):
+            errs.append(f"{where}.remember {i}: needs 'text'")
+            continue
+        if words(box["text"]) > 50:
+            errs.append(f"{where}.remember {i}: over 50 words")
+        if box.get("visual"):
+            errs += check_visual(box["visual"], f"{where}.remember {i} visual")
+    return errs
+
+
+def grade_learn_check(lesson: dict, card: int, choice) -> dict | None:
+    """None if that card has no check."""
+    cards = lesson.get("learn") or []
+    if not isinstance(card, int) or not 0 <= card < len(cards) or not cards[card].get("check"):
+        return None
+    ck = cards[card]["check"]
+    correct = choice == ck["answer"]
+    return {"correct": correct, "why": ck["why"] if correct else "", "hint": "" if correct else ck["hint"]}
+
+
+def learn_check_count(lesson: dict) -> int:
+    return sum(1 for c in lesson.get("learn") or [] if c.get("check"))
+
+
 def validate_lesson(data: dict) -> list[str]:
     errs = []
     is_lab = bool(data.get("lab"))     # lab lessons happen in an outside tool, so they have no Python sections
@@ -175,14 +249,9 @@ def validate_lesson(data: dict) -> list[str]:
         bug = run_checks(dbg["buggy_code"], dbg["checks"])
         if all(r["ok"] for r in bug):
             errs.append("debug: the buggy code passes every check (checks are too weak)")
-    for i, card in enumerate(data["learn"], 1):
-        if isinstance(card, dict):
-            if not card.get("text"):
-                errs.append(f"learn {i}: a card written as a mapping needs 'text'")
-            if card.get("visual"):
-                errs += check_visual(card["visual"], f"learn {i} visual")
-        elif not isinstance(card, str):
-            errs.append(f"learn {i}: must be Markdown text or {{text, visual}}")
+    errs += _check_learn(data["learn"])
+    for where in REMEMBER_IN:
+        errs += _check_remember((data.get(where) or {}).get("remember"), where)
     for i, q in enumerate(data["quiz"], 1):
         if q.get("visual"):
             errs += check_visual(q["visual"], f"quiz {i} visual")
@@ -279,6 +348,8 @@ def public_view(lesson: dict) -> dict:
                     for q in lesson["quiz"]]
     if lesson.get("debug"):
         view["debug"] = {k: v for k, v in lesson["debug"].items() if k not in ("solution", "checks")}
+    view["learn"] = [{**c, "check": {"question": c["check"]["question"], "choices": c["check"]["choices"]}} if c.get("check") else c
+                     for c in lesson.get("learn") or []]
     return view
 
 

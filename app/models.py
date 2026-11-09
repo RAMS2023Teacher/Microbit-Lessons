@@ -58,6 +58,7 @@ class Classroom(db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow)
     screen = db.Column(db.JSON)     # Classroom Screen settings
+    skip_learn = db.Column(db.Boolean, default=False)   # the teacher teaches Learn live; students skip it
 
     teacher = db.relationship("User", foreign_keys=[teacher_id])
     students = db.relationship("User", secondary=enrollments, back_populates="classes",
@@ -96,6 +97,7 @@ class Progress(db.Model):
     debug_attempts = db.Column(db.Integer, default=0)
     debug_hints_used = db.Column(db.Integer, default=0)
     debug_reflection = db.Column(db.Text, default="")
+    learn_checks = db.Column(db.JSON)                  # {"0": {"tries": 1, "ok": true}, ...} per Learn card
     quiz_answers = db.Column(db.JSON)
     quiz_score = db.Column(db.Integer)
     quiz_best = db.Column(db.Integer)
