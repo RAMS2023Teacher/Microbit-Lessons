@@ -394,3 +394,51 @@ def test_unit_check_page(client):
     assert "unit-1-check" not in {x["id"] for x in __import__("app.gamify", fromlist=["x"]).map_data(User.query.filter_by(role="student").first())["nodes"]}
     assert L.get_lesson("buttons-and-inputs")["number"] == 6      # checks don't shift lesson numbers
 
+
+
+def test_learn_quick_checks(client):
+    """Each Learn card's quick check is graded on the server and gives XP only when right on the first try."""
+    lid = "circuits-101"
+    lesson = L.get_lesson(lid)
+    view = L.public_view(lesson)
+    assert all("answer" not in c["check"] and "why" not in c["check"] for c in view["learn"])
+    register_teacher(client)
+    c = make_class(client)
+    logout(client)
+    register_student(client, c.join_code)
+    page = client.get(f"/lessons/{lid}").data.decode()
+    assert "lc-choice" in page and "Read to me" in page and "remember-box" in page
+    assert lesson["learn"][0]["check"]["why"] not in page          # feedback only comes from the server
+    url = f"/api/lessons/{lid}/learn-check"
+    right0, right1 = lesson["learn"][0]["check"]["answer"], lesson["learn"][1]["check"]["answer"]
+    wrong = client.post(url, json={"card": 0, "choice": (right0 + 1) % 3}).json
+    assert wrong["check"]["correct"] is False and wrong["check"]["hint"] and wrong["rewards"]["xp_gained"] == 0
+    again = client.post(url, json={"card": 0, "choice": right0}).json
+    assert again["check"]["correct"] and again["check"]["why"]
+    assert again["rewards"]["xp_gained"] == 0                     # right, but not on the first try
+    first = client.post(url, json={"card": 1, "choice": right1}).json
+    assert first["rewards"]["xp_gained"] >= 5
+    assert client.post(url, json={"card": 1, "choice": right1}).json["rewards"]["xp_gained"] == 0   # never twice
+    assert client.post(url, json={"card": 99, "choice": 0}).status_code == 400
+    p = Progress.query.filter_by(lesson_id=lid).first()
+    assert p.learn_checks["0"] == {"tries": 2, "ok": True, "pick": right0}
+
+
+def test_skip_learn_for_a_class(client):
+    register_teacher(client)
+    c = make_class(client)
+    client.post(f"/teacher/classes/{c.id}/skip-learn", data={"skip": "1"})
+    logout(client)
+    register_student(client, c.join_code)
+    page = client.get(f"/lessons/{LID}").data.decode()
+    assert '"skip_learn": true' in page
+    p = Progress.query.filter_by(lesson_id=LID).first()
+    assert p.sections.get("learn")                                  # taught live, so it counts as done
+
+
+def test_learn_rules_catch_long_cards():
+    card = {"text": "word " * 70, "check": {"question": "Q?", "choices": ["a", "b"], "answer": 0, "why": "w", "hint": "h"}}
+    assert any("60" in e for e in L._check_learn([card]))
+    assert any("check" in e for e in L._check_learn([{"text": "short"}]))
+    assert any("4 cards" in e for e in L._check_learn([card] * 5))
+    assert any("answer" in e for e in L._check_learn([{"text": "hi", "check": {**card["check"], "answer": 5}}]))

@@ -367,7 +367,8 @@ def student(cid, sid):
         assigned = any(a.lesson_id == lesson["id"] for a in c.assignments)
         if p or assigned:
             items.append({"lesson": lesson, "p": p, "assigned": assigned, "partner": mates.get((s.id, lesson["id"])),
-                          "pct": p.percent(L.section_keys(lesson)) if p else 0})
+                          "pct": p.percent(L.section_keys(lesson)) if p else 0,
+                          "checks": L.learn_check_summary(lesson, p.learn_checks) if p else None})
     return render_template("teacher/student.html", c=c, s=s, items=items,
                            level=gamify.level_info(s.xp or 0), badges=gamify.badge_list(s))
 

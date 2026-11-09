@@ -183,6 +183,24 @@ def grade_learn_check(lesson: dict, card: int, choice) -> dict | None:
     return {"correct": correct, "why": ck["why"] if correct else "", "hint": "" if correct else ck["hint"]}
 
 
+def card_title(card: dict) -> str:
+    m = re.search(r"^#+\s*(.+)$", card.get("text") or "", re.MULTILINE)
+    return m.group(1).strip() if m else (card.get("text") or "").strip().split("\n")[0][:40]
+
+
+def learn_check_summary(lesson: dict, checks: dict | None) -> dict | None:
+    """For the teacher: which Learn quick checks a student got right first try, needed more tries, or hasn't answered."""
+    cards = [(i, c) for i, c in enumerate(lesson.get("learn") or []) if c.get("check")]
+    if not cards:
+        return None
+    rows = []
+    for i, c in cards:
+        r = (checks or {}).get(str(i)) or {}
+        status = "first" if r.get("ok") and r.get("tries") == 1 else "retry" if r.get("ok") else "missed" if r.get("tries") else "none"
+        rows.append({"title": card_title(c), "status": status, "tries": r.get("tries", 0)})
+    return {"first": sum(r["status"] == "first" for r in rows), "total": len(rows), "rows": rows}
+
+
 def learn_check_count(lesson: dict) -> int:
     return sum(1 for c in lesson.get("learn") or [] if c.get("check"))
 

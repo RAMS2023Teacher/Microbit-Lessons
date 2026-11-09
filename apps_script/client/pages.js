@@ -350,6 +350,15 @@
         h.push('<dt>Debug</dt><dd>' + (p.debug_solved ? '✅ fixed' : '❌ not fixed') + ' · ' + (p.debug_attempts || 0) + ' checks · ' + (p.debug_hints_used || 0) + ' hints' +
           pre('view their fix', p.debug_code) + (p.debug_reflection ? '<blockquote>' + E(p.debug_reflection) + '</blockquote>' : '') + '</dd>');
       }
+      if (it.learn_titles && it.learn_titles.length) {
+        var lc = p.learn_checks || {}, firsts = 0, notes = [];
+        it.learn_titles.forEach(function (title, i) {
+          var r = lc[i] || {};
+          if (r.ok && r.tries === 1) { firsts++; return; }
+          notes.push('<br><small class="muted">' + (r.ok ? '🔁 ' : r.tries ? '❌ ' : '· ') + E(title) + (r.tries ? ' (' + r.tries + ' tries)' : ' (not answered)') + '</small>');
+        });
+        h.push('<dt>Quick checks</dt><dd>' + firsts + ' of ' + it.learn_titles.length + ' right first try' + notes.join('') + '</dd>');
+      }
       h.push('<dt>Quiz</dt><dd>' + (p.quiz_total ? 'latest ' + p.quiz_score + '/' + p.quiz_total + ' · best ' + p.quiz_best + '/' + p.quiz_total + ' · ' + p.quiz_attempts + ' attempt(s)' : '—') +
         '</dd><dt>Challenge</dt><dd>' + (p.challenge_submitted_at ? 'submitted ' + E(shortDate(p.challenge_submitted_at)) + '<blockquote>' + E(p.challenge_response) + '</blockquote>' +
         pre('view code', p.challenge_code) : '—') + '</dd></dl><div class="feedback-form"><label class="field"><span>Feedback (the student sees this at the top of the lesson)</span>' +

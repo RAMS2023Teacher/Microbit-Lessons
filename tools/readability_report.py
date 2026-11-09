@@ -73,6 +73,12 @@ def screens(lesson: dict):
         body = card["text"] if isinstance(card, dict) else card
         visual = isinstance(card, dict) and bool(card.get("visual"))
         yield (f"learn {i}", prose(body), visual)
+        ck = card.get("check") if isinstance(card, dict) else None
+        if ck:     # read on the same card, but judged on its own so the card's limit stays as it was
+            yield (f"learn {i} check", prose(ck["question"]) + ". " + ". ".join(map(str, ck["choices"])) + ". " + prose(ck["why"]), True)
+    for where in ("circuit", "code", "practice", "debug", "lab"):
+        for i, box in enumerate((lesson.get(where) or {}).get("remember") or [], 1):
+            yield (f"remember {where} {i}", prose(box["text"]), bool(box.get("visual")))
     c = lesson.get("circuit")
     if c:
         yield ("get ready", prose(c.get("intro", "")) + " " + prose(c.get("safety", [])), True)

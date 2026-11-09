@@ -208,7 +208,8 @@ function studentDetail(cid, email) {
   var items = lessonList_().filter(function (L) { return rec.progress[L.id] || assigned[L.id]; }).map(function (L) {
     var p = rec.progress[L.id] || null;
     return { id: L.id, number: L.number, title: L.title, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0, p: p,
-             feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug };
+             feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug,
+             learn_titles: (L.learn_checks || []).some(function (c) { return c; }) ? L.learn_titles : [] };
   });
   return { cls: cfg.classes[cid], student: { email: email, name: rec.name, xp: rec.xp || 0, level: levelInfo_(rec.xp || 0),
            avatar: avatarOf_(rec), badges: badgeList_(rec).filter(function (b) { return b.earned; }) }, items: items };

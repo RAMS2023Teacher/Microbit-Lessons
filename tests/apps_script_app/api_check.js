@@ -77,6 +77,24 @@ assert.ok(r.body.sections.challenge);
 r = api(S, 'sprint-servo-skills', 'save', { mark: { learn: true, code: true }, circuit_steps: [0, 1, 2, 3, 99, 2] });
 assert.ok(r.body.sections.circuit && r.body.sections.learn);
 
+// Learn quick checks: graded on the server, +XP only when right on the first try, answers never in the page
+const C101 = w.g.DATA.lessons['circuits-101'];
+const lcPage = pageView(S, '/lessons/circuits-101');
+assert.ok(!lcPage.includes(C101.learn_checks[0].why), 'quick check feedback leaked into the page');
+const lc = (who, card, choice) => w.call(who, 'api', ['/api/lessons/circuits-101/learn-check', JSON.stringify({ card, choice })]);
+const a0 = C101.learn_checks[0].answer, a1 = C101.learn_checks[1].answer;
+r = lc(S, 0, (a0 + 1) % 3);
+assert.ok(r.status === 200 && r.body.check.correct === false && r.body.check.hint && r.body.rewards.xp_gained === 0);
+r = lc(S, 0, a0);
+assert.ok(r.body.check.correct && r.body.check.why && r.body.rewards.xp_gained === 0);       // right, but not first try
+r = lc(S, 1, a1);
+assert.strictEqual(r.body.rewards.xp_gained, 5);
+assert.strictEqual(lc(S, 1, a1).body.rewards.xp_gained, 0);                                     // never twice
+assert.strictEqual(lc(S, 42, 0).status, 400);
+assert.deepStrictEqual(r.body.learn_checks['0'], { tries: 2, ok: true, pick: a0 });
+assert.match(pageView(S, '/lessons/circuits-101'), /"learn_checks":\{"0":\{"tries":2/);
+assert.ok(lc(T, 0, a0).body.check.correct);                                                     // the teacher can try them too
+
 // the lesson page puts saved work back
 const lp = pageView(S, '/lessons/sprint-servo-skills');
 assert.match(lp, /"warmup_answer":"arms and wheels!"/);
@@ -113,6 +131,14 @@ const pkg = w.call(T, 'classroomPackage', [cls.id, 'both', ['sprint-servo-skills
 assert.strictEqual(pkg.source, 'microbit-maker-lab');
 assert.ok(typeof pkg.students.find((s) => s.name === 'Sam K.').grades['sprint-servo-skills'] === 'number');
 assert.throws(() => w.call(S, 'gradebook', [cls.id]), /Only the teacher/);
+
+// the teacher shows quick-check results, and can skip Learn for a class (it counts as done)
+assert.ok(w.call(T, 'studentDetail', [cls.id, S]).items.find((i) => i.id === 'circuits-101').learn_titles.length >= 3);
+w.call(T, 'setSkipLearn', [cls.id, true]);
+assert.match(pageView(S, '/lessons/blink-external-led'), /"skip_learn":true/);
+assert.ok(w.call(T, 'studentDetail', [cls.id, S]).items.find((i) => i.id === 'blink-external-led').p.sections.learn);
+w.call(T, 'setSkipLearn', [cls.id, false]);
+assert.match(pageView(S, '/lessons/radio-remote'), /"skip_learn":false/);
 
 // removing a student hides them and sends them back to the join page
 w.call(T, 'removeStudent', [cls.id, S2]);

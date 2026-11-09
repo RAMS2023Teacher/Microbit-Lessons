@@ -43,7 +43,7 @@ python tools/validate_lessons.py
 | `agenda` | list of `{key, name, minutes}`; keys from warmup, learn, circuit, code, debug, quiz, challenge |
 | `video` | `{title, note}` — the teacher pastes a video URL later in the site |
 | `warmup` | `{prompt}` — a quick-write question, no wrong answers |
-| `learn` | list of Markdown blocks (each one is a "card"; start with a `###` heading). Students see one card at a time, so keep each to one idea and about 60 words |
+| `learn` | **3-4 cards** (max 4), each `{text, visual?, more?, check}`. Students see one card at a time and must answer its quick `check` to move on. `text` ≤ 60 words with a `###` heading. See *Learn cards* below |
 | `circuit` | optional; see below |
 | `code` | `{intro, starter, walkthrough: [{lines, explain}], try_it: [..]}` — `starter` must be valid Python |
 | `debug` | see below |
@@ -185,6 +185,45 @@ the words on every screen and estimates a reading grade level.
 Write for a 6th grader: everyday words, one idea per sentence, and define a
 technical word in the sentence where it first appears.
 
+## Learn cards: quick checks, `more`, and Remember boxes
+
+Learn holds only the big ideas students need before they start. Every card ends with a one-tap
+**quick check**, graded on the server: a wrong pick shows the `hint` and they try again; right shows `why`.
+Right on the first try is worth `XP["learn_check"]` (5). A **🔊 Read to me** button reads each card aloud.
+
+```yaml
+learn:
+  - text: |
+      ### A circuit is a loop
+      Electricity needs a **complete loop**, called a **circuit**. ...
+    more: |                       # optional: collapsed "More about this" for extra depth
+      **Every model leaves things out.** ...
+    visual: {type: try, kind: loop}
+    check:
+      question: One wire pops out of your loop. What happens to the LED?   # ≤ 30 words
+      choices: ["It stays on", "It goes out", "It gets brighter"]          # 2-4
+      answer: 1                                                             # 0-based
+      why: A gap anywhere breaks the loop, so no electricity flows.         # shown when right
+      hint: Can electricity get all the way around with a gap?              # shown when wrong; don't give it away
+```
+
+Details that are only needed later go in a **💡 Remember** box right where they're used:
+`remember:` (a list of `{text, visual?}`, each ≤ 50 words, start with a **bold label:**) under
+`circuit`, `code`, `practice`, `debug` or `lab`.
+
+```yaml
+circuit:
+  remember:
+    - text: "**LED legs:** the long leg (+) goes toward the power; the short leg (–) toward GND."
+      visual: {type: part, part: led, color: red}
+```
+
+A teacher can **Skip Learn** for a class (on the class page) to teach it live; students then skip
+the step and it counts as done.
+
+**YAML gotcha:** in an unquoted value, ` #` starts a comment, so `tip: the #1 way` becomes "the".
+Quote values that contain ` #`.
+
 ## Visual aids (`visual:`)
 
 A Learn card can be plain Markdown, or a mapping with `text` and `visual`:
@@ -212,6 +251,7 @@ Pick the visual that shows the idea; a picture that only decorates doesn't help.
 | `circuit` | a small breadboard picture, cropped to the parts used | `add: [...]`: the same parts and wires as circuit steps (checked by the validator) |
 | `flow` | boxes and arrows | `steps: [{icon, label}]` (2-5, labels ≤ 26 characters), `loop: true` and `loop_label` to draw a repeat arrow |
 | `wave` | PWM on/off signals and how bright they look | `duty: [10, 50, 100]` (percent), optional `values: [102, 512, 1023]` |
+| `try` | **interactive**: students tap or slide to see what the code does | `kind:` `pin` (write_digital on/off, optional `pin`), `pwm` (brightness slider; `code: "pin0.write_analog({value})"`, `max`, `start`), `servo` (angle slider; `code`, `map: [value at 0°, value at 180°]`, `start`), `button` (hold to see `is_pressed()`; `button`, `pressed`/`released` LED images, `then`/`else`), `sensor` (reading slider vs an `if`; `min`, `max`, `threshold`, `op: "<"`/`">"`, `read`, `then`, `else`, `unit`), `loop` (make or close a gap; `steps`) |
 | `scale` | a number line, with zones or a mapping to a smaller range | `min`, `max`, `marks: [{at, label, pointer}]`, `zones: [{from, to, label, color}]`, `map: [0, 5]` + `map_label` |
 | `compare` | 2-4 side-by-side cards | `items: [{icon, title, text}]` (text ≤ 12 words) |
 | `bits` | a number in binary | `value`, `bits` (1-10) |
