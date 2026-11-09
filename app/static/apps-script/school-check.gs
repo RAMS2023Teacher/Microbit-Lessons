@@ -6,6 +6,7 @@
  * It saves no names or email addresses. The test Sheet only holds times and run numbers.
  */
 const SHEET_ID = 'checkSheetId';
+const FOLDER_ID = 'checkFolderId';
 
 function doGet() {
   return HtmlService.createHtmlOutput(PAGE).setTitle('Maker Lab school check');
@@ -59,6 +60,61 @@ function saveTest(run, index) {
   return Date.now() - started;
 }
 
+/** Makes the test folder once, before a class test starts, so 30 saves don't race to create it. */
+function prepareFolder() {
+  const props = PropertiesService.getScriptProperties();
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(25000)) throw new Error('Timed out preparing the folder.');
+  try {
+    let id = props.getProperty(FOLDER_ID);
+    if (!id) {
+      id = DriveApp.createFolder('Maker Lab school check files (safe to delete)').getId();
+      props.setProperty(FOLDER_ID, id);
+    }
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Design B: one small file per student. No shared lock, so students never wait for each other. */
+function saveFileTest(run, index) {
+  const started = Date.now();
+  const folder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty(FOLDER_ID));
+  const body = JSON.stringify({ run: String(run).slice(0, 12), student: Number(index) || 0, at: new Date().toISOString() });
+  const file = folder.createFile('student-' + (Number(index) || 0) + '-' + String(run).slice(0, 12) + '.json', body, 'application/json');
+  file.setContent(body + ' ');   // a second save to the same file, like a student saving again
+  return Date.now() - started;
+}
+
+/** Design C: save to the fast cache now; a background job copies it into the Sheet later. */
+function saveCacheTest(run, index) {
+  const started = Date.now();
+  CacheService.getScriptCache().put('save:' + String(run).slice(0, 12) + ':' + (Number(index) || 0),
+    JSON.stringify({ at: new Date().toISOString() }), 21600);
+  return Date.now() - started;
+}
+
+/** The background copy for design C: all cached saves go into the Sheet in one write. */
+function flushCacheTest(run, count) {
+  const started = Date.now();
+  const keys = [];
+  for (let i = 1; i <= Math.min(Number(count) || 0, 100); i++) keys.push('save:' + String(run).slice(0, 12) + ':' + i);
+  const found = CacheService.getScriptCache().getAll(keys);
+  const rows = Object.keys(found).map((k) => [new Date(), k.split(':')[1], Number(k.split(':')[2])]);
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(25000)) throw new Error('Timed out waiting for the Sheet.');
+  try {
+    if (rows.length) {
+      const sh = sheet_();
+      sh.getRange(sh.getLastRow() + 1, 1, rows.length, 3).setValues(rows);
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  return { copied: rows.length, ms: Date.now() - started };
+}
+
 const PAGE = String.raw`<!doctype html><html><head><base target="_blank"><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{font:16px/1.5 system-ui,sans-serif;color:#12283f;max-width:760px;margin:24px auto;padding:0 16px}
@@ -93,7 +149,9 @@ row('usb','Send to micro:bit over USB',function(c){button(c,'Try it',tryUsb)});
 row('download','Downloads a .hex file',function(c){button(c,'Download',tryDownload);button(c,'It worked',function(){set('download',true,'the file downloaded')},'no');button(c,'It did not',function(){set('download',false,'the file did not download')},'no')});
 row('copy','Copies to the clipboard',function(c){button(c,'Try it',tryCopy)});
 row('createai','CreateAI opens',function(c){var a=c.appendChild(document.createElement('a'));a.href='https://createai.microbit.org/';a.textContent='Open it';a.rel='noopener';c.appendChild(document.createTextNode(' '));yesNo('createai','it opened','it was blocked')(c)});
-row('classsize','Handles a whole class at once',function(c){button(c,'Run test',tryClass)});
+row('classsize','A: Whole class saves to one Sheet',function(c){button(c,'Run test',function(){tryClass('classsize','saveTest')})});
+row('classfiles','B: Whole class saves, one file per student',function(c){button(c,'Run test',function(){call('prepareFolder').then(function(){tryClass('classfiles','saveFileTest')}).catch(function(e){set('classfiles',false,e.message)})})});
+row('classcache','C: Whole class saves to a fast cache',function(c){button(c,'Run test',function(){tryClass('classcache','saveCacheTest',function(){return call('flushCacheTest',[RUN+'c',30]).then(function(r){return ', then copied '+r.copied+' of 30 into the Sheet in '+Math.round(r.ms/100)/10+' seconds'})})})});
 
 call('whoAmI').then(function(w){var note=w.identityVisible?('yes, '+(w.isOwner?'script owner':'another account')+(w.sameDomain?', same school domain':', different domain')):('no'+(w.problem?': '+w.problem:', Google did not share the account'));set('who',w.identityVisible,note);if(w.shown)$('r-who').querySelector('small').textContent=note+' ('+w.shown+')'}).catch(function(e){set('who',false,e.message)});
 call('saveTest',[RUN,0]).then(function(ms){set('save',true,'saved in '+Math.round(ms/100)/10+' seconds')}).catch(function(e){set('save',false,e.message)});
@@ -106,5 +164,5 @@ $('sim').src=SIM+'/v/0.1/simulator.html';
 function tryUsb(){if(!('serial' in navigator)){set('usb',false,'this browser has no USB serial here');return}navigator.serial.requestPort({filters:[{usbVendorId:0x0d28}]}).then(function(){set('usb',true,'a micro:bit was chosen')}).catch(function(e){if(e.name==='NotFoundError')set('usb',true,'the device picker opened');else set('usb',false,e.name+': '+e.message)})}
 function tryDownload(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['test'],{type:'application/octet-stream'}));a.download='maker-lab-test.hex';document.body.appendChild(a);a.click();a.remove();set('download',null,'pressed: did maker-lab-test.hex appear?')}
 function tryCopy(){if(!navigator.clipboard){set('copy',false,'no clipboard here');return}navigator.clipboard.writeText('maker lab test').then(function(){set('copy',true,'works')}).catch(function(e){set('copy',false,e.name)})}
-function tryClass(){var n=30,good=0,slow=0,bad='';set('classsize',null,'running 30 saves at once…');var jobs=[];for(var i=1;i<=n;i++){jobs.push(call('saveTest',[RUN,i]).then(function(ms){good++;slow=Math.max(slow,ms)}).catch(function(e){bad=e.message}))}Promise.all(jobs).then(function(){set('classsize',good===n,good+' of '+n+' saved, slowest '+Math.round(slow/100)/10+' seconds'+(bad?', error: '+bad:''))})}
+function tryClass(key,fn,after){var n=30,good=0,slow=0,bad='',t0=Date.now(),run=fn==='saveCacheTest'?RUN+'c':RUN;set(key,null,'running 30 saves at once… (up to a minute)');var jobs=[];for(var i=1;i<=n;i++){jobs.push(call(fn,[run,i]).then(function(ms){good++;slow=Math.max(slow,ms)}).catch(function(e){bad=e.message}))}Promise.all(jobs).then(function(){var note=good+' of '+n+' saved, slowest '+Math.round(slow/100)/10+' s, all done in '+Math.round((Date.now()-t0)/100)/10+' s'+(bad?', error: '+bad:'');if(after&&good===n)return after().then(function(extra){set(key,true,note+extra)}).catch(function(e){set(key,false,note+', copy failed: '+e.message)});set(key,good===n,note)})}
 </script></body></html>`;

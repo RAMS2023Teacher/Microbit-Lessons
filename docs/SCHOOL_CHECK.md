@@ -2,7 +2,9 @@
 
 This small Apps Script finds out what your school's Google accounts allow, so we know how to move Maker Lab into Apps Script. It takes about 10 minutes.
 
-It saves no names or email addresses. It creates one Sheet, called **Maker Lab school check (safe to delete)**, which only holds times and run numbers.
+It saves no names or email addresses. It creates one Sheet, called **Maker Lab school check (safe to delete)**, and one Drive folder, called **Maker Lab school check files (safe to delete)**. They only hold times and test numbers.
+
+**Updating an older copy:** paste the new code over the old, save, then go to **Deploy → Manage deployments**, click the pencil, choose **Version: New version** and press **Deploy**. Google asks for permission again because the new tests use Drive.
 
 ## 1. Set it up with your teacher account
 
@@ -20,7 +22,12 @@ Open the URL. Then press each blue button:
 * **Send to micro:bit over USB:** plug in a micro:bit first if you have one.
 * **Downloads a .hex file:** say whether the file appeared.
 * **CreateAI opens:** say whether it opened.
-* **Handles a whole class at once:** this makes 30 saves at the same time.
+* **A, B and C: Whole class saves:** three ways of saving 30 students' work at the same moment. Run each one and wait until its row shows ✅ or ❌ (up to a minute each).
+  * **A** saves everything into one Sheet, waiting in line.
+  * **B** saves one small file per student in a Drive folder.
+  * **C** saves to Apps Script's fast cache, then copies it all into the Sheet in one go.
+
+  A failed on the first run (0 of 30), which is why B and C were added.
 
 ## 3. Run it as a student
 
@@ -42,4 +49,4 @@ Copy the text from the **Your results** box for each account, and paste both bac
 
 ## Afterward
 
-Delete the **Maker Lab school check** Sheet from Drive, and delete the script project. You can also turn off the deployment under **Deploy**, then **Manage deployments**.
+Delete the **Maker Lab school check** Sheet and the **Maker Lab school check files** folder from Drive, and delete the script project. You can also turn off the deployment under **Deploy**, then **Manage deployments**.
