@@ -83,6 +83,18 @@
     }
   }
   ML.fixLinks = fixLinks;
+  // In-page links (#challenge, the lesson's side menu) would follow <base target="_top"> and load this
+  // frame's own address in the whole window: a blank page. Keep them inside the page instead.
+  document.addEventListener('click', function (ev) {
+    var a = ev.target && ev.target.closest ? ev.target.closest('a[href^="#"]') : null;
+    if (!a || ev.defaultPrevented) return;
+    var id = a.getAttribute('href').slice(1);
+    ev.preventDefault();
+    if (!id) return;
+    if (location.hash !== '#' + id) location.hash = id;      // lesson.js shows that part of the lesson
+    var el = document.getElementById(id);
+    if (el && !el.hidden && el.scrollIntoView) el.scrollIntoView({ block: 'start' });
+  }, true);
   new MutationObserver(function () { fixLinks(document); }).observe(document.documentElement, { childList: true, subtree: true });
 
   // ------------------------------------------------------------ helpers for pages.js

@@ -47,6 +47,7 @@ function studentPage_(me, path) {
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec)) };
   if (path === '/map') return { name: 'map', title: 'Maker Map', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg)) }) };
   if (path === '/me') return { name: 'profile', title: 'My robot', data: merge_(base, profileData_(rec)) };
+  if (path === '/setup') return { name: 'setup', title: 'micro:bit setup', editor: true, data: merge_(base, { done: !!rec.setup_done }) };
   if (path === '/editor') return { name: 'playground', title: 'Editor', editor: true, html: page_('_playground').html, data: base };
   if ((m = /^\/lessons\/([\w-]+)$/.exec(path)) && PAGES_GZ[m[1]]) return lessonPage_(m[1], rec, cfg, base, false);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
@@ -59,6 +60,7 @@ function teacherPage_(path) {
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
+  if (path === '/setup') return { name: 'setup', title: 'micro:bit setup', editor: true, data: merge_(base, { done: true }) };
   if (path === '/teacher/standards') return { name: 'static', title: 'Standards', html: page_('_standards').html, data: base };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { units: catalogUnits_(), urls: cfg.videos }) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(null)) };
@@ -113,7 +115,7 @@ function dashboardData_(rec, cfg) {
     .slice(0, 3).map(function (l) { return { lesson: DATA.lessons[l].card, pct: percent_(rec.progress[l], DATA.lessons[l]) }; });
   var badges = badgeList_(rec).filter(function (b) { return b.earned; })
     .sort(function (a, b) { return String(b.earned_at).localeCompare(String(a.earned_at)); });
-  return { rows: rows, recent: recent, badges: badges.slice(0, 6), badge_total: DATA.badges.length,
+  return { rows: rows, recent: recent, badges: badges.slice(0, 6), badge_total: DATA.badges.length, setup_done: !!rec.setup_done,
            classes: classes.map(function (c) { return cfg.classes[c].name; }) };
 }
 
@@ -243,8 +245,8 @@ function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos']]
-    : [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'Dashboard']];
+    ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/setup', 'micro:bit setup']]
+    : [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/setup', 'micro:bit setup'], ['/', 'Dashboard']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });

@@ -34,6 +34,13 @@ assert.strictEqual(w.call(S, 'joinClass', [cls.code.toLowerCase(), 'Sam K.']).cl
 w.call(S2, 'joinClass', [cls.code, 'Ava R.']);
 assert.match(pageView(S), /"page":"dashboard"/);
 
+// the micro:bit setup tutorial: a reminder on the dashboard until the student says it worked
+assert.match(pageView(S), /"setup_done":false/);
+assert.match(pageView(S, '/setup'), /"page":"setup"/);
+w.call(S, 'markSetupDone', [true]);
+assert.match(pageView(S), /"setup_done":true/);
+assert.match(pageView(S, '/setup'), /"done":true/);
+
 // lesson work through the same API paths the browser uses
 const api = (who, lid, action, body) => w.call(who, 'api', [`/api/lessons/${lid}/${action}`, JSON.stringify(body || {})]);
 let r = api(S, 'sprint-servo-skills', 'save', { warmup_answer: 'arms and wheels' });
@@ -171,7 +178,7 @@ assert.throws(() => noGc.call(noGc.owner, 'classroomCourses'), /Classroom servic
 assert.match(noGc.call(noGc.owner, 'checkInstall'), /❌ Google Classroom/);
 
 // every page renders for the teacher and the student
-for (const p of ['/', '/lessons', '/map', '/editor', '/teacher/standards', '/teacher/videos', '/teacher/google-import', `/teacher/classes/${cls.id}`,
+for (const p of ['/', '/lessons', '/map', '/editor', '/teacher/standards', '/teacher/videos', '/teacher/google-import', '/setup', `/teacher/classes/${cls.id}`,
   `/teacher/classes/${cls.id}/students/${encodeURIComponent(S)}`, `/teacher/classes/${cls.id}/google-classroom`, '/lessons/radio-remote']) {
   const html = pageView(T, p);
   assert.ok(!/"page":"error"/.test(html), 'teacher page failed: ' + p + ' ' + (html.match(/"message":"[^"]*"/) || [''])[0]);

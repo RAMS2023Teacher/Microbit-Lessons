@@ -207,7 +207,9 @@
         setStatus(ed, 'Building .hex…', 'busy');
         try {
           await window.Microbit.downloadHex(ed.getCode(), ed.filename);
-          setStatus(ed, 'Downloaded! Drag the .hex file onto the MICROBIT drive.', 'ok');
+          setStatus(ed, window.MAKERLAB_NO_USB
+            ? 'Downloaded! Saved it to MICROBIT? Your code runs when the light stops blinking. (Help: micro:bit setup in the menu.)'
+            : 'Downloaded! Drag the .hex file onto the MICROBIT drive.', 'ok');
           if (opts.onSend) opts.onSend('hex');
         } catch (e) { setStatus(ed, 'Could not build the .hex: ' + e.message, 'bad'); }
       } else if (act === 'reset') {

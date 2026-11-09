@@ -62,7 +62,10 @@
       '<a class="btn ghost" href="/me">🏅 Badges (' + d.badges.length + (d.badges.length >= 6 ? '+' : '') + ' / ' + d.badge_total + ')</a></div></div><div class="hero-badges">');
     if (d.badges.length) d.badges.forEach(function (b) { h.push('<span class="mini-badge" title="' + E(b.name + ': ' + b.desc) + '">' + E(b.icon) + '</span>'); });
     else h.push('<span class="muted small">Earn badges by finishing lessons!</span>');
-    h.push('</div></section><div class="grid-2"><section class="card"><h2>My assignments</h2>');
+    h.push('</div></section>');
+    if (!d.setup_done) h.push('<section class="card tip setup-nudge"><h2>👋 First time here? Set up your micro:bit downloads</h2>' +
+      '<p>Two minutes, once. Then getting your code onto the micro:bit is just <b>Download → Save</b>.</p><a class="btn primary" href="/setup">Show me how</a></section>');
+    h.push('<div class="grid-2"><section class="card"><h2>My assignments</h2>');
     if (d.rows.length) {
       h.push('<ul class="assign-list">');
       d.rows.forEach(function (r) {
@@ -81,8 +84,8 @@
     }
     h.push('<section class="card"><h2>My classes</h2><ul>' + d.classes.map(function (c) { return '<li>' + E(c) + '</li>'; }).join('') + '</ul>' +
       '<div class="inline-form"><input id="join-code" placeholder="Class code" maxlength="10"><button class="btn small" id="join-go" type="button">Join</button></div></section>' +
-      '<section class="card tip"><h2>Getting code onto your micro:bit</h2><p>In any lesson, click <b>⬇ Download .hex</b> under the code.</p>' +
-      '<p>Open the <b>Files</b> app, then drag the .hex file onto the <b>MICROBIT</b> drive. The light on the back blinks while it copies, then your code runs.</p></section></aside></div>');
+      '<section class="card tip"><h2>Getting code onto your micro:bit</h2><p>Click <b>⬇ Download .hex</b> under the code, pick <b>MICROBIT</b>, and press <b>Save</b>. ' +
+      'The light on the back blinks while it copies, then your code runs.</p><p><a href="/setup">micro:bit setup and help</a></p></section></aside></div>');
     main.innerHTML = h.join('');
     document.getElementById('join-go').addEventListener('click', function () {
       act(this, 'joinClass', [document.getElementById('join-code').value, '']);
@@ -407,6 +410,75 @@
           function () { document.getElementById('gc-msg').textContent = 'Select the text below and copy it.'; });
       });
     });
+  };
+
+  // ---------------------------------------------------------------- micro:bit setup tutorial (Chromebook downloads)
+  var SETUP_CSS = '<style>' +
+    '.setup-steps{counter-reset:st;list-style:none;padding:0;margin:0;display:grid;gap:16px}' +
+    '.setup-steps>li{counter-increment:st;display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start}' +
+    '.setup-steps>li::before{content:counter(st);width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--accent);font-weight:800;font-size:1.3rem;display:grid;place-items:center}' +
+    '.setup-steps h3{margin:.3em 0 .4em}.setup-steps p{margin:.3em 0}' +
+    '.mock{border:1px solid var(--line);border-radius:10px;background:#fff;margin:10px 0;max-width:520px;overflow:hidden;font-size:.92rem;box-shadow:var(--shadow)}' +
+    '.mock-bar{background:#eef1f8;padding:6px 10px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between}' +
+    '.mock-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-top:1px solid var(--line)}' +
+    '.mock-row.hl{background:#fffbe6;outline:3px solid var(--accent);outline-offset:-3px}' +
+    '.toggle{width:40px;height:22px;border-radius:11px;background:#1a73e8;position:relative;flex:none}' +
+    '.toggle::after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}' +
+    '.toggle.off{background:#bdc1c6}.toggle.off::after{right:auto;left:3px}' +
+    '.mock-save{display:grid;grid-template-columns:150px 1fr}.mock-side{background:#f7f8fc;border-right:1px solid var(--line);padding:6px 0}' +
+    '.mock-side div{padding:6px 12px}.mock .hl{color:#0b2a6b}.mock-side .hl{background:#d3e3fd;font-weight:700;border-radius:0 14px 14px 0;margin-right:8px}' +
+    '.mock-main{padding:10px 12px;display:flex;flex-direction:column;gap:8px;justify-content:space-between}' +
+    '.mock-file{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:var(--mono)}' +
+    '.mock-btns{display:flex;gap:8px;justify-content:flex-end}.mock-btns span{padding:5px 14px;border-radius:16px;border:1px solid var(--line)}' +
+    '.mock-btns .go{background:#1a73e8;color:#fff;border-color:#1a73e8;outline:3px solid var(--accent)}' +
+    '.kbd{font-family:var(--mono);background:#eef1f8;border:1px solid var(--line);border-radius:5px;padding:1px 6px}' +
+    '.setup-done{display:flex;gap:10px;flex-wrap:wrap;align-items:center}' +
+    '</style>';
+
+  pages.setup = function () {
+    var h = [SETUP_CSS, '<h1>🔌 micro:bit setup</h1><p class="muted">Do this once on your Chromebook (about 2 minutes). After that, getting code onto ' +
+      'your micro:bit is: <b>Download → Save</b>.</p>'];
+    h.push('<section class="card"><ol class="setup-steps">' +
+      '<li><div><h3>Plug in your micro:bit</h3><p>Use the USB cable. A drive called <b>MICROBIT</b> shows up in the <b>Files</b> app.</p>' +
+      '<p class="small muted">No MICROBIT drive? Try another cable: some cables only charge.</p></div></li>' +
+      '<li><div><h3>Tell Chrome to ask where to save</h3><p>In Chrome, click <b>⋮</b> (top right) → <b>Settings</b>. Type <span class="kbd">downloads</span> ' +
+      'in the search box at the top. Turn on <b>Ask where to save each file before downloading</b>.</p>' +
+      '<div class="mock" aria-hidden="true"><div class="mock-bar">Settings › Downloads</div>' +
+      '<div class="mock-row"><span>Location<br><small class="muted">My files › Downloads</small></span><span class="mock-btns"><span>Change</span></span></div>' +
+      '<div class="mock-row hl"><span>Ask where to save each file before downloading</span><span class="toggle"></span></div></div>' +
+      '<p class="small muted">Is the switch gray with a 🏢 building icon? Your school controls it. Skip to <b>Plan B</b> below.</p></div></li>' +
+      '<li><div><h3>Download, pick MICROBIT, Save</h3><p>Click <b>⬇ Download .hex</b> under any code. In the box that opens, click <b>MICROBIT</b> on the left, then <b>Save</b>.</p>' +
+      '<div class="mock" aria-hidden="true"><div class="mock-bar">Save file as</div><div class="mock-save"><div class="mock-side"><div>Recent</div><div>My files</div>' +
+      '<div>Downloads</div><div>Google Drive</div><div class="hl">MICROBIT</div></div><div class="mock-main"><div class="mock-file">blink-external-led.hex</div>' +
+      '<div class="mock-btns"><span>Cancel</span><span class="go">Save</span></div></div></div></div>' +
+      '<p>The yellow light on the back blinks while it copies. When it stops, your code runs.</p></div></li>' +
+      '<li><div><h3>Next time: just press Save</h3><p>Chrome remembers MICROBIT. If your micro:bit was unplugged, the box opens somewhere else: plug it in and pick MICROBIT again.</p></div></li>' +
+      '</ol></section>');
+    h.push('<section class="card"><h2>Try it now</h2><p>Plug in your micro:bit and click the button. Save it to <b>MICROBIT</b>. ' +
+      'Your micro:bit should scroll <b>Hi!</b> and show a happy face.</p><div class="setup-done"><button class="btn primary" id="su-try" type="button">⬇ Download the test program</button>' +
+      '<span id="su-msg" class="muted small"></span></div>' +
+      (ML.teacher ? '' : '<div class="setup-done" style="margin-top:14px"><button class="btn" id="su-ok" type="button">✅ It worked!</button>' +
+        (d.done ? '<span class="muted small">You\'ve already done this. 👍</span>' : '<button class="btn ghost" id="su-later" type="button">Skip for now</button>') + '</div>') +
+      '</section>');
+    h.push('<section class="card tip"><h2>Plan B: drag it with the Files app</h2><ol><li>Click <b>⬇ Download .hex</b>. The file goes to <b>Downloads</b>.</li>' +
+      '<li>Open the <b>Files</b> app (or press <span class="kbd">Alt</span> + <span class="kbd">Shift</span> + <span class="kbd">M</span>).</li>' +
+      '<li>Drag the newest .hex file from <b>Downloads</b> onto <b>MICROBIT</b> on the left.</li></ol></section>');
+    h.push('<section class="card"><h2>Troubleshooting</h2><ul>' +
+      '<li><b>Words scroll across the micro:bit that you didn\'t write?</b> That\'s an error message from Python. Read the line number, fix that line, and download again.</li>' +
+      '<li><b>Nothing happens?</b> Wait for the yellow light to stop blinking, then press the reset button on the back.</li>' +
+      '<li><b>Want to test without a micro:bit?</b> Click <b>🖥 Simulate</b> under the code.</li></ul></section>');
+    main.innerHTML = h.join('');
+    var $ = function (id) { return document.getElementById(id); };
+    $('su-try').addEventListener('click', function () {
+      var b = this, msg = $('su-msg');
+      b.disabled = true; msg.textContent = 'Building…';
+      window.Microbit.downloadHex('from microbit import *\n\ndisplay.scroll("Hi!")\ndisplay.show(Image.HAPPY)\n', 'microbit-test')
+        .then(function () { msg.textContent = 'Downloaded. Did the save box open? Pick MICROBIT and Save.'; },
+              function (e) { msg.textContent = 'Could not build it: ' + e.message; })
+        .then(function () { b.disabled = false; });
+    });
+    if ($('su-ok')) $('su-ok').addEventListener('click', function () { act(this, 'markSetupDone', [true], function () { ML.go('/'); }); });
+    if ($('su-later')) $('su-later').addEventListener('click', function () { act(this, 'markSetupDone', [true], function () { ML.go('/'); }); });
   };
 
   window.MLStart = function () {

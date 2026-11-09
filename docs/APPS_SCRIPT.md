@@ -13,6 +13,8 @@ You paste 4 Script files and the `appsscript.json` manifest into a project, run 
 * **Getting code onto a micro:bit:** **Download .hex**, then drag the file onto the MICROBIT drive in the
   Files app. Google's Apps Script frame blocks USB, so one-click **Send to micro:bit** isn't available here
   (the school check confirmed this on student Chromebooks). The simulator works.
+  The **micro:bit setup** page (in the menu, and suggested on a student's dashboard until they finish it) shows how to
+  turn on Chrome's "Ask where to save each file", so a download can be saved straight onto MICROBIT.
 * **Saving:** each student's work is one file in **My Drive → Maker Lab data → students**, so a whole class
   saving at once never waits in line (the school check measured 30 saves in about 5 seconds this way,
   compared with up to 20 seconds, or failures, with one shared Sheet).

@@ -160,6 +160,17 @@ function joinClass(code, name) {
   return { ok: true, class_name: cls.name };
 }
 
+/** The student finished (or skipped) the micro:bit setup tutorial: stop showing the reminder. */
+function markSetupDone(done) {
+  var me = whoIs_();
+  if (!me.email || me.teacher) return { ok: true };
+  var rec = loadStudent_(me.email);
+  if (!rec) throw new Error('Join your class first.');
+  rec.setup_done = done !== false;
+  saveStudent_(rec);
+  return { ok: true };
+}
+
 // ---------------------------------------------------------------- firmware for .hex downloads
 /** Run once from the editor (Run > setup). Makes the data folder and downloads the micro:bit firmware. */
 function setup() {
