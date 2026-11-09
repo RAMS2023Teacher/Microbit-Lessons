@@ -14,6 +14,10 @@ function page_(id) {
 // by client/pages.js from the data sent here.
 
 function doGet(e) {
+  var problems = installProblems_();
+  if (problems.length) return plainPage_('Maker Lab needs a fix', '<h1>Maker Lab isn\'t installed correctly yet</h1><ul><li>' +
+    problems.map(escapeHtml_).join('</li><li>') + '</li></ul><p>Fix the files above in the Apps Script editor, save, then deploy a ' +
+    '<b>new version</b> (Deploy → Manage deployments → ✏️ → Version: New version). The steps are in INSTALL.md.</p>');
   var me = whoIs_();
   var path = String((e && e.parameter && e.parameter.p) || '/');
   var page;
@@ -145,6 +149,61 @@ function embedInfo_(url) {
   return { kind: 'link', src: url };
 }
 
+// ---------------------------------------------------------------- install check
+function escapeHtml_(s) {
+  return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+}
+
+/** Every pasted file must be there, complete, and from the same build as Code.gs. */
+function installProblems_() {
+  var out = [];
+  var stamps = typeof BUILD_STAMPS === 'undefined' ? {} : BUILD_STAMPS;
+  BUILD_FILES.forEach(function (name) {
+    if (/\.gs$/.test(name)) {
+      var key = name.slice(0, -3), got = stamps[key];
+      if (!got) out.push(name + ' is missing or was cut short while pasting. Paste all of it again.');
+      else if (got !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
+      return;
+    }
+    var key2 = name.replace(/\.html$/, ''), text = '';
+    try { text = HtmlService.createHtmlOutputFromFile(key2).getContent(); } catch (e) {
+      out.push(name + ' is missing. Add it as an HTML file named "' + key2 + '" (+ next to Files → HTML).');
+      return;
+    }
+    var end = /maker-lab-end (\w+)/.exec(text.slice(-200));
+    if (!end) out.push(name + ' was cut short while pasting (its last line is missing). Paste all of it again.');
+    else if (end[1] !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
+  });
+  return out;
+}
+
+/** Run this from the editor (choose checkInstall, press Run) to check everything; the result is in the log. */
+function checkInstall() {
+  var lines = [], ok = function (good, text) { lines.push((good ? '✅ ' : '❌ ') + text); };
+  var problems = installProblems_();
+  ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and from build ' + BUILD_ID);
+  try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
+  try {
+    var n = Object.keys(PAGES_GZ).length, first = page_(DATA.order[0]);
+    ok(!!first && first.html.length > 1000, n + ' lesson pages in Pages*.gs, and they unpack');
+  } catch (e) { ok(false, 'Pages*.gs: ' + e.message); }
+  try { studentFolder_(); ok(true, 'Drive folder "' + DATA_FOLDER + '" is ready'); } catch (e) { ok(false, 'Drive folder: ' + e.message + ' (run setup)'); }
+  ['v1', 'v2'].forEach(function (v) {
+    try { ok(firmwareInfo(v).parts > 0, 'micro:bit firmware ' + v + ' is saved'); } catch (e) { ok(false, 'firmware ' + v + ': ' + e.message); }
+  });
+  try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
+  try { ok(ScriptApp.getService().isEnabled(), 'Web app is deployed: ' + ScriptApp.getService().getUrl()); } catch (e) { ok(false, 'Deployment: ' + e.message); }
+  var report = lines.join('\n');
+  Logger.log(report);
+  return report;
+}
+
+function plainPage_(title, body) {
+  return HtmlService.createHtmlOutput('<!doctype html><html><head><base target="_top"><meta charset="utf-8"></head>' +
+    '<body style="font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#12283f">' + body + '</body></html>')
+    .setTitle(title);
+}
+
 // ---------------------------------------------------------------- the HTML around every page
 function asset_(name) { return HtmlService.createHtmlOutputFromFile(name).getContent(); }
 
@@ -159,8 +218,15 @@ function render_(me, page) {
   var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="apps-script">',
     asset_('Styles'), '</head><body class="apps-script">',
+    // If the page's code ever crashes, show the message instead of a blank page.
+    '<script>window.addEventListener("error",function(e){var b=document.getElementById("ml-crash");if(!b){b=document.createElement("div");',
+    'b.id="ml-crash";b.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#fde2e2;color:#7a1010;border:2px solid #b32626;',
+    'border-radius:10px;padding:10px 14px;font:14px/1.4 system-ui,sans-serif;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);',
+    'b.textContent="Something went wrong on this page. Please send this to your teacher:\\n"}b.textContent+="\\n"+(e.message||"error")+',
+    '(e.filename?" ("+String(e.filename).split("/").pop()+":"+e.lineno+")":"")});</script>',
     '<header class="topbar" id="topbar"></header>',
-    '<main class="', page.mainClass || 'container', '" id="main">', page.html || '', '</main>',
+    '<main class="', page.mainClass || 'container', '" id="main">',
+    page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
     '<footer class="footer">Built for young makers · Python + micro:bit + circuits</footer>',
     '<script>window.ML=', json_(ml), ';'];
   Object.keys(globals).forEach(function (k) { out.push('window.', k, '=', json_(globals[k]), ';'); });

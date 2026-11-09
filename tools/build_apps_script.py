@@ -12,6 +12,7 @@ Writes dist/apps-script/: the files to paste into an Apps Script project, plus I
 import ast
 import base64
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -200,6 +201,19 @@ def pack(value):
     return base64.b64encode(gzip.compress(raw, 9, mtime=0)).decode("ascii")
 
 
+def stamp(files):
+    """Gives every file the same build id and an end marker, so the app can tell when a file is
+    missing, cut short while pasting, or left over from an older build."""
+    build = hashlib.sha1("".join(files[k] for k in sorted(files)).encode("utf-8")).hexdigest()[:10]
+    for name in list(files):
+        if name.endswith(".gs"):
+            key = name[:-3]
+            files[name] = files[name] + f"\nvar BUILD_STAMPS = BUILD_STAMPS || {{}};\nBUILD_STAMPS[{json.dumps(key)}] = {json.dumps(build)};\n"
+        else:
+            files[name] = files[name] + f"<!-- maker-lab-end {build} -->\n"
+    files["Code.gs"] = files["Code.gs"] + f"var BUILD_ID = {json.dumps(build)};\nvar BUILD_FILES = {json.dumps(sorted(files))};\n"
+
+
 def split_gs(name, header, entries):
     """Writes `header` then entries into as many .gs files as needed to stay under MAX_FILE."""
     files, cur, size, n = {}, [header], len(header), 1
@@ -228,6 +242,7 @@ def main():
     entries = [f"PAGES_GZ[{json.dumps(k)}] = {json.dumps(pack(v))};" for k, v in pages.items()]
     files.update(split_gs("Pages", header, entries))
     files.update(build_assets())
+    stamp(files)
 
     if OUT.exists():
         shutil.rmtree(OUT)

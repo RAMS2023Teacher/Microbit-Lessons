@@ -82,9 +82,14 @@ function makeWorld(dist, opts) {
       const text = fs.readFileSync(path.join(__dirname, '../../app/static/vendor/microbit', name), 'utf8');
       return { getContentText: () => text };
     } },
-    ScriptApp: { getService: () => ({ getUrl: () => opts.url || 'https://script.google.com/a/macros/school.org/s/TEST/exec' }) },
+    ScriptApp: { getService: () => ({ getUrl: () => opts.url || 'https://script.google.com/a/macros/school.org/s/TEST/exec', isEnabled: () => true }) },
+    Logger: { log: () => {} },
     HtmlService: {
-      createHtmlOutputFromFile: (name) => ({ getContent: () => fs.readFileSync(path.join(dist, name + '.html'), 'utf8') }),
+      createHtmlOutputFromFile: (name) => {
+        const file = path.join(dist, name + '.html');
+        if (!fs.existsSync(file)) throw new Error('No HTML file named ' + name + ' was found.');
+        return { getContent: () => fs.readFileSync(file, 'utf8') };
+      },
       createHtmlOutput: (html) => {
         const out = { html, title: '', setTitle(t) { out.title = t; return out; }, addMetaTag() { return out; }, getContent: () => out.html };
         return out;

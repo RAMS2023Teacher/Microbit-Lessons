@@ -118,4 +118,23 @@ for (const p of ['/', '/lessons', '/map', '/me', '/editor', '/lessons/ai-teach-y
 }
 assert.match(w.page(S, '/teacher/standards').getContent(), /"page":"error"/);       // students can't see teacher pages
 assert.match(w.page('', '/').getContent(), /school Google account/);
+// the install check: everything pasted correctly
+const report = w.call(T, 'checkInstall');
+assert.ok(!report.includes('❌'), report);
+assert.match(w.page(T, '/').getContent(), /Loading Maker Lab/);           // shown until the page's code draws it
+assert.match(w.page(T, '/').getContent(), /ml-crash/);                    // crashes are shown, not a blank page
+
+// a file cut short, missing, or from an older version gets a plain message (no JavaScript needed)
+const fs = require('fs'), os = require('os'), path = require('path');
+function broken(edit) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ml-broken-'));
+  for (const f of fs.readdirSync(dist)) fs.copyFileSync(path.join(dist, f), path.join(dir, f));
+  edit(dir);
+  return makeWorld(dir).page(T, '/').getContent();
+}
+assert.match(broken((d) => fs.writeFileSync(path.join(d, 'App.html'), fs.readFileSync(path.join(d, 'App.html'), 'utf8').slice(0, 50000))),
+  /App\.html was cut short/);
+assert.match(broken((d) => fs.unlinkSync(path.join(d, 'Styles.html'))), /Styles\.html is missing/);
+assert.match(broken((d) => fs.writeFileSync(path.join(d, 'Data.gs'), fs.readFileSync(path.join(d, 'Data.gs'), 'utf8').replace(/BUILD_STAMPS\["Data"\] = "\w+"/, 'BUILD_STAMPS["Data"] = "old"'))),
+  /Data\.gs is from a different version/);
 console.log('apps script app passed');
