@@ -111,6 +111,7 @@ The page detects when MicroPython is missing and tells them what to do.
 
 - [CodeMirror 5](https://codemirror.net/5/) (MIT)
 - [@microbit/microbit-fs](https://github.com/microbit-foundation/microbit-fs) (MIT)
+- [micro:bit MicroPython simulator](https://github.com/microbit-foundation/micropython-microbit-v2-simulator) (MIT), loaded from `python-simulator.usermbit.org` when a student presses Simulate. School filters need to allow that address.
 - [MicroPython for micro:bit](https://github.com/bbcmicrobit/micropython) V1 and [V2](https://github.com/microbit-foundation/micropython-microbit-v2) firmware (MIT)
 
 These are all bundled in `app/static/vendor/`. This project is not affiliated with the Micro:bit Educational Foundation.

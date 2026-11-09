@@ -494,6 +494,7 @@
     $('section-next').hidden = !next || HAS_OWN_NEXT.has(el.id);
     if (next) $('section-next').textContent = `Next: ${stepName(next)} →`;
     syncLessonDone();
+    MakerEditor.all.forEach((ed) => { if (!el.contains(ed.root)) MakerEditor.closeSim(ed); });   // no sound from hidden parts
     // CodeMirror can't measure itself while hidden.
     MakerEditor.all.forEach((ed) => { if (el.contains(ed.root)) ed.cm.refresh(); });
     if (moved) {

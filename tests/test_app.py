@@ -169,6 +169,7 @@ def test_challenge_levels_and_hints(client):
     assert b"Code library" in r.data and b"hint-set" in r.data
     assert b"Spicy" not in r.data
     assert b"My idea" in r.data
+    assert b'data-act="sim"' in r.data
     # challenges start from working code, not a blank editor
     import json
     state = json.loads(re.search(rb"window\.STATE = (.*?);\n", r.data).group(1))

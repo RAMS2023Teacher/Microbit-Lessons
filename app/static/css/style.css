@@ -232,6 +232,15 @@ textarea { resize: vertical; }
 .CodeMirror { height: auto; min-height: 180px; font-family: var(--mono); font-size: 15px; }
 .CodeMirror-scroll { min-height: 180px; max-height: 560px; }
 .cm-error-line { background: #ffe3e3 !important; }
+.ed-sim { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 14px; padding: 12px; border-top: 1px solid var(--line); background: #f7f9fd; }
+.sim-board iframe { display: block; width: 100%; aspect-ratio: 400 / 329; border: 0; }
+.sim-side p { margin: 0 0 8px; }
+.sim-sensors { margin-bottom: 8px; }
+.sim-sensors summary { font-weight: 700; cursor: pointer; }
+.sim-controls label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; align-items: center; margin-top: 6px; font-size: .9rem; }
+.sim-controls input[type=range] { width: 100%; padding: 0; }
+.sim-controls select { padding: 3px 6px; }
+@media (max-width: 560px) { .ed-sim { grid-template-columns: minmax(0, 1fr); } }
 .ed-console { border-top: 1px solid var(--line); background: #0f1730; }
 .ed-console-head { display: flex; justify-content: space-between; padding: 4px 10px; color: #aab4d8; font-size: .8rem; }
 .ed-console-head .linklike { color: #aab4d8; }
