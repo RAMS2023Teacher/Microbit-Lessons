@@ -52,6 +52,21 @@ python tools/validate_lessons.py
 | `teacher_notes` | Markdown: common problems, troubleshooting, extensions |
 | `standards` | Massachusetts DLCS (2016) grade 6–8 standards: a list of `{code, how}`. `code` must be in `app/standards.yaml` (e.g. `6-8.CT.b.1`); `how` is one sentence on what in the lesson meets it. Only list standards the lesson really teaches or assesses. |
 
+## Learning by doing (`predict`, `practice`)
+
+Every Python lesson needs two more things:
+
+* `code.predict`: one multiple-choice question to answer **before** running the starter code (`question`, `choices`, `answer`, `explain`).
+* `practice`: the **Your turn** task (`level`, `prompt`, `starter`, `solution`, `checks`, `hints`). Use `level: fill` with `___` blanks in early lessons, and `level: write` once students can write it from comments. `checks` work like debug checks, and the validator makes sure the solution passes and the starter doesn't.
+
+Quizzes should include one question where students work out what code does, and one review question from an earlier lesson.
+
+A lesson's map `requires` must include the lessons that teach the ideas it uses.
+
+## Unit checks (`kind: check`)
+
+A short quiz only, with `label`, `kind: check`, `unit`, `order`, `title`, `duration_minutes`, `agenda` (one `quiz` item) and 4–10 `quiz` questions. Unit checks can be assigned, but aren't stops on the map.
+
 ## Lab lessons (`lab`)
 
 For work in an outside tool. A lab lesson has a `lab` section **instead of** `code` and `debug`, and its agenda uses the keys warmup, learn, lab, quiz and challenge.

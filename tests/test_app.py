@@ -13,7 +13,7 @@ LID = "blink-external-led"
 
 def test_all_lessons_valid():
     lessons = L.all_lessons()
-    assert sum(1 for l in lessons if l["unit"] <= 4) == 16   # core course; unit 5 is the Robot Sprint
+    assert sum(1 for l in lessons if l["unit"] <= 4 and l.get("kind") != "check") == 16   # core course; unit 5 is the Robot Sprint
     for lesson in lessons:
         assert L.validate_lesson(lesson) == [], lesson["id"]
 
@@ -70,6 +70,7 @@ def test_full_flow(client, app):
     n = len(L.get_lesson(LID)["circuit"]["steps"])
     assert client.post(f"/api/lessons/{LID}/save", json={"circuit_steps": list(range(n))}).json["sections"]["circuit"]
     client.post(f"/api/lessons/{LID}/sent", json={"section": "code"})
+    client.post(f"/api/lessons/{LID}/practice", json={"code": L.get_lesson(LID)["practice"]["solution"]})
 
     # debug: buggy code fails, solution passes
     lesson = L.get_lesson(LID)
@@ -154,7 +155,7 @@ def test_code_library_snippets_are_valid():
                 ast.parse(entry["code"])
     for lesson in L.all_lessons():
         lib = C.for_lesson(lesson)
-        assert lib["here"] or lesson.get("lab"), lesson["id"]
+        assert lib["here"] or lesson.get("lab") or lesson.get("kind") == "check", lesson["id"]
         # nothing is lost or listed twice
         names = [e["title"] for e in lib["here"]] + [e["title"] for g in lib["groups"] for e in g["entries"]]
         assert sorted(names) == sorted(e["title"] for g in C.groups() for e in g["entries"])
@@ -162,6 +163,8 @@ def test_code_library_snippets_are_valid():
 
 def test_challenge_levels_and_hints(client):
     for lesson in L.all_lessons():
+        if lesson.get("kind") == "check":
+            continue
         names = [lv.split(":", 1)[0] for lv in lesson["challenge"]["levels"]]
         assert names == ["Bronze", "Silver", "Gold"], lesson["id"]
     register_teacher(client)
@@ -331,4 +334,63 @@ def test_google_classroom_package(client):
     assert "sprint-servo-skills" not in grades and "sprint-build-the-bot" not in grades   # unstarted stays blank
     assert client.post(url, json={"score": "quiz", "lessons": lessons}).json["students"][0]["grades"] == {}
     assert client.post(url, json={"score": "nope", "lessons": lessons}).status_code == 400
+
+
+def test_map_requires_what_each_lesson_uses():
+    """A student can't reach a lesson without the lessons that teach the code it uses."""
+    import re
+    from app import gamify
+    tree = gamify.TREE
+
+    def ancestors(lid, seen=None):
+        seen = set() if seen is None else seen
+        for r in tree[lid]["requires"]:
+            if r not in seen:
+                seen.add(r)
+                ancestors(r, seen)
+        return seen
+    ideas = {"traffic-light": r"\bdef \w+\(", "buttons-and-inputs": r"(?m)^\s*if\b", "dimmer-pwm": r"(?m)^\s*for \w+ in",
+             "light-sensor": r"(?m)^\s*elif\b", "potentiometer": r"//", "temperature-data": r"\b(max|min)\(",
+             "servo-motor": r"\breturn\b", "motion-and-sound": r"accelerometer"}
+    problems = []
+    for lesson in L.all_lessons():
+        if lesson["unit"] > 4 or not lesson.get("code"):
+            continue
+        code = lesson["code"]["starter"] + lesson["debug"]["solution"]
+        for teacher, pattern in ideas.items():
+            if teacher != lesson["id"] and re.search(pattern, code) and teacher not in ancestors(lesson["id"]):
+                problems.append(f"{lesson['id']} needs {teacher}")
+    assert not problems, problems
+
+
+def test_practice_and_predict_flow(client):
+    register_teacher(client)
+    r = client.get(f"/lessons/{LID}")
+    assert b'id="practice"' in r.data and b"predict-choice" in r.data
+    code = make_class(client).join_code
+    logout(client)
+    register_student(client, code)
+    page = client.get(f"/lessons/{LID}").data
+    solution = L.get_lesson(LID)["practice"]["solution"]
+    assert solution.encode() not in page             # students don't get the answer
+    url = f"/api/lessons/{LID}/practice"
+    no = client.post(url, json={"code": L.get_lesson(LID)["practice"]["starter"]}).json
+    assert no["solved"] is False and no["messages"]
+    yes = client.post(url, json={"code": solution}).json
+    assert yes["solved"] and yes["sections"]["practice"]
+
+
+def test_unit_check_page(client):
+    register_teacher(client)
+    assert client.get("/lessons/unit-1-check").status_code == 200
+    c_code = make_class(client).join_code
+    logout(client)
+    register_student(client, c_code)
+    page = client.get("/lessons/unit-1-check")
+    assert page.status_code == 200 and b'id="warmup"' not in page.data
+    n = len(L.get_lesson("unit-1-check")["quiz"])
+    done = client.post("/api/lessons/unit-1-check/quiz", json={"answers": [0] * n}).json
+    assert done["percent"] == 100
+    assert "unit-1-check" not in {x["id"] for x in __import__("app.gamify", fromlist=["x"]).map_data(User.query.filter_by(role="student").first())["nodes"]}
+    assert L.get_lesson("buttons-and-inputs")["number"] == 6      # checks don't shift lesson numbers
 

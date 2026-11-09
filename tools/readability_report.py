@@ -61,6 +61,10 @@ def grade(t: str) -> float:
 
 def screens(lesson: dict):
     """Yield (name, text, has_visual) for each screen, as the lesson page shows them."""
+    if lesson.get("kind") == "check":
+        for i, q in enumerate(lesson["quiz"], 1):
+            yield (f"check {i}", prose(q["question"] + ". " + ". ".join(map(str, q["choices"]))), False)
+        return
     # overview: objectives + material chips + key-word chips (meanings appear only when tapped)
     yield ("overview", prose(lesson.get("objectives", [])) + " " + prose(lesson.get("materials", [])) + " " +
            prose([v["term"] for v in lesson.get("vocabulary", [])]), True)
@@ -87,6 +91,8 @@ def screens(lesson: dict):
         yield (f"how-it-works {i}", prose(w["explain"]), True)
     for i, idea in enumerate(code.get("try_it", []), 1):
         yield (f"try-it {i}", prose(idea), True)
+    if lesson.get("practice"):
+        yield ("your turn", prose(lesson["practice"]["prompt"]), True)
     if lesson.get("debug"):
         yield ("debug", prose(lesson["debug"]["story"]), True)
     for i, q in enumerate(lesson["quiz"], 1):

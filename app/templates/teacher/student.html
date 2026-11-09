@@ -38,6 +38,8 @@
     <dt>Warm-up</dt><dd>{{ p.warmup_answer or '—' }}</dd>
     {% if l.circuit %}<dt>Circuit steps</dt><dd>{{ (p.circuit_steps or [])|length }} / {{ l.circuit.steps|length }} checked off</dd>{% endif %}
     {% if l.lab %}<dt>AI lab steps</dt><dd>{{ (p.circuit_steps or [])|length }} / {{ l.lab.steps|length }} checked off</dd>{% endif %}
+    {% if l.practice %}<dt>Your turn</dt><dd>{{ '✅ solved' if p.practice_solved else '❌ not yet' }}
+      {% if p.practice_code %}<details><summary>view their code</summary><pre class="code-block">{{ p.practice_code }}</pre></details>{% endif %}</dd>{% endif %}
     {% if l.code %}<dt>Code</dt><dd>{{ 'Ran it ✓' if (p.sections or {}).get('code') else 'not yet' }} · sent/downloaded {{ p.sends or 0 }}×
       {% if p.code %}<details><summary>view code</summary><pre class="code-block">{{ p.code }}</pre></details>{% endif %}</dd>
     <dt>Debug</dt><dd>{{ '✅ fixed' if p.debug_solved else '❌ not fixed' }} · {{ p.debug_attempts or 0 }} checks · {{ p.debug_hints_used or 0 }} hints

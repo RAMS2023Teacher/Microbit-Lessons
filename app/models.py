@@ -89,6 +89,8 @@ class Progress(db.Model):
     warmup_answer = db.Column(db.Text, default="")
     code = db.Column(db.Text)                          # code section editor
     sends = db.Column(db.Integer, default=0)           # times sent to micro:bit / downloaded
+    practice_code = db.Column(db.Text)
+    practice_solved = db.Column(db.Boolean, default=False)
     debug_code = db.Column(db.Text)
     debug_solved = db.Column(db.Boolean, default=False)
     debug_attempts = db.Column(db.Integer, default=0)

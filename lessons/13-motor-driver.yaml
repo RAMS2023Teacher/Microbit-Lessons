@@ -33,12 +33,13 @@ materials:
   - 8 jumper wires (some male-female)
   - Tape for a shaft "flag"
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How an H-bridge reverses a motor
@@ -252,6 +253,7 @@ code:
         display.show(Image.NO)
         stop()
         sleep(1000)
+  predict: {"question": "During `forward(800)`, what does pin 14 do?", "choices": ["Stays at 0", "Gets 800", "Switches on and off"], "answer": 0, "explain": "forward sends PWM to P13 and holds P14 at 0."}
   walkthrough:
     - lines: "3-5"
       explain: "**forward**: P13 gets PWM (speed 0-1023) and P14 is 0. Current flows AOUT1 → motor → AOUT2."
@@ -265,6 +267,17 @@ code:
     - Change 800 to 400, then 1023. How slow can it go before it just hums?
     - Add a brake() function that sets both pins to 1. Does it stop faster than stop()?
     - Make button A run forward and button B run backward. Stop when neither is pressed.
+practice:
+  level: "write"
+  prompt: "Write a function called spin_back. It takes speed, sets pin 13 to 0, and sends speed to pin 14."
+  starter: "from microbit import *\n\n# define spin_back here\n\nspin_back(600)\n"
+  solution: "from microbit import *\n\ndef spin_back(speed):\n    pin13.write_digital(0)\n    pin14.write_analog(speed)\n\nspin_back(600)\n"
+  hints: ["It's the same idea as backward() in the starter code."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "def\\s+spin_back\\(\\s*speed\\s*\\)\\s*:", "message": "Start with def spin_back(speed):"}
+    - {"type": "contains", "pattern": "pin13\\.write_digital\\(\\s*0\\s*\\)", "message": "Pin 13 should be 0."}
+    - {"type": "contains", "pattern": "pin14\\.write_analog\\(\\s*speed\\s*\\)", "message": "Send speed to pin 14."}
 debug:
   story: >-
     Priya's motor goes forward, stops... and then goes forward again. It never
@@ -381,6 +394,8 @@ quiz:
       - pin14.write_analog(1023)
     answer: 1
     explain: write_analog takes 0-1023, so 512 is about half power. The other input must be 0 for forward.
+  - {"question": "`def half(n): return n // 2`. What does `display.show(half(9))` show?", "choices": ["4", "4.5", "5"], "answer": 0, "explain": "9 // 2 drops the remainder."}
+  - {"question": "From Lesson 12: what is the flyback diode for?", "choices": ["Giving a motor's voltage spike a safe path", "Making the motor faster", "Lighting up"], "answer": 0, "explain": "It protects the transistor from the spike."}
 challenge:
   title: Motor Machine
   prompt: >-

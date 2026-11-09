@@ -32,12 +32,13 @@ materials:
   - 1 resistor, 220 Ω (red-red-brown)
   - 3 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Build the circuit, minutes: 6}
-  - {key: code, name: Code it, minutes: 8}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How PWM dims an LED
@@ -214,6 +215,7 @@ code:
         for brightness in range(1023, -1, -step):    # fade down
             pin0.write_analog(brightness)
             sleep(wait)
+  predict: {"question": "You change `step` from 8 to 64. What happens to the fade?", "choices": ["It gets faster and jumpier", "It gets slower and smoother", "Nothing changes"], "answer": 0, "explain": "Bigger steps mean fewer, larger changes in brightness."}
   walkthrough:
     - lines: "3-4"
       explain: Two **variables** control the speed. Change them once and the whole fade changes.
@@ -231,6 +233,17 @@ code:
     - Change step to 1, then to 64. What happens to the fade?
     - Make the LED fade up slowly but drop down fast (use two different waits).
     - Try pin0.write_analog(50) on its own. How dim can you go before it looks off?
+practice:
+  level: "fill"
+  prompt: "Fill in the blanks. Make the LED on pin 0 fade up from 0, again and again."
+  starter: "from microbit import *\n\nwhile True:\n    for level in range(___, 1024, 16):\n        pin0.___(level)\n        sleep(10)\n"
+  solution: "from microbit import *\n\nwhile True:\n    for level in range(0, 1024, 16):\n        pin0.write_analog(level)\n        sleep(10)\n"
+  hints: ["The first number in range() is where it starts.", "It's the analog version of write_digital."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "not_contains", "pattern": "___", "message": "Fill in every blank first."}
+    - {"type": "contains", "pattern": "range\\(\\s*0\\s*,", "message": "Start counting at 0."}
+    - {"type": "contains", "pattern": "write_analog\\(\\s*level\\s*\\)", "message": "Which pin command sets a brightness from 0 to 1023?"}
 debug:
   story: >-
     Alex wants a breathing light. First the micro:bit stops with an error
@@ -325,6 +338,8 @@ quiz:
       - The LED has 1023 tiny lights inside
     answer: 0
     explain: 2 × 2 × 2 … ten times is 1024, so 10 bits count from 0 to 1023. In binary, 1023 is 1111111111.
+  - {"question": "What numbers does `range(1, 7, 2)` make?", "choices": ["1, 3, 5, 7", "1, 3, 5", "2, 4, 6"], "answer": 1, "explain": "It adds 2 each time and stops before 7."}
+  - {"question": "From Lesson 4: how do you run a function called `party`?", "choices": ["def party", "party", "party()"], "answer": 2, "explain": "Write the name with parentheses to call it."}
 challenge:
   title: Mood Lighting
   prompt: >-

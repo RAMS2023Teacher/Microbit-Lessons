@@ -31,12 +31,13 @@ materials:
   - A sticky note for your group number
   - Cups, cones or tape for a course
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 7}
   - {key: circuit, name: Check the robot wiring, minutes: 3}
-  - {key: code, name: Code it, minutes: 8}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
 video:
   title: micro:bit radio basics
@@ -285,6 +286,7 @@ code:
         radio.send(command)
         display.show(command)
         sleep(100)               # send 10 times a second
+  predict: {"question": "`x` is 500 and `TILT` is 300. What command is sent?", "choices": ["L", "R", "S"], "answer": 1, "explain": "500 is more than 300, so x > TILT is true."}
   walkthrough:
     - lines: "4-5"
       explain: "**config(group=12)** picks your team's channel. **on()** switches the radio on. Without it, nothing is sent."
@@ -298,6 +300,18 @@ code:
     - Add a 'B' command to go back (tilt toward you, y < -TILT). Add it to the robot program too.
     - Press button A to send a turbo command 'T'. The robot drives at 1023.
     - Switch off the controller while the robot drives (wheels up!). Does the fail-safe stop it?
+practice:
+  level: "write"
+  prompt: "Write a receiver. Turn the radio on. If the message is 'H', show a heart."
+  starter: "from microbit import *\n\nimport radio\n\n# turn on the radio\n\nwhile True:\n    # read a message into msg\n    # if msg is H, show Image.HEART\n    sleep(20)\n"
+  solution: "from microbit import *\n\nimport radio\n\nradio.on()\n\nwhile True:\n    msg = radio.receive()\n    if msg == 'H':\n        display.show(Image.HEART)\n    sleep(20)\n"
+  hints: ["radio.receive() gives you the message, or None."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "radio\\.on\\(\\)", "message": "Turn the radio on first."}
+    - {"type": "contains", "pattern": "msg\\s*=\\s*radio\\.receive\\(\\)", "message": "Save radio.receive() in msg."}
+    - {"type": "contains", "pattern": "if\\s+msg\\s*==\\s*['\\\"]H['\\\"]", "message": "Compare msg with 'H'."}
+    - {"type": "contains", "pattern": "Image\\.HEART", "message": "Show Image.HEART."}
 debug:
   story: >-
     Ana flashed this onto her robot. At first it ignores the controller. After
@@ -455,6 +469,8 @@ quiz:
       - A mobile phone network
     answer: 1
     explain: The messages travel through the air (wireless) over a short distance in one room (local). There's no cable, router or cell tower.
+  - {"question": "`last_heard` is 1000 and `running_time()` is 1600. Is `running_time() - last_heard > 500` true?", "choices": ["Yes, it is 600", "No, it is 600", "No, it is 1600"], "answer": 0, "explain": "1600 - 1000 is 600, which is more than 500."}
+  - {"question": "From Lesson 15: what is state in a program?", "choices": ["A value it keeps between loops", "A type of sensor", "A pin number"], "answer": 0, "explain": "last_seen is state: the robot's memory."}
 challenge:
   title: Robot Grand Prix
   prompt: >-

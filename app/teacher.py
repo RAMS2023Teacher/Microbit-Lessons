@@ -208,6 +208,7 @@ def _screen_payload(c):
     if not lesson:                          # default: the next assignment due
         dated = sorted(c.assignments, key=lambda a: (a.due_date is None, a.due_date or date.max, a.created_at))
         upcoming = [a for a in dated if not a.due_date or a.due_date >= date.today()] or dated
+        upcoming = [a for a in upcoming if L.get_lesson(a.lesson_id)]
         lesson = L.get_lesson(upcoming[0].lesson_id) if upcoming else L.all_lessons()[0]
     standards = STD.for_lesson(lesson)
     standard = next((s for s in standards if s["code"] == settings["standard"]), standards[0] if standards else None)
@@ -225,7 +226,7 @@ def _screen_payload(c):
     return {"settings": settings, "students": students,
             "total_xp": 0 if settings["xp"] == "hide" else sum(s.xp or 0 for s in c.students),
             "lesson": {"id": lesson["id"], "number": lesson["number"], "title": lesson["title"]},
-            "question": settings["question"] or lesson["warmup"]["prompt"],
+            "question": settings["question"] or (lesson.get("warmup") or {}).get("prompt", ""),
             "standard": {"code": standard["code"], "text": standard["text"]} if standard else None,
             "standards": [{"code": s["code"], "text": s["text"]} for s in standards]}
 

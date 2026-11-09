@@ -27,11 +27,12 @@ materials:
   - micro:bit V2 + USB cable
   - Battery pack
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 6}
-  - {key: code, name: Code it, minutes: 11}
+  - {key: code, name: Code it, minutes: 8}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: quiz, name: Check for understanding, minutes: 4}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
 video:
   title: Data logging with the micro:bit
@@ -117,6 +118,7 @@ code:
                     sound=microphone.sound_level())
             next_time = running_time() + INTERVAL
         sleep(20)
+  predict: {"question": "`INTERVAL` is 5000 and you log for 20 seconds. About how many rows do you get?", "choices": ["2", "4 or 5", "20"], "answer": 1, "explain": "One row every 5 seconds makes about 4 or 5."}
   walkthrough:
     - lines: "4-6"
       explain: "Set how often to read, and name the columns. The first light reading is always 0."
@@ -130,6 +132,16 @@ code:
     - Set INTERVAL to 1000. Clap near it, then cover it. Check your chart.
     - Press B. Does it stop right away? Why is that better than a long sleep?
     - Log for 2 minutes in two different spots. Which spot is brighter?
+practice:
+  level: "write"
+  prompt: "Write a tiny logger. Save the temperature in the temp column about every 2 seconds."
+  starter: "from microbit import *\n\nimport log\n\nlog.set_labels('temp', timestamp=log.SECONDS)\n\nwhile True:\n    # save one row\n    # wait\n    pass\n"
+  solution: "from microbit import *\n\nimport log\n\nlog.set_labels('temp', timestamp=log.SECONDS)\n\nwhile True:\n    log.add(temp=temperature())\n    sleep(2000)\n"
+  hints: ["The name inside log.add() must match the label."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "log\\.add\\(\\s*temp\\s*=\\s*temperature\\(\\)\\s*\\)", "message": "Use log.add(temp=temperature())."}
+    - {"type": "contains", "pattern": "sleep\\(\\s*2000\\s*\\)", "message": "Wait 2000 milliseconds."}
 debug:
   story: >-
     Lena's logger won't start. After that's fixed, Python rejects a column name.
@@ -178,6 +190,8 @@ quiz:
     choices: ["The code can still notice buttons while it waits", "It uses more memory", "It makes the LEDs brighter"]
     answer: 0
     explain: A long sleep freezes the program. Checking the time lets it keep working.
+  - {"question": "`running` is True, `running_time()` is 5000 and `next_time` is 4000. Is `running and running_time() >= next_time` true?", "choices": ["Yes", "No", "Only at 4000"], "answer": 0, "explain": "Both sides are true."}
+  - {"question": "From earlier: what are the three steps a sensor system repeats?", "choices": ["Sense, decide, act", "Copy, paste, save", "Open, close, print"], "answer": 0, "explain": "Embedded computers run this loop all day."}
 challenge:
   title: Station Upgrade
   prompt: Change your field station to fit something you want to find out about your school.

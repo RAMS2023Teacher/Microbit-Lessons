@@ -31,11 +31,12 @@ materials:
   - Masking tape and a ruler for test runs
 agenda:
   - {key: warmup, name: Warm-up, minutes: 2}
-  - {key: learn, name: Learn, minutes: 6}
+  - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Upgrade wiring, minutes: 3}
-  - {key: code, name: Code it, minutes: 8}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: quiz, name: Check for understanding, minutes: 4}
   - {key: challenge, name: Showcase, minutes: 8}
 video:
   title: Testing like an engineer
@@ -236,6 +237,7 @@ code:
         else:
             display.show(Image.ARROW_N)
         sleep(20)
+  predict: {"question": "You press button B. Which test runs?", "choices": ["Drive straight", "One 90° turn", "The sensor check"], "answer": 1, "explain": "Button B runs Test 2."}
   walkthrough:
     - lines: "7-9"
       explain: All the numbers you tune live at the top, so you change each in **one** place.
@@ -249,6 +251,17 @@ code:
     - Change TURN_MS by 25 at a time. Write each try in your test log.
     - "Test 1 curves? Change STOP_L or STOP_R by 1, never both at once."
     - Add Test 4 for your mission's sensor, like pin8 for the line sensor.
+practice:
+  level: "write"
+  prompt: "Add a test of your own. If the line sensor on pin 8 reads 1, show Image.YES. Otherwise, show Image.NO."
+  starter: "from microbit import *\n\nwhile True:\n    # your test 4\n    sleep(20)\n"
+  solution: "from microbit import *\n\nwhile True:\n    if pin8.read_digital() == 1:\n        display.show(Image.YES)\n    else:\n        display.show(Image.NO)\n    sleep(20)\n"
+  hints: ["The test has the same shape as Test 3."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "pin8\\.read_digital\\(\\)\\s*==\\s*1", "message": "Check whether pin 8 reads 1."}
+    - {"type": "contains", "pattern": "Image\\.YES", "message": "Show Image.YES."}
+    - {"type": "contains", "pattern": "Image\\.NO", "message": "Show Image.NO."}
 debug:
   story: >-
     Ava's demo bot should drive forward until it sees the wall, then stop and
@@ -357,6 +370,8 @@ quiz:
       - 580 cm
     answer: 0
     explain: Distance in cm = echo time ÷ 58. So 580 ÷ 58 = 10 cm.
+  - {"question": "`TURN_MS = 450`, and you change it to 400. What happens to the turn?", "choices": ["It gets shorter", "It gets longer", "Nothing"], "answer": 0, "explain": "A smaller time means less turning."}
+  - {"question": "From Sprint 5: why does the Bump Bot turn for a random time?", "choices": ["So it tries a new direction each time", "To save batteries", "To go faster"], "answer": 0, "explain": "Random turns help it escape corners."}
 challenge:
   title: Showcase
   prompt: >-

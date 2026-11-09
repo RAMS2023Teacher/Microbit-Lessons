@@ -28,11 +28,12 @@ materials:
   - micro:bit V2 + USB cable
   - A computer with a web browser
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 7}
-  - {key: code, name: Code it, minutes: 9}
+  - {key: code, name: Code it, minutes: 6}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 6}
-  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: quiz, name: Check for understanding, minutes: 4}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
 video:
   title: Meet the micro:bit
@@ -159,6 +160,7 @@ code:
         sleep(500)
         display.show(Image.HEART_SMALL)
         sleep(500)
+  predict: {"question": "Right after it scrolls Hello!, what will the micro:bit do?", "choices": ["Scroll Hello! again, forever", "Flash a big heart and a small heart, forever", "Show one heart and stop"], "answer": 1, "explain": "The scroll is before the loop, so it runs once. Only the indented lines repeat."}
   walkthrough:
     - lines: "1"
       explain: Loads the micro:bit toolbox so Python knows display, Image and sleep.
@@ -174,6 +176,18 @@ code:
     - Change "Hello!" to your own name.
     - Make the heart beat faster. Change both 500s to 200.
     - Delete one of the sleep() lines. What happens to the animation? Why?
+practice:
+  level: "fill"
+  prompt: "Fill in the blanks. Scroll your name once. Then flash a happy face forever."
+  starter: "from microbit import *\n\ndisplay.___(\"Your name\")\n\nwhile ___:\n    display.show(Image.HAPPY)\n    sleep(___)\n    display.show(Image.ASLEEP)\n    sleep(500)\n"
+  solution: "from microbit import *\n\ndisplay.scroll(\"Sam\")\n\nwhile True:\n    display.show(Image.HAPPY)\n    sleep(500)\n    display.show(Image.ASLEEP)\n    sleep(500)\n"
+  hints: ["The word after display. makes text scroll.", "A forever loop is written while True:"]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "not_contains", "pattern": "___", "message": "Fill in every blank first."}
+    - {"type": "contains", "pattern": "display\\.scroll\\(", "message": "Which word makes text slide across the LEDs?"}
+    - {"type": "contains", "pattern": "while\\s+True\\s*:", "message": "Which word means repeat forever?"}
+    - {"type": "contains", "pattern": "sleep\\(\\s*\\d+\\s*\\)", "message": "Give sleep() a number of milliseconds."}
 debug:
   story: >-
     Maya wanted her micro:bit to scroll "Hi" and then flash a heart and a smiley
@@ -252,6 +266,7 @@ quiz:
       - It only works on laptops with the lid open
     answer: 0
     explain: Open-source software shares its code with everyone under a license. Proprietary software keeps its code private.
+  - {"question": "`display.scroll(\"Go\")` comes **before** `while True:`. How many times does it scroll?", "choices": ["Once", "Twice", "Forever"], "answer": 0, "explain": "Code before the loop runs one time."}
 challenge:
   title: Name Badge Animation
   prompt: >-

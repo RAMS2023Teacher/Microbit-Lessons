@@ -52,8 +52,9 @@
   }
 
   // ----- warm-up & learn -----
-  autosave($('warmup-answer'), 'warmup_answer', $('warmup-status'));
+  if ($('warmup-answer')) autosave($('warmup-answer'), 'warmup_answer', $('warmup-status'));
   (function learnStepper() {
+    if (!$('learn-cards')) return;
     const cards = [...$('learn-cards').children];
     const dots = $('learn-dots');
     const seen = new Set();
@@ -108,6 +109,7 @@
     return ed;
   };
   const edCode = mount('ed-code', 'code', { onSend: () => api('/sent', { section: 'code' }) });
+  const edPractice = mount('ed-practice', 'practice_code', { onSend: () => api('/sent', {}) });
   const edDebug = mount('ed-debug', 'debug_code', { onSend: () => api('/sent', {}) });
   const edChal = mount('ed-challenge', 'challenge_code', { onSend: () => api('/sent', {}) });
 
@@ -316,6 +318,34 @@
     show(cur);
   }
 
+  // ----- predict: commit to an answer before running the code -----
+  document.querySelectorAll('.predict-choice').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.predict-choice').forEach((x) => { x.disabled = true; x.classList.toggle('right', x.dataset.right === 'yes'); });
+    if (b.dataset.right !== 'yes') b.classList.add('wrong');
+    $('predict-explain').hidden = false;
+  }));
+
+  // ----- your turn: students write the code -----
+  if (L.practice && $('practice-check')) {
+    const message = (kind, text) => { $('practice-result').className = 'debug-result ' + kind; $('practice-result').textContent = text; };
+    if (S.practice_solved) message('ok', '✅ You did it!');
+    const tips = L.practice.hints || [];
+    let shown = 0;
+    $('practice-hint').disabled = !tips.length;
+    $('practice-hint').addEventListener('click', () => {
+      if (shown < tips.length) $('practice-hints').appendChild(document.createElement('li')).textContent = '💡 ' + tips[shown++];
+      $('practice-hint').disabled = shown >= tips.length;
+      if (shown >= tips.length) $('practice-hint').textContent = 'No more hints';
+    });
+    $('practice-check').addEventListener('click', async () => {
+      message('busy', 'Checking…');
+      const d = await api('/practice', { code: edPractice.getCode() });
+      if (d.error) return message('bad', d.error);
+      if (d.solved) message('ok', '✅ It looks right! Try it in the simulator or on your micro:bit.');
+      else message('bad', `Not yet (${d.passed}/${d.total}). ${(d.messages && d.messages[0]) || 'Keep going.'}`);
+    });
+  }
+
   // ----- debug -----
   if (L.debug) {
   const hints = L.debug.hints || [];
@@ -417,7 +447,7 @@
   });
 
   // ----- challenge -----
-  $('challenge-submit').addEventListener('click', async () => {
+  if ($('challenge-submit')) $('challenge-submit').addEventListener('click', async () => {
     $('challenge-status').textContent = 'Submitting…';
     const d = await api('/challenge', { code: edChal ? edChal.getCode() : '', response: $('challenge-response').value });
     $('challenge-status').textContent = d.ok

@@ -34,12 +34,13 @@ materials:
   - 1 resistor, 220 Ω (red-red-brown)
   - 4 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 6}
-  - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 6}
+  - {key: warmup, name: Warm-up, minutes: 2}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Build the circuit, minutes: 8}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 4}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Voltage, current and resistance
@@ -235,6 +236,7 @@ code:
     while True:
         display.scroll("mA: " + str(round(milliamps, 1)))
         sleep(1000)
+  predict: {"question": "You change `resistor_ohms` from 220 to 1000. What happens to the number on the screen?", "choices": ["It goes up", "It goes down", "It stays the same"], "answer": 1, "explain": "More resistance means less current."}
   walkthrough:
     - lines: "3-5"
       explain: Three **variables** store numbers. Their names explain what they mean.
@@ -250,6 +252,17 @@ code:
     - Change resistor_ohms to 1000 (brown-black-red). Does the current go up or down?
     - Try 100 Ω, then 47 Ω. LEDs like under 20 mA. Which values are safe?
     - Swap a 1 kΩ resistor into your circuit. Does the LED get dimmer, like your math said?
+practice:
+  level: "fill"
+  prompt: "Fill in the blanks to work out the current through a 1000 Ω resistor."
+  starter: "from microbit import *\n\nsupply = 3.3\nled = 2.0\nresistor = 1000\n\nvolts = supply - ___\namps = volts / ___\ndisplay.scroll(str(amps * 1000))\n"
+  solution: "from microbit import *\n\nsupply = 3.3\nled = 2.0\nresistor = 1000\n\nvolts = supply - led\namps = volts / resistor\ndisplay.scroll(str(amps * 1000))\n"
+  hints: ["What uses up some of the voltage before the resistor?", "Which variable holds the resistance?"]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "not_contains", "pattern": "___", "message": "Fill in every blank first."}
+    - {"type": "contains", "pattern": "volts\\s*=\\s*supply\\s*-\\s*led", "message": "The resistor gets what the LED doesn't use."}
+    - {"type": "contains", "pattern": "amps\\s*=\\s*volts\\s*/\\s*resistor", "message": "Ohm's law: current = volts ÷ resistance."}
 debug:
   story: >-
     Sam's current calculator crashes with a **TypeError**. After that's fixed,
@@ -337,6 +350,8 @@ quiz:
       - scroll() only works with pictures
     answer: 1
     explain: Python won't glue a string and a number together. str() turns the number into text first.
+  - {"question": "`a = 6` and then `b = a / 2`. What is `b`?", "choices": ["2", "6", "3.0"], "answer": 2, "explain": "One slash divides and gives a decimal: 3.0."}
+  - {"question": "From Lesson 1: what does `sleep(1000)` do?", "choices": ["Waits 1 second", "Waits 1000 seconds", "Turns off the screen"], "answer": 0, "explain": "sleep counts in milliseconds, and 1000 ms is 1 second."}
 challenge:
   title: Resistor Detective
   prompt: >-

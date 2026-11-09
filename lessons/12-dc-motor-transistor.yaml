@@ -36,11 +36,12 @@ materials:
   - Tape
 agenda:
   - {key: warmup, name: Warm-up, minutes: 2}
-  - {key: learn, name: Learn, minutes: 5}
-  - {key: circuit, name: Build the circuit, minutes: 11}
+  - {key: learn, name: Learn, minutes: 4}
+  - {key: circuit, name: Build the circuit, minutes: 9}
   - {key: code, name: Code it, minutes: 5}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Transistors as switches
@@ -234,6 +235,7 @@ code:
         pin0.write_analog(speed)
         display.show(speed * 10 // 1024)   # 0-9 on the screen
         sleep(50)
+  predict: {"question": "`speed` starts at 0, and you press B twice. What is `speed`?", "choices": ["256", "512", "1023"], "answer": 1, "explain": "Each press adds 256."}
   walkthrough:
     - lines: "3"
       explain: A variable remembers the speed. 0 is off, 1023 is fully on.
@@ -247,6 +249,18 @@ code:
     - Find the slowest speed that still turns your motor. Why won't it spin at very low numbers?
     - "Kick start: from 0, run at 1023 for 100 ms. Then drop to the speed you want."
     - Swap the two motor wires. What changes?
+practice:
+  level: "write"
+  prompt: "Write it yourself. Button A sets speed to 0. Button B sets speed to 1023. Send speed to pin 0 every loop."
+  starter: "from microbit import *\n\nspeed = 0\n\nwhile True:\n    # button A: speed is 0\n    # button B: speed is 1023\n    # send speed to pin 0\n    sleep(50)\n"
+  solution: "from microbit import *\n\nspeed = 0\n\nwhile True:\n    if button_a.was_pressed():\n        speed = 0\n    if button_b.was_pressed():\n        speed = 1023\n    pin0.write_analog(speed)\n    sleep(50)\n"
+  hints: ["Use one if for each button.", "The write_analog line goes outside both if blocks."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "button_a\\.(was|is)_pressed\\(\\)", "message": "Check button A."}
+    - {"type": "contains", "pattern": "button_b\\.(was|is)_pressed\\(\\)", "message": "Check button B."}
+    - {"type": "contains", "pattern": "(?m)^\\s+speed\\s*=\\s*1023", "message": "Set speed to 1023 for button B."}
+    - {"type": "contains", "pattern": "write_analog\\(\\s*speed\\s*\\)", "message": "Send speed to pin 0 with write_analog."}
 debug:
   story: >-
     Sam wants button B to make the motor go faster with every press. The first
@@ -326,6 +340,8 @@ quiz:
       - Turns it off
     answer: 0
     explain: 512 is about half of 1023, so the transistor is ON about half the time and the motor goes slower.
+  - {"question": "What is `max(0, min(1023, 1500))`?", "choices": ["0", "1023", "1500"], "answer": 1, "explain": "min picks 1023, and max keeps it."}
+  - {"question": "From Lesson 11: why does a servo get its own batteries?", "choices": ["It can pull more current than the micro:bit can give", "It looks better", "It makes the code shorter"], "answer": 0, "explain": "A moving servo can gulp current and reset the micro:bit."}
 challenge:
   title: Motor Mayhem
   prompt: >-

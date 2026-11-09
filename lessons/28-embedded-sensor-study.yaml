@@ -30,12 +30,13 @@ materials:
   - Battery pack
   - Tape
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Plug it in, minutes: 4}
-  - {key: code, name: Code it, minutes: 9}
+  - {key: code, name: Code it, minutes: 6}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
 video:
   title: Asking a good research question
@@ -139,6 +140,7 @@ code:
             passes = 0
             window_end = running_time() + WINDOW
         sleep(20)
+  predict: {"question": "You pass your hand slowly in front of the sensor, one time. What does the count do?", "choices": ["Goes up by 1", "Goes up by many", "Stays the same"], "answer": 0, "explain": "`not blocked` counts only the first moment."}
   walkthrough:
     - lines: "7-9"
       explain: Start with no passes, nothing in front, and a time for the first save.
@@ -152,6 +154,17 @@ code:
     - Pass your hand by slowly. Does it count just once?
     - Change WINDOW to 10000. How does your data change?
     - Walk past 10 times. How close was the count?
+practice:
+  level: "write"
+  prompt: "Count button A the hard way, using is_pressed. Add 1 only at the moment the button goes down. Use now and held."
+  starter: "from microbit import *\n\ncount = 0\nheld = False\n\nwhile True:\n    now = button_a.is_pressed()\n    # if it just went down, add 1 and show count\n    # remember now in held\n    sleep(20)\n"
+  solution: "from microbit import *\n\ncount = 0\nheld = False\n\nwhile True:\n    now = button_a.is_pressed()\n    if now and not held:\n        count = count + 1\n        display.show(min(9, count))\n    held = now\n    sleep(20)\n"
+  hints: ["It's the same pattern as the door counter."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "if\\s+now\\s+and\\s+not\\s+held\\s*:", "message": "Check: now, and not held."}
+    - {"type": "contains", "pattern": "count\\s*=\\s*count\\s*\\+\\s*1|count\\s*\\+=\\s*1", "message": "Add 1 to count."}
+    - {"type": "contains", "pattern": "(?m)^\\s+held\\s*=\\s*now", "message": "Remember now in held each loop."}
 debug:
   story: >-
     Nia's door counter counts when nothing is there, and one person counts over
@@ -208,6 +221,8 @@ quiz:
     choices: ["It protects their privacy", "Names are too long", "The sensor would break"]
     answer: 0
     explain: Anonymous data can still answer the question without identifying anyone.
+  - {"question": "`now` is True and `blocked` is False. Is `now and not blocked` true?", "choices": ["Yes", "No", "It causes an error"], "answer": 0, "explain": "not False is True, so both sides are true."}
+  - {"question": "From Embedded 1: what does each `log.add()` do?", "choices": ["Saves a new row", "Adds a new column", "Clears the log"], "answer": 0, "explain": "Labels are columns, and log.add() adds a row."}
 challenge:
   title: Real Research
   prompt: Pick a question about your school. Collect real data, then say what it shows.

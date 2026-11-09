@@ -125,6 +125,8 @@ def lesson(lesson_id):
         "warmup_answer": p.warmup_answer if p else "",
         "code": p.code if p and p.code else starter,
         "debug_code": p.debug_code if p and p.debug_code else buggy,
+        "practice_code": p.practice_code if p and p.practice_code else (lesson.get("practice") or {}).get("starter", ""),
+        "practice_solved": bool(p and p.practice_solved),
         "debug_solved": bool(p and p.debug_solved),
         "debug_hints_used": p.debug_hints_used if p else 0,
         "debug_reflection": p.debug_reflection if p else "",

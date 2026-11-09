@@ -33,12 +33,13 @@ materials:
   - Small screwdriver
   - Tape or zip ties for mounting
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How line-following robots work
@@ -267,6 +268,7 @@ code:
             display.show(Image.NO)
             break
         sleep(10)
+  predict: {"question": "Only the left sensor sees the line. What does the robot do?", "choices": ["Goes straight", "Turns left", "Turns right"], "answer": 1, "explain": "The line has drifted to the left."}
   walkthrough:
     - lines: "3-5"
       explain: "**LINE** is what the sensor reads over black. Got 0 over black? Change this one number."
@@ -280,6 +282,18 @@ code:
     - Make a gentle oval track first. Then add a sharp corner. Where does your robot lose the line?
     - Raise SPEED by 50 at a time. What's the fastest speed that still finishes a lap?
     - For a turn, try drive(SPEED // 3, SPEED) instead of drive(0, SPEED). Smoother or worse?
+practice:
+  level: "write"
+  prompt: "Write the decisions. Both sensors see 1: show F. Only left is 1: show L. Only right is 1: show R. Neither: show ?."
+  starter: "from microbit import *\n\nwhile True:\n    left = pin1.read_digital()\n    right = pin2.read_digital()\n    # choose F, L, R or ?\n    sleep(10)\n"
+  solution: "from microbit import *\n\nwhile True:\n    left = pin1.read_digital()\n    right = pin2.read_digital()\n    if left == 1 and right == 1:\n        display.show(\"F\")\n    elif left == 1:\n        display.show(\"L\")\n    elif right == 1:\n        display.show(\"R\")\n    else:\n        display.show(\"?\")\n    sleep(10)\n"
+  hints: ["Order matters: left == 1 is also true when both see the line."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "if\\s+left\\s*==\\s*1\\s+and\\s+right\\s*==\\s*1\\s*:", "message": "Check both sensors first, with and."}
+    - {"type": "contains", "pattern": "elif\\s+left\\s*==\\s*1\\s*:", "message": "Then check the left sensor."}
+    - {"type": "contains", "pattern": "elif\\s+right\\s*==\\s*1\\s*:", "message": "Then check the right sensor."}
+    - {"type": "contains", "pattern": "else\\s*:", "message": "Use else for neither."}
 debug:
   story: >-
     Sam's robot never drives straight and never turns right. It just keeps
@@ -422,6 +436,8 @@ quiz:
       - Swap the battery pack's wires
     answer: 0
     explain: Slower driving gives the loop more chances to react before the robot runs off the line.
+  - {"question": "`left` and `right` are both 1. The code says `if left == 1:` show L, then `elif left == 1 and right == 1:` show F. What shows?", "choices": ["L", "F", "Both"], "answer": 0, "explain": "Python stops at the first true test."}
+  - {"question": "From Lesson 14: why calibrate a robot's turns?", "choices": ["Batteries, floors and motors all differ", "To make the code longer", "To change the radio group"], "answer": 0, "explain": "Real robots need testing and adjusting."}
 challenge:
   title: Track Masters
   prompt: >-

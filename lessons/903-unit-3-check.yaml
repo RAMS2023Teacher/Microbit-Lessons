@@ -1,0 +1,25 @@
+id: unit-3-check
+label: U3
+kind: check
+unit: 3
+order: 903
+title: "Unit 3 Check: Making Things Move"
+subtitle: A short check on what you can do without looking back
+duration_minutes: 15
+level: Unit check
+big_idea: "Show what you remember from Making Things Move. Then go back to anything you missed."
+objectives:
+  - Answer from memory first
+  - Read the explanation for anything you miss
+  - Go back to any lesson you need
+materials:
+  - Just your brain
+agenda:
+  - {key: quiz, name: Unit check, minutes: 15}
+quiz:
+  - {"question": "Why can't a motor connect straight to a micro:bit pin?", "choices": ["It needs more current than a pin can give", "Pins only work with LEDs", "Motors don't use electricity"], "answer": 0, "explain": "Pins give only a few milliamps."}
+  - {"question": "Why must the battery and micro:bit share a ground?", "choices": ["So they agree on what 0 volts is", "To charge the battery", "To make it faster"], "answer": 0, "explain": "Signals only make sense against a shared ground."}
+  - {"question": "`def add_one(n): return n + 1`. What is `add_one(4)`?", "choices": ["4", "5", "6"], "answer": 1, "explain": "The function returns 4 + 1."}
+  - {"question": "What does `max(0, min(180, 200))` give?", "choices": ["0", "180", "200"], "answer": 1, "explain": "It keeps the value in range."}
+  - {"question": "In `pin13.write_analog(speed)`, what does a bigger speed do to a motor?", "choices": ["Spins faster", "Spins backward", "Stops it"], "answer": 0, "explain": "More on-time means more power."}
+  - {"question": "An H-bridge lets code do what?", "choices": ["Reverse a motor", "Measure light", "Send radio messages"], "answer": 0, "explain": "It flips the direction of the current."}
