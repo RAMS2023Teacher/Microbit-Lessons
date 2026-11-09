@@ -60,6 +60,12 @@ learn:
       items:
         - {icon: "0️⃣", title: "0", text: "low: about 0 volts"}
         - {icon: "1️⃣", title: "1", text: "high: about 3 volts"}
+    check:
+      question: What can `pin0.read_digital()` give back?
+      choices: ["Only 0 or 1", "Any number from 0 to 1023", "A word, like yes or no"]
+      answer: 0
+      why: A digital sensor answers a yes-or-no question, so it only ever gives 0 or 1.
+      hint: Think about what "digital" means on this card. How many answers can a yes-or-no question have?
   - text: |
       ### The IR obstacle sensor
       It shines **infrared** light. That's light you can't see. If the light bounces back off something, the sensor knows.
@@ -68,11 +74,26 @@ learn:
       * Nothing there → **1**
 
       Yes, 0 means "I see it." It works from about **2 to 40 cm** away.
+    more: |
+      **Gold: the ultrasonic sensor.** The **HC-SR04** measures real distance, not just yes or no.
+
+      1. Your code sends a short **ping** on Trig (high for 10 µs).
+      2. The sound bounces back.
+      3. Echo stays on while it waits.
+
+      Time the Echo pulse in microseconds. Divide by **58** to get cm. It runs on 5V, so it needs
+      **safe wiring**. Ask your teacher.
     visual:
       type: compare
       items:
         - {icon: "✋", title: "Hand in front", text: "read_digital() gives 0"}
         - {icon: "🌫️", title: "Nothing there", text: "read_digital() gives 1"}
+    check:
+      question: You hold your hand 10 cm in front of the IR sensor. What does it read?
+      choices: ["1, because it sees you", "0, because it sees you", "Nothing until you touch it"]
+      answer: 1
+      why: This sensor is backwards on purpose. 0 means "I see something," and 10 cm is in its range.
+      hint: This sensor's numbers might be the opposite of what you'd guess. Check the card's arrows.
   - text: |
       ### The line sensor
       It looks **down** at the floor.
@@ -88,6 +109,12 @@ learn:
         - {icon: "⬛", title: "Black line", text: "gives 1"}
         - {icon: "⬜", title: "White paper", text: "gives 0"}
         - {icon: "🚁", title: "Lifted up", text: "gives 1, same as black"}
+    check:
+      question: Why must the line sensor stay close to the floor?
+      choices: ["It gets too hot up high", "Its wires are too short", "Too high, it reads 1, just like black"]
+      answer: 2
+      why: With nothing close below, no light bounces back, so it can't tell the floor from a black line.
+      hint: What does the sensor read when it's lifted up? Compare it with the other two readings.
   - text: |
       ### The tuning knob
       Each sensor has a tiny knob called a **potentiometer**. Turn it gently with a small screwdriver.
@@ -109,22 +136,12 @@ learn:
         - {at: 20, label: "20 cm", pointer: true}
         - {at: 40, label: "40 cm"}
       caption: "IR obstacle sensor range in cm"
-  - text: |
-      ### Gold: the ultrasonic sensor
-      The **HC-SR04** measures real distance, not just yes or no.
-
-      1. Your code sends a short **ping** on Trig.
-      2. The sound bounces back.
-      3. Echo stays on while it waits.
-
-      Time it in microseconds. Divide by **58** to get cm. It runs on 5V, so it needs **safe wiring**. Ask your teacher.
-    visual:
-      type: flow
-      steps:
-        - {icon: "📤", label: "Trig high for 10 µs"}
-        - {icon: "🔊", label: "Sound bounces back"}
-        - {icon: "⏱️", label: "Time the Echo pulse"}
-        - {icon: "📏", label: "µs ÷ 58 = cm"}
+    check:
+      question: How can you tell the line sensor's knob is tuned right?
+      choices: ["Its LED just flips between black and white", "It reads 1 everywhere", "The knob won't turn any more"]
+      answer: 0
+      why: Set right at the flip point, the sensor's LED changes as soon as it crosses the line.
+      hint: The card says what to watch while you turn the knob.
 circuit:
   intro: >-
     You'll plug the IR sensor into pin 0 and the line sensor into pin 8. No
@@ -187,6 +204,10 @@ code:
     This program lights the **left** side of the screen when the IR sensor
     sees your hand. It lights the **right** side over a black line. Send it and
     wave!
+  remember:
+    - text: |
+        **Backwards on purpose:** the IR sensor gives **0** when something is in front and **1** when the
+        path is clear. The line sensor gives **1** for black **or** nothing below, and **0** for white.
   starter: |
     from microbit import *
 

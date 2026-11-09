@@ -64,6 +64,12 @@ learn:
       items:
         - {icon: "⬅️", title: "Left motor (A)", text: "P13 → AIN1, P14 → AIN2"}
         - {icon: "➡️", title: "Right motor (B)", text: "P15 → BIN1, P16 → BIN2"}
+    check:
+      question: Which micro:bit pins control the **right** motor?
+      choices: ["P13 and P14", "P15 and P16", "P1 and P2"]
+      answer: 1
+      why: The right motor is on the driver's B side, and P15 and P16 feed BIN1 and BIN2.
+      hint: The right motor uses the driver's B side. Which pins go to the B inputs?
   - text: |
       ### Steering with speed
       Our robot has no steering wheel. It turns by **differential drive**:
@@ -78,6 +84,12 @@ learn:
         - {icon: "↗️", title: "700, 300", text: "Gentle curve right"}
         - {icon: "🔄", title: "600, -600", text: "Spin right on the spot"}
         - {icon: "⬇️", title: "-700, -700", text: "Straight backward"}
+    check:
+      question: "The left wheel goes 300 and the right wheel goes 700. Which way does the robot curve?"
+      choices: ["Left", "Right", "It goes straight"]
+      answer: 0
+      why: The left wheel is slower, and a robot curves toward its slower wheel.
+      hint: Which wheel is slower? The robot bends toward that side.
   - text: |
       ### One function to rule them all
       We write one function: **drive(left, right)**.
@@ -98,28 +110,19 @@ learn:
         - {at: 0, label: "0 stop"}
         - {at: 700, label: "700", pointer: true}
         - {at: 1023, label: "1023"}
+    check:
+      question: What does `drive(-700, -700)` do?
+      choices: ["Drives straight forward", "Spins on the spot", "Drives straight backward"]
+      answer: 2
+      why: Both speeds are negative and the same, so both wheels roll backward together.
+      hint: What does a minus sign mean for a wheel? Are both wheels doing the same thing?
   - text: |
-      ### Drive a square
-      A square is **4 sides** and **4 turns**.
-      So the program repeats the same two moves 4 times:
+      ### Drive a square, then calibrate
+      A square is **4 sides** and **4 turns**: drive straight, then spin about 90°, four times.
 
-      * drive straight, then stop
-      * spin right about 90 degrees
-    visual:
-      type: flow
-      loop: true
-      loop_label: repeat 4 times
-      steps:
-        - {icon: "⬆️", label: "drive straight 1000 ms"}
-        - {icon: "✋", label: "stop"}
-        - {icon: "🔄", label: "spin right 450 ms"}
-  - text: |
-      ### Real robots need calibrating
-      Code says "turn for 450 ms". But how far is that?
-      It depends on the **batteries**, the **floor** and your **motors**.
+      But how far does "turn for 450 ms" go? It depends on the **batteries**, the **floor** and your **motors**.
 
-      Engineers **test, measure and adjust**.
-      Keep your timing in **variables** at the top, so you only change it once.
+      Engineers **test, measure and adjust**. Keep your timing in **variables** at the top, so you only change it once.
     visual:
       type: flow
       loop: true
@@ -128,6 +131,12 @@ learn:
         - {icon: "🧪", label: "test"}
         - {icon: "📏", label: "measure"}
         - {icon: "🔧", label: "adjust"}
+    check:
+      question: Your robot turns too far at every corner. What do you adjust?
+      choices: ["Turn for more time", "Turn for less time", "Drive the sides for longer"]
+      answer: 1
+      why: Turning for less time makes each spin smaller, so it gets closer to 90°.
+      hint: The turn is too big. Would spinning for longer make it bigger or smaller?
 circuit:
   intro: >-
     It's the lesson 13 circuit plus a second motor on the driver's B side.

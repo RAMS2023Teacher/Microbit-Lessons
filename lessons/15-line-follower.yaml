@@ -63,6 +63,12 @@ learn:
       items:
         - {icon: "⬜", title: "White floor", text: "Light bounces back. OUT is 0 on most modules."}
         - {icon: "⬛", title: "Black tape", text: "Light is soaked up. OUT is 1 on most modules."}
+    check:
+      question: Why does black tape look different from white floor to the sensor?
+      choices: ["It soaks up the infrared light", "It bounces back more light", "It is warmer than the floor"]
+      answer: 0
+      why: Black soaks up the IR light, so little bounces back, and the sensor's OUT pin changes.
+      hint: The sensor shines light down and measures what comes back. What does a dark color do to light?
   - text: |
       ### Two sensors, four situations
       Mount the two sensors close together at the front.
@@ -76,6 +82,12 @@ learn:
         - {icon: "⬅️", title: "Only left sees it", text: "Line drifting left. Turn left."}
         - {icon: "➡️", title: "Only right sees it", text: "Line drifting right. Turn right."}
         - {icon: "❓", title: "Neither sees it", text: "Lost it! Search."}
+    check:
+      question: Only the **left** sensor sees the line. What should the robot do?
+      choices: ["Go straight", "Turn right", "Turn left"]
+      answer: 2
+      why: The line is drifting off to the left, so the robot turns left to stay on it.
+      hint: Only one sensor still sees the tape. Should the robot steer toward the tape or away from it?
   - text: |
       ### Remembering: state
       Both sensors lost the line. Which way should the robot search? It needs a **memory**.
@@ -90,6 +102,12 @@ learn:
         - {icon: "⬅️", label: "only left sees the line"}
         - {icon: "💾", label: "last_seen = 'left'"}
         - {icon: "❓", label: "lost? spin left"}
+    check:
+      question: The robot loses the line, and `last_seen` is 'right'. Which way does it spin?
+      choices: ["Left", "Right", "It stops and waits"]
+      answer: 1
+      why: It spins toward the side it saw last, and last_seen says the line was on the right.
+      hint: last_seen is the robot's memory. Which side did it save, and why does that side matter?
   - text: |
       ### Sense → decide → act → repeat
       The loop runs about **100 times a second**.
@@ -104,6 +122,12 @@ learn:
         - {icon: "👀", label: "sense: read both sensors"}
         - {icon: "🤔", label: "decide: if/elif/else"}
         - {icon: "🚗", label: "act: drive()"}
+    check:
+      question: Your robot keeps zooming off the line on curves. What should you try first?
+      choices: ["Drive faster", "Drive slower", "Make the loop run less often"]
+      answer: 1
+      why: Slower speeds give the code more time to react with lots of tiny corrections.
+      hint: Think about how much time the code gets to notice the curve and fix it.
 circuit:
   intro: >-
     Start with your lesson 14 wiring (steps 1-2 recap it). Then add two line

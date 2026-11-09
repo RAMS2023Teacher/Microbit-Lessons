@@ -60,6 +60,58 @@ learn:
       | `'L'` | spin left |
       | `'R'` | spin right |
       | `'S'` | stop |
+
+      The **robot's program** is in **More about this**.
+    more: |
+      **The robot's program.** Flash this onto the **robot's** micro:bit. Change the group to your team's number.
+
+      ```python
+      from microbit import *
+      import radio
+
+      radio.config(group=12)   # must match the controller!
+      radio.on()
+
+      def set_motor(pin_a, pin_b, speed):
+          if speed > 0:
+              pin_a.write_analog(speed)
+              pin_b.write_digital(0)
+          elif speed < 0:
+              pin_a.write_digital(0)
+              pin_b.write_analog(-speed)
+          else:
+              pin_a.write_digital(0)
+              pin_b.write_digital(0)
+
+      def drive(left, right):
+          set_motor(pin13, pin14, left)
+          set_motor(pin15, pin16, right)
+
+      last_heard = running_time()
+      while True:
+          msg = radio.receive()          # a string, or None if nothing arrived
+          if msg:
+              last_heard = running_time()
+              if msg == 'F':
+                  drive(700, 700)
+              elif msg == 'L':
+                  drive(-500, 500)
+              elif msg == 'R':
+                  drive(500, -500)
+              else:
+                  drive(0, 0)
+              display.show(msg)
+          if running_time() - last_heard > 500:
+              drive(0, 0)                # fail-safe: lost contact
+              display.show(Image.NO)
+          sleep(20)
+      ```
+
+      **Reading it:** you met `set_motor()` and `drive()` in Lesson 14. The new part is the loop:
+
+      * `radio.receive()` gives a message, or **None** if nothing came.
+      * `if msg:` means "if something arrived."
+      * The last `if` is the **fail-safe**.
     visual:
       type: flow
       steps:
@@ -67,37 +119,61 @@ learn:
         - {icon: "📡", label: "radio.send('F')"}
         - {icon: "🤖", label: "robot: radio.receive()"}
         - {icon: "🚗", label: "drive(700, 700)"}
+    check:
+      question: Which micro:bit calls `radio.send()`?
+      choices: ["The robot", "Both of them", "The controller"]
+      answer: 2
+      why: The controller reads your tilt and sends a letter. The robot only listens and drives.
+      hint: One micro:bit talks and the other listens. Which one is in your hand reading tilt?
   - text: |
-      ### Groups keep teams apart
-      Every micro:bit in the room can hear every other one!
+      ### Wired or wireless?
+      A **network** connects devices so they can send each other messages.
 
-      * `radio.config(group=12)` puts your pair on **channel 12**.
-      * A micro:bit only hears its **own group**.
-      * **Both** micro:bits must use the same number.
-
-      Your teacher gives each team a number. Write it on a sticky note on your controller.
+      Messages travel through a **cable** or through the **air**.
+      Wireless lets you move around.
     visual:
       type: compare
       items:
-        - {icon: "✅", title: "Group 12 → group 12", text: "Same channel. The robot hears you."}
-        - {icon: "🔇", title: "Group 12 → group 8", text: "Different channels. The robot hears nothing."}
+        - {icon: "🔌", title: "Wired", text: "Through a cable (Ethernet, USB). Fast and reliable, but you're tied down."}
+        - {icon: "📡", title: "Wireless", text: "Radio waves (Wi-Fi, Bluetooth, micro:bit radio). Short range, shared airwaves."}
+    check:
+      question: Which one is a **wired** network?
+      choices: ["Two micro:bits talking by radio", "A laptop plugged in with an Ethernet cable", "A phone using Bluetooth"]
+      answer: 1
+      why: An Ethernet cable carries the messages, so the laptop is on a wired network.
+      hint: Wired means the messages travel through something you can hold. Which one has a cable?
+  - text: |
+      ### Small and big networks
+      Networks also come in different **sizes**.
+
+      Your two micro:bits make a tiny **wireless local network**, with no router.
+      Every micro:bit in the same **group** hears every message. That's a **broadcast**.
+
+      `radio.config(group=12)` puts your pair on **channel 12**. **Both** micro:bits must use the same number.
+    visual:
+      type: compare
+      items:
+        - {icon: "🏫", title: "LAN (local area network)", text: "Devices in one place, like your school's Wi-Fi."}
+        - {icon: "🌍", title: "WAN (wide area network)", text: "Networks joined across cities and countries. The internet is the biggest."}
+        - {icon: "📱", title: "Mobile", text: "Phones talk to cell towers that hand you on as you move."}
+    check:
+      question: Why does each team need its **own** group number?
+      choices: ["Every micro:bit in a group hears every message", "Groups make the radio faster", "A group can only hold one micro:bit"]
+      answer: 0
+      why: Radio is a broadcast, so two teams on one group would hear and obey each other's commands.
+      hint: Think about what "broadcast" means for the other teams' robots in the room.
   - text: |
       ### What if the messages stop?
-      The controller's batteries die while the robot drives forward.
-      The last command was `'F'`... so it would drive **forever**!
+      The controller's batteries die while the robot drives forward. The last command was `'F'`... so it drives **forever**!
 
-      A **fail-safe** fixes this. It makes a machine go to a **safe** state when something goes wrong.
-      Real robots, drones and lawnmowers all have one.
-    visual:
-      type: compare
-      items:
-        - {icon: "😱", title: "No fail-safe", text: "Keeps doing the last command. Drives away!"}
-        - {icon: "🛑", title: "With a fail-safe", text: "No messages? It stops by itself."}
-  - text: |
-      ### The 500 ms safety timer
+      A **fail-safe** makes a machine go to a **safe** state when something goes wrong.
+
       * The controller sends a command **every 100 ms**.
-      * The robot notes **when** it last heard one with `running_time()` (milliseconds since it started).
       * No message for more than **500 ms**? The robot **stops**.
+    more: |
+      **How the timer works:** the robot notes **when** it last heard a message with `running_time()`
+      (milliseconds since it started). If `running_time() - last_heard` is more than 500, it stops.
+      Real robots, drones and lawnmowers all have a fail-safe like this.
     visual:
       type: scale
       label: ms since the last message
@@ -110,82 +186,12 @@ learn:
         - {at: 0, label: "message heard", pointer: true}
         - {at: 500, label: "500"}
         - {at: 1000, label: "1000"}
-  - |
-    ### The robot's program
-    Flash this onto the **robot's** micro:bit. Change the group to your team's number.
-
-    ```python
-    from microbit import *
-    import radio
-
-    radio.config(group=12)   # must match the controller!
-    radio.on()
-
-    def set_motor(pin_a, pin_b, speed):
-        if speed > 0:
-            pin_a.write_analog(speed)
-            pin_b.write_digital(0)
-        elif speed < 0:
-            pin_a.write_digital(0)
-            pin_b.write_analog(-speed)
-        else:
-            pin_a.write_digital(0)
-            pin_b.write_digital(0)
-
-    def drive(left, right):
-        set_motor(pin13, pin14, left)
-        set_motor(pin15, pin16, right)
-
-    last_heard = running_time()
-    while True:
-        msg = radio.receive()          # a string, or None if nothing arrived
-        if msg:
-            last_heard = running_time()
-            if msg == 'F':
-                drive(700, 700)
-            elif msg == 'L':
-                drive(-500, 500)
-            elif msg == 'R':
-                drive(500, -500)
-            else:
-                drive(0, 0)
-            display.show(msg)
-        if running_time() - last_heard > 500:
-            drive(0, 0)                # fail-safe: lost contact
-            display.show(Image.NO)
-        sleep(20)
-    ```
-  - text: |
-      ### Reading the robot's program
-      You met `set_motor()` and `drive()` in Lesson 14. The new part is the loop:
-
-      * `radio.receive()` gives a message, or **None** if nothing came.
-      * `if msg:` means "if something arrived."
-      * The last `if` is the **fail-safe**.
-  - text: |
-      ### Wired or wireless?
-      A **network** connects devices so they can send each other messages.
-
-      Messages travel through a **cable** or through the **air**.
-      Wireless lets you move around.
-    visual:
-      type: compare
-      items:
-        - {icon: "🔌", title: "Wired", text: "Through a cable (Ethernet, USB). Fast and reliable, but you're tied down."}
-        - {icon: "📡", title: "Wireless", text: "Radio waves (Wi-Fi, Bluetooth, micro:bit radio). Short range, shared airwaves."}
-  - text: |
-      ### Small and big networks
-      Networks also come in different **sizes**.
-
-      Your two micro:bits make a tiny **wireless local network**, with no router.
-      Every micro:bit in the same group hears every message. That's a **broadcast**.
-      So each team needs its own group number.
-    visual:
-      type: compare
-      items:
-        - {icon: "🏫", title: "LAN (local area network)", text: "Devices in one place, like your school's Wi-Fi."}
-        - {icon: "🌍", title: "WAN (wide area network)", text: "Networks joined across cities and countries. The internet is the biggest."}
-        - {icon: "📱", title: "Mobile", text: "Phones talk to cell towers that hand you on as you move."}
+    check:
+      question: You switch the controller off while the robot drives. What does the robot do?
+      choices: ["Keeps doing the last command", "Stops by itself after 500 ms", "Drives backward to find you"]
+      answer: 1
+      why: With no messages for more than 500 ms, the fail-safe stops the robot.
+      hint: What is the fail-safe for? Look at the scale past 500 ms.
 circuit:
   intro: >-
     The robot's wiring is the same as lesson 14. No new parts! Check every
@@ -261,6 +267,15 @@ code:
     hold. Flash the **robot** program from the Learn section onto the robot.
     Change group=12 in BOTH programs to your team's number. Hold the
     controller flat with the logo pointing away from you, then tilt to drive.
+  remember:
+    - text: |
+        **Radio groups:** a micro:bit only hears its **own group**, so the `group=` number must match
+        in **both** programs. Your teacher gives each team a number. Write it on a sticky note on your controller.
+      visual:
+        type: compare
+        items:
+          - {icon: "✅", title: "Group 12 → group 12", text: "Same channel. The robot hears you."}
+          - {icon: "🔇", title: "Group 12 → group 8", text: "Different channels. The robot hears nothing."}
   starter: |
     from microbit import *
     import radio
