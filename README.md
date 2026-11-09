@@ -58,6 +58,14 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 
 Lessons are YAML files in `lessons/`. See [docs/LESSON_FORMAT.md](docs/LESSON_FORMAT.md) for how to edit them or write new ones.
 
+## Run it in Google Apps Script (no hosting)
+
+Maker Lab can also run as a **Google Apps Script web app** in a teacher's school account. Students sign in
+with their school Google accounts, and their work is saved in the teacher's Drive. To set it up, paste the
+6 files in [dist/apps-script](dist/apps-script) and follow
+[dist/apps-script/INSTALL.md](dist/apps-script/INSTALL.md). How it works, and what's different, is in
+[docs/APPS_SCRIPT.md](docs/APPS_SCRIPT.md).
+
 ## Run it locally
 
 ```bash

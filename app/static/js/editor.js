@@ -168,7 +168,15 @@
       t = setTimeout(() => ed.changeFns.forEach((fn) => fn(cm.getValue())), 800);
     });
 
+    // Apps Script pages can't use USB (Google's frame blocks it), so .hex download is the way.
+    if (window.MAKERLAB_NO_USB) {
+      root.querySelectorAll('[data-act=send],[data-act=stop]').forEach((b) => { b.hidden = true; });
+      const hx = root.querySelector('[data-act=hex]');
+      if (hx) { hx.classList.remove('ghost'); hx.classList.add('primary'); hx.textContent = '⬇ Download .hex for micro:bit'; }
+    }
+
     async function doSend() {
+      if (window.MAKERLAB_NO_USB) { const hx = root.querySelector('[data-act=hex]'); if (hx) hx.click(); return; }
       active = ed;
       ed.consoleText = '';
       ed.pre.textContent = '';
