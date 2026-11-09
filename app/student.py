@@ -36,7 +36,7 @@ def dashboard():
              .order_by(Assignment.due_date.is_(None), Assignment.due_date, Assignment.created_at))
         for a in q:
             lesson = L.get_lesson(a.lesson_id)
-            if not lesson:
+            if not lesson or not L.owes_assignment(a, pm):
                 continue
             p = pm.get(a.lesson_id)
             pct = p.percent(L.section_keys(lesson)) if p else 0
@@ -58,7 +58,8 @@ def _assigned_ids(user):
     ids = [c.id for c in user.classes]
     if not ids:
         return set()
-    return {a.lesson_id for a in Assignment.query.filter(Assignment.classroom_id.in_(ids))}
+    # A choice branch stays locked until Sprint 3 is done, like any other path.
+    return {a.lesson_id for a in Assignment.query.filter(Assignment.classroom_id.in_(ids)) if not a.branch}
 
 
 @bp.route("/map")

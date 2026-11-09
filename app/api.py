@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 
 from . import gamify
 from . import lessons as L
+from . import partners
 from .models import Progress, db, utcnow
 
 bp = Blueprint("api", __name__, url_prefix="/api")
@@ -127,7 +128,38 @@ def challenge(lesson_id):
     p.challenge_response = response
     p.challenge_submitted_at = utcnow()
     p.mark("challenge")
-    return _finish(lesson, p)
+    return _finish(lesson, p, partner=partners.share_challenge(current_user.id, lesson, p))
+
+
+@bp.route("/lessons/<lesson_id>/partner", methods=["GET", "POST"])
+@login_required
+def partner(lesson_id):
+    if not L.get_lesson(lesson_id) or current_user.is_teacher:
+        abort(404)
+    if request.method == "GET":
+        return jsonify(partners.state(current_user, lesson_id))
+    data = request.get_json(silent=True) or {}
+    action = data.get("action")
+    row = partners.current(current_user.id, lesson_id)
+    error = None
+    if action == "invite":
+        if not isinstance(data.get("partner_id"), int):
+            abort(400)
+        error = partners.invite(current_user, lesson_id, data["partner_id"])
+    elif action == "accept":
+        if not row or row.partner_id != current_user.id:
+            abort(400)
+        row.accepted = True
+    elif action == "leave":                 # also declines or cancels an invite
+        if row:
+            db.session.delete(row)
+    else:
+        abort(400)
+    if error:
+        db.session.rollback()
+        return jsonify({"error": error, **partners.state(current_user, lesson_id)}), 400
+    db.session.commit()
+    return jsonify(partners.state(current_user, lesson_id))
 
 
 @bp.post("/avatar")

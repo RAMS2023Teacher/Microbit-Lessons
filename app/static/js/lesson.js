@@ -420,8 +420,66 @@
   $('challenge-submit').addEventListener('click', async () => {
     $('challenge-status').textContent = 'Submitting…';
     const d = await api('/challenge', { code: edChal ? edChal.getCode() : '', response: $('challenge-response').value });
-    $('challenge-status').textContent = d.ok ? 'Submitted ✓ Your teacher can see it now.' : (d.error || 'Could not submit.');
+    $('challenge-status').textContent = d.ok
+      ? (d.partner ? `Submitted ✓ for you and ${d.partner}.` : 'Submitted ✓ Your teacher can see it now.')
+      : (d.error || 'Could not submit.');
   });
+
+  // ----- partner: invite a classmate, then one submission counts for both -----
+  if ($('partner-box')) {
+    const box = $('partner-box');
+    let last = '';
+    const partnerApi = async (body) => {
+      const r = await fetch(base + '/partner', {
+        method: body ? 'POST' : 'GET', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return r.json().catch(() => ({ status: 'none', classmates: [], error: 'Could not reach the site.' }));
+    };
+    const add = (tag, text, cls) => {
+      const el = box.appendChild(document.createElement(tag));
+      if (text) el.textContent = text;
+      if (cls) el.className = cls;
+      return el;
+    };
+    const act = (label, body, cls) => {
+      const b = add('button', label, cls || 'btn small');
+      b.type = 'button';
+      b.addEventListener('click', async () => draw(await partnerApi(typeof body === 'function' ? body() : body)));
+      return b;
+    };
+    function draw(p) {
+      const key = JSON.stringify(p);
+      if (key === last) return;            // don't rebuild while a student is using the menu
+      last = key;
+      box.textContent = '';
+      $('challenge-submit').textContent = p.status === 'paired' ? '📤 Submit for both of us' : '📤 Submit my challenge';
+      if (p.status === 'paired') {
+        add('span', `👥 You're partners with ${p.name}. One submission counts for both of you.`);
+        act('Leave', { action: 'leave' }, 'btn small ghost');
+      } else if (p.status === 'sent') {
+        add('span', `⏳ Waiting for ${p.name} to accept.`);
+        act('Cancel', { action: 'leave' }, 'btn small ghost');
+      } else if (p.status === 'incoming') {
+        add('span', `👥 ${p.name} wants to be your partner.`);
+        act('Accept', { action: 'accept' });
+        act('No thanks', { action: 'leave' }, 'btn small ghost');
+      } else if (p.classmates.length) {
+        add('label', 'Working with a partner?', 'partner-label').htmlFor = 'partner-pick';
+        const pick = add('select');
+        pick.id = 'partner-pick';
+        p.classmates.forEach((m) => { const o = pick.appendChild(document.createElement('option')); o.value = m.id; o.textContent = m.name; });
+        act('Invite', () => ({ action: 'invite', partner_id: parseInt(pick.value, 10) }), 'btn small ghost');
+      }
+      if (p.error) add('span', p.error, 'bad small');
+    }
+    const check = async () => {
+      if (!document.hidden && !$('challenge').hidden && document.activeElement.id !== 'partner-pick') draw(await partnerApi());
+    };
+    partnerApi().then(draw);
+    setInterval(check, 8000);
+  }
 
   // ----- 35-minute class timer -----
   const TKEY = 'timer-' + L.id;

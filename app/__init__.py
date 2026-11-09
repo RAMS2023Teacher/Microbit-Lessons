@@ -32,6 +32,10 @@ def _add_missing_columns():
             conn.execute(text('ALTER TABLE "user" ADD COLUMN xp INTEGER NOT NULL DEFAULT 0'))
         if "avatar" not in cols:
             conn.execute(text('ALTER TABLE "user" ADD COLUMN avatar JSON'))
+        if "branch" not in {c["name"] for c in insp.get_columns("assignment")}:
+            conn.execute(text("ALTER TABLE assignment ADD COLUMN branch VARCHAR(20)"))
+        if "screen" not in {c["name"] for c in insp.get_columns("classroom")}:
+            conn.execute(text("ALTER TABLE classroom ADD COLUMN screen JSON"))
 
 
 def create_app(test_config=None):

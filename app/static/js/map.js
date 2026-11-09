@@ -93,15 +93,15 @@
     map.appendChild(a);
   });
 
-  // silkscreen labels above the side trails
-  [[5, 'ROBOT SPRINT · START ANY TIME'], [6, 'AI LAB · AFTER SHAKE, TILT AND PLAY']].forEach(([unit, text]) => {
-    const group = M.nodes.filter((n) => n.unit === unit);
-    if (!group.length) return;
-    const top = group.reduce((a, n) => (n.y < a.y ? n : a));
-    const [x, y] = px(top);
+  // silkscreen labels: the Sprint trunk, then its three branches
+  [['sprint-servo-skills', 'ROBOT SPRINT · START ANY TIME', 60, 'right'], ['sprint-build-the-bot', 'ROBOTS', 0, 'center'],
+    ['ai-rules-or-learning', 'AI', 0, 'center'], ['embedded-field-station', 'EMBEDDED', 0, 'center']].forEach(([id, text, shift, align]) => {
+    const node = byId[id];
+    if (!node) return;
+    const [x, y] = px(node);
     const lab = document.createElement('div');
-    lab.className = 'map-unit-label';
-    lab.style.left = (100 * (x + 60) / W) + '%';
+    lab.className = `map-unit-label ${align}`;
+    lab.style.left = (100 * (x + shift) / W) + '%';
     lab.style.top = (100 * (y - 44) / H) + '%';
     lab.textContent = text;
     map.appendChild(lab);
@@ -132,7 +132,7 @@
     const action = { complete: 'Review lesson', progress: `Continue (${n.pct}%)`, open: 'Start lesson', locked: 'Peek anyway' }[n.state];
     let body = `<div class="eyebrow">Lesson ${n.number} · Unit ${n.unit}: ${esc(unit.title || '')}</div><h2>${esc(n.title)}</h2>`;
     if (n.state === 'locked') {
-      body += `<p class="lock-note">🔒 Finish <b>${n.requires_titles.map(esc).join('</b> and <b>')}</b> to unlock this path.</p>`;
+      body += `<p class="lock-note">🔒 Finish <b>${n.requires_titles.map(esc).join('</b> and <b>')}</b> to unlock this path.${n.or_titles.length ? ` Or finish <b>${n.or_titles.map(esc).join('</b> or <b>')}</b>.` : ''}</p>`;
     } else {
       body += `<p class="stars-big">${STAR(n.stars)}</p><div class="meter wide"><i style="width:${n.pct}%"></i></div><p class="muted small">${n.pct}% complete · up to ${n.xp_possible} XP</p>`;
     }

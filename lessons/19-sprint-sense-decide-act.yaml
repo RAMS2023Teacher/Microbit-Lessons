@@ -370,3 +370,7 @@ standards:
     how: Students handle the edge of the sensor's range, where flickering readings make the gate flap, with a cooldown.
   - code: 6-8.CT.d.4
     how: The program combines a loop, conditionals, a Boolean expression, a state variable and an angle() function.
+branches:
+  - {lesson: sprint-build-the-bot, label: "🤖 Robots", blurb: "Build a robot, then send it on a mission."}
+  - {lesson: ai-rules-or-learning, label: "🧠 AI", blurb: "Teach a micro:bit your moves and test it for fairness."}
+  - {lesson: embedded-field-station, label: "📡 Embedded computing", blurb: "Build sensor stations and answer a research question."}

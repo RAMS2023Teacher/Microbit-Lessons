@@ -303,6 +303,7 @@
     </div>
     <label class="field"><span><b>{{ lesson.challenge.submit_prompt or "Describe what you made." }}</b></span>
       <textarea id="challenge-response" rows="4">{{ state.challenge_response }}</textarea></label>
+    {% if not is_teacher %}<div class="partner-box" id="partner-box" aria-live="polite"></div>{% endif %}
     <div class="row"><button type="button" class="btn" id="challenge-submit">📤 Submit my challenge</button><span class="save-status muted small" id="challenge-status">{% if state.challenge_submitted %}Submitted ✓ (you can resubmit){% endif %}</span></div>
   </section>
 
@@ -314,7 +315,12 @@
 
   <div class="lesson-done card" id="lesson-done" hidden>
     <h2>🎉 Lesson complete!</h2>
-    {% if nxt %}<a class="btn" href="{{ url_for('student.lesson', lesson_id=nxt.id) }}">Next: {{ nxt.title }} →</a>{% endif %}
+    {% if lesson.branches %}
+    <p>Pick your branch. You can come back and try another one later.</p>
+    <div class="branch-choices">
+      {% for b in lesson.branches %}<a class="lesson-card card" href="{{ url_for('student.lesson', lesson_id=b.lesson) }}"><h3>{{ b.label }}</h3><p>{{ b.blurb }}</p></a>{% endfor %}
+    </div>
+    {% elif nxt %}<a class="btn" href="{{ url_for('student.lesson', lesson_id=nxt.id) }}">Next: {{ nxt.title }} →</a>{% endif %}
   </div>
 </article>
 {% endblock %}

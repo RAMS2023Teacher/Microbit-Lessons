@@ -1,0 +1,209 @@
+id: embedded-field-station
+label: E1
+unit: 7
+order: 27
+title: "Embedded 1: Field Station"
+subtitle: Turn your micro:bit into a tiny computer that records the world by itself
+duration_minutes: 35
+level: Embedded
+big_idea: >-
+  An embedded computer lives inside a thing and does one job, often with no
+  screen and nobody watching. A data logger is a good first example.
+objectives:
+  - Explain what an embedded computer is
+  - Read temperature, light and sound together
+  - Save sensor readings with the log module
+  - Wait for the next reading without stopping
+vocabulary:
+  - term: Embedded computer
+    definition: A small computer built into a thing to do one job.
+  - term: Data logger
+    definition: A device that saves readings over time.
+  - term: Sample rate
+    definition: How often a sensor is read.
+  - term: Timestamp
+    definition: The time saved with each reading.
+materials:
+  - micro:bit V2 + USB cable
+  - Battery pack
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 6}
+  - {key: code, name: Code it, minutes: 11}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: challenge, name: Open-ended challenge, minutes: 7}
+video:
+  title: Data logging with the micro:bit
+  note: Notice where the saved data ends up.
+warmup:
+  prompt: Name three things around you with a tiny computer inside but no keyboard. What is the one job each one does?
+learn:
+  - text: |
+      ### What is embedded computing?
+      An **embedded computer** is built into a thing. It does **one job**.
+
+      A thermostat, a washing machine and a car's airbag sensor all have one.
+
+      Many have no screen. They just sense, decide and act, all day.
+    visual:
+      type: compare
+      items:
+        - {icon: "🌡️", title: "Thermostat", text: "Keeps a room warm."}
+        - {icon: "🧺", title: "Washer", text: "Runs each cycle."}
+        - {icon: "🚗", title: "Airbag", text: "Senses a crash."}
+  - text: |
+      ### Three built-in sensors
+      The micro:bit V2 can sense these with no wires:
+
+      * `temperature()`: degrees Celsius
+      * `display.read_light_level()`: 0 (dark) to 255 (bright)
+      * `microphone.sound_level()`: 0 (quiet) to 255 (loud)
+  - text: |
+      ### Save it with log
+      Put `import log` at the top.
+
+      ```python
+      log.set_labels('temp', timestamp=log.SECONDS)
+      log.add(temp=temperature())
+      ```
+      Labels are your **columns**. Each `log.add()` saves a new **row**. The data stays after you unplug it.
+    visual:
+      type: flow
+      steps:
+        - {icon: "🌡️", label: "Read a sensor"}
+        - {icon: "💾", label: "log.add() saves a row"}
+        - {icon: "📈", label: "Open MY_DATA.HTM"}
+  - text: |
+      ### How often should you read?
+      The **sample rate** is how often you take a reading.
+
+      * Room temperature changes **slowly**. Every minute is plenty.
+      * Sound changes **fast**. Try every second.
+
+      Too many readings will fill the memory.
+  - text: |
+      ### Waiting without stopping
+      `sleep(5000)` freezes your code for 5 seconds. Buttons have to wait too.
+
+      So ask, "Is it time yet?"
+
+      `running_time()` counts milliseconds since power-on. Save the next time to read, then check it over and over.
+code:
+  intro: Press **A** to start logging and **B** to stop. Then plug it in, open the **MICROBIT** drive and double-click **MY_DATA.HTM**.
+  starter: |
+    from microbit import *
+    import log
+
+    INTERVAL = 5000          # ms between readings
+    log.set_labels('temp', 'light', 'sound', timestamp=log.SECONDS)
+    display.read_light_level()   # the first reading is a warm-up
+
+    running = False
+    next_time = 0
+    display.show(Image.NO)
+
+    while True:
+        if button_a.was_pressed():
+            running = True
+            display.show(Image.YES)
+        if button_b.was_pressed():
+            running = False
+            display.show(Image.NO)
+
+        if running and running_time() >= next_time:
+            log.add(temp=temperature(),
+                    light=display.read_light_level(),
+                    sound=microphone.sound_level())
+            next_time = running_time() + INTERVAL
+        sleep(20)
+  walkthrough:
+    - lines: "4-6"
+      explain: "Set how often to read, and name the columns. The first light reading is always 0."
+    - lines: "13-18"
+      explain: Button A starts logging. Button B stops it. The picture shows which one is on.
+    - lines: "20"
+      explain: "Is logging on, **and** is it time yet? Both must be true."
+    - lines: "21-24"
+      explain: Save one row, then work out when the next reading is due.
+  try_it:
+    - Set INTERVAL to 1000. Clap near it, then cover it. Check your chart.
+    - Press B. Does it stop right away? Why is that better than a long sleep?
+    - Log for 2 minutes in two different spots. Which spot is brighter?
+debug:
+  story: >-
+    Lena's logger won't start. After that's fixed, Python rejects a column name.
+    And she'd fill the memory fast. Find the **three** bugs, then press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+    import log
+
+    log.set_labels('temp', timestamp=log.SECONDS)
+
+    while True
+        log.add(tmp=temperature())
+        sleep(1)
+  solution: |
+    from microbit import *
+    import log
+
+    log.set_labels('temp', timestamp=log.SECONDS)
+
+    while True:
+        log.add(temp=temperature())
+        sleep(5000)
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: 'log\.add\(\s*temp\s*=', message: "The name inside log.add() must match the label: temp."}
+    - {type: not_contains, pattern: 'sleep\(\s*\d{1,2}\s*\)', message: "That logs far too often. Temperature changes slowly, so wait at least a second."}
+  hints:
+    - Which line is missing the mark that every loop needs at the end?
+    - Compare the label name with the name inside log.add().
+    - sleep(1) waits 1 millisecond. How many rows is that in a minute?
+  reflection_prompt: Why does a good logger not read as fast as it can?
+quiz:
+  - question: What makes a computer embedded?
+    choices: ["It is built into a thing to do one job", "It has a big screen", "It needs the internet"]
+    answer: 0
+    explain: Embedded computers live inside things and usually do one job.
+  - question: "What does each `log.add()` do?"
+    choices: ["Adds a new column", "Saves a new row of data", "Deletes the old data"]
+    answer: 1
+    explain: Labels are columns. Each log.add() saves one row.
+  - question: Room temperature changes slowly. Which sample rate makes the most sense?
+    choices: ["1,000 times a second", "About once a minute", "Once a year"]
+    answer: 1
+    explain: Reading far more often than things change just fills the memory.
+  - question: Why check running_time() instead of using a long sleep?
+    choices: ["The code can still notice buttons while it waits", "It uses more memory", "It makes the LEDs brighter"]
+    answer: 0
+    explain: A long sleep freezes the program. Checking the time lets it keep working.
+challenge:
+  title: Station Upgrade
+  prompt: Change your field station to fit something you want to find out about your school.
+  levels:
+    - "Bronze: Add a fourth column for tilt with `accelerometer.get_x()`."
+    - "Silver: Show a sad face whenever sound goes over a limit you choose."
+    - "Gold: Count the readings over your limit. Save that count in a new column."
+  hints:
+    Bronze:
+      - "Add a new label in `log.set_labels()`."
+      - "Add `tilt=accelerometer.get_x()` inside `log.add()`. Names must match."
+    Silver:
+      - "Save the sound in a variable first, so you can test it and log it."
+      - "Use `if sound > LIMIT:` right after you read it."
+    Gold:
+      - "Start `loud = 0` before the loop. Add 1 when the sound is over your limit."
+      - "Add `loud=loud` to `log.add()`, and add 'loud' to your labels."
+  submit_prompt: What question could your field station help answer? Which reading matters most?
+teacher_notes: |
+  * **Hardware:** microphone and `log` need a V2. Saved data is viewed by opening **MY_DATA.HTM** on the MICROBIT drive.
+  * Data survives unplugging and flashing the same program. `log.delete()` erases it. A full log raises an error, so keep sample rates sensible.
+  * Light is read through the LED display, so the first reading is 0, and the picture on the screen can slightly change the value.
+standards:
+  - code: 6-8.CS.a.6
+    how: Students use a handheld device's sensors to collect environmental data.
+  - code: 6-8.CT.c.5
+    how: Students use a data logger to gather readings, then view them as a table and chart.
+  - code: 6-8.CT.b.1
+    how: Students write a loop with conditionals that controls when readings are saved.

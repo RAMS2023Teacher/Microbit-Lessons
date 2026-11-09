@@ -1,6 +1,6 @@
 # Robot Sprint: hardware setup and facts
 
-The Robot Sprint (lessons S1–S6) is written for this hardware:
+The Robot Sprint is written for this hardware. Sprints 1–3 are shared. Then classes choose Robots (S4–S6), AI (A1–A4, which needs CreateAI and may need a second micro:bit) or Embedded (E1–E3, which needs only the shield and IR sensor):
 
 | Part | What it is |
 |---|---|

@@ -45,6 +45,7 @@
       {% if p.debug_reflection %}<blockquote>{{ p.debug_reflection }}</blockquote>{% endif %}</dd>{% endif %}
     <dt>Quiz</dt><dd>{% if p.quiz_total %}latest {{ p.quiz_score }}/{{ p.quiz_total }} · best {{ p.quiz_best }}/{{ p.quiz_total }} · {{ p.quiz_attempts }} attempt(s){% else %}—{% endif %}</dd>
     <dt>Challenge</dt><dd>{% if p.challenge_submitted_at %}submitted {{ p.challenge_submitted_at.strftime('%b %-d %-I:%M %p') }} UTC
+      {% if it.partner %}<b>· 👥 with {{ it.partner }}</b>{% endif %}
       <blockquote>{{ p.challenge_response }}</blockquote>
       {% if p.challenge_code %}<details><summary>view code</summary><pre class="code-block">{{ p.challenge_code }}</pre></details>{% endif %}
       {% else %}—{% endif %}</dd>

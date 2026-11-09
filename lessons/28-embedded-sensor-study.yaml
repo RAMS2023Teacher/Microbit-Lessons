@@ -1,0 +1,239 @@
+id: embedded-sensor-study
+label: E2
+unit: 7
+order: 28
+title: "Embedded 2: Sensor Study"
+subtitle: Ask a real research question and let your sensor collect the evidence
+duration_minutes: 35
+level: Embedded
+big_idea: >-
+  A sensor only gives you numbers. A clear question and a fair test turn those
+  numbers into evidence.
+objectives:
+  - Write a question a sensor can answer
+  - Plan a fair test with one change
+  - Count events without counting twice
+  - Check your sensor's accuracy before you trust it
+vocabulary:
+  - term: Research question
+    definition: A question you can answer by collecting data.
+  - term: Fair test
+    definition: A test where you change only one thing.
+  - term: Calibrate
+    definition: Check and adjust a sensor against something you know.
+  - term: Anonymous
+    definition: Data that can't show who someone is.
+materials:
+  - micro:bit V2 + USB cable
+  - Keyestudio sensor shield (KS0360)
+  - IR obstacle sensor
+  - Battery pack
+  - Tape
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: circuit, name: Plug it in, minutes: 4}
+  - {key: code, name: Code it, minutes: 9}
+  - {key: debug, name: Debug, minutes: 5}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 7}
+video:
+  title: Asking a good research question
+  note: Listen for what makes a question testable.
+warmup:
+  prompt: What is something about your school you've always wondered about and could measure? Which door is busiest? Which room is loudest?
+learn:
+  - text: |
+      ### Ask a question a sensor can answer
+      * Weak: "Is lunch fun?" A sensor can't measure fun.
+      * Strong: "Which door has more people going through at lunch?"
+
+      A good question names **what you measure**, **where** and **when**.
+    visual:
+      type: compare
+      items:
+        - {icon: "❌", title: "Weak", text: "Is lunch fun?"}
+        - {icon: "✅", title: "Strong", text: "Which door is busiest at lunch?"}
+  - text: |
+      ### Make it a fair test
+      Change only **one thing**. Keep the rest the same.
+
+      Comparing two doors? Use the same sensor, the same time of day and the same height.
+
+      Otherwise, you can't tell what caused the difference.
+  - text: |
+      ### Don't count twice
+      The loop checks 50 times a second. One person could count 20 times!
+
+      Only count when something **just arrived**:
+
+      `if now and not blocked:`
+
+      `not` flips true and false. So it means "there now, but not there last time."
+    visual:
+      type: flow
+      steps:
+        - {icon: "⬜", label: "Clear"}
+        - {icon: "🚶", label: "Just arrived: count"}
+        - {icon: "🚶", label: "Still there: skip"}
+  - text: |
+      ### Trust, but check
+      Before you collect data, **calibrate**.
+
+      Walk past the sensor **10 times**. Did it count 10?
+
+      If not, fix it with the tuning knob or a better spot. Bad sensors give bad evidence.
+  - text: |
+      ### Respect people
+      * Count people. Never record who they are. That keeps data **anonymous**.
+      * Ask your teacher before you put a sensor in a shared space.
+      * Tell people what you are measuring.
+circuit:
+  intro: You'll plug the IR sensor into pin 0, just like Sprint 2. No servos today.
+  safety:
+    - Unplug the USB cable before you plug in a sensor.
+    - Match G to G. A backwards sensor can be damaged.
+    - The two small chips on the shield get hot. Don't touch them.
+  steps:
+    - title: Set the jumpers
+      instruction: Set jumper **V1 to 3.3V**. That is the sensor row, pins 0-10.
+      check: Is V1 on 3.3V?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+    - title: Plug in the IR sensor
+      instruction: Plug the **IR obstacle sensor** into header **0**. Match **G to G**, V to V and S to S.
+      check: Is G on the sensor lined up with G on the shield?
+      visual:
+        type: board
+        board: shield
+        jumpers: {V1: "3.3V", V2: "5V"}
+        plugs:
+          - {pin: 0, device: "IR obstacle", kind: sensor}
+    - title: Power and test
+      instruction: Plug in the **USB cable**. Wave your hand in front of the sensor. Its LED should blink on.
+      check: Did the sensor's LED react to your hand?
+code:
+  intro: This counts how many things pass the sensor each minute, then saves the count. Point it across a doorway, or test it with your hand.
+  starter: |
+    from microbit import *
+    import log
+
+    WINDOW = 60000   # count for 1 minute
+    log.set_labels('passes', timestamp=log.MINUTES)
+
+    passes = 0
+    blocked = False
+    window_end = running_time() + WINDOW
+
+    while True:
+        now = pin0.read_digital() == 0     # 0 means something is in front
+        if now and not blocked:            # it just arrived
+            passes = passes + 1
+            display.show(min(9, passes))
+        blocked = now
+
+        if running_time() >= window_end:
+            log.add(passes=passes)
+            passes = 0
+            window_end = running_time() + WINDOW
+        sleep(20)
+  walkthrough:
+    - lines: "7-9"
+      explain: Start with no passes, nothing in front, and a time for the first save.
+    - lines: "12-13"
+      explain: "`now` is True when something is in front. Count only if it wasn't there last time."
+    - lines: "16"
+      explain: Remember this check for next time. That memory is **state**.
+    - lines: "18-21"
+      explain: Time's up? Save the count, reset it, and start a new minute.
+  try_it:
+    - Pass your hand by slowly. Does it count just once?
+    - Change WINDOW to 10000. How does your data change?
+    - Walk past 10 times. How close was the count?
+debug:
+  story: >-
+    Nia's door counter counts when nothing is there, and one person counts over
+    and over. Find the **three** bugs, then press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    passes = 0
+    blocked = False
+
+    while True:
+        now = pin0.read_digital() == 1
+        if now:
+            passes = passes + 1
+            display.show(min(9, passes))
+        sleep(20)
+  solution: |
+    from microbit import *
+
+    passes = 0
+    blocked = False
+
+    while True:
+        now = pin0.read_digital() == 0
+        if now and not blocked:
+            passes = passes + 1
+            display.show(min(9, passes))
+        blocked = now
+        sleep(20)
+  checks:
+    - {type: syntax}
+    - {type: contains, pattern: 'read_digital\(\)\s*==\s*0', message: "Which number does the IR sensor give when something is in front?"}
+    - {type: contains, pattern: 'if\s+now\s+and\s+not\s+blocked', message: "Only count when something just arrived: now, and not blocked."}
+    - {type: contains, pattern: '^\s+blocked\s*=\s*now', message: "The code never remembers what it saw. Save now into blocked each loop."}
+  hints:
+    - What does the IR sensor read when something is in front?
+    - The if should be true only on the first check after something arrives.
+    - The blocked variable never changes. Where should it be updated?
+  reflection_prompt: How would the double-counting bug have changed your research results?
+quiz:
+  - question: Which is the best research question for a sensor?
+    choices: ["Is the gym nice?", "Which hallway is loudest between classes?", "Why do people like music?"]
+    answer: 1
+    explain: It names what you can measure, where and when.
+  - question: You compare two rooms. What makes it a fair test?
+    choices: ["Different sensors in each room", "Changing only the room", "Testing them in different weeks"]
+    answer: 1
+    explain: A fair test changes only one thing.
+  - question: "What does `if now and not blocked:` catch?"
+    choices: ["The moment something arrives", "Every loop while something is there", "When nothing is there"]
+    answer: 0
+    explain: It is true only when something is there now, but wasn't there last time.
+  - question: Why count people but not record who they are?
+    choices: ["It protects their privacy", "Names are too long", "The sensor would break"]
+    answer: 0
+    explain: Anonymous data can still answer the question without identifying anyone.
+challenge:
+  title: Real Research
+  prompt: Pick a question about your school. Collect real data, then say what it shows.
+  levels:
+    - "Bronze: Calibrate first. Walk past 10 times and report how accurate your counter is."
+    - "Silver: Compare two places for 5 minutes each, with a fair test."
+    - "Gold: Use a different sensor from your kit. Calibrate it, then answer your own question."
+  hints:
+    Bronze:
+      - "Accuracy is the count divided by 10. A count of 9 is 90%."
+      - "Missed some? Try a different height, or turn the knob."
+    Silver:
+      - "Decide the rule first: same time, same height, same length."
+      - "Set WINDOW to 60000 so you get a count every minute."
+    Gold:
+      - "Test the sensor alone first. Which number means 'on'?"
+      - "Change the pin and the test. Keep the same counting pattern."
+  submit_prompt: "What was your question? What did the numbers show? What could have made your data wrong?"
+teacher_notes: |
+  * **Permission and privacy:** approve sensor spots first. Counting is anonymous, but students should still post a note saying what's being measured.
+  * **Time:** real collection can run during another class or passing period. The 5-minute comparison is a starting point.
+  * The IR sensor reads about 2-40 cm, so a wide doorway may need a sensor mounted at the narrow point.
+standards:
+  - code: 6-8.CT.c.5
+    how: Students choose and use a sensor to gather and analyze data for a research question.
+  - code: 6-8.DTC.c.4
+    how: Students answer a research question with sensor data and communicate their conclusion.
+  - code: 6-8.CS.a.6
+    how: Students use a sensor to collect information about a real place at school.

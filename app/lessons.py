@@ -18,8 +18,16 @@ UNITS = {
     2: {"title": "Sensing the World", "blurb": "Buttons, light, temperature, knobs and motion."},
     3: {"title": "Making Things Move", "blurb": "Sound, servos, DC motors and motor drivers."},
     4: {"title": "Robots", "blurb": "Build, program and remote-control a two-wheel robot."},
-    5: {"title": "Robot Sprint", "blurb": "A 6-lesson motors + sensors project for classes that already know micro:bit basics."},
+    5: {"title": "Robot Sprint", "blurb": "For classes that already know micro:bit basics. Learn servos and sensors, then pick a branch: Robots, AI or Embedded."},
     6: {"title": "AI Lab", "blurb": "Teach a micro:bit with machine learning, test it for fairness, and build with it."},
+    7: {"title": "Embedded Computing", "blurb": "Build sensor stations that monitor the real world and answer research questions."},
+}
+
+SPRINT_TRUNK = ["sprint-servo-skills", "sprint-sensor-lab", "sprint-sense-decide-act"]
+SPRINT_BRANCHES = {
+    "robots": ["sprint-build-the-bot", "sprint-mission-day", "sprint-showcase"],
+    "ai": ["ai-rules-or-learning", "ai-teach-your-microbit", "ai-test-and-fix", "ai-build-with-your-model"],
+    "embedded": ["embedded-field-station", "embedded-sensor-study", "embedded-monitor-and-report"],
 }
 
 REQUIRED = ["id", "unit", "order", "title", "duration_minutes", "big_idea",
@@ -159,6 +167,9 @@ def validate_lesson(data: dict) -> list[str]:
             errs.append(f"standards: unknown code {st.get('code')!r} (see app/standards.yaml)")
         elif not st.get("how"):
             errs.append(f"standards: {st['code']} needs a 'how' explaining what in the lesson meets it")
+    for branch in data.get("branches") or []:
+        if not (branch.get("lesson") and branch.get("label") and branch.get("blurb")):
+            errs.append("branches: each one needs lesson, label and blurb")
     if not data["challenge"].get("levels"):
         errs.append("challenge: add 'levels' (bronze / silver / gold ideas)")
     hints = data["challenge"].get("hints") or {}
@@ -196,6 +207,11 @@ def get_lesson(lesson_id: str) -> dict | None:
         if lesson["id"] == lesson_id:
             return lesson
     return None
+
+
+def owes_assignment(assignment, started_ids) -> bool:
+    """Choice-branch work only counts once the student has started that branch."""
+    return not assignment.branch or any(l in started_ids for l in SPRINT_BRANCHES.get(assignment.branch, []))
 
 
 def lessons_by_unit() -> list[dict]:

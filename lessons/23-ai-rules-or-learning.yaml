@@ -106,7 +106,7 @@ code:
     - lines: "3"
       explain: "`LIMIT` is your cut-off number. Change it in one place."
     - lines: "6-7"
-      explain: Read the tilt in two directions, over and over.
+      explain: The **accelerometer** senses tilt and movement. Read it in two directions, over and over.
     - lines: "9-14"
       explain: "Each `if` is a **rule** a person wrote: W for wave, C for chop, a dash for neither."
     - lines: "16"
@@ -187,7 +187,7 @@ challenge:
       - "Set `count = 0` again in your `else`. Show W when `count >= 3`."
   submit_prompt: What fooled your rules? Why would that move be hard to write a rule for?
 teacher_notes: |
-  * **Prior knowledge:** accelerometer readings come from Lesson 10.
+  * **Two ways in:** classes arrive from Lesson 10 or from Sprint 3. Sprint classes haven't used the accelerometer, so spend an extra minute on x and y.
   * **The point of the lesson** is the failure. A slow tilt reaches about 1024 on x, so a LIMIT of 800 can't separate it from a wave. Keep the move students could not catch for the next lesson.
   * **Language:** talk about AI as a machine ("the model estimates"), not a person ("it thinks").
 standards:

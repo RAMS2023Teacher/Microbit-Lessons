@@ -4,6 +4,8 @@
 {% block content %}
 <div class="page-head">
   <div><a class="muted small" href="{{ url_for('teacher.home') }}">← My classes</a><h1>{{ c.name }}</h1></div>
+  <div class="row"><a class="btn" href="{{ url_for('teacher.screen', cid=c.id) }}">📺 Classroom screen</a>
+    <a class="btn ghost" href="{{ url_for('teacher.google', cid=c.id) }}">Google Classroom</a></div>
   <div class="join-code">Join code <b>{{ c.join_code }}</b>
     <small>{{ url_for('auth.register', code=c.join_code, _external=True) }}</small></div>
 </div>
@@ -25,6 +27,7 @@
     {% for s in c.students %}
       <tr><th class="who"><span data-avatar='{{ avatar_of(s)|tojson }}' data-size="34"></span><span><a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}">{{ s.display_name }}</a><small>{{ s.username }} · Lv {{ levels[s.id].level }} · {{ s.xp or 0 }} XP</small></span></th>
       {% for a, l in cols %}{% set cell = grid[(s.id, a.id)] %}
+        {% if cell.status == 'other-branch' %}<td class="cell other-branch" title="This student didn't pick this branch">—</td>{% else %}
         <td class="cell {{ cell.status }}{{ ' late' if cell.late }}">
           <a href="{{ url_for('teacher.student', cid=c.id, sid=s.id) }}#{{ l.id }}">
           <span class="meter"><i style="width:{{ cell.pct }}%"></i></span>
@@ -33,16 +36,36 @@
               {% if cell.p.quiz_total %}· Q {{ cell.p.quiz_best }}/{{ cell.p.quiz_total }}{% endif %}
               {% if cell.p.debug_solved %}· 🐞✓{% endif %}
               {% if cell.p.challenge_submitted_at %}· 🚀{% endif %}
+              {% if cell.partner %}<span title="Partner: {{ cell.partner }}">· 👥 {{ cell.partner }}</span>{% endif %}
             {% endif %}
             {% if cell.late %}<b class="bad">late</b>{% endif %}</span></a>
-        </td>
+        </td>{% endif %}
       {% endfor %}</tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
-  <p class="muted small">Q = best quiz score · 🐞✓ = debug challenge fixed · 🚀 = open-ended challenge submitted. Click a column title for everyone's answers side by side.</p>
+  <p class="muted small">Q = best quiz score · 🐞✓ = debug challenge fixed · 🚀 = open-ended challenge submitted · 👥 = partner. Click a column title for everyone's answers side by side.</p>
   {% endif %}
+</section>
+
+<section class="card">
+  <h2>🏁 Assign the Robot Sprint</h2>
+  <p class="muted">Assigns Sprints 1–3, then the branch below, all due on one date. Assigning it again updates the date.</p>
+  <form method="post" action="{{ url_for('teacher.assign_sprint', cid=c.id) }}">
+    {{ csrf() }}
+    <div class="row">
+      <label class="field"><span>Branch</span><select name="branch">
+        <option value="choice">Let students pick</option>
+        <option value="robots">🤖 Robots</option>
+        <option value="ai">🧠 AI</option>
+        <option value="embedded">📡 Embedded computing</option>
+      </select></label>
+      <label class="field"><span>Due date</span><input type="date" name="due_date" required></label>
+      <label class="field grow"><span>Note to students (optional)</span><input name="note" maxlength="500"></label>
+    </div>
+    <button class="btn" type="submit">Assign the Sprint</button>
+  </form>
 </section>
 
 <div class="grid-2">

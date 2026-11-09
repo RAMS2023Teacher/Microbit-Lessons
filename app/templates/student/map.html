@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Lesson map · {{ site_name }}{% endblock %}
+{% block main_class %}container wide{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <h1>Maker Map</h1>
-    <p class="muted">Follow the circuit from your first blink to a radio-controlled robot. Finish a lesson to send power down the paths after it. The Robot Sprint on the right can start any time.</p>
+    <p class="muted">Follow the circuit from your first blink to a radio-controlled robot. Finish a lesson to send power down the paths after it. The Robot Sprint on the right can start any time, then splits into three branches.</p>
   </div>
   {% if not current_user.is_teacher %}
   <a class="level-chip card" href="{{ url_for('student.profile') }}">
