@@ -4,7 +4,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from flask_login import current_user, login_required
 
 from . import gamify
-from . import lessons as L
+from . import code_library, lessons as L
 from . import standards as STD
 from .models import Assignment, Classroom, Progress, XPEvent, db
 from .videos import video_for
@@ -138,6 +138,7 @@ def lesson(lesson_id):
     rewards = gamify.sync_rewards(current_user)
     return render_template("student/lesson.html", lesson=lesson, rewards=rewards,
                            standards=STD.for_lesson(lesson),
+                           library=code_library.for_lesson(lesson),
                            lesson_xp=gamify.lesson_xp(current_user, lesson_id),
                            xp_possible=gamify.possible_xp(lesson),
                            stars=gamify.lesson_stars(lesson, p), view=L.public_view(lesson),

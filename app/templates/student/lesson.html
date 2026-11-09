@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% from "_editor.html" import editor %}
+{% extends "base.html" %}{% from "_editor.html" import editor, code_library %}
 {% block title %}{{ lesson.title }} · {{ site_name }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/codemirror.css') }}">
@@ -182,7 +182,15 @@
   <section data-step class="card step-section" id="debug">
     <h2><span class="sec-num">{{ n + 1 }}</span> Debug it 🐞</h2>
     {{ lesson.debug.story|md }}
-    {{ editor("ed-debug", state.debug_code, "debug", lesson.id ~ "-debug", reset_code=lesson.debug.buggy_code) }}
+    <div class="workspace">
+      <div class="helper-toggles">
+        <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="debug-library">📚 Code library</button>
+      </div>
+      <div class="workspace-main">
+        {{ editor("ed-debug", state.debug_code, "debug", lesson.id ~ "-debug", reset_code=lesson.debug.buggy_code) }}
+        <div class="helper-panels" hidden>{{ code_library("debug-library", library) }}</div>
+      </div>
+    </div>
     <div class="row">
       <button type="button" class="btn" id="debug-check">🔍 Check my fix</button>
       <button type="button" class="btn ghost" id="debug-hint">💡 Hint</button>
@@ -225,7 +233,7 @@
     {% if lesson.challenge.visual %}<figure class="vz" data-visual='{{ lesson.challenge.visual|tojson }}'></figure>{% endif %}
     <div class="level-picker" role="tablist" aria-label="Pick a level">
       {% for lv in lesson.challenge.levels %}{% set parts = lv.split(':', 1) %}
-      <button type="button" role="tab" class="level-tab level-{{ loop.index }}" data-level="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ '🌶' * loop.index }} {{ parts[0] if parts|length > 1 else ['Mild','Medium','Spicy'][loop.index0 % 3] }}</button>
+      <button type="button" role="tab" class="level-tab level-{{ loop.index }}" data-level="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ ['🥉','🥈','🥇'][loop.index0 % 3] }} {{ parts[0] if parts|length > 1 else ['Bronze','Silver','Gold'][loop.index0 % 3] }}</button>
       {% endfor %}
     </div>
     <div class="levels">
@@ -233,7 +241,28 @@
       <div class="level level-{{ loop.index }}" data-level="{{ loop.index0 }}" role="tabpanel" {{ '' if loop.first else 'hidden' }}>{{ (parts[1] if parts|length > 1 else lv)|md }}</div>
       {% endfor %}
     </div>
-    {{ editor("ed-challenge", state.challenge_code, "challenge", lesson.id ~ "-challenge") }}
+    <div class="workspace">
+      <div class="helper-toggles">
+        <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="challenge-library">📚 Code library</button>
+        <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="challenge-hints">💡 Hints</button>
+      </div>
+      <div class="workspace-main">
+        {{ editor("ed-challenge", state.challenge_code, "challenge", lesson.id ~ "-challenge") }}
+        <div class="helper-panels" hidden>
+          <section class="helper-panel" id="challenge-hints" aria-label="Hints" hidden>
+            <h3>💡 Hints</h3>
+            {% for lv in lesson.challenge.levels %}{% set name = lv.split(':', 1)[0] %}
+            <div class="hint-set" data-level="{{ loop.index0 }}" {{ '' if loop.first else 'hidden' }}>
+              <p class="muted small">{{ name }} level. Try it first, then open one hint at a time.</p>
+              <ul class="hints">{% for h in lesson.challenge.hints[name] %}<li hidden>{{ h|md }}</li>{% endfor %}</ul>
+              <button type="button" class="btn small hint-next">Show a hint</button>
+            </div>
+            {% endfor %}
+          </section>
+          {{ code_library("challenge-library", library) }}
+        </div>
+      </div>
+    </div>
     <label class="field"><span><b>{{ lesson.challenge.submit_prompt or "Describe what you made." }}</b></span>
       <textarea id="challenge-response" rows="4">{{ state.challenge_response }}</textarea></label>
     <div class="row"><button type="button" class="btn" id="challenge-submit">📤 Submit my challenge</button><span class="save-status muted small" id="challenge-status">{% if state.challenge_submitted %}Submitted ✓ (you can resubmit){% endif %}</span></div>

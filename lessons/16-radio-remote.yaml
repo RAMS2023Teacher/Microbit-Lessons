@@ -455,9 +455,19 @@ challenge:
     Improve both programs so you can drive faster and steer better than
     everyone else.
   levels:
-    - "Mild: Add a backward 'B' command. Drive through a slalom of 3 cups without knocking any over."
-    - "Medium: Tilt more to go faster. Send a letter and a number, like 'F8'. On the robot, use int() to read the number."
-    - "Spicy: Robot soccer! Use a ping-pong ball and two goals. Add a button \"kick\" (a quick burst forward) and a horn with `music.pitch()`."
+    - "Bronze: Add a backward 'B' command. Drive through a slalom of 3 cups without knocking any over."
+    - "Silver: Tilt more to go faster. Send a letter and a number, like 'F8'. On the robot, use int() to read the number."
+    - "Gold: Robot soccer! Use a ping-pong ball and two goals. Add a button \"kick\" (a quick burst forward) and a horn with `music.pitch()`."
+  hints:
+    Bronze:
+      - "On the remote, add `elif y < -TILT:` and set `command = 'B'`."
+      - "On the robot, add a check for 'B' that drives both wheels backward."
+    Silver:
+      - "Scale the tilt on the remote: `level = min(9, abs(y) // 100)`."
+      - "Send `'F' + str(level)`. On the robot, `msg[0]` is the letter and `int(msg[1])` is the number."
+    Gold:
+      - "A kick is a short burst: full speed for about 200 ms, then back to normal."
+      - "Send one new letter for the kick and one for the horn. Use the remote's buttons."
   submit_prompt: What did you add to your controller or robot, and how did it help on the course?
 teacher_notes: |
   * **Give every team a different radio group** (for example their table number plus 10) and write it on the board. Most "my robot is possessed" problems are two teams on the same group. Groups go from 0 to 255.
@@ -466,7 +476,7 @@ teacher_notes: |
   * **A wheel spins backward** or the robot turns the wrong way: swap that motor's wires on the driver (same fix as lesson 14).
   * **Robot stutters or stops randomly:** the controller may be too far away or sending too slowly, or the batteries are low (the 4×AA pack, the robot's 2×AAA or the controller's 2×AAA). The fail-safe makes low batteries show up as "stops by itself" - that's the safe way to fail.
   * The robot program lives in the Learn section because the starter box holds one program. Students can copy it into a second editor tab.
-  * Radio is not private: any micro:bit in the same group can listen. Good discussion starter about security - a Spicy extension is a "secret password" letter at the start of each message.
+  * Radio is not private: any micro:bit in the same group can listen. Good discussion starter about security - a Gold extension is a "secret password" letter at the start of each message.
 
 standards:  # Massachusetts DLCS framework (2016), grades 6-8
   - code: 6-8.CS.c.3

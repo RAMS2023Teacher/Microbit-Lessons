@@ -363,9 +363,19 @@ challenge:
     Get your robot demo-ready. Give your 30-second demo, then write your
     reflection. Done early? Add an upgrade.
   levels:
-    - "Mild: Give your 30-second demo: say your mission, show it work, and name one bug you fixed."
-    - "Medium: Fill three rows of your test log, one number each, and keep the best value. Then demo."
-    - "Spicy: Scanning head: point P15 left, ahead and right, measure each distance, then turn toward the most open way."
+    - "Bronze: Give your 30-second demo: say your mission, show it work, and name one bug you fixed."
+    - "Silver: Fill three rows of your test log, one number each, and keep the best value. Then demo."
+    - "Gold: Scanning head: point P15 left, ahead and right, measure each distance, then turn toward the most open way."
+  hints:
+    Bronze:
+      - "Plan three things: your mission, the show, and one bug you fixed. Practice once with a timer."
+      - "Test your robot right before your demo. Keep fresh batteries close."
+    Silver:
+      - "Change only one number for each test. Write down what happened."
+      - "The best value is the one that worked most often. Put it back in your code."
+    Gold:
+      - "Write `def look(deg):` that points the servo, waits a moment, then returns `distance_cm()`."
+      - "Save the three distances. Use `max()` to find the biggest, then turn that way."
   submit_prompt: "Your reflection: What worked? What bug did you fix? What would you upgrade next?"
   visual:
     type: flow
@@ -382,7 +392,7 @@ teacher_notes: |
   * **Head servo:** P15 is a 180° servo: 26 = 0°, 77 = 90°, 128 = 180°. The sprint keeps to 3 servos at a time (two wheels and the head).
   * **Radio remote:** both micro:bits need `radio.on()` and the same `radio.config(group=...)`. Give each team its own group number (0-255) so remotes don't drive the wrong robot.
   * **DC motors (KS4033):** Motor A = P13 + P12, Motor B = P15 + P16, 4×AA (6V). Forward is `pin13.write_analog(speed)` with `pin12.write_digital(0)`; swap to reverse; both 0 = stop. Have students test this, and swap a motor's wires if it spins the wrong way.
-  * **Fast finishers:** the Spicy scanning head needs a function that returns three distances and picks the biggest. Radio plus scanning (the remote shows the distance) is a further stretch.
+  * **Fast finishers:** the Gold scanning head needs a function that returns three distances and picks the biggest. Radio plus scanning (the remote shows the distance) is a further stretch.
   * **Students who need a quick win:** the test bench runs as-is. One perfect corner, logged in the test log, counts as a win.
 standards:
   - code: 6-8.CS.a.5

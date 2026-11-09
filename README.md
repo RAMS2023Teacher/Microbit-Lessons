@@ -15,7 +15,7 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
   - **Download .hex** in any browser. You drag the file onto the MICROBIT drive. MicroPython for both micro:bit V1 and V2 is bundled in.
 - **Debug challenges**: broken code to fix, with hints and a "Check my fix" button, plus a reflection question.
 - Quizzes that give an explanation for each answer.
-- Open-ended **Mild / Medium / Spicy** challenges with a write-up to submit.
+- Open-ended **Bronze / Silver / Gold** challenges with a write-up to submit.
 - A 35-minute class timer that highlights which part of the lesson you should be on.
 
 **Gamification**

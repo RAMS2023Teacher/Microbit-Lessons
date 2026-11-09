@@ -109,7 +109,7 @@ learn:
         - {at: 40, label: "40 cm"}
       caption: "IR obstacle sensor range in cm"
   - text: |
-      ### Spicy: the ultrasonic sensor
+      ### Gold: the ultrasonic sensor
       The **HC-SR04** measures real distance, not just yes or no.
 
       1. Your code sends a short **ping** on Trig.
@@ -311,9 +311,19 @@ challenge:
     Your kit has more sensors. Plug one in, read it, and find out what 0 and 1
     mean for it. Report what you discover!
   levels:
-    - "Mild: Try the crash sensor on pin 1. Show a sad face when it's pressed."
-    - "Medium: Test two more sensors from the kit. Make a table: sensor, pin, what 0 means, what 1 means."
-    - "Spicy: Wire the ultrasonic with your teacher's safe divider. Write distance_cm() and show the distance in cm."
+    - "Bronze: Try the crash sensor on pin 1. Show a sad face when it's pressed."
+    - "Silver: Test two more sensors from the kit. Make a table: sensor, pin, what 0 means, what 1 means."
+    - "Gold: Wire the ultrasonic with your teacher's safe divider. Write distance_cm() and show the distance in cm."
+  hints:
+    Bronze:
+      - "Read it with `pin1.read_digital()`. Press it and watch whether the number changes."
+      - "Use `if` with that number to show `Image.SAD`. Use `else` to clear the screen."
+    Silver:
+      - "Plug in one sensor at a time. Change only the pin name in your code."
+      - "Test both ways: set off the sensor, then leave it alone. Write what each number means."
+    Gold:
+      - "Ask your teacher to check your wiring before you power the sensor."
+      - "Send a 10 microsecond ping on Trig. Time the Echo pulse, then divide by 58."
   submit_prompt: Which sensors did you test, and what did 0 and 1 mean for each one?
   visual:
     type: leds
@@ -326,7 +336,7 @@ teacher_notes: |
   * **Line sensor always reads 1:** it's too high. Keep it 0-3 cm above the paper, then turn the knob until its LED is right at the on/off point.
   * **Pin labels:** most kit sensors are marked G, V, S. If yours say GND, VCC and OUT/DO, match them up. Check your kit if a module is labeled differently.
   * **Sensor detective:** the crash sensor on P1 reads **0 when pressed**. For other modules (PIR motion, touch, tilt and so on), check your kit's docs for the pin labels, the logic level and whether it works at 3.3 V. Only use the 0-10 row at 3.3V, and unplug the crash sensor before using P1 for the ultrasonic.
-  * **The ultrasonic and 5V (Spicy only):** the HC-SR04 is a 5 V module, and its **Echo pin outputs 5 V**. That is more than a micro:bit pin is rated for, even though wiring it straight to P1 often "works". Use the safe wiring:
+  * **The ultrasonic and 5V (Gold only):** the HC-SR04 is a 5 V module, and its **Echo pin outputs 5 V**. That is more than a micro:bit pin is rated for, even though wiring it straight to P1 often "works". Use the safe wiring:
     * **VCC** to any **V** pin in the **11-20 row** (V2 = 5V), **GND** to any **G**.
     * **Trig** straight to the **S** pin of header **2** (3.3 V is enough to trigger it).
     * **Echo → 1 kΩ → P1**, and **P1 → 2 kΩ → GND** (10 kΩ + 20 kΩ also works). 5 V × 2/3 ≈ 3.3 V. Build the divider on a small breadboard with jumper wires, or use the SparkFun breakout.

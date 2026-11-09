@@ -429,9 +429,20 @@ challenge:
     track a name and at least one tricky part. Then dare another team's robot
     to try it!
   levels:
-    - "Mild: Tune SPEED and SEARCH until your robot finishes a full lap of an oval without help."
-    - "Medium: Add an S-bend and a sharp corner. Show a sad face when it's lost and a happy face when it finds the line."
-    - "Spicy: Time a lap with `running_time()` and scroll it. Extra spicy: add a 5 cm gap in the tape. Drive straight briefly, then search."
+    - "Bronze: Tune SPEED and SEARCH until your robot finishes a full lap of an oval without help."
+    - "Silver: Add an S-bend and a sharp corner. Show a sad face when it's lost and a happy face when it finds the line."
+    - "Gold: Time a lap with `running_time()` and scroll it. Extra challenge: add a 5 cm gap in the tape. Drive straight briefly, then search."
+  hints:
+    Bronze:
+      - "Start slow. If the robot runs off the line, lower `SPEED` first."
+      - "If it spins too long when lost, lower `SEARCH`. Change one number each test."
+    Silver:
+      - "The last `else` runs when the robot is lost. Show `Image.SAD` there."
+      - "Show `Image.HAPPY` in the part that goes straight. Lower `SPEED` for sharp corners."
+    Gold:
+      - "Save `start = running_time()` right after button A starts the run."
+      - "At the finish line, press button B. Scroll `running_time() - start` in that part of the code."
+      - "For the gap, save the time when lost. Drive straight for a moment, then search."
   submit_prompt: What was the trickiest part of your track, and what did you change in the code to get through it?
 teacher_notes: |
   * **Test the sensors before driving.** Many modules give 1 over black, some give 0. The LINE constant handles either - students just change one number.
@@ -440,7 +451,7 @@ teacher_notes: |
   * **A wheel spins backward:** swap that motor's wires on the driver, same fix as lesson 14.
   * **Gets slower and wobblier during class:** low batteries. Fresh AAs make a big difference to how well the speed numbers carry over between runs.
   * The sensors run from the micro:bit's 3V. Make sure no one moves the battery + wire to the red rail - the verify step on the circuit page checks that it isn't.
-  * The "jump the gap" Spicy idea needs a second piece of state: the time the robot first got lost (lost_since = running_time()). Drive straight while running_time() - lost_since is small, then search.
+  * The "jump the gap" Gold idea needs a second piece of state: the time the robot first got lost (lost_since = running_time()). Drive straight while running_time() - lost_since is small, then search.
   * Extension: use pin1.read_analog() on an analog-output sensor (if your modules have an AO pin) for smoother proportional steering.
 
 standards:  # Massachusetts DLCS framework (2016), grades 6-8

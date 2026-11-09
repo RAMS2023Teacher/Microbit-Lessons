@@ -233,9 +233,19 @@ challenge:
     Send a secret message with your LED! Use Morse code or make up your own.
     Can a partner decode it?
   levels:
-    - "Mild: Flash an SOS: 3 short, 3 long, 3 short."
-    - "Medium: Use variables `dot` and `dash` for the times and spell your initials."
-    - "Spicy: Add a second LED on pin 1 that lights between letters, or make button A start the message."
+    - "Bronze: Flash an SOS: 3 short, 3 long, 3 short."
+    - "Silver: Use variables `dot` and `dash` for the times and spell your initials."
+    - "Gold: Add a second LED on pin 1 that lights between letters, or make button A start the message."
+  hints:
+    Bronze:
+      - "Write one short blink: on, `sleep(200)`, off, `sleep(200)`. Repeat it 3 times."
+      - "A long blink is the same code with a bigger `sleep()` number. Try 600."
+    Silver:
+      - "Set `dot = 200` and `dash = 600` at the top. Then use `sleep(dot)` and `sleep(dash)`."
+      - "Look up your initials in Morse code. Leave a longer pause between letters."
+    Gold:
+      - "The second LED uses `pin1.write_digital()`. Wire it like the first LED, with its own resistor."
+      - "To start with button A, wait first: `while not button_a.was_pressed():` with `sleep(20)` inside."
   submit_prompt: What message did your LED send, and how does your code make dots and dashes?
   visual:
     type: leds

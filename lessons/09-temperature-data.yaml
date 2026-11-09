@@ -353,9 +353,19 @@ challenge:
     Turn your micro:bit into a science instrument! How fast does it warm up in
     your hand, or cool down near a window? Collect the data, then show it off.
   levels:
-    - "Mild: Add a blue or green LED on pin 1 that lights when it's too cold (below a COLD threshold)."
-    - "Medium: Use the V2 log module to record the temperature every 5 seconds. Open MY_DATA.HTM and describe the chart."
-    - "Spicy: Show a live bar graph that grows as it gets warmer. Make the LED blink faster the hotter it gets."
+    - "Bronze: Add a blue or green LED on pin 1 that lights when it's too cold (below a COLD threshold)."
+    - "Silver: Use the V2 log module to record the temperature every 5 seconds. Open MY_DATA.HTM and describe the chart."
+    - "Gold: Show a live bar graph that grows as it gets warmer. Make the LED blink faster the hotter it gets."
+  hints:
+    Bronze:
+      - "Add `COLD = 20` next to `HOT`. Then test with `if t < COLD:`."
+      - "Use `pin1.write_digital()`. Add an `else` that turns it off."
+    Silver:
+      - "Add `import log` at the top. Call `log.set_labels()` once, before your loop."
+      - "Use `sleep(5000)` to wait 5 seconds. Find MY_DATA.HTM on the MICROBIT drive."
+    Gold:
+      - "Turn temperature into bars with `bars = (t - 20) // 2`. Keep it from 0 to 5."
+      - "Hotter means a shorter wait. Try `wait = 1000 - (t - 20) * 30`. Keep it above 50."
   submit_prompt: What experiment did you run, what did your data show, and which list tools (append, min, max, average) did you use?
 teacher_notes: |
   **Common problems**

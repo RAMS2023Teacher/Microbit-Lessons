@@ -154,8 +154,53 @@
   // ----- challenge: pick one level at a time -----
   document.querySelectorAll('.level-tab').forEach((tab) => tab.addEventListener('click', () => {
     document.querySelectorAll('.level-tab').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
-    document.querySelectorAll('.levels .level').forEach((p) => { p.hidden = p.dataset.level !== tab.dataset.level; });
+    document.querySelectorAll('.levels .level, .hint-set').forEach((p) => { p.hidden = p.dataset.level !== tab.dataset.level; });
   }));
+
+  // ----- challenge hints: open one at a time -----
+  document.querySelectorAll('.hint-set').forEach((set) => {
+    const items = [...set.querySelectorAll('.hints li')];
+    const btn = set.querySelector('.hint-next');
+    btn.addEventListener('click', () => {
+      const next = items.find((li) => li.hidden);
+      if (next) next.hidden = false;
+      const left = items.filter((li) => li.hidden).length;
+      btn.hidden = left === 0;
+      btn.textContent = `Show another hint (${left} left)`;
+    });
+  });
+
+  // ----- code library and hints panels beside the editor -----
+  document.querySelectorAll('.workspace').forEach((space) => {
+    const holder = space.querySelector('.helper-panels');
+    space.querySelectorAll('.helper-toggle').forEach((btn) => btn.addEventListener('click', () => {
+      const panel = $(btn.getAttribute('aria-controls'));
+      panel.hidden = !panel.hidden;
+      btn.setAttribute('aria-expanded', String(!panel.hidden));
+      holder.hidden = !holder.querySelector('.helper-panel:not([hidden])');
+      space.classList.toggle('has-helpers', !holder.hidden);
+      // The editor just changed width.
+      MakerEditor.all.forEach((ed) => { if (space.contains(ed.root)) ed.cm.refresh(); });
+      if (!panel.hidden) panel.scrollIntoView({ block: 'nearest' });
+    }));
+    holder.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.lib-copy');
+      if (!btn) return;
+      const pre = btn.closest('.lib-entry').querySelector('pre');
+      try {
+        await navigator.clipboard.writeText(pre.textContent);
+        btn.textContent = 'Copied ✓';
+      } catch (err) {   // no clipboard access: select the text so Ctrl+C works
+        const range = document.createRange();
+        range.selectNodeContents(pre);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        btn.textContent = 'Press Ctrl+C';
+      }
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    });
+  });
 
   // ----- circuit: "get ready" screen before step 1 -----
   if ($('circuit-ready')) {

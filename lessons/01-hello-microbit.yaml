@@ -250,13 +250,23 @@ challenge:
     Turn your micro:bit into a name badge that shows who you are. Mix
     scrolling words, pictures and timing. There's no single right answer!
   levels:
-    - "Mild: Scroll your name, then show a picture you like, inside a while True loop."
-    - "Medium: Make a 3-picture animation that tells a tiny story, like a wink or a beating heart."
-    - "Spicy: Design your own picture with Image(\"09090:99999:99999:09990:00900\"). Each number 0-9 is one LED's brightness."
+    - "Bronze: Scroll your name, then show a picture you like, inside a while True loop."
+    - "Silver: Make a 3-picture animation that tells a tiny story, like a wink or a beating heart."
+    - "Gold: Design your own picture with Image(\"09090:99999:99999:09990:00900\"). Each number 0-9 is one LED's brightness."
+  hints:
+    Bronze:
+      - "Put `display.scroll()` and `display.show()` inside the loop. Indent both lines."
+      - "Need a picture name? Look in the Code library."
+    Silver:
+      - "Pick three pictures and show them in order. Add a `sleep()` after each one."
+      - "A wink needs two pictures that differ a little. Try changing the `sleep()` times too."
+    Gold:
+      - "The five groups of numbers are the five rows, from top to bottom."
+      - "Save it in a variable: `boat = Image(\"...\")`. Then use `display.show(boat)`."
   submit_prompt: What does your badge show, and which line of code are you most proud of?
   visual:
     type: leds
-    caption: "Spicy: this pattern of numbers draws a heart."
+    caption: "Gold: this pattern of numbers draws a heart."
     image: "09090:99999:99999:09990:00900"
 teacher_notes: |
   * **Flashing problems:** make sure the micro:bit shows up as a **MICROBIT** drive. Some USB cables are charge-only - swap the cable if the drive never appears.

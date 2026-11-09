@@ -335,9 +335,19 @@ challenge:
     meter, a waving robot hand, or a flag that pops up when you win.
     Cardboard and tape welcome!
   levels:
-    - "Mild: Make a dial with 3 labeled spots. Use buttons A and B to point to each one."
-    - "Medium: Put a potentiometer or photoresistor on P1. Turn the knob, and the servo follows."
-    - "Spicy: Make a hand that waves when you shake the micro:bit, or a gauge that shows temperature() as an angle."
+    - "Bronze: Make a dial with 3 labeled spots. Use buttons A and B to point to each one."
+    - "Silver: Put a potentiometer or photoresistor on P1. Turn the knob, and the servo follows."
+    - "Gold: Make a hand that waves when you shake the micro:bit, or a gauge that shows temperature() as an angle."
+  hints:
+    Bronze:
+      - "Pick three angles, like 30, 90 and 150. Put them in a list."
+      - "Keep `spot = 1`. Button A takes away 1 and button B adds 1. Use `set_angle(angles[spot])`."
+    Silver:
+      - "Read the part with `pin1.read_analog()`. It gives 0 to 1023."
+      - "Scale it to an angle: `angle = value * 180 // 1023`. Then call `set_angle(angle)`."
+    Gold:
+      - "Check `accelerometer.was_gesture('shake')`. Inside, use a `for` loop to swing between two angles."
+      - "For a gauge from 15 to 35 degrees, try `angle = (temperature() - 15) * 9`. Stay within 0-180."
   visual:
     type: dial
     caption: A mood meter needs just three angles.

@@ -362,13 +362,23 @@ challenge:
     Your three LEDs can do more than a traffic light! Use functions to invent
     a new pattern: a crosswalk, a party light, a race start, or your own idea.
   levels:
-    - "Mild: Make a race start. Red, then red + yellow, then all three. Then all off, and show Image.YES for GO!"
-    - "Medium: Add a crosswalk button. When button_a.is_pressed(), go to red. Show Image.STICKFIGURE for 5 seconds."
-    - "Spicy: Write a function with parameters, like def flash(pin, times):. Use it to build a whole light show."
+    - "Bronze: Make a race start. Red, then red + yellow, then all three. Then all off, and show Image.YES for GO!"
+    - "Silver: Add a crosswalk button. When button_a.is_pressed(), go to red. Show Image.STICKFIGURE for 5 seconds."
+    - "Gold: Write a function with parameters, like def flash(pin, times):. Use it to build a whole light show."
+  hints:
+    Bronze:
+      - "The `red()` function turns the others off first. For red + yellow, use the pin lines instead."
+      - "Red is `pin0`, yellow is `pin1` and green is `pin2`. Use `all_off()` before GO."
+    Silver:
+      - "Check `if button_a.is_pressed():` inside the `while True` loop, before the green light starts."
+      - "During `sleep(3000)` the code can't see the button. Hold the button, or use shorter waits."
+    Gold:
+      - "Give the function two inputs: `def flash(pin, times):`. Inside, use `pin.write_digital(1)`."
+      - "Put a `for` loop inside to repeat. Call it with a pin name: `flash(pin0, 3)`."
   submit_prompt: What pattern did you make, and which function are you proudest of? Why did using functions help?
   visual:
     type: flow
-    caption: "Mild: a race start, one step at a time."
+    caption: "Bronze: a race start, one step at a time."
     steps:
       - {icon: "🔴", label: "red"}
       - {icon: "🟡", label: "red + yellow"}

@@ -68,7 +68,7 @@ works. Pick one of these setups:
 2. **Keyestudio's wiring:** everything on the 0–10 row with V1 set to 5 V. This is quick, but it is outside the
    micro:bit's rating, and it puts **every** sensor on that row at 5 V. If you do this, move the IR and line sensors elsewhere.
 
-In the sprint, the ultrasonic sensor is the **Spicy** option. The IR obstacle sensor gives the same
+In the sprint, the ultrasonic sensor is the **Gold** option. The IR obstacle sensor gives the same
 "is something close?" answer at 3.3 V with nothing extra to wire.
 
 ## Servos in MicroPython

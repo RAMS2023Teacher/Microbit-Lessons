@@ -337,9 +337,19 @@ challenge:
     cookie-jar detector, or something new. Calibrate it for your room and show
     it off.
   levels:
-    - "Mild: Show a different picture for bright, medium and dark. Use if / elif / else and two thresholds."
-    - "Medium: Make the LED fade brighter as the room gets darker using write_analog."
-    - "Spicy: Cookie-jar alarm! When the sensor suddenly sees light, play `music.play(music.BA_DING)` and count how many times the jar opened."
+    - "Bronze: Show a different picture for bright, medium and dark. Use if / elif / else and two thresholds."
+    - "Silver: Make the LED fade brighter as the room gets darker using write_analog."
+    - "Gold: Cookie-jar alarm! When the sensor suddenly sees light, play `music.play(music.BA_DING)` and count how many times the jar opened."
+  hints:
+    Bronze:
+      - "Test first. Press button A to see the reading in bright light and in shade."
+      - "Check the smallest group first: `if light < dark:`, then `elif light < medium:`, then `else:`."
+    Silver:
+      - "You need the opposite of the reading. A small light number should give a big LED number."
+      - "Try `pin0.write_analog(1023 - light)`."
+    Gold:
+      - "Add `import music` at the top, and `count = 0` before the loop."
+      - "To count each opening once, remember the last state with `was_open = False`. Act only when it changes."
   submit_prompt: What does your gadget do, what threshold(s) did you choose, and how did you pick them?
 teacher_notes: |
   * **Reading stuck near 0:** the red wire from T+20 is missing, or the 3V wire isn't in the red rail.

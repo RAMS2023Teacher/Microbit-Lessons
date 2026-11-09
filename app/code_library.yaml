@@ -1,0 +1,296 @@
+# The Code library panel beside the challenge and debug editors.
+# Each entry: title, code, optional note, and `uses`: a regex. If it matches this
+# lesson's starter code, debug solution or Learn cards, the entry is listed under
+# "In this lesson". Every `code` must be valid Python (tests check this).
+groups:
+  - name: Display
+    entries:
+      - title: Scroll words
+        uses: 'display\.scroll'
+        code: |
+          display.scroll("Hello!")
+      - title: Show a picture
+        uses: 'display\.show\(Image'
+        code: |
+          display.show(Image.HAPPY)
+      - title: Picture names
+        uses: 'Image\.'
+        code: |
+          Image.HEART     Image.HAPPY
+          Image.SAD       Image.YES
+          Image.NO        Image.ASLEEP
+          Image.SQUARE    Image.ARROW_N
+        not_python: true
+        note: Arrows also come as ARROW_E, ARROW_S and ARROW_W.
+      - title: Show a number or letter
+        uses: 'display\.show\((?!Image)'
+        code: |
+          display.show(7)
+          display.show("A")
+      - title: Draw your own picture
+        uses: 'Image\("'
+        code: |
+          boat = Image("05050:05050:05050:99999:09990")
+          display.show(boat)
+        note: Five rows of LEDs. Each number 0-9 is a brightness.
+      - title: Light one LED
+        uses: 'set_pixel'
+        code: |
+          display.set_pixel(2, 4, 9)
+        note: Column, row, brightness. Row 0 is the top.
+      - title: Clear the screen
+        uses: 'display\.clear'
+        code: |
+          display.clear()
+
+  - name: Buttons
+    entries:
+      - title: Button clicked?
+        uses: 'was_pressed'
+        code: |
+          if button_a.was_pressed():
+              display.show(Image.HAPPY)
+      - title: Button held down?
+        uses: 'is_pressed'
+        code: |
+          if button_b.is_pressed():
+              display.show(Image.SAD)
+      - title: Wait for a button
+        uses: 'while not button_a'
+        code: |
+          while not button_a.was_pressed():
+              sleep(20)
+      - title: Breadboard button
+        uses: 'set_pull'
+        code: |
+          pin1.set_pull(pin1.PULL_UP)
+          if pin1.read_digital() == 0:
+              display.show(Image.YES)
+        note: With PULL_UP, 0 means pressed.
+
+  - name: Pins
+    entries:
+      - title: Turn a pin on or off
+        uses: 'write_digital'
+        code: |
+          pin0.write_digital(1)
+          pin0.write_digital(0)
+      - title: Set a pin's power level
+        uses: 'write_analog'
+        code: |
+          pin0.write_analog(512)
+        note: 0 is off and 1023 is full.
+      - title: Read on or off
+        uses: 'read_digital'
+        code: |
+          value = pin1.read_digital()
+      - title: Read a dial or light sensor
+        uses: 'read_analog'
+        code: |
+          value = pin1.read_analog()
+        note: Gives a number from 0 to 1023.
+      - title: Shrink a big number
+        uses: '\* \d+ // 1024|// 1023'
+        code: |
+          small = value * 5 // 1024
+        note: Turns 0-1023 into 0, 1, 2, 3 or 4.
+      - title: Point a servo
+        uses: 'set_analog_period'
+        code: |
+          pin13.set_analog_period(20)
+
+          def angle(deg):
+              pin13.write_analog(26 + deg * 102 // 180)
+
+          angle(90)
+        note: Servos need their own battery pack.
+
+  - name: Decisions
+    entries:
+      - title: If and else
+        uses: '\belse:'
+        code: |
+          if light < 300:
+              display.show(Image.ASLEEP)
+          else:
+              display.show(Image.HAPPY)
+      - title: Three or more choices
+        uses: '\belif\b'
+        code: |
+          if light < 300:
+              display.show("D")
+          elif light < 700:
+              display.show("M")
+          else:
+              display.show("B")
+      - title: Compare numbers
+        uses: '==|>=|<='
+        code: |
+          x == 5    # equal to
+          x != 5    # not equal to
+          x > 5     # bigger than
+          x <= 5    # 5 or less
+      - title: Two tests at once
+        uses: '(?m)^\s*(if|elif) .*\b(and|or)\b.*:\s*(#.*)?$'
+        code: |
+          if x > 300 or x < -300:
+              display.show(Image.NO)
+
+  - name: Loops
+    entries:
+      - title: Repeat forever
+        uses: 'while True'
+        code: |
+          while True:
+              display.show(Image.HEART)
+              sleep(500)
+      - title: Repeat a set number of times
+        uses: 'for \w+ in range\(\d\)'
+        code: |
+          for i in range(3):
+              display.show(i)
+              sleep(500)
+      - title: Count by steps
+        uses: 'range\(\d+, '
+        code: |
+          for level in range(0, 1024, 8):
+              pin0.write_analog(level)
+              sleep(5)
+      - title: Count backwards
+        uses: 'range\(.*, -\w+\)'
+        code: |
+          for level in range(1023, -1, -8):
+              pin0.write_analog(level)
+              sleep(5)
+
+  - name: Variables and lists
+    entries:
+      - title: Keep a count
+        uses: '= \w+ \+ 1'
+        code: |
+          score = 0
+          score = score + 1
+          display.show(score)
+      - title: Keep a number in range
+        uses: 'max\(.*min\('
+        code: |
+          speed = max(0, min(1023, speed))
+      - title: Words and numbers together
+        uses: 'str\('
+        code: |
+          display.scroll("Score " + str(score))
+      - title: Use a list
+        uses: '\[\d|readings|\.append'
+        code: |
+          notes = [262, 330, 392]
+          notes.append(440)
+          first = notes[0]
+          how_many = len(notes)
+
+  - name: Functions
+    entries:
+      - title: Make a function
+        uses: 'def \w+\(\)'
+        code: |
+          def blink():
+              pin0.write_digital(1)
+              sleep(200)
+              pin0.write_digital(0)
+
+          blink()
+      - title: Give a function inputs
+        uses: 'def \w+\(\w+'
+        code: |
+          def flash(pin, times):
+              for i in range(times):
+                  pin.write_digital(1)
+                  sleep(200)
+                  pin.write_digital(0)
+                  sleep(200)
+
+          flash(pin0, 3)
+      - title: Get an answer back
+        uses: '\breturn\b'
+        code: |
+          def double(n):
+              return n * 2
+
+          answer = double(4)
+
+  - name: Time and random
+    entries:
+      - title: Wait
+        uses: 'sleep\('
+        code: |
+          sleep(1000)
+        note: 1000 milliseconds is 1 second.
+      - title: Time something
+        uses: 'running_time'
+        code: |
+          start = running_time()
+          taken = running_time() - start
+      - title: Pick a random number
+        uses: 'random\.'
+        code: |
+          import random
+          n = random.randint(1, 6)
+        note: Put the import at the top of your code.
+
+  - name: Sensors
+    entries:
+      - title: Temperature
+        uses: 'temperature\(\)'
+        code: |
+          t = temperature()
+      - title: Tilt
+        uses: 'accelerometer\.get_'
+        code: |
+          x = accelerometer.get_x()
+          y = accelerometer.get_y()
+      - title: Shake and other moves
+        uses: 'was_gesture'
+        code: |
+          if accelerometer.was_gesture('shake'):
+              display.show(Image.SURPRISED)
+        note: Also try 'left', 'right', 'up', 'down' and 'face down'.
+      - title: Save data
+        uses: 'log\.add'
+        code: |
+          import log
+          log.set_labels('temp', timestamp=log.SECONDS)
+          log.add(temp=temperature())
+
+  - name: Sound
+    entries:
+      - title: Play a tune
+        uses: 'music\.play'
+        code: |
+          import music
+          music.play(music.BA_DING)
+        note: Other tunes include POWER_UP, NYAN and BADDY.
+      - title: Play one note
+        uses: 'music\.pitch'
+        code: |
+          import music
+          music.pitch(440, 200)
+        note: Pitch in hertz, then length in milliseconds.
+
+  - name: Radio
+    entries:
+      - title: Turn the radio on
+        uses: 'radio\.on'
+        code: |
+          import radio
+          radio.config(group=12)
+          radio.on()
+        note: Use the same group number on both micro:bits.
+      - title: Send a message
+        uses: 'radio\.send'
+        code: |
+          radio.send('F')
+      - title: Read a message
+        uses: 'radio\.receive'
+        code: |
+          msg = radio.receive()
+          if msg:
+              display.show(msg)

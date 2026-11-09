@@ -311,9 +311,20 @@ challenge:
     Turn your button and LED into a game! Use if/else to decide who wins,
     who's out, or what happens next. Test it on a friend.
   levels:
-    - "Mild: The LED stays on. Pressing the breadboard button turns it off and shows a happy face."
-    - "Medium: Wait a random time, then light the LED. Smile if the player presses within 1 second. Frown if they press too early."
-    - "Spicy: Two-player race! Player 1 uses the breadboard button, player 2 uses button B. First to press wins. Keep score."
+    - "Bronze: The LED stays on. Pressing the breadboard button turns it off and shows a happy face."
+    - "Silver: Wait a random time, then light the LED. Smile if the player presses within 1 second. Frown if they press too early."
+    - "Gold: Two-player race! Player 1 uses the breadboard button, player 2 uses button B. First to press wins. Keep score."
+  hints:
+    Bronze:
+      - "Turn the LED on before the loop starts. Then watch for the button inside the loop."
+      - "Pressed means `pin1.read_digital() == 0`. Then turn off pin 0 and show `Image.HAPPY`."
+    Silver:
+      - "Wait a random time with `sleep(random.randint(1000, 5000))`. Add `import random` at the top."
+      - "Save `start = running_time()` when the LED lights. Later, `running_time() - start` is the time in ms."
+      - "To catch an early press, wait in many small sleeps and check the button each time."
+    Gold:
+      - "Check both players in one loop: `pin1.read_digital() == 0` and `button_b.was_pressed()`."
+      - "Use two score variables. After a win, show the score, wait, then start a new round."
   submit_prompt: Explain your game's rules and point to the if/else that decides what happens.
 teacher_notes: |
   * **LED always on, even without pressing?** Almost always a missing `pin1.set_pull(pin1.PULL_UP)`.
