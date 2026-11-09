@@ -44,7 +44,10 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 | 2 Sensing the World | 6 Buttons & inputs · 7 Light sensor night light · 8 Potentiometers · 9 Temperature data |
 | 3 Making Things Move | 10 Motion & sound · 11 Servo motor · 12 DC motor + transistor · 13 Motor driver |
 | 4 Robots | 14 Drive your robot · 15 Line follower · 16 Radio remote control |
+| 6 AI Lab | A1 Rules or learning? · A2 Teach your micro:bit · A3 Test, break, fix · A4 Build with your model |
 | 5 Robot Sprint *(stand-alone)* | S1 Servo skills · S2 Sensor lab · S3 Sense → decide → act · S4 Build the bot · S5 Mission day · S6 Test, upgrade, showcase |
+
+**AI Lab** follows Lesson 10. A1 uses Python here on the site, and A2–A4 use the free [micro:bit CreateAI](https://createai.microbit.org/) tool and MakeCode in another tab. It needs Chrome or Edge and a micro:bit V2 to run a model. Computers without Bluetooth need a second micro:bit for each pair.
 
 **Robot Sprint** is a 6-lesson motors and sensors project for classes that already know micro:bit basics. It can start at any time and doesn't need the core lessons. It's written for the Keyestudio KS0360 sensor shield, the KS4009 45-in-1 sensor kit, 180° and continuous servos, a two-servo robot chassis and, optionally, the KS4033 motor board. Setup, pin map and wiring safety notes are in [docs/ROBOT_SPRINT_HARDWARE.md](docs/ROBOT_SPRINT_HARDWARE.md).
 
@@ -108,6 +111,7 @@ The page detects when MicroPython is missing and tells them what to do.
 
 - [CodeMirror 5](https://codemirror.net/5/) (MIT)
 - [@microbit/microbit-fs](https://github.com/microbit-foundation/microbit-fs) (MIT)
+- [micro:bit MicroPython simulator](https://github.com/microbit-foundation/micropython-microbit-v2-simulator) (MIT), loaded from `python-simulator.usermbit.org` when a student presses Simulate. School filters need to allow that address.
 - [MicroPython for micro:bit](https://github.com/bbcmicrobit/micropython) V1 and [V2](https://github.com/microbit-foundation/micropython-microbit-v2) firmware (MIT)
 
 These are all bundled in `app/static/vendor/`. This project is not affiliated with the Micro:bit Educational Foundation.

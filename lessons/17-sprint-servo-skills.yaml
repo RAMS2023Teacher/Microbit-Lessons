@@ -61,6 +61,13 @@ learn:
         - {icon: "🤔", title: "if ...:", text: "make a choice"}
         - {icon: "📦", title: "def go():", text: "a recipe with a name"}
   - text: |
+      ### Python in 30 more seconds
+      * `speed = 5` stores a number in a **variable**.
+      * `else:` runs when the `if` isn't true. `elif` adds another choice.
+      * `==` asks if two things are equal.
+      * `for i in range(4):` repeats 4 times. `range(0, 20, 5)` counts by 5s.
+      * `def spin(ms):` makes a recipe with an **input**. Call it with `spin(500)`.
+  - text: |
       ### Two kinds of servos
       They look the same, but they act differently.
 

@@ -212,7 +212,7 @@ code:
     - lines: "3-4"
       explain: Give each sensor's pin a name, so the code is easy to read.
     - lines: "6-12"
-      explain: A **function** that lights a whole column when `on` is True, or clears it.
+      explain: "A **function** with two inputs: column `x` and `on`. `set_pixel(x, y, 9)` lights one LED; 0 clears it."
     - lines: "15-16"
       explain: "**Sense:** ask each sensor for a 0 or a 1."
     - lines: "17-20"

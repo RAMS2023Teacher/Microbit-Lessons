@@ -82,6 +82,8 @@ learn:
       * Two `==` **asks a question**: is x equal to 0?
 
       Use `==` inside an `if`.
+
+      `presses = presses + 1` isn't math. It means: take the old value, add 1, and store it back.
     visual:
       type: compare
       items:
@@ -312,16 +314,15 @@ challenge:
     who's out, or what happens next. Test it on a friend.
   levels:
     - "Bronze: The LED stays on. Pressing the breadboard button turns it off and shows a happy face."
-    - "Silver: Wait a random time, then light the LED. Smile if the player presses within 1 second. Frown if they press too early."
+    - "Silver: Wait 3 seconds, then light the LED. If the button is already down, show a frown. If not, smile."
     - "Gold: Two-player race! Player 1 uses the breadboard button, player 2 uses button B. First to press wins. Keep score."
   hints:
     Bronze:
       - "Turn the LED on before the loop starts. Then watch for the button inside the loop."
       - "Pressed means `pin1.read_digital() == 0`. Then turn off pin 0 and show `Image.HAPPY`."
     Silver:
-      - "Wait a random time with `sleep(random.randint(1000, 5000))`. Add `import random` at the top."
-      - "Save `start = running_time()` when the LED lights. Later, `running_time() - start` is the time in ms."
-      - "To catch an early press, wait in many small sleeps and check the button each time."
+      - "Inside `while True`: `sleep(3000)`, LED on, then your `if`."
+      - "Down means `pin1.read_digital() == 0`. Use `Image.SAD` for the frown."
     Gold:
       - "Check both players in one loop: `pin1.read_digital() == 0` and `button_b.was_pressed()`."
       - "Use two score variables. After a win, show the score, wait, then start a new round."

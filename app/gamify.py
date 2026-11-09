@@ -18,6 +18,7 @@ XP = {
     "warmup": 10,
     "learn": 10,
     "circuit": 30,
+    "lab": 40,
     "code": 20,
     "debug": 30,
     "quiz": 15,
@@ -28,7 +29,7 @@ XP = {
     "quiz_first_try": 10,  # 100% on the first attempt
     "badge": 25,          # every badge is also worth XP
 }
-SECTION_LABELS = {"warmup": "Warm-up", "learn": "Learn", "circuit": "Circuit built", "code": "Code ran",
+SECTION_LABELS = {"warmup": "Warm-up", "learn": "Learn", "circuit": "Circuit built", "lab": "AI lab done", "code": "Code ran",
                   "debug": "Bug fixed", "quiz": "Quiz done", "challenge": "Challenge submitted",
                   "complete": "Lesson complete!", "clean_fix": "Fixed with no hints",
                   "quiz_perfect": "Perfect quiz", "quiz_first_try": "Perfect on the first try"}
@@ -81,6 +82,11 @@ TREE = {
     "sprint-build-the-bot": {"requires": ["sprint-sense-decide-act"], "pos": (5.6, 3.9)},
     "sprint-mission-day":   {"requires": ["sprint-build-the-bot"], "pos": (5.6, 5.2)},
     "sprint-showcase":      {"requires": ["sprint-mission-day"], "pos": (5.6, 6.5)},
+    # AI Lab: builds on the accelerometer in Shake, Tilt and Play
+    "ai-rules-or-learning":     {"requires": ["motion-and-sound"], "pos": (5.6, 8.0)},
+    "ai-teach-your-microbit":   {"requires": ["ai-rules-or-learning"], "pos": (5.6, 9.2)},
+    "ai-test-and-fix":          {"requires": ["ai-teach-your-microbit"], "pos": (5.6, 10.4)},
+    "ai-build-with-your-model": {"requires": ["ai-test-and-fix"], "pos": (5.6, 11.6)},
 }
 
 
@@ -98,10 +104,11 @@ def tree() -> dict:
 
 
 def lesson_stars(lesson: dict, p: Progress | None) -> int:
-    """0-3 stars: bug fixed, perfect quiz, challenge submitted."""
+    """0-3 stars: bug fixed (or AI lab done), perfect quiz, challenge submitted."""
     if not p:
         return 0
-    return (int(bool(p.debug_solved)) + int(bool(p.quiz_total and p.quiz_best == p.quiz_total))
+    first = p.debug_solved if lesson.get("debug") else (p.sections or {}).get("lab")
+    return (int(bool(first)) + int(bool(p.quiz_total and p.quiz_best == p.quiz_total))
             + int(bool(p.challenge_submitted_at)))
 
 
@@ -141,7 +148,8 @@ def map_data(user, assigned_ids=()) -> dict:
 
 def possible_xp(lesson: dict) -> int:
     keys = L.section_keys(lesson)
-    return sum(XP[k] for k in keys) + XP["complete"] + XP["clean_fix"] + XP["quiz_perfect"] + XP["quiz_first_try"]
+    clean = XP["clean_fix"] if lesson.get("debug") else 0
+    return sum(XP[k] for k in keys) + XP["complete"] + clean + XP["quiz_perfect"] + XP["quiz_first_try"]
 
 
 # ---------------------------------------------------------------- badges
@@ -166,6 +174,7 @@ BADGES = [
     ("unit-3", "⚙️", "Mover & Shaker", "Complete every lesson in Unit 3: Making Things Move."),
     ("unit-4", "🤖", "Robot Wrangler", "Complete every lesson in Unit 4: Robots."),
     ("unit-5", "🏎️", "Sprint Champion", "Complete every lesson in the Robot Sprint."),
+    ("unit-6", "🧠", "Model Maker", "Complete every lesson in the AI Lab."),
     ("graduate", "🎓", "Graduate", "Complete all 16 core lessons."),
     ("teachers-pick", "🍎", "Teacher's Pick", "Given by your teacher for great work."),
 ]

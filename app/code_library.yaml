@@ -294,3 +294,36 @@ groups:
           msg = radio.receive()
           if msg:
               display.show(msg)
+
+  - name: Error messages
+    entries:
+      - title: SyntaxError
+        uses: '(?!x)x'
+        not_python: true
+        code: |
+          SyntaxError
+        note: "Python can't read the line. Look for a missing colon, quote or bracket."
+      - title: IndentationError
+        uses: '(?!x)x'
+        not_python: true
+        code: |
+          IndentationError
+        note: "The spaces at the start of a line are wrong. Use 4 for each level."
+      - title: NameError
+        uses: '(?!x)x'
+        not_python: true
+        code: |
+          NameError
+        note: "Python doesn't know a word. Check spelling and capital letters."
+      - title: TypeError
+        uses: '(?!x)x'
+        not_python: true
+        code: |
+          TypeError
+        note: "The wrong kind of value, like adding text to a number. Try str()."
+      - title: ValueError
+        uses: '(?!x)x'
+        not_python: true
+        code: |
+          ValueError
+        note: "The value is out of range, like write_analog(2000)."

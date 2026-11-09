@@ -35,9 +35,9 @@ materials:
   - 4 jumper wires
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 5}
+  - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
+  - {key: code, name: Code it, minutes: 6}
   - {key: debug, name: Debug, minutes: 4}
   - {key: quiz, name: Check for understanding, minutes: 2}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
@@ -132,6 +132,15 @@ learn:
         - {icon: "〰️", label: "1.3 V left for resistor"}
         - {icon: "🧮", label: "1.3 ÷ 220 ≈ 6 mA"}
   - text: |
+      ### The breadboard's secret wiring
+      Hidden metal strips join the holes.
+
+      * Each hole has a **letter and a number**, like **c10**.
+      * Holes **a–e** in one column are joined. So are **f–j**.
+      * The long **+** and **–** **rails** run the whole board. **T+1** means the top + rail at spot 1.
+
+      Two legs in the **same column** are connected.
+  - text: |
       ### LEDs have a + and a –
       An LED only works **one way round**. This is called **polarity**.
 
@@ -176,6 +185,7 @@ circuit:
       instruction: >-
         Put the 220 Ω resistor in row **c**, from column **10** to column **14**
         (holes **c10** and **c14**). Resistors have no direction - either way works.
+      tip: "The color bands give the value. Red-red-brown means 2, 2, and one zero: 220 Ω."
       check: Is each resistor leg in a different column?
       add:
         - {type: resistor, id: r1, a: c10, b: c14, ohms: 220}
@@ -335,7 +345,7 @@ challenge:
   levels:
     - "Bronze: Find the current for 100, 220 and 1000 Ω. Predict each one: brighter or dimmer?"
     - "Silver: Work backwards. Pick a target, like 10 mA. Find the resistor you need with R = V / I."
-    - "Gold: Make button A step through a list like [100, 220, 470, 1000]. Scroll the current for each one."
+    - "Gold: Two resistors in a row add up. Use one more variable, add 1000 Ω to your 220 Ω, and scroll the new current."
   hints:
     Bronze:
       - "Use the starter code. Change `resistor_ohms` to one value at a time and run it."
@@ -344,8 +354,8 @@ challenge:
       - "Change 10 mA into amps first: divide by 1000."
       - "The resistor gets 3.3 - 2.0 = 1.3 volts. Divide those volts by your amps."
     Gold:
-      - "Keep your spot in the list with a variable: `i = 0`. Button A adds 1."
-      - "Go back to the start with `i = (i + 1) % len(values)`. Then use `values[i]`."
+      - "Make `second_ohms = 1000`. Then use `resistor_ohms + second_ohms` in Ohm's law."
+      - "Should the current go up or down? Predict first, then run it."
   submit_prompt: Which resistor values did you test, what did your math predict, and did the real LED agree?
   visual:
     type: part

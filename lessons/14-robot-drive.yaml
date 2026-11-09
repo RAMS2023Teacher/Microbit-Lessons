@@ -276,7 +276,7 @@ code:
     - lines: "20-31"
       explain: "**drive** sends each speed to its motor. **turn_right** spins: left wheel forward, right wheel backward."
     - lines: "33-44"
-      explain: Wait for button A. Then four sides and four turns make a square.
+      explain: "`while not` repeats until button A is pressed. Then four sides and four turns make a square."
   try_it:
     - "Calibrate TURN_TIME: turns too far? Make it smaller. Not far enough? Bigger. Change it 25 ms at a time."
     - Does your robot drift? Try drive(700, 670) or drive(670, 700) to balance the motors.

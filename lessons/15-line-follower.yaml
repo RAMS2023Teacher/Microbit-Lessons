@@ -274,8 +274,8 @@ code:
       explain: "**Sense.** Read both sensors. Each gives 0 or 1."
     - lines: "33-42"
       explain: "**Decide and act.** Check \"both\" first: `left == LINE` is also true when both see the line."
-    - lines: "44-49"
-      explain: Lost! Spin toward last_seen, the side we saw last. That memory is the robot's **state**.
+    - lines: "44-54"
+      explain: "Lost! Spin toward last_seen. That memory is **state**. Button B: `break` leaves the loop and ends the program."
   try_it:
     - Make a gentle oval track first. Then add a sharp corner. Where does your robot lose the line?
     - Raise SPEED by 50 at a time. What's the fastest speed that still finishes a lap?
@@ -440,7 +440,7 @@ challenge:
       - "The last `else` runs when the robot is lost. Show `Image.SAD` there."
       - "Show `Image.HAPPY` in the part that goes straight. Lower `SPEED` for sharp corners."
     Gold:
-      - "Save `start = running_time()` right after button A starts the run."
+      - "`running_time()` counts milliseconds since power-on. Save `start = running_time()` right after button A."
       - "At the finish line, press button B. Scroll `running_time() - start` in that part of the code."
       - "For the gap, save the time when lost. Drive straight for a moment, then search."
   submit_prompt: What was the trickiest part of your track, and what did you change in the code to get through it?

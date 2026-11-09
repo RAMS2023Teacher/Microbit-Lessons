@@ -1,0 +1,199 @@
+id: ai-rules-or-learning
+label: A1
+unit: 6
+order: 23
+title: "AI 1: Rules or Learning?"
+subtitle: Write your own move detector, then find out where rules break
+duration_minutes: 35
+level: AI Lab
+big_idea: >-
+  You can make a computer spot a move by writing rules or by giving it
+  examples. Rules are clear, but real movement is messy.
+objectives:
+  - Explain AI as a machine that finds patterns
+  - Tell rules apart from machine learning
+  - Write rules that use tilt readings
+  - Find a move that fools your rules
+vocabulary:
+  - term: Artificial intelligence (AI)
+    definition: Computers doing jobs that seem to need thinking, like spotting a voice or a face.
+  - term: Machine learning (ML)
+    definition: A way of making AI where the computer finds patterns in examples.
+  - term: Rule
+    definition: An instruction a person writes, like an if statement.
+  - term: Pattern
+    definition: Something that repeats or looks alike across many examples.
+materials:
+  - micro:bit V2 + USB cable
+  - A battery pack, if you have one
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: code, name: Code it, minutes: 11}
+  - {key: debug, name: Debug, minutes: 6}
+  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: challenge, name: Open-ended challenge, minutes: 7}
+video:
+  title: Rules and machine learning
+  note: Listen for how the computer gets its examples.
+warmup:
+  prompt: >-
+    Think of an app that seems smart, like one that spots faces in photos.
+    Do you think a person wrote every step? How else could it learn?
+learn:
+  - text: |
+      ### What is AI?
+      **Artificial intelligence (AI)** means computers doing jobs that seem to need thinking, like spotting a voice.
+
+      AI is a **machine**. It doesn't think or feel. It finds **patterns** and makes a best guess.
+    visual:
+      type: flow
+      steps:
+        - {icon: "📥", label: "Lots of data"}
+        - {icon: "🔍", label: "Find patterns"}
+        - {icon: "🎯", label: "Best guess"}
+  - text: |
+      ### Two ways to spot a move
+      * With **rules**, a person writes every `if`.
+      * With **machine learning (ML)**, a person gives **examples**. The computer finds the pattern.
+
+      Today you'll try rules. Next time, you'll try examples.
+    visual:
+      type: compare
+      items:
+        - {icon: "✍️", title: "Rules", text: "A person decides every step."}
+        - {icon: "📚", title: "Machine learning", text: "A computer finds the pattern in examples."}
+  - text: |
+      ### One test or the other
+      A wave can go left or right, so x can be big or very negative.
+
+      ```python
+      if x > 800 or x < -800:
+          display.show("W")
+      ```
+      `or` is true if **either** side is true. `and` needs **both**.
+  - text: |
+      ### Why rules get hard
+      Clapping, waving and stirring all feel different to you. But what numbers make a clap?
+
+      People move in different ways. Every new move needs more rules. This is where **examples** can help.
+    visual:
+      type: compare
+      items:
+        - {icon: "👏", title: "Clap", text: "Fast and short."}
+        - {icon: "👋", title: "Wave", text: "Side to side."}
+        - {icon: "🥄", title: "Stir", text: "Round and round."}
+code:
+  intro: These rules try to tell a side-to-side **wave** from a forward-back **chop**. Send it, then try to fool it!
+  starter: |
+    from microbit import *
+
+    LIMIT = 800   # how far a reading must go to count
+
+    while True:
+        x = accelerometer.get_x()
+        y = accelerometer.get_y()
+
+        if x > LIMIT or x < -LIMIT:      # side to side
+            display.show("W")
+        elif y > LIMIT or y < -LIMIT:    # forward and back
+            display.show("C")
+        else:
+            display.show("-")
+
+        sleep(100)
+  walkthrough:
+    - lines: "3"
+      explain: "`LIMIT` is your cut-off number. Change it in one place."
+    - lines: "6-7"
+      explain: Read the tilt in two directions, over and over.
+    - lines: "9-14"
+      explain: "Each `if` is a **rule** a person wrote: W for wave, C for chop, a dash for neither."
+    - lines: "16"
+      explain: Check 10 times a second.
+  try_it:
+    - Tilt it slowly to the right and hold it. Does it think you are waving?
+    - Change LIMIT to 1500. What works better? What gets worse?
+    - Find one move your rules can't catch. Write it down for later.
+debug:
+  story: >-
+    Kai's wave detector won't run. After that's fixed, it never shows **W**, no
+    matter how hard Kai waves. Find the **two** bugs, then press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    LIMIT = 800
+
+    while True:
+        x = accelerometer.get_x()
+        if x > LIMIT and x < -LIMIT:
+            display.show("W")
+        else
+            display.show("-")
+        sleep(100)
+  solution: |
+    from microbit import *
+
+    LIMIT = 800
+
+    while True:
+        x = accelerometer.get_x()
+        if x > LIMIT or x < -LIMIT:
+            display.show("W")
+        else:
+            display.show("-")
+        sleep(100)
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: 'x\s*>\s*LIMIT\s+and\s+x', message: "Can x be above 800 and below -800 at the same time? Try a different word than and."}
+    - {type: contains, pattern: 'x\s*>\s*LIMIT\s+or\s+x\s*<\s*-\s*LIMIT', message: "The rule should be true when x goes far in either direction."}
+  hints:
+    - Read the error's line number. What must end every else line?
+    - Pick a number that is above 800 and also below -800. Can you?
+  reflection_prompt: Why was the and version never true?
+quiz:
+  - question: What is the best way to describe AI?
+    choices: ["A machine that finds patterns and makes guesses", "A computer that feels things", "A person inside the computer"]
+    answer: 0
+    explain: AI is a machine. It finds patterns and makes a best guess.
+  - question: In machine learning, what does a person give the computer?
+    choices: ["A rule for every case", "Examples to learn from", "Feelings"]
+    answer: 1
+    explain: The computer finds the pattern in the examples.
+  - question: "When is `x > 800 or x < -800` true?"
+    choices: ["Only when x is above 800", "When x is far in either direction", "Never"]
+    answer: 1
+    explain: With or, either side can make it true.
+  - question: You tilt the micro:bit slowly and the code says W. Why?
+    choices: ["Tilting changes x, and the rule only looks at x", "The battery is low", "The code learned a new move"]
+    answer: 0
+    explain: The rule can't tell a slow tilt from a fast wave. It only checks one number.
+challenge:
+  title: Rule Breaker
+  prompt: Make your rules better. Then ask a partner to try to fool your code.
+  levels:
+    - "Bronze: Tune LIMIT until a wave shows W but a slow tilt does not."
+    - "Silver: Add a rule for a third move, like a flip. Use `accelerometer.get_z()`."
+    - "Gold: Add a counter. Only show W if the rule is true 3 checks in a row."
+  hints:
+    Bronze:
+      - "A hard wave can go past 1024. A slow tilt can't. Try numbers above 1024."
+      - "Change LIMIT by 100 each time. Test a wave and a tilt each time."
+    Silver:
+      - "Add `z = accelerometer.get_z()` next to the other readings."
+      - "Show what z does: `display.scroll(z)`. Then pick your cut-off number."
+    Gold:
+      - "Start `count = 0` before the loop. Add 1 when the rule is true."
+      - "Set `count = 0` again in your `else`. Show W when `count >= 3`."
+  submit_prompt: What fooled your rules? Why would that move be hard to write a rule for?
+teacher_notes: |
+  * **Prior knowledge:** accelerometer readings come from Lesson 10.
+  * **The point of the lesson** is the failure. A slow tilt reaches about 1024 on x, so a LIMIT of 800 can't separate it from a wave. Keep the move students could not catch for the next lesson.
+  * **Language:** talk about AI as a machine ("the model estimates"), not a person ("it thinks").
+standards:
+  - code: 6-8.CT.b.1
+    how: Students write a forever loop with conditionals that classify accelerometer readings.
+  - code: 6-8.CT.b.4
+    how: Students compare writing rules by hand with learning from examples as two ways to solve the same problem.
+  - code: 6-8.CT.b.5
+    how: Students test the limits of their rules by finding moves that produce wrong results.

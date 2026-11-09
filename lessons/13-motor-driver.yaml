@@ -76,7 +76,7 @@ learn:
         - {icon: "⏸️", title: "Coast", text: "All four open. The motor slows to a stop."}
   - text: |
       ### Let a chip do the switching
-      Never close both switches on the **same side**. That **shorts** the battery!
+      Never close both switches on the **same side**. That makes a **short**: a path with almost no resistance, so huge current flows and parts get hot.
 
       A **motor driver** chip has the H-bridge built in.
 
@@ -400,7 +400,7 @@ challenge:
       - "Stay in range with `speed = max(0, min(1023, speed))`. Then call `forward(speed)`."
     Gold:
       - "Read `x = accelerometer.get_x()`. Go forward when x is above 100, backward when below -100."
-      - "Get speed from tilt with `speed = min(1023, abs(x))`. Stop when the tilt is small."
+      - "`abs(x)` drops the minus sign. Use `speed = min(1023, abs(x))`. Stop when the tilt is small."
   submit_prompt: What does your motor machine do, and how do your functions control direction and speed?
 teacher_notes: |
   * **Motor spins the wrong way:** that's normal. Swap the two motor wires on AOUT1/AOUT2, or swap the bodies of forward() and backward(). Physically swapping wires is the habit to build for the robot lessons.

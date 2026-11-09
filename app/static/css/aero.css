@@ -1,0 +1,155 @@
+/* Frutiger Aero theme: sky, water, glass and gloss. Loaded after style.css.
+   Remove the <link> in base.html to go back to the plain look.
+   Screen only, so printed pages stay on plain white. No blur on cards, to keep Chromebooks smooth. */
+@media screen {
+  :root {
+    --ink: #12283f; --muted: #44566c; --line: #c4dff2; --bg: #e6f6fe;
+    --card: rgba(255, 255, 255, .9);
+    --navy: #0b4f8a; --accent: #ffd84d; --teal: #0b78b8; --teal-d: #075e94;
+    --ok: #2b8a1f; --ok-bg: #e4f7d8; --warn-bg: #fff8d6;
+    --radius: 18px;
+    --shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(11, 79, 138, .12), 0 8px 24px rgba(11, 79, 138, .14);
+    --gloss: linear-gradient(180deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .1) 49%, rgba(255, 255, 255, 0) 50%);
+  }
+
+  /* the sky behind everything */
+  html { background: #e6f6fe; }
+  body {
+    background: transparent;
+    font-family: Frutiger, "Segoe UI", "Myriad Pro", Roboto, system-ui, -apple-system, sans-serif;
+    /* keeps the hill at the bottom of the window on short pages */
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  body > main { flex: 1 0 auto; width: 100%; }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(ellipse 240px 44px at 16% 19%, rgba(255, 255, 255, .95), rgba(255, 255, 255, 0) 72%),
+      radial-gradient(ellipse 150px 58px at 12% 16%, rgba(255, 255, 255, .95), rgba(255, 255, 255, 0) 72%),
+      radial-gradient(ellipse 300px 52px at 84% 31%, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 72%),
+      radial-gradient(ellipse 170px 66px at 88% 27%, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 72%),
+      radial-gradient(ellipse 260px 40px at 44% 64%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 72%),
+      linear-gradient(180deg, #b4e1fa 0%, #d3effd 42%, #eefaff 72%, #f1fbe6 100%);
+  }
+
+  /* glass top bar */
+  .topbar {
+    /* a softer shine than the buttons, so white text stays easy to read */
+    background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05) 49%, rgba(255, 255, 255, 0) 50%),
+      linear-gradient(180deg, rgba(20, 108, 178, .95), rgba(9, 84, 150, .95));
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, .55);
+    box-shadow: 0 3px 14px rgba(11, 79, 138, .3);
+  }
+  .brand, .topbar nav > a { text-shadow: 0 1px 2px rgba(5, 50, 90, .55); }
+  .topbar nav > a { color: #fff; }
+  .brand-mark, .usermenu summary {
+    background: var(--gloss), rgba(5, 55, 105, .55);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35);
+  }
+
+  /* glossy buttons */
+  .btn {
+    border: 1px solid #075a95; border-radius: 999px;
+    background: var(--gloss), linear-gradient(180deg, #1677b8, #0a5f9e);
+    text-shadow: 0 1px 1px rgba(3, 40, 75, .55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 2px 6px rgba(11, 79, 138, .32);
+    transition: filter .12s, box-shadow .12s;
+  }
+  .btn:hover { background: var(--gloss), linear-gradient(180deg, #1a84c9, #0b69ae); border-color: #075a95; filter: brightness(1.04); }
+  .btn:focus-visible { outline: 3px solid #ffb300; outline-offset: 2px; }
+  .btn.small { border-radius: 999px; }
+  .btn.ghost, .btn.danger {
+    background: linear-gradient(180deg, #fff, #e1f2fd); border-color: #84bfe6; text-shadow: none;
+    box-shadow: inset 0 1px 0 #fff, 0 1px 4px rgba(11, 79, 138, .2);
+  }
+  .btn.ghost { color: var(--teal-d); }
+  .btn.ghost:hover { background: linear-gradient(180deg, #fff, #cfe9fb); border-color: #4fa1d8; }
+  .btn.danger { color: #b32626; border-color: #e0a0a0; }
+  .btn.danger:hover { background: linear-gradient(180deg, #fff, #fbdcdc); }
+  .btn.primary { background: var(--gloss), linear-gradient(180deg, #27831c, #1a6c14); border-color: #165c11; }
+  .btn.primary:hover { background: var(--gloss), linear-gradient(180deg, #2b8f1f, #1d7616); border-color: #165c11; }
+
+  input[type=text], input:not([type]), input[type=password], input[type=url], input[type=date], textarea, select {
+    border-color: #a9d0ec; border-radius: 10px; box-shadow: inset 0 1px 3px rgba(11, 79, 138, .14);
+  }
+
+  /* landing page: deep water, with a strip of grass along the bottom */
+  .hero {
+    position: relative; overflow: hidden; padding-bottom: 84px;
+    background:
+      radial-gradient(circle at 8% 30%, rgba(255, 255, 255, .22) 0 26px, rgba(255, 255, 255, 0) 27px),
+      radial-gradient(circle at 15% 66%, rgba(255, 255, 255, .16) 0 14px, rgba(255, 255, 255, 0) 15px),
+      radial-gradient(circle at 92% 22%, rgba(255, 255, 255, .18) 0 18px, rgba(255, 255, 255, 0) 19px),
+      radial-gradient(ellipse 80% 70% at 50% 0, rgba(120, 215, 255, .35), rgba(120, 215, 255, 0) 70%),
+      linear-gradient(180deg, #0a4f94, #0e74bd);
+  }
+  .hero::after {
+    content: ""; position: absolute; left: -10%; right: -10%; bottom: -70px; height: 120px; border-radius: 50%;
+    background: linear-gradient(180deg, #a6e05a, #4fae2c);
+    box-shadow: 0 -3px 16px rgba(190, 255, 120, .7);
+  }
+  .hero p { color: #f0f9ff; }
+  .hero .btn.ghost { background: var(--gloss), rgba(255, 255, 255, .16); color: #fff; border-color: #fff; text-shadow: 0 1px 1px rgba(3, 40, 75, .55); }
+  .hero .btn.ghost:hover { background: var(--gloss), rgba(255, 255, 255, .26); }
+  .hero-actions, .hero-text, .mb-face { position: relative; z-index: 1; }
+  .mb-face {
+    background: linear-gradient(160deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 45%), #0a3768;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .4), 0 14px 30px rgba(3, 40, 75, .45);
+  }
+  .mb-face i { background: #17508a; }
+
+  /* glossy orbs */
+  .sec-num {
+    background: radial-gradient(circle at 50% 16%, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 55%), linear-gradient(180deg, #1677b8, #0b4f8a);
+    box-shadow: 0 2px 5px rgba(11, 79, 138, .35);
+  }
+  .lesson-num {
+    border-radius: 50%; color: #4a3500;
+    background: radial-gradient(circle at 50% 14%, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0) 55%), linear-gradient(180deg, #ffe77a, #ffc21f);
+    box-shadow: 0 1px 4px rgba(150, 100, 0, .4);
+  }
+
+  /* the big idea and other dark panels look like deep water */
+  .big-idea {
+    background: var(--gloss), linear-gradient(180deg, #0f68ad, #0b4f8a);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 4px 14px rgba(11, 79, 138, .25);
+  }
+  pre.code-block, .ed-console { background: #0a2a4a; }
+  .video-box { background: linear-gradient(180deg, #0a4f94, #0a2a4a); }
+
+  /* lesson sidebar sits on a sheet of glass, so it stays readable on the sky */
+  .lesson-nav-inner {
+    background: var(--card); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow);
+  }
+  .timer { background: linear-gradient(180deg, #fff, #e6f5fe); }
+  .agenda a:hover { background: #dcf0fc; }
+  .agenda li.current a {
+    background: linear-gradient(180deg, #e9f7ff, #bfe4fa); color: var(--teal-d);
+    box-shadow: inset 0 0 0 1px #8cc8ec;
+  }
+
+  /* glossy progress bars */
+  .meter, .timer-bar { background: #d6e9f6; box-shadow: inset 0 1px 2px rgba(11, 79, 138, .25); }
+  .meter i { background: var(--gloss), linear-gradient(90deg, #49b52f, #8fdc3f); }
+  .timer-bar i { background: var(--gloss), linear-gradient(90deg, #ffc21f, #ffe77a); }
+
+  .lesson-card:hover { border-color: #4fa1d8; box-shadow: inset 0 1px 0 #fff, 0 10px 28px rgba(11, 120, 184, .28); }
+  .tag { background: #e0f1fc; color: #2f4a63; }
+  code { background: #e3f1fb; }
+  .learn-card, .helper-panel { background: linear-gradient(180deg, #fff, #eef8ff); }
+  .level-tab { border-radius: 999px; }
+
+  /* a hill at the bottom of every page */
+  .footer {
+    color: var(--ink); padding: 64px 24px 18px;
+    background:
+      radial-gradient(ellipse 72% 72px at 26% 100%, #a3dc62 98%, rgba(163, 220, 98, 0) 100%) bottom / 100% 100% no-repeat,
+      radial-gradient(ellipse 66% 92px at 80% 100%, #c2ea84 98%, rgba(194, 234, 132, 0) 100%) bottom / 100% 100% no-repeat;
+  }
+  .footer a { color: #06507f; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}

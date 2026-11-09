@@ -1,0 +1,171 @@
+id: ai-teach-your-microbit
+label: A2
+unit: 6
+order: 24
+title: "AI 2: Teach Your micro:bit"
+subtitle: Record examples of your moves and train a machine learning model
+duration_minutes: 35
+level: AI Lab
+big_idea: >-
+  A machine learning model learns from data, so the examples you record
+  decide what it can and can't recognize.
+objectives:
+  - Record data samples for different actions
+  - Remove a bad sample from your data
+  - Train a machine learning model
+  - Test your model and read its certainty
+vocabulary:
+  - term: Data sample
+    definition: One recording of a move. In CreateAI, each one lasts 1 second.
+  - term: Action
+    definition: A move you want the model to recognize, like clapping.
+  - term: Train
+    definition: Let the computer find patterns in your data.
+  - term: Model
+    definition: What training makes. It estimates what you are doing.
+  - term: Certainty
+    definition: How sure the model is, as a percent.
+  - term: Outlier
+    definition: A sample that looks very different from the others.
+materials:
+  - micro:bit V2 + USB data cable
+  - Battery pack for the micro:bit you move
+  - Computer with Chrome or Edge
+  - A second micro:bit V2, if your computer has no Bluetooth
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: lab, name: AI lab, minutes: 18}
+  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: challenge, name: Open-ended challenge, minutes: 6}
+video:
+  title: Getting started with CreateAI
+  note: Watch how the graph changes when the micro:bit moves.
+warmup:
+  prompt: Last time you found a move your rules couldn't catch. If you had to teach that move to a friend, what would you show them?
+learn:
+  - text: |
+      ### Data is the teacher
+      Today your **data** is movement. The accelerometer records x, y and z.
+
+      One recording is a **data sample**. Each sample lasts **1 second**.
+
+      Your model will only know what your samples show it.
+    visual:
+      type: flow
+      steps:
+        - {icon: "👋", label: "Record moves"}
+        - {icon: "🧠", label: "Train model"}
+        - {icon: "🧪", label: "Test it"}
+        - {icon: "🔁", label: "Make it better"}
+  - text: |
+      ### Pick moves that look different
+      * Clapping and waving are **easy** to tell apart.
+      * A small wave and a big wave are **harder**.
+
+      Hold the micro:bit the **same way** each time. Moving it in your other hand can look like a new move.
+  - text: |
+      ### Why add "still"?
+      The model has to pick from the actions it knows.
+
+      If it only knows clapping and waving, what happens when you do nothing? It still has to guess!
+
+      An action called **still** gives it another choice.
+    visual:
+      type: compare
+      items:
+        - {icon: "👏", title: "Clapping", text: "An action you want."}
+        - {icon: "👋", title: "Waving", text: "An action you want."}
+        - {icon: "🧍", title: "Still", text: "Everything else."}
+  - text: |
+      ### Certainty is not truth
+      **Certainty** is how sure the model is, as a percent.
+
+      A model can be 95% sure and still be **wrong**. It is only comparing your move to its data.
+
+      Always test it yourself.
+lab:
+  title: "AI lab: Train a model"
+  tool: CreateAI
+  url: https://createai.microbit.org/
+  intro: You'll work in CreateAI, a free tool from the Micro:bit Educational Foundation. There are no logins. Keep this page open for the steps.
+  steps:
+    - title: Connect
+      instruction: Open CreateAI and follow its steps to connect. If your computer has no Bluetooth, you need **two** micro:bits. One stays plugged in. The other one moves.
+      tip: Put a battery pack on the micro:bit that moves.
+      check: My micro:bit is connected.
+    - title: Name your first action
+      instruction: Pick two moves that look very different, like **clapping** and **waving**. Type the first one as your first action.
+      check: I named my first action.
+    - title: Record samples
+      instruction: Press **Record**, or button **B** on the micro:bit. Do the move for the whole second. Record at least **3** samples. Try for **10**.
+      tip: Hold the micro:bit the same way each time.
+      check: I have 10 samples of my first action.
+    - title: Clean your data
+      instruction: Look at your graphs. Does one look very different from the rest? That's an **outlier**. Remove it, then record one more.
+      check: I checked my graphs for outliers.
+    - title: Add your second action
+      instruction: Press **Add action**. Name your second move. Record 10 samples.
+      check: I have 10 samples of my second action.
+    - title: Add a still action
+      instruction: Press **Add action** again. Name it **still**. Record samples while you hold the micro:bit still, in a few different positions.
+      check: I recorded a still action.
+    - title: Train
+      instruction: Press **Train model**. The computer looks for patterns in all of your samples.
+      check: My model is trained.
+    - title: Test
+      instruction: Do each move 5 times. Watch the **estimated action** and the **certainty**. Write down how many of the 5 it got right.
+      tip: Try the move your Python rules couldn't catch.
+      check: I tested every action 5 times.
+    - title: Save your work
+      instruction: Press **Save** to download a HEX file. Name it with your names. You'll need it next time.
+      tip: Projects stay on this computer only, and clearing the browser deletes them.
+      check: I saved my HEX file.
+quiz:
+  - question: In CreateAI, what is one data sample?
+    choices: ["A 1-second recording of a move", "A whole class's data", "A line of Python"]
+    answer: 0
+    explain: Each sample records 1 second of movement.
+  - question: Why add an action called still?
+    choices: ["It makes the micro:bit faster", "It gives the model a choice when you aren't doing a move", "It saves the file"]
+    answer: 1
+    explain: Without it, the model must pick from the moves it knows.
+  - question: The model says waving, 95% certain. But you clapped. What is true?
+    choices: ["You must have waved", "Certainty can be high and the guess can still be wrong", "The micro:bit is broken"]
+    answer: 1
+    explain: Certainty only says how sure the model is. It doesn't make it right.
+  - question: What is an outlier?
+    choices: ["A sample that looks very different from the rest", "The best sample", "A type of micro:bit"]
+    answer: 0
+    explain: A bad sample can teach the model the wrong pattern, so you can remove it.
+challenge:
+  title: Move Detective
+  prompt: How much data does a good model need? Run an experiment and find out.
+  levels:
+    - "Bronze: Train a model on 3 very different moves. Test each one 5 times."
+    - "Silver: Train two moves that look alike, like a small wave and a big wave. Can it tell?"
+    - "Gold: Train with 3 samples each, then 10. Compare how many tests it gets right."
+  hints:
+    Bronze:
+      - "Pick moves that use your arm in very different ways."
+      - "Keep a still action, so it has another choice."
+    Silver:
+      - "Make the two moves as different as you can in size or speed."
+      - "Look at the graphs side by side. Can you see a difference?"
+    Gold:
+      - "Change only the number of samples. Keep the same moves and the same test."
+      - "Write your score out of 15 for each try."
+  submit_prompt: Which moves did your model mix up? What in your data could explain that?
+teacher_notes: |
+  * **Check first:** some school computers have Bluetooth turned off for good. Without Bluetooth, each pair needs two micro:bits, connected by a radio link. V1 boards can't use the radio link.
+  * **Hardware:** any micro:bit can collect data and test a model, but only a V2 can run the model after it's downloaded in AI 4.
+  * **Saving:** projects are stored in that browser on that device. Clearing site data deletes them, so have students save a HEX file.
+  * **Privacy:** the CreateAI page says it has no logins and shares no student data. It uses movement data only.
+  * **Language:** say "the model estimates," not "it thinks."
+standards:
+  - code: 6-8.CT.c.5
+    how: Students use the micro:bit's accelerometer to gather movement data, then view and clean it.
+  - code: 6-8.CS.a.6
+    how: Students use a handheld device with a sensor to collect the data that trains their model.
+  - code: 6-8.CT.b.4
+    how: Students compare the trained model with the rules they wrote in the previous lesson.

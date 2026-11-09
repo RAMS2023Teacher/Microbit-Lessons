@@ -48,9 +48,25 @@ python tools/validate_lessons.py
 | `code` | `{intro, starter, walkthrough: [{lines, explain}], try_it: [..]}` — `starter` must be valid Python |
 | `debug` | see below |
 | `quiz` | 3–6 items `{question, choices: [..], answer: <0-based index>, explain}` |
-| `challenge` | `{title, prompt, levels: ["Bronze: …", "Silver: …", "Gold: …"], hints: {Bronze: [..], Silver: [..], Gold: [..]}, submit_prompt}` — open-ended and fun. Give each level 1–3 `hints`, each **≤ 20 words**, that nudge without solving it |
+| `challenge` | `{title, prompt, levels: ["Bronze: …", "Silver: …", "Gold: …"], hints: {Bronze: [..], Silver: [..], Gold: [..]}, submit_prompt}` — open-ended and fun. Give each level 1–3 `hints`, each **≤ 20 words**, that nudge without solving it. A level must only need ideas taught in this lesson or earlier |
 | `teacher_notes` | Markdown: common problems, troubleshooting, extensions |
 | `standards` | Massachusetts DLCS (2016) grade 6–8 standards: a list of `{code, how}`. `code` must be in `app/standards.yaml` (e.g. `6-8.CT.b.1`); `how` is one sentence on what in the lesson meets it. Only list standards the lesson really teaches or assesses. |
+
+## Lab lessons (`lab`)
+
+For work in an outside tool. A lab lesson has a `lab` section **instead of** `code` and `debug`, and its agenda uses the keys warmup, learn, lab, quiz and challenge.
+
+```yaml
+lab:
+  title: "AI lab: Train a model"
+  tool: CreateAI                          # shown on the open button
+  url: https://createai.microbit.org/
+  intro: One or two sentences.
+  steps:
+    - {title: Train, instruction: "Press **Train model**.", check: My model is trained., tip: optional}
+```
+
+Each `instruction` is **≤ 45 words**. Steps are checked off like circuit steps, and finishing them earns the first star.
 
 ## `debug`
 

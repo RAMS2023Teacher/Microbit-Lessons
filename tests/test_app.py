@@ -1,5 +1,7 @@
 import re
 
+import re
+
 from app import lessons as L
 from app.circuits import check_circuit
 from app.models import Progress, User
@@ -152,7 +154,7 @@ def test_code_library_snippets_are_valid():
                 ast.parse(entry["code"])
     for lesson in L.all_lessons():
         lib = C.for_lesson(lesson)
-        assert lib["here"], lesson["id"]
+        assert lib["here"] or lesson.get("lab"), lesson["id"]
         # nothing is lost or listed twice
         names = [e["title"] for e in lib["here"]] + [e["title"] for g in lib["groups"] for e in g["entries"]]
         assert sorted(names) == sorted(e["title"] for g in C.groups() for e in g["entries"])
@@ -166,4 +168,43 @@ def test_challenge_levels_and_hints(client):
     r = client.get(f"/lessons/{LID}")
     assert b"Code library" in r.data and b"hint-set" in r.data
     assert b"Spicy" not in r.data
+    assert b"My idea" in r.data
+    assert b'data-act="sim"' in r.data
+    # challenges start from working code, not a blank editor
+    import json
+    state = json.loads(re.search(rb"window\.STATE = (.*?);\n", r.data).group(1))
+    assert state["challenge_code"] == L.get_lesson(LID)["code"]["starter"]
+
+
+def test_lab_lesson_flow(client):
+    lesson = L.get_lesson("ai-teach-your-microbit")
+    keys = L.section_keys(lesson)
+    assert keys == ["warmup", "learn", "lab", "quiz", "challenge"]
+    register_teacher(client)
+    r = client.get("/lessons/ai-teach-your-microbit")
+    assert r.status_code == 200 and b"createai.microbit.org" in r.data
+    assert b'id="ed-code"' not in r.data and b'id="ed-debug"' not in r.data
+    n = len(lesson["lab"]["steps"])
+    assert client.post("/api/lessons/ai-teach-your-microbit/save", json={"circuit_steps": list(range(n))}).json["sections"]["lab"]
+    assert client.post("/api/lessons/ai-teach-your-microbit/debug", json={"code": "x"}).status_code == 404
+    done = client.post("/api/lessons/ai-teach-your-microbit/challenge", json={"response": "My model mixed up two moves."}).json
+    assert done["sections"]["challenge"] and done["stars"] == 2
+    assert client.get("/map").status_code == 200 and client.get("/lessons").status_code == 200
+
+
+def test_teacher_sees_lab_work(client, app):
+    register_teacher(client)
+    c = make_class(client)
+    cid, code = c.id, c.join_code
+    logout(client)
+    register_student(client, code)
+    client.post("/api/lessons/ai-test-and-fix/save", json={"circuit_steps": [0, 1]})
+    sid = User.query.filter_by(role="student").first().id
+    logout(client)
+    client.post("/login", data={"username": "teach", "password": "pass1234"})
+    r = client.get(f"/teacher/classes/{cid}/students/{sid}")
+    assert r.status_code == 200 and b"AI lab steps" in r.data
+    assert client.get("/teacher/standards").status_code == 200
+    assert client.get(f"/teacher/classes/{cid}/export.csv").status_code == 200
+    assert client.get("/lessons/ai-test-and-fix").status_code == 200
 

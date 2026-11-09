@@ -2,6 +2,7 @@
 <div class="mb-editor{{ ' compact' if compact }}" id="{{ id }}" data-section="{{ section }}" data-filename="{{ filename }}">
   <div class="ed-toolbar">
     <button type="button" class="btn small primary" data-act="send" title="Save the code onto your micro:bit and run it">▶ Send to micro:bit</button>
+    <button type="button" class="btn small ghost" data-act="sim" title="Try your code on an on-screen micro:bit" aria-expanded="false">🖥 Simulate</button>
     <button type="button" class="btn small ghost" data-act="stop" title="Stop the running program">■ Stop</button>
     <button type="button" class="btn small ghost" data-act="hex" title="Download a .hex file to drag onto the MICROBIT drive">⬇ Download .hex</button>
     <span class="spacer"></span>
@@ -10,6 +11,14 @@
   </div>
   <textarea class="ed-source" spellcheck="false">{{ code }}</textarea>
   {% if reset_code is not none %}<script type="application/json" class="ed-reset">{{ reset_code|tojson }}</script>{% endif %}
+  <div class="ed-sim" hidden>
+    <div class="sim-board"></div>
+    <div class="sim-side">
+      <p class="sim-help"><b>Press ▶ on the board</b> to run your code. Click A and B to press the buttons.</p>
+      <details class="sim-sensors" hidden><summary>Change the sensors</summary><div class="sim-controls"></div></details>
+      <p class="muted small">Only the micro:bit is simulated. LEDs on a breadboard, servos and motors need a real one.</p>
+    </div>
+  </div>
   <div class="ed-console" hidden>
     <div class="ed-console-head"><span>micro:bit says…</span><button type="button" class="linklike" data-act="clear">clear</button></div>
     <pre></pre>

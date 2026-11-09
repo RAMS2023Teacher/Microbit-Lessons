@@ -108,7 +108,9 @@ learn:
       ### Keep only the newest 30
       The micro:bit has **limited memory**. So we keep only the **newest 30** readings.
 
-      `readings.pop(0)` removes the **oldest** one. That is the one at position 0, the front of the list.
+      Each item has a **position**, starting at **0**. `readings[0]` is the first one.
+
+      `readings.pop(0)` removes the **oldest**, at the front of the list.
     visual:
       type: flow
       steps:
