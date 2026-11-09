@@ -55,20 +55,29 @@ learn:
       items:
         - {icon: "✅", title: "8 right", text: "The model estimated the move correctly."}
         - {icon: "❌", title: "2 wrong", text: "Look for what these have in common."}
+    check:
+      question: Your model got 4 of 5 tests right. What is its accuracy?
+      choices: ["4%", "45%", "80%"]
+      answer: 2
+      why: 4 ÷ 5 = 0.8, and 0.8 is 80%.
+      hint: Divide the correct tests by all the tests, then turn it into a percent.
   - text: |
-      ### Who is in your data?
+      ### Gaps in data cause bias
       If only you recorded the data, the model learned **your** moves.
+      Someone taller, shorter or left-handed may move in a different way.
+      Those people are a **data gap**. Gaps can make a model **unfair**.
 
-      Someone taller, shorter or left-handed may move in a different way. Those people are a **data gap**.
-
-      A gap can make a model **unfair**.
-  - text: |
-      ### Bias in the real world
       **Bias** means a system works better for some people than for others.
-
-      Some real face and voice systems have worked worse for people missing from their data.
-
-      The computer isn't being mean. The **data** had gaps, and people chose that data.
+      The computer isn't being mean. The **data** had gaps.
+    more: |
+      **Bias in the real world:** some real face and voice systems have worked worse for people
+      missing from their data. People chose that data, so people can fill the gaps.
+    check:
+      question: Why might a model work for you but not for your partner?
+      choices: ["The computer is being mean to them", "Your partner's moves are missing from its data", "Your partner's micro:bit is different"]
+      answer: 1
+      why: The model learned from your data, so people who move differently are a data gap.
+      hint: Think about who recorded the data the model learned from.
   - text: |
       ### Ask first
       Data comes from people. So ask before you use theirs.
@@ -78,12 +87,24 @@ learn:
       * Let them say **no**.
 
       That's **consent**. Saying yes after you understand is what counts.
+    check:
+      question: Which one is real **consent**?
+      choices: ["They say yes after you explain what you'll record and why", "They didn't say no", "Your friend says they'll probably be fine with it"]
+      answer: 0
+      why: Consent is saying yes after you understand what will happen.
+      hint: Look at the three steps on the card. Which choice follows all of them?
   - text: |
       ### How sure is sure enough?
       The **recognition point** is how certain the model must be before an action counts.
 
       * Set it **high**: fewer false alarms, but it may miss real moves.
       * Set it **low**: it catches more, but it makes more mistakes.
+    check:
+      question: You set the recognition point **low**. What happens?
+      choices: ["It never makes mistakes", "It has fewer false alarms but misses real moves", "It catches more moves but makes more mistakes"]
+      answer: 2
+      why: A low point counts a move even when the model isn't very sure, so it catches more and errs more.
+      hint: Low means the model doesn't have to be very sure. Is that careful or eager?
 lab:
   title: "AI lab: Test and fix"
   tool: CreateAI

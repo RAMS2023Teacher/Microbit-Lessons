@@ -53,6 +53,12 @@ learn:
         - {icon: "📥", label: "Lots of data"}
         - {icon: "🔍", label: "Find patterns"}
         - {icon: "🎯", label: "Best guess"}
+    check:
+      question: How does AI make its guess?
+      choices: ["It thinks and feels like a person", "It finds patterns and makes a best guess", "It always knows the right answer"]
+      answer: 1
+      why: AI is a machine. It finds patterns in data and makes its best guess.
+      hint: The card says AI doesn't think or feel. So what does it do instead?
   - text: |
       ### Two ways to spot a move
       * With **rules**, a person writes every `if`.
@@ -64,6 +70,12 @@ learn:
       items:
         - {icon: "✍️", title: "Rules", text: "A person decides every step."}
         - {icon: "📚", title: "Machine learning", text: "A computer finds the pattern in examples."}
+    check:
+      question: With **machine learning**, what does a person give the computer?
+      choices: ["Examples", "Every if rule", "A list of right answers to memorize"]
+      answer: 0
+      why: In machine learning, people give examples and the computer finds the pattern.
+      hint: With rules, a person writes every if. What's different about machine learning?
   - text: |
       ### One test or the other
       A wave can go left or right, so x can be big or very negative.
@@ -73,6 +85,12 @@ learn:
           display.show("W")
       ```
       `or` is true if **either** side is true. `and` needs **both**.
+    check:
+      question: "x is -900. Is `x > 800 or x < -800` true?"
+      choices: ["No, because -900 is not bigger than 800", "Yes, because one side is true"]
+      answer: 1
+      why: -900 is less than -800, and `or` only needs one side to be true.
+      hint: Check each side on its own. Then remember what `or` needs.
   - text: |
       ### Why rules get hard
       Clapping, waving and stirring all feel different to you. But what numbers make a clap?
@@ -84,6 +102,12 @@ learn:
         - {icon: "👏", title: "Clap", text: "Fast and short."}
         - {icon: "👋", title: "Wave", text: "Side to side."}
         - {icon: "🥄", title: "Stir", text: "Round and round."}
+    check:
+      question: Why do rules get hard for moves like clapping and waving?
+      choices: ["The micro:bit can't sense moves", "Rules only work with buttons", "People move in different ways, so you keep needing more rules"]
+      answer: 2
+      why: Everyone claps a bit differently, and every new move needs more rules.
+      hint: Think about how different people clap. Would one set of numbers fit everyone?
 code:
   intro: These rules try to tell a side-to-side **wave** from a forward-back **chop**. Send it, then try to fool it!
   starter: |

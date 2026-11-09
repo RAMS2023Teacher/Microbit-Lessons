@@ -58,12 +58,24 @@ learn:
         - {icon: "🧠", label: "Train model"}
         - {icon: "🧪", label: "Test it"}
         - {icon: "🔁", label: "Make it better"}
+    check:
+      question: Your model only saw claps done standing up. What will it know about?
+      choices: ["Every kind of clap", "Only what your samples showed it", "Any move you do"]
+      answer: 1
+      why: The data is the teacher. A model only knows what its samples show it.
+      hint: Look at the last line of the card. Where does the model learn from?
   - text: |
       ### Pick moves that look different
       * Clapping and waving are **easy** to tell apart.
       * A small wave and a big wave are **harder**.
 
       Hold the micro:bit the **same way** each time. Moving it in your other hand can look like a new move.
+    check:
+      question: Which pair of moves will be **easiest** for the model to tell apart?
+      choices: ["A small wave and a big wave", "Clapping and waving", "A wave in each hand"]
+      answer: 1
+      why: Moves that look very different are easiest to tell apart.
+      hint: Pick the pair whose motions are the least alike.
   - text: |
       ### Why add "still"?
       The model has to pick from the actions it knows.
@@ -77,6 +89,12 @@ learn:
         - {icon: "👏", title: "Clapping", text: "An action you want."}
         - {icon: "👋", title: "Waving", text: "An action you want."}
         - {icon: "🧍", title: "Still", text: "Everything else."}
+    check:
+      question: Your model only knows clapping and waving. You do nothing. What happens?
+      choices: ["It shows nothing", "It still guesses clapping or waving", "It turns itself off"]
+      answer: 1
+      why: The model has to pick from the actions it knows, so it guesses one of them.
+      hint: The model must choose from the actions it has. What are its choices?
   - text: |
       ### Certainty is not truth
       **Certainty** is how sure the model is, as a percent.
@@ -84,6 +102,12 @@ learn:
       A model can be 95% sure and still be **wrong**. It is only comparing your move to its data.
 
       Always test it yourself.
+    check:
+      question: The model says "waving, 95%". What does that tell you?
+      choices: ["It's how sure the model is, and it could still be wrong", "It's definitely waving", "95% of your samples were waves"]
+      answer: 0
+      why: Certainty is only how sure the model is. It can be sure and wrong.
+      hint: Is being sure the same as being right?
 lab:
   title: "AI lab: Train a model"
   tool: CreateAI

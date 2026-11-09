@@ -65,6 +65,12 @@ learn:
         - {icon: "🔢", label: "Change one number"}
         - {icon: "▶️", label: "Run it"}
         - {icon: "📝", label: "Write what happened"}
+    check:
+      question: You change TURN_MS **and** STOP_L at the same time, and now the corner is square. What's the problem?
+      choices: ["Nothing, it works", "You don't know which change fixed it", "You should have changed three things"]
+      answer: 1
+      why: With two changes at once, you can't tell which one made the difference.
+      hint: Read the first sentence of the card again.
   - text: |
       ### Keep a test log
       A test log is three short columns. It stops you from trying the same
@@ -81,6 +87,12 @@ learn:
         - {icon: "🔢", title: "Changed", text: "TURN_MS 500 to 450"}
         - {icon: "👀", title: "Happened", text: "corner was square"}
         - {icon: "✅", title: "Keep it?", text: "yes"}
+    check:
+      question: How does a test log help you?
+      choices: ["It stops you from trying the same thing twice", "It makes the robot drive faster", "It saves your code for you"]
+      answer: 0
+      why: Writing down each change and result shows what you already tried.
+      hint: Think about what you'd forget after ten tries without writing anything down.
   - text: |
       ### The finish line
       Your showcase is a **30-second demo**:
@@ -97,58 +109,33 @@ learn:
         - {icon: "🤖", label: "Show it work"}
         - {icon: "🐞", label: "Name one bug you fixed"}
         - {icon: "📝", label: "Reflect"}
+    check:
+      question: Your demo shows the robot working. What else do you share in the 30 seconds?
+      choices: ["Every line of your code", "All your stop numbers", "One bug you fixed and how"]
+      answer: 2
+      why: The demo is mission, show it, and one bug you fixed.
+      hint: Look at step 3 of the demo.
   - text: |
-      ### Upgrade: a scanning head
-      Put the **ultrasonic sensor** on a **180° servo** on **P15**. Now the robot
-      can look left, ahead and right.
+      ### Upgrades: pick one
+      Mission working? Add **one** upgrade.
 
-      * Trig on **P2**. Echo on **P1** through a **divider** (it makes 5 V safe).
-      * Distance in cm = echo time ÷ 58.
+      * **Scanning head:** the ultrasonic sensor sits on a servo, so the robot looks left, ahead and right.
+      * **Radio remote:** a **second micro:bit** sends messages that drive the robot.
+      * **DC motors:** a new motor board, the **KS4033**, replaces the shield.
 
-      Unplug the crash sensor first: it uses P1 too.
-    visual:
-      type: board
-      board: shield
-      jumpers: {V1: "3.3V", V2: "5V"}
-      power: "6×AA"
-      plugs:
-        - {pin: 1, device: "Echo via divider", kind: ultrasonic}
-        - {pin: 2, device: "Ultrasonic Trig", kind: ultrasonic}
-        - {pin: 13, device: "Left wheel", kind: servo}
-        - {pin: 14, device: "Right wheel", kind: servo}
-        - {pin: 15, device: "Head servo", kind: servo}
-  - text: |
-      ### Upgrade: a radio remote
-      A **second micro:bit** becomes the remote. It sends short messages like
-      `"L"` or `"F"`. The robot reads them and drives.
-
-      Both need the **same group** number, or they can't hear each other:
-
-      ```python
-      radio.on()
-      radio.config(group=7)
-      ```
+      The wiring and code tips are in the Remember boxes.
     visual:
       type: compare
       items:
-        - {icon: "🎮", title: "Remote", text: "radio.send(\"L\") when A is pressed"}
-        - {icon: "📻", title: "Same group", text: "radio.config(group=7) on both"}
-        - {icon: "🤖", title: "Robot", text: "radio.receive() then drive()"}
-  - text: |
-      ### Upgrade: DC motors
-      The **KS4033** board drives two DC motors. It's a different board, so it
-      replaces the shield.
-
-      * **Motor A:** P13 + P12. **Motor B:** P15 + P16.
-      * One pin gets `write_analog(speed)`, the other gets 0.
-      * Swap them to reverse. Both 0 = stop.
-    visual:
-      type: board
-      board: motor
-      power: "4×AA (6V)"
-      motors:
-        - {port: A, device: "left motor"}
-        - {port: B, device: "right motor"}
+        - {icon: "📡", title: "Scanning head", text: "ultrasonic on a servo, P15"}
+        - {icon: "🎮", title: "Radio remote", text: "a second micro:bit sends L or F"}
+        - {icon: "⚡", title: "DC motors", text: "KS4033 board replaces the shield"}
+    check:
+      question: Which upgrade needs a **second micro:bit**?
+      choices: ["Scanning head", "Radio remote", "DC motors"]
+      answer: 1
+      why: The second micro:bit is the remote. It sends messages to the robot.
+      hint: Which upgrade lets you control the robot from across the room?
 circuit:
   intro: >-
     These steps are only for upgrades. Pick **one**. Unplug the battery pack
@@ -157,6 +144,13 @@ circuit:
     - Unplug the battery pack before you change any wiring.
     - Never wire the ultrasonic Echo straight to P1. Use the divider.
     - The KS4033 replaces the shield. Don't try to stack them.
+  remember:
+    - text: |
+        **Scanning head:** the ultrasonic sensor rides on a **180° servo** on **P15**. **Trig → P2**.
+        **Echo → P1 through the divider**: Echo sends 5 V, and the divider makes it safe.
+        Unplug the crash sensor first: it uses P1 too.
+    - text: |
+        **KS4033 motor board:** **Motor A** uses **P13 + P12**. **Motor B** uses **P15 + P16**.
   steps:
     - title: "Head: add a servo on P15"
       instruction: >-
@@ -207,6 +201,16 @@ code:
   intro: >-
     This is a **test bench**. Each button runs one test. The screen shows what
     the IR sensor sees. Run each test, then tune **one** number.
+  remember:
+    - text: |
+        **Ultrasonic distance:** distance in cm = echo time ÷ 58.
+    - text: |
+        **Radio remote:** the remote sends short messages like `"L"` or `"F"` with `radio.send()`.
+        The robot reads them with `radio.receive()`, then drives. Both run `radio.on()` and need the
+        **same group**, like `radio.config(group=7)`, or they can't hear each other.
+    - text: |
+        **DC motor speed:** give one of a motor's pins `write_analog(speed)` and the other **0**.
+        Swap them to reverse. Both 0 = stop.
   starter: |
     from microbit import *
 

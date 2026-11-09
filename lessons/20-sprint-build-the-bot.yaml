@@ -49,21 +49,6 @@ warmup:
     left?
 learn:
   - text: |
-      ### Today's plan
-      By the end of class, your robot drives a square.
-
-      * **Build:** put the wheel servos on the chassis.
-      * **Tune:** find the number that makes each wheel stop.
-      * **Code:** write one `drive()` function.
-      * **Go:** drive a square.
-    visual:
-      type: flow
-      steps:
-        - {icon: "🔧", label: "Build"}
-        - {icon: "🎯", label: "Tune each stop"}
-        - {icon: "📦", label: "Write drive()"}
-        - {icon: "⬜", label: "Drive a square"}
-  - text: |
       ### Each wheel has its own stop
       In Sprint 1, about **77** made a wheel servo stop. But no two servos are
       the same.
@@ -72,6 +57,9 @@ learn:
       * Your right wheel might stop at **79**.
 
       Write down **both** numbers. Your code will use them.
+    more: |
+      **Today's plan:** **build** (put the wheel servos on the chassis), **tune** (find each wheel's
+      stop number), **code** (write one `drive()` function), then **go** (drive a square).
     visual:
       type: scale
       min: 70
@@ -82,6 +70,12 @@ learn:
       marks:
         - {at: 76, label: "left 76", pointer: true}
         - {at: 79, label: "right 79", pointer: true}
+    check:
+      question: Why do you write down **two** stop numbers?
+      choices: ["One for going forward, one for going back", "Each servo stops at a slightly different number", "The second one is a backup"]
+      answer: 1
+      why: No two servos are the same, so each wheel gets its own stop number.
+      hint: Look at the example. Do the left and right wheels stop at the same number?
   - text: |
       ### The wheels are mirrored
       The two servos face **opposite ways**, like your two hands.
@@ -97,36 +91,26 @@ learn:
         - {icon: "⬅️", title: "Left wheel (P13)", text: "forward = stop + a bit"}
         - {icon: "➡️", title: "Right wheel (P14)", text: "forward = stop - a bit"}
         - {icon: "🔄", title: "Same number on both", text: "the bot just spins in place"}
+    check:
+      question: You add the same amount to **both** stop numbers. What does the robot do?
+      choices: ["Drives straight forward", "Drives straight back", "Spins in place"]
+      answer: 2
+      why: The servos face opposite ways, so the same change makes the wheels push against each other.
+      hint: The servos face opposite ways, like your two hands. Think about which way each wheel rolls.
   - text: |
       ### One easy speed scale
       Pulse numbers are hard to remember. So `drive(left, right)` uses
-      **speeds** instead:
+      **speeds**: **100** = full forward, **0** = stop, **-100** = full back.
 
-      * **100** = full speed forward
-      * **0** = stop
-      * **-100** = full speed back
+      Every move is a pair of speeds:
 
-      The function turns each speed into the right pulse for that wheel.
-    visual:
-      type: scale
-      min: -100
-      max: 100
-      zones:
-        - {from: -100, to: -5, label: "back", color: "#dbe4ff"}
-        - {from: -5, to: 5, label: "stop", color: "#fde2e2"}
-        - {from: 5, to: 100, label: "forward", color: "#dff4f4"}
-      marks:
-        - {at: -100, label: "-100"}
-        - {at: 0, label: "0", pointer: true}
-        - {at: 100, label: "100"}
-  - text: |
-      ### Moves are just two speeds
-      Every move is a pair of wheel speeds.
-
-      * `drive(60, 60)`: both go forward.
-      * `drive(-60, -60)`: both go back.
+      * `drive(60, 60)`: forward.
+      * `drive(-60, -60)`: back.
       * `drive(60, -60)`: spin right on the spot.
       * `drive(0, 0)`: stop.
+    more: |
+      The `drive()` function turns each speed into the right pulse for that wheel, using that wheel's
+      stop number. You never have to type a pulse number again.
     visual:
       type: compare
       items:
@@ -134,6 +118,12 @@ learn:
         - {icon: "⬇️", title: "drive(-60, -60)", text: "back up"}
         - {icon: "↻", title: "drive(60, -60)", text: "spin right"}
         - {icon: "⏹️", title: "drive(0, 0)", text: "stop"}
+    check:
+      question: Which call makes the robot **stop**?
+      choices: ["drive(0, 0)", "drive(77, 77)", "drive(-100, -100)"]
+      answer: 0
+      why: On the speed scale, 0 means stop. The function handles each wheel's stop number for you.
+      hint: You're using speeds now, not pulse numbers. What speed means not moving?
   - text: |
       ### A square is 4 sides and 4 turns
       The robot has no eyes yet. It moves by **time**.
@@ -151,6 +141,12 @@ learn:
         - {icon: "⬆️", label: "Forward 1 s"}
         - {icon: "↻", label: "Spin about 0.5 s"}
         - {icon: "⏹️", label: "Stop at the end"}
+    check:
+      question: How does the robot know how far to turn at each corner?
+      choices: ["It sees the corner", "It spins for a set time", "It counts the wheels"]
+      answer: 1
+      why: With no eyes yet, the robot moves by time. Longer spin, bigger turn.
+      hint: Read the first line of the card again. What does the robot use to move?
 circuit:
   intro: >-
     You'll mount the two wheel servos, plug them into pins 13 and 14, and power

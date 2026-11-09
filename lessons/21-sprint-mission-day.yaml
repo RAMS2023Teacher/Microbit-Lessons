@@ -58,6 +58,9 @@ learn:
       * **D.** Gadget (no robot needed)
 
       The starter code runs Mission A, so start there if you can't pick.
+    more: |
+      **Gadget ideas (Mission D):** a candy door, a flag that waves hello, or a trap that snaps shut.
+      The IR sensor on **P0** sees a hand, and a **180° servo** on **P13** swings.
     visual:
       type: compare
       items:
@@ -65,6 +68,12 @@ learn:
         - {icon: "〰️", title: "B. Edge Explorer", text: "line sensor on P8 follows tape"}
         - {icon: "💥", title: "C. Bump Bot", text: "crash sensor on P1 feels a bump"}
         - {icon: "⚙️", title: "D. Gadget", text: "a sensor moves a servo, no wheels"}
+    check:
+      question: You can't decide on a mission. Which one should you start with?
+      choices: ["Mission D", "Mission A", "Any, but write all new code"]
+      answer: 1
+      why: The starter code already runs Mission A, so you can get going right away.
+      hint: Look at the last line of the card. Which mission does the starter code run?
   - text: |
       ### Your four milestones
       Check them off in order. Show your teacher each one.
@@ -80,74 +89,56 @@ learn:
         - {icon: "2️⃣", label: "Senses"}
         - {icon: "3️⃣", label: "Reacts"}
         - {icon: "4️⃣", label: "Polish"}
+    check:
+      question: Your wheels move, but the screen never changes when the sensor sees something. Which milestone are you working on?
+      choices: ["Reacts", "Polish", "Senses"]
+      answer: 2
+      why: Milestone 2, Senses, is done when the screen changes as the sensor sees something.
+      hint: Milestone 1 is done. Which milestone is about the screen and the sensor?
   - text: |
-      ### A. Obstacle Avoider
-      The **IR obstacle sensor** on P0 shines invisible light. It reads **0**
-      when something is in front.
+      ### Sensors say 0 or 1
+      Each sensor sends a **0** or a **1**. Learn what yours means.
 
-      * Clear (1): drive forward.
-      * Blocked (0): back up, then turn.
-
-      Turn the sensor's small knob to change how far it sees.
-    visual:
-      type: flow
-      loop: true
-      loop_label: "forever"
-      steps:
-        - {icon: "👀", label: "Read pin 0"}
-        - {icon: "🤔", label: "0 = something there?"}
-        - {icon: "↩️", label: "Yes: back up and turn"}
-        - {icon: "⬆️", label: "No: drive forward"}
-  - text: |
-      ### B. Edge Explorer
-      You have **one** line sensor on P8. It reads **1 on black** and **0 on
-      white**.
-
-      Follow the **edge** of the tape by zig-zagging:
-
-      * On black: curve one way.
-      * On white: curve back the other way.
-
-      The robot keeps crossing the edge, so it wiggles along it.
+      * **IR obstacle (P0):** **0** when something is in front.
+      * **Line sensor (P8):** **1 on black**, **0 on white**.
+      * **Crash sensor (P1):** a switch. **0 when pressed**.
     visual:
       type: compare
       items:
-        - {icon: "⬛", title: "Reads 1 (black)", text: "drive(50, 10): curve right, off the tape"}
-        - {icon: "⬜", title: "Reads 0 (white)", text: "drive(10, 50): curve left, back to tape"}
+        - {icon: "👀", title: "IR obstacle, P0", text: "0 = something in front"}
+        - {icon: "〰️", title: "Line sensor, P8", text: "1 = black, 0 = white"}
+        - {icon: "💥", title: "Crash sensor, P1", text: "0 = pressed"}
+    check:
+      question: The Bump Bot hits a wall and its crash switch is pressed. What does pin 1 read?
+      choices: ["0", "1", "77"]
+      answer: 0
+      why: The crash sensor is a switch that reads 0 when it's pressed.
+      hint: Find the crash sensor on the card. Which number means pressed?
   - text: |
-      ### C. Bump Bot
-      The **crash sensor** on P1 is a switch. It reads **0 when pressed**.
+      ### Decide, then act
+      Each mission turns a reading into a move.
 
-      * Drive forward until it bumps.
-      * Back up for a moment.
-      * Turn for a **random** time, so it tries a new way each time.
-
-      `random.randint(300, 900)` picks a number from 300 to 900.
+      * **A:** blocked? Back up, then turn. Clear? Drive forward.
+      * **B:** on black, curve one way. On white, curve back. It **wiggles** along the tape's edge.
+      * **C:** bump? Back up, then turn for a **random** time.
+      * **D:** hand seen? The servo swings.
+    more: |
+      **Why random?** A turn that's the same every time can trap the Bump Bot bouncing between two walls.
+      A **random** turn tries a new way each time.
     visual:
       type: flow
       loop: true
       loop_label: "forever"
       steps:
-        - {icon: "⬆️", label: "Drive forward"}
-        - {icon: "💥", label: "Pin 1 reads 0?"}
-        - {icon: "⬇️", label: "Back up"}
-        - {icon: "🎲", label: "Turn a random time"}
-  - text: |
-      ### D. Gadget Mission
-      No robot? Build a **machine** that reacts. A sensor triggers a servo.
-
-      * IR sensor on **P0** sees a hand.
-      * A **180° servo** on **P13** swings open.
-
-      Ideas: a candy door, a flag that waves hello, or a trap that snaps shut.
-    visual:
-      type: board
-      board: shield
-      jumpers: {V1: "3.3V", V2: "5V"}
-      power: "6×AA"
-      plugs:
-        - {pin: 0, device: "IR obstacle", kind: sensor}
-        - {pin: 13, device: "Servo A (180°)", kind: servo}
+        - {icon: "👀", label: "Sense: read the pin"}
+        - {icon: "🤔", label: "Decide: if 0 or 1"}
+        - {icon: "🛞", label: "Act: drive or swing"}
+    check:
+      question: The Edge Explorer's sensor sees **white**. What should it do?
+      choices: ["Stop and wait", "Drive straight ahead", "Curve back toward the tape"]
+      answer: 2
+      why: On white it has left the tape, so it curves back. That's why it wiggles along the edge.
+      hint: The robot wants to stay on the edge of the tape. Where is it if it sees white?
 circuit:
   intro: >-
     Keep your wheels on P13 and P14. Add **only** the sensor for your mission.
@@ -157,6 +148,10 @@ circuit:
     - Unplug the battery pack before you plug in a sensor.
     - Match G to G. A backwards sensor can be damaged.
     - V1 must be on 3.3V. Sensors on pins 0-10 run at 3.3 volts.
+  remember:
+    - text: |
+        **IR sensor range:** turn the small knob on the IR obstacle sensor to change how far
+        it sees. It shines invisible light and reads **0** when something is in front.
   steps:
     - title: "Mission A: IR obstacle sensor"
       instruction: >-
@@ -219,6 +214,14 @@ code:
   intro: >-
     This template runs **Mission A**. Put in your stop numbers from Sprint 4,
     then press **A** to start and **B** to stop. Wave your hand in front of it!
+  remember:
+    - text: |
+        **Edge Explorer (B):** one line sensor only knows black or white. On black use
+        `drive(50, 10)` to curve right, off the tape. On white use `drive(10, 50)` to curve
+        left, back on. It keeps crossing the edge.
+    - text: |
+        **Random turns (C):** add `import random`. Then `random.randint(300, 900)` picks a
+        number from 300 to 900, so each turn is a different length.
   starter: |
     from microbit import *
     import random

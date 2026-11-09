@@ -49,24 +49,33 @@ learn:
         - {icon: "📳", label: "Sense: accelerometer"}
         - {icon: "🧠", label: "Decide: the model"}
         - {icon: "💡", label: "Act: your code"}
+    check:
+      question: In the sense, decide, act loop, what job does the **model** do?
+      choices: ["Sense the move", "Decide what the move is", "Act by showing an icon"]
+      answer: 1
+      why: The accelerometer senses, the model decides what the move is, and your code acts.
+      hint: Look at the middle step of the loop.
   - text: |
       ### Blocks for your model
       CreateAI uses **MakeCode** blocks. Find the **Machine Learning** group at the top.
 
-      * **on ML ... start** runs when an action begins.
-      * **is ML ... detected** is true during an action.
+      * **on ML ... start** is an **event**. It runs when an action begins, so you don't need your own loop.
+      * **is ML ... detected** is true during an action, like the test in an `if`.
       * **certainty (%) ML ...** gives a number.
-  - text: |
-      ### Same ideas, new look
-      Blocks and Python share the same ideas.
-
-      * **is ML ... detected** works like the test in an `if`.
-      * **on ML ... start** is an **event**. It runs when that action begins, so you don't need your own loop.
+    more: |
+      **Same ideas, new look.** Blocks and Python share the same ideas. In Python you type an `if`
+      and test the numbers yourself. In blocks you snap in an **event** for the action.
     visual:
       type: compare
       items:
         - {icon: "🐍", title: "Python", text: "You type if and test the numbers."}
         - {icon: "🧩", title: "Blocks", text: "You snap in an event for the action."}
+    check:
+      question: Which block runs **by itself** when an action begins?
+      choices: ["is ML ... detected", "certainty (%) ML ...", "on ML ... start"]
+      answer: 2
+      why: on ML ... start is an event, so it runs when that action begins.
+      hint: Look for the block the card calls an event.
   - text: |
       ### What AI can't do
       Your model doesn't **understand** a clap. It only matches numbers to its data.
@@ -74,6 +83,12 @@ learn:
       It can be wrong, and it can't tell you why. So someone has to decide when it's **safe** to use.
 
       That someone is **you**.
+    check:
+      question: Your model says "clap". Does it understand what a clap is?
+      choices: ["No, it only matches numbers to its data", "Yes, it learned what clapping means"]
+      answer: 0
+      why: A model matches numbers to its data. It doesn't understand the move.
+      hint: Read the first line of the card again.
   - text: |
       ### Write a model card
       A **model card** is an honest label for an AI.
@@ -82,6 +97,12 @@ learn:
       * **Who it was tested on**
       * **How accurate it was**
       * **When not to use it**
+    check:
+      question: Your model was only tested on your class. Which part of the model card says that?
+      choices: ["What it's for", "Who it was tested on", "How accurate it was"]
+      answer: 1
+      why: The model card says who it was tested on, so people know who it may not work for.
+      hint: This is about the people, not the score or the job.
 lab:
   title: "AI lab: Code your model"
   tool: CreateAI
