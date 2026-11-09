@@ -154,25 +154,13 @@ function escapeHtml_(s) {
   return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
 }
 
-/** Every pasted file must be there, complete, and from the same build as Code.gs. */
+/** Every pasted Script file must be there, complete (its last line sets its stamp), and from the same build. */
 function installProblems_() {
-  var out = [];
-  var stamps = typeof BUILD_STAMPS === 'undefined' ? {} : BUILD_STAMPS;
+  var out = [], stamps = typeof BUILD_STAMPS === 'undefined' ? {} : BUILD_STAMPS;
   BUILD_FILES.forEach(function (name) {
-    if (/\.gs$/.test(name)) {
-      var key = name.slice(0, -3), got = stamps[key];
-      if (!got) out.push(name + ' is missing or was cut short while pasting. Paste all of it again.');
-      else if (got !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
-      return;
-    }
-    var key2 = name.replace(/\.html$/, ''), text = '';
-    try { text = HtmlService.createHtmlOutputFromFile(key2).getContent(); } catch (e) {
-      out.push(name + ' is missing. Add it as an HTML file named "' + key2 + '" (+ next to Files → HTML).');
-      return;
-    }
-    var end = /maker-lab-end (\w+)/.exec(text);
-    if (!end) out.push(name + ' was cut short while pasting (its last line is missing). Paste all of it again.');
-    else if (end[1] !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
+    var key = name.replace(/\.gs$/, ''), got = stamps[key];
+    if (!got) out.push(name + ' is missing or was cut short while pasting. Add it as a Script file named "' + key + '" and paste all of it.');
+    else if (got !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
   });
   return out;
 }
@@ -182,12 +170,10 @@ function checkInstall() {
   var lines = [], ok = function (good, text) { lines.push((good ? '✅ ' : '❌ ') + text); };
   var problems = installProblems_();
   ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and from build ' + BUILD_ID);
-  ['Styles', 'App', 'Editor'].forEach(function (k) {
-    try {
-      var t = HtmlService.createHtmlOutputFromFile(k).getContent(), want = BUILD_SIZES[k + '.html'];
-      lines.push('   ' + k + '.html: ' + t.length + ' of ' + want + ' characters, ends with: ' + JSON.stringify(t.slice(-60)));
-    } catch (e) { lines.push('   ' + k + '.html: ' + e.message); }
-  });
+  try {
+    ['styles', 'app', 'editor'].forEach(function (k) { if (asset_(k).length < 1000) throw new Error(k + ' is empty'); });
+    ok(true, 'The site\'s styles and code unpack');
+  } catch (e) { ok(false, 'Assets.gs: ' + e.message); }
   try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
   try {
     var n = Object.keys(PAGES_GZ).length, first = page_(DATA.order[0]);
@@ -211,7 +197,34 @@ function plainPage_(title, body) {
 }
 
 // ---------------------------------------------------------------- the HTML around every page
-function asset_(name) { return HtmlService.createHtmlOutputFromFile(name).getContent(); }
+/** The site's CSS and JavaScript, stored gzip-compressed in Assets.gs. */
+var ASSET_CACHE_ = {};
+function asset_(name) {
+  if (ASSET_CACHE_[name] !== undefined) return ASSET_CACHE_[name];
+  var blob = Utilities.newBlob(Utilities.base64Decode(ASSETS_GZ[name]), 'application/x-gzip');
+  return (ASSET_CACHE_[name] = JSON.parse(Utilities.ungzip(blob).getDataAsString('UTF-8')));
+}
+
+/** Text as web-safe base64: only letters, digits, - and _, so Apps Script can't mistake any of it for a comment. */
+function safe64_(text) {
+  return Utilities.base64EncodeWebSafe(Utilities.newBlob(text, 'text/plain').getBytes()).replace(/=+$/, '');
+}
+
+// Apps Script strips // and /* comments from <script> blocks, without noticing when they're inside strings.
+// So the page gets exactly two tiny scripts written with no slashes at all, and all real code and data
+// travel as safe64 text that the loader decodes and runs.
+var CRASH_SCRIPT_ = '<script>window.addEventListener("error",function(e){var b=document.getElementById("ml-crash");' +
+  'if(!b){b=document.createElement("div");b.id="ml-crash";b.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;' +
+  'z-index:9999;background:#fde2e2;color:#7a1010;border:2px solid #b32626;border-radius:10px;padding:10px 14px;' +
+  'font:14px system-ui,sans-serif;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);' +
+  'b.textContent="Something went wrong on this page. Please send this to your teacher:"}' +
+  'b.textContent+=String.fromCharCode(10)+(e.message||"error")+(e.lineno?" (line "+e.lineno+")":"")});</script>';
+var LOADER_SCRIPT_ = '<script>(function(){var t=document.getElementById("ml-code");' +
+  'function d(s){var b=atob(s.split("-").join("+").split("_").join(String.fromCharCode(47)));' +
+  'var u=new Uint8Array(b.length);for(var i=0;i<b.length;i++){u[i]=b.charCodeAt(i)}return new TextDecoder().decode(u)}' +
+  'var parts=t.textContent.split(".");for(var j=0;j<parts.length;j++){if(!parts[j])continue;' +
+  'var s=document.createElement("script");s.textContent=d(parts[j]);document.body.appendChild(s)}' +
+  'if(window.MLStart){window.MLStart()}})();</script>';
 
 function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
@@ -220,25 +233,18 @@ function render_(me, page) {
     ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos']]
     : [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'Dashboard']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, teacher: me.teacher, nav: nav, data: page.data || {} };
-  var globals = page.globals || {};
+  var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
+  Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
+  var code = [safe64_(setup), safe64_(asset_('app'))];
+  if (page.editor) code.push(safe64_(asset_('editor')));
   var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="apps-script">',
-    asset_('Styles'), '</head><body class="apps-script">',
-    // If the page's code ever crashes, show the message instead of a blank page.
-    '<script>window.addEventListener("error",function(e){var b=document.getElementById("ml-crash");if(!b){b=document.createElement("div");',
-    'b.id="ml-crash";b.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#fde2e2;color:#7a1010;border:2px solid #b32626;',
-    'border-radius:10px;padding:10px 14px;font:14px/1.4 system-ui,sans-serif;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);',
-    'b.textContent="Something went wrong on this page. Please send this to your teacher:\\n"}b.textContent+="\\n"+(e.message||"error")+',
-    '(e.filename?" ("+String(e.filename).split("/").pop()+":"+e.lineno+")":"")});</script>',
+    '<style>', asset_('styles'), '</style></head><body class="apps-script">', CRASH_SCRIPT_,
     '<header class="topbar" id="topbar"></header>',
     '<main class="', page.mainClass || 'container', '" id="main">',
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
     '<footer class="footer">Built for young makers · Python + micro:bit + circuits</footer>',
-    '<script>window.ML=', json_(ml), ';'];
-  Object.keys(globals).forEach(function (k) { out.push('window.', k, '=', json_(globals[k]), ';'); });
-  out.push('</script>', asset_('App'));
-  if (page.editor) out.push(asset_('Editor'));
-  out.push('<script>window.MLStart && window.MLStart();</script></body></html>');
+    '<div id="ml-code" hidden>', code.join('.'), '</div>', LOADER_SCRIPT_, '</body></html>'];
   return HtmlService.createHtmlOutput(out.join(''))
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');

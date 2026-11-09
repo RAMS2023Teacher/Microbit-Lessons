@@ -4,7 +4,7 @@ The same site, run as a Google Apps Script web app in the teacher's school accou
 no passwords, and student work stays in the teacher's Google Drive.
 
 **To install or update it, follow [dist/apps-script/INSTALL.md](../dist/apps-script/INSTALL.md).**
-You paste 6 files into a script project, run `setup` once, and deploy.
+You paste 4 Script files into a project, run `setup` once, and deploy.
 
 ## How it works for students and teachers
 
@@ -44,6 +44,11 @@ tests/apps_script_app/    fake Google services, an API test, and a local server 
   `Pages1.gs`, and filled in with the student's saved work in the browser.
 * **Lesson code** (`lesson.js`, `editor.js`, `map.js`, `profile.js`, the visuals) is the same file the Flask
   site uses. `shim.js` turns its `fetch('/api/...')` calls into `google.script.run.api(...)`.
+* **Why there are no HTML files:** Apps Script strips `//` and `/* */` comments from `<script>` blocks, and it
+  doesn't notice when they're inside strings (`"https://…"`, Python's `102 // 180`). That broke the page. So the
+  CSS and JavaScript live gzip-compressed in `Assets.gs`, and each page has just two small scripts written
+  without any slashes. All real code and data travel as web-safe base64, which a loader decodes and runs. The
+  fake Google in the tests strips comments the same way, so a regression fails the tests.
 * **Rules:** XP values, levels, badges, the map and avatar parts come from `app/gamify.py` through
   `Data.gs`. The logic is ported to `apps_script/server/30_rewards.js`.
 * **Grading:** checks run as JavaScript regexes, and Python's `ast.parse` is replaced by a small syntax

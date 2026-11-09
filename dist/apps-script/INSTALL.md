@@ -7,18 +7,19 @@ change the lessons or the code in the repository and build again.
 
 1. Go to <https://script.google.com/home/projects/create> in Chrome, signed in to your school account.
 2. Rename it **micro:bit Maker Lab** (click "Untitled project").
-3. Add one file in the editor for each row below. Click **+** next to "Files", choose the type, and type the
-   name exactly (Apps Script adds the `.gs` or `.html`). Open the file from this folder, select all, copy,
-   and paste it in. `Code.gs` already exists: replace what's in it.
+3. Add one **Script** file in the editor for each row below. Click **+** next to "Files", choose **Script**,
+   and type the name exactly (Apps Script adds `.gs`). Open the file from this folder, select all, copy, and
+   paste it in. `Code.gs` already exists: replace what's in it.
+
+   Don't add HTML files: Apps Script strips parts of the code in HTML files, so everything is in these Script files.
+   If you have `Styles`, `App` or `Editor` HTML files from an earlier version, delete them.
 
 | File | Add it as | Size |
 |---|---|---|
+| `Assets.gs` | Script (+ → Script), name it `Assets` | 245 KB |
 | `Code.gs` | Script (+ → Script), name it `Code` | 62 KB |
 | `Data.gs` | Script (+ → Script), name it `Data` | 108 KB |
-| `Pages1.gs` | Script (+ → Script), name it `Pages1` | 653 KB |
-| `Styles.html` | HTML (+ → HTML), name it `Styles` | 65 KB |
-| `App.html` | HTML (+ → HTML), name it `App` | 105 KB |
-| `Editor.html` | HTML (+ → HTML), name it `Editor` | 502 KB |
+| `Pages1.gs` | Script (+ → Script), name it `Pages1` | 652 KB |
 
 4. Press **Ctrl+S**.
 

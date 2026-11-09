@@ -2,6 +2,13 @@
 // Apps Script files can run in Node (tests) and behind a local web server (browser tests).
 const fs = require('fs'), path = require('path'), vm = require('vm'), zlib = require('zlib');
 
+/** What real Apps Script does to <script> and <style> blocks: deletes // and /* comments, without
+ *  noticing when they're inside strings. Applied to every page, so tests catch code it would break. */
+function stripLikeAppsScript(html) {
+  return html.replace(/(<(script|style)\b[^>]*>)([\s\S]*?)(<\/\2>)/gi, (m, open, tag, body, close) =>
+    open + body.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ') + close);
+}
+
 function makeWorld(dist, opts) {
   opts = opts || {};
   const owner = opts.owner || 'teacher@school.org';
@@ -48,7 +55,10 @@ function makeWorld(dist, opts) {
     constructor(...a) { if (a.length) super(...a); else super(state.clock); }
     static now() { return state.clock; }
   }
-  const blob = (bytes, type) => ({ bytes: Buffer.from(bytes), type, getDataAsString: () => Buffer.from(bytes).toString('utf8') });
+  const blob = (data, type) => {
+    const bytes = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data);
+    return { bytes, type, getDataAsString: () => bytes.toString('utf8'), getBytes: () => Array.from(bytes) };
+  };
 
   const g = {
     console, JSON, Math, Date: FakeDate, Object, Array, String, Number, Boolean, RegExp, Error, encodeURIComponent, decodeURIComponent,
@@ -79,6 +89,7 @@ function makeWorld(dist, opts) {
         return iso.slice(0, 19);
       },
       base64Decode: (s) => Array.from(Buffer.from(s, 'base64')),
+      base64EncodeWebSafe: (b) => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
       newBlob: (bytes, type) => blob(bytes, type),
       ungzip: (b) => blob(zlib.gunzipSync(b.bytes)),
     },
@@ -96,7 +107,8 @@ function makeWorld(dist, opts) {
         return { getContent: () => fs.readFileSync(file, 'utf8') };
       },
       createHtmlOutput: (html) => {
-        const out = { html, title: '', setTitle(t) { out.title = t; return out; }, addMetaTag() { return out; }, getContent: () => out.html };
+        const out = { html, title: '', setTitle(t) { out.title = t; return out; }, addMetaTag() { return out; },
+                      getContent: () => stripLikeAppsScript(out.html) };
         return out;
       },
     },
@@ -119,4 +131,4 @@ function makeWorld(dist, opts) {
   return { g, state, call, page, owner, advance: (ms) => { state.clock += ms; } };
 }
 
-module.exports = { makeWorld };
+module.exports = { makeWorld, stripLikeAppsScript };
