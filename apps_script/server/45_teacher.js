@@ -38,6 +38,7 @@ function deleteClass(cid, typedName) {
   if (!c) throw new Error('No such class.');
   if (typedName !== c.name) throw new Error('Type the class name exactly to delete it.');
   delete cfg.classes[cid];
+  if (cfg.rosters) delete cfg.rosters[cid];
   cfg.assignments = cfg.assignments.filter(function (a) { return a.class_id !== cid; });
   saveConfig_(cfg);
   return { ok: true };
@@ -133,14 +134,16 @@ function saveVideos(map) {
 }
 
 // ---------------------------------------------------------------- gradebook
+/** Everyone in a class: students who joined with the code, plus the Google Classroom roster (even before they sign in). */
 function classStudents_(cfg, sum, cid) {
-  var removed = cfg.removed[cid] || [];
-  return Object.keys(sum.students).filter(function (email) {
-    return sum.students[email].classes.indexOf(cid) >= 0 && removed.indexOf(email) < 0;
-  }).map(function (email) {
+  var removed = cfg.removed[cid] || [], roster = rosterOf_(cfg, cid), emails = {};
+  Object.keys(sum.students).forEach(function (email) { if (sum.students[email].classes.indexOf(cid) >= 0) emails[email] = 1; });
+  Object.keys(roster).forEach(function (email) { emails[email] = 1; });
+  return Object.keys(emails).filter(function (email) { return removed.indexOf(email) < 0; }).map(function (email) {
     var s = sum.students[email];
-    return { email: email, name: s.name || email, xp: s.xp, level: levelInfo_(s.xp).level, avatar: s.avatar || null,
-             badges: s.badges, lessons: s.lessons };
+    if (!s) return { email: email, name: roster[email] || email, xp: 0, level: 1, avatar: null, badges: [], lessons: {}, not_yet: true };
+    return { email: email, name: roster[email] || s.name || email, xp: s.xp, level: levelInfo_(s.xp).level, avatar: s.avatar || null,
+             badges: s.badges, lessons: s.lessons, rostered: email in roster };
   }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
 }
 
@@ -164,7 +167,7 @@ function teacherHome() {
   var cfg = teacher_(), sum = summary_();
   return { classes: Object.keys(cfg.classes).map(function (cid) {
     var c = cfg.classes[cid];
-    return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length,
+    return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length, classroom: c.classroom || null,
              assignments: cfg.assignments.filter(function (a) { return a.class_id === cid; }).length };
   }) };
 }
@@ -180,7 +183,7 @@ function gradebook(cid) {
   var grid = {};
   students.forEach(function (s) { cols.forEach(function (a) { grid[s.email + '|' + a.id] = gradebookCell_(a, s); }); });
   return { cls: c, cols: cols, students: students.map(function (s) {
-             return { email: s.email, name: s.name, xp: s.xp, level: s.level, avatar: s.avatar };
+             return { email: s.email, name: s.name, xp: s.xp, level: s.level, avatar: s.avatar, not_yet: !!s.not_yet };
            }), grid: grid,
            assigned: cols.map(function (a) { return a.lesson_id; }), url: ScriptApp.getService().getUrl() };
 }
@@ -189,6 +192,7 @@ function studentDetail(cid, email) {
   var cfg = teacher_();
   if (!cfg.classes[cid]) throw new Error('No such class.');
   var rec = loadStudentFresh_(email);
+  if (!rec && rosterOf_(cfg, cid)[email]) rec = newStudent_(email), rec.name = rosterOf_(cfg, cid)[email];
   if (!rec) throw new Error('No work saved for that student yet.');
   var assigned = {};
   cfg.assignments.forEach(function (a) { if (a.class_id === cid) assigned[a.lesson_id] = 1; });

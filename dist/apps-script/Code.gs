@@ -69,12 +69,13 @@ function writeNamed_(key, value) {
 // ---------------------------------------------------------------- teacher settings
 // Only the teacher writes this file: classes, assignments, videos, feedback and bonus XP.
 function emptyConfig_() {
-  return { v: 1, classes: {}, assignments: [], videos: {}, feedback: {}, bonuses: {}, picks: {}, removed: {}, next_id: 1 };
+  return { v: 1, classes: {}, assignments: [], videos: {}, feedback: {}, bonuses: {}, picks: {}, removed: {}, rosters: {}, next_id: 1 };
 }
 function config_() {
   var c = CacheService.getScriptCache().get('config');
-  if (c) return JSON.parse(c);
+  if (c) { var cached = JSON.parse(c); cached.rosters = cached.rosters || {}; return cached; }
   var cfg = readNamed_('config', null) || emptyConfig_();
+  cfg.rosters = cfg.rosters || {};              // added with the Google Classroom import
   cacheConfig_(cfg);
   return cfg;
 }
@@ -89,9 +90,11 @@ function saveConfig_(cfg) {
 }
 function nextId_(cfg) { var id = cfg.next_id || 1; cfg.next_id = id + 1; return id; }
 
-/** Classes a student belongs to: joined, and not removed by the teacher. */
+/** Classes a student belongs to: joined with a code or on a Google Classroom roster, and not removed by the teacher. */
 function studentClassIds_(rec, cfg) {
-  return (rec.classes || []).filter(function (cid) {
+  var ids = (rec.classes || []).slice();
+  Object.keys(cfg.rosters || {}).forEach(function (cid) { if (cfg.rosters[cid][rec.email] && ids.indexOf(cid) < 0) ids.push(cid); });
+  return ids.filter(function (cid) {
     return cfg.classes[cid] && (cfg.removed[cid] || []).indexOf(rec.email) < 0;
   });
 }
@@ -769,6 +772,7 @@ function deleteClass(cid, typedName) {
   if (!c) throw new Error('No such class.');
   if (typedName !== c.name) throw new Error('Type the class name exactly to delete it.');
   delete cfg.classes[cid];
+  if (cfg.rosters) delete cfg.rosters[cid];
   cfg.assignments = cfg.assignments.filter(function (a) { return a.class_id !== cid; });
   saveConfig_(cfg);
   return { ok: true };
@@ -864,14 +868,16 @@ function saveVideos(map) {
 }
 
 // ---------------------------------------------------------------- gradebook
+/** Everyone in a class: students who joined with the code, plus the Google Classroom roster (even before they sign in). */
 function classStudents_(cfg, sum, cid) {
-  var removed = cfg.removed[cid] || [];
-  return Object.keys(sum.students).filter(function (email) {
-    return sum.students[email].classes.indexOf(cid) >= 0 && removed.indexOf(email) < 0;
-  }).map(function (email) {
+  var removed = cfg.removed[cid] || [], roster = rosterOf_(cfg, cid), emails = {};
+  Object.keys(sum.students).forEach(function (email) { if (sum.students[email].classes.indexOf(cid) >= 0) emails[email] = 1; });
+  Object.keys(roster).forEach(function (email) { emails[email] = 1; });
+  return Object.keys(emails).filter(function (email) { return removed.indexOf(email) < 0; }).map(function (email) {
     var s = sum.students[email];
-    return { email: email, name: s.name || email, xp: s.xp, level: levelInfo_(s.xp).level, avatar: s.avatar || null,
-             badges: s.badges, lessons: s.lessons };
+    if (!s) return { email: email, name: roster[email] || email, xp: 0, level: 1, avatar: null, badges: [], lessons: {}, not_yet: true };
+    return { email: email, name: roster[email] || s.name || email, xp: s.xp, level: levelInfo_(s.xp).level, avatar: s.avatar || null,
+             badges: s.badges, lessons: s.lessons, rostered: email in roster };
   }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
 }
 
@@ -895,7 +901,7 @@ function teacherHome() {
   var cfg = teacher_(), sum = summary_();
   return { classes: Object.keys(cfg.classes).map(function (cid) {
     var c = cfg.classes[cid];
-    return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length,
+    return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length, classroom: c.classroom || null,
              assignments: cfg.assignments.filter(function (a) { return a.class_id === cid; }).length };
   }) };
 }
@@ -911,7 +917,7 @@ function gradebook(cid) {
   var grid = {};
   students.forEach(function (s) { cols.forEach(function (a) { grid[s.email + '|' + a.id] = gradebookCell_(a, s); }); });
   return { cls: c, cols: cols, students: students.map(function (s) {
-             return { email: s.email, name: s.name, xp: s.xp, level: s.level, avatar: s.avatar };
+             return { email: s.email, name: s.name, xp: s.xp, level: s.level, avatar: s.avatar, not_yet: !!s.not_yet };
            }), grid: grid,
            assigned: cols.map(function (a) { return a.lesson_id; }), url: ScriptApp.getService().getUrl() };
 }
@@ -920,6 +926,7 @@ function studentDetail(cid, email) {
   var cfg = teacher_();
   if (!cfg.classes[cid]) throw new Error('No such class.');
   var rec = loadStudentFresh_(email);
+  if (!rec && rosterOf_(cfg, cid)[email]) rec = newStudent_(email), rec.name = rosterOf_(cfg, cid)[email];
   if (!rec) throw new Error('No work saved for that student yet.');
   var assigned = {};
   cfg.assignments.forEach(function (a) { if (a.class_id === cid) assigned[a.lesson_id] = 1; });
@@ -962,6 +969,133 @@ function classroomPackage(cid, how, lessonIds) {
            assignments: cols.map(function (a) { return { key: a.lesson_id, title: a.number + '. ' + a.title, due: a.due || '' }; }) };
 }
 
+// ---------------------------------------------------------------- Google Classroom: import classes and rosters
+// Uses the Google Classroom advanced service (appsscript.json "dependencies"), read-only, as the teacher.
+// A linked class keeps its roster in config.json (cfg.rosters[cid] = { email: name }), so students on it
+// are in the class the first time they open Maker Lab: no join code, and their Classroom name is used.
+
+function classroomApi_() {
+  if (typeof Classroom === 'undefined' || !Classroom.Courses) {
+    throw new Error('The Google Classroom service is not turned on. Replace appsscript.json with the one in INSTALL.md, ' +
+      'save, then run checkInstall once to allow access.');
+  }
+  return Classroom;
+}
+
+function classroomCoursesRaw_() {
+  var api = classroomApi_(), out = [], token = null;
+  do {
+    var r = api.Courses.list({ teacherId: 'me', courseStates: ['ACTIVE'], pageSize: 100, pageToken: token || undefined });
+    (r.courses || []).forEach(function (c) { out.push(c); });
+    token = r.nextPageToken;
+  } while (token);
+  return out;
+}
+
+/** { students: { email: name }, missing: number of students whose email Classroom didn't share } */
+function classroomRoster_(courseId) {
+  var api = classroomApi_(), students = {}, missing = 0, token = null;
+  do {
+    var r = api.Courses.Students.list(courseId, { pageSize: 100, pageToken: token || undefined });
+    (r.students || []).forEach(function (s) {
+      var p = s.profile || {}, email = String(p.emailAddress || '').trim().toLowerCase();
+      var name = String((p.name && (p.name.fullName || [p.name.givenName, p.name.familyName].join(' '))) || '').trim();
+      if (email) students[email] = name.slice(0, 40) || email;
+      else missing++;
+    });
+    token = r.nextPageToken;
+  } while (token);
+  return { students: students, missing: missing };
+}
+
+function rosterOf_(cfg, cid) { return (cfg.rosters || {})[cid] || {}; }
+
+/** The import page: your active Classroom courses and which Maker Lab class each is linked to. */
+function classroomCourses() {
+  var cfg = teacher_(), linked = {};
+  Object.keys(cfg.classes).forEach(function (cid) {
+    var g = cfg.classes[cid].classroom;
+    if (g) linked[g.id] = cid;
+  });
+  var courses = classroomCoursesRaw_().map(function (c) {
+    return { id: c.id, name: c.name || 'Untitled class', section: c.section || '', link: c.alternateLink || '', linked: linked[c.id] || null };
+  });
+  return { courses: courses, classes: Object.keys(cfg.classes).map(function (cid) { return { id: cid, name: cfg.classes[cid].name }; }) };
+}
+
+/** choices: [{ course_id, target: 'new' | a class id }]. Makes or links each class, then copies its roster. */
+function importClassroom(choices) {
+  var cfg = teacher_(), byId = {}, results = [];
+  classroomCoursesRaw_().forEach(function (c) { byId[c.id] = c; });
+  (choices || []).forEach(function (ch) {
+    var c = byId[ch && ch.course_id];
+    if (!c) return;
+    var cid = ch.target === 'new' ? null : String(ch.target || '');
+    if (cid && !cfg.classes[cid]) return;
+    Object.keys(cfg.classes).forEach(function (k) {   // a course links to one class at a time
+      var g = cfg.classes[k].classroom;
+      if (g && g.id === c.id && k !== cid) { delete cfg.classes[k].classroom; delete cfg.rosters[k]; }
+    });
+    if (!cid) {
+      cid = String(nextId_(cfg));
+      var name = (c.name + (c.section ? ' (' + c.section + ')' : '')).slice(0, 80);
+      cfg.classes[cid] = { id: cid, name: name, code: joinCode_(cfg), created_at: now_() };
+    }
+    cfg.classes[cid].classroom = { id: c.id, name: c.name || '', section: c.section || '', link: c.alternateLink || '' };
+    results.push(syncInto_(cfg, cid));
+  });
+  saveConfig_(cfg);
+  return { classes: results };
+}
+
+function syncInto_(cfg, cid) {
+  var cls = cfg.classes[cid], before = rosterOf_(cfg, cid), r = classroomRoster_(cls.classroom.id);
+  cfg.rosters = cfg.rosters || {};
+  cfg.rosters[cid] = r.students;
+  cls.classroom.synced_at = now_();
+  cls.classroom.missing = r.missing;
+  var added = Object.keys(r.students).filter(function (e) { return !(e in before); }).length;
+  var left = Object.keys(before).filter(function (e) { return !(e in r.students); }).length;
+  return { id: cid, name: cls.name, students: Object.keys(r.students).length, added: added, left: left, missing: r.missing };
+}
+
+/** Copies the class's roster from Google Classroom again (new students in, students who left out). */
+function syncClassroom(cid) {
+  var cfg = teacher_(), cls = cfg.classes[cid];
+  if (!cls) throw new Error('No such class.');
+  if (!cls.classroom) throw new Error('This class is not linked to Google Classroom.');
+  var out = syncInto_(cfg, cid);
+  saveConfig_(cfg);
+  return out;
+}
+
+/** Re-copies every linked class's roster. */
+function syncAllClassroom() {
+  var cfg = teacher_(), out = [];
+  Object.keys(cfg.classes).forEach(function (cid) {
+    if (!cfg.classes[cid].classroom) return;
+    try { out.push(syncInto_(cfg, cid)); } catch (e) { out.push({ id: cid, name: cfg.classes[cid].name, error: e.message }); }
+  });
+  saveConfig_(cfg);
+  return { classes: out };
+}
+
+function unlinkClassroom(cid) {
+  var cfg = teacher_(), cls = cfg.classes[cid];
+  if (!cls) throw new Error('No such class.');
+  delete cls.classroom;
+  if (cfg.rosters) delete cfg.rosters[cid];
+  saveConfig_(cfg);
+  return { ok: true };
+}
+
+/** The Classroom name for a student, if any linked class has them on its roster. */
+function rosterName_(cfg, email) {
+  var rosters = cfg.rosters || {};
+  for (var cid in rosters) if (cfg.classes[cid] && rosters[cid][email]) return rosters[cid][email];
+  return '';
+}
+
 // ---------------------------------------------------------------- pages
 /** Lesson pages are stored gzip-compressed (PAGES_GZ, made by the build); unpack one when needed. */
 var PAGE_CACHE_ = {};
@@ -996,6 +1130,12 @@ function doGet(e) {
 
 function studentPage_(me, path) {
   var rec = loadStudent_(me.email), cfg = config_();
+  var listed = rosterName_(cfg, me.email);
+  if (listed && (!rec || !rec.name)) {          // on a Google Classroom roster: no join page, use the Classroom name
+    rec = rec || newStudent_(me.email);
+    rec.name = listed;
+    saveStudent_(rec);
+  }
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
   var rewards = syncRewards_(rec, cfg);
   if (rewards.xp_gained) saveStudent_(rec);
@@ -1015,6 +1155,7 @@ function teacherPage_(path) {
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, teacherHome()) };
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
+  if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/teacher/standards') return { name: 'static', title: 'Standards', html: page_('_standards').html, data: base };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { units: catalogUnits_(), urls: cfg.videos }) };
@@ -1027,6 +1168,10 @@ function teacherPage_(path) {
   if (path === '/editor') return { name: 'playground', title: 'Editor', editor: true, html: page_('_playground').html, data: base };
   if ((m = /^\/lessons\/([\w-]+)$/.exec(path)) && PAGES_GZ[m[1]]) return lessonPage_(m[1], null, cfg, base, true);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
+}
+
+function classroomImportData_() {
+  try { return classroomCourses(); } catch (e) { return { courses: [], classes: [], problem: e.message }; }
 }
 
 function merge_(a, b) {
@@ -1148,6 +1293,8 @@ function checkInstall() {
     try { ok(firmwareInfo(v).parts > 0, 'micro:bit firmware ' + v + ' is saved'); } catch (e) { ok(false, 'firmware ' + v + ': ' + e.message); }
   });
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
+  try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
+  catch (e) { ok(false, 'Google Classroom: ' + e.message); }
   try { ok(ScriptApp.getService().isEnabled(), 'Web app is deployed: ' + ScriptApp.getService().getUrl()); } catch (e) { ok(false, 'Deployment: ' + e.message); }
   var report = lines.join('\n');
   Logger.log(report);
@@ -1213,6 +1360,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "f698e74f8f";
-var BUILD_EXPECT = {"Assets": "7739bf9359", "Data": "22978377cf", "Pages1": "78e15dbaa8"};
+var BUILD_ID = "b6e73df4f4";
+var BUILD_EXPECT = {"Assets": "2f45bfb438", "Data": "22978377cf", "Pages1": "78e15dbaa8"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];

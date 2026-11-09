@@ -6,6 +6,12 @@ const [dist, port] = [process.argv[2], Number(process.argv[3] || 5055)];
 const base = `http://localhost:${port}/exec`;
 const w = makeWorld(dist, { url: base });
 w.call(w.owner, 'setup');
+// a pretend Google Classroom to import from
+const kid = (email, fullName) => ({ userId: email, profile: { emailAddress: email, name: { fullName } } });
+w.state.classroom = {
+  courses: [{ id: 'gc1', name: 'Makers', section: 'Period 3', courseState: 'ACTIVE' }, { id: 'gc2', name: 'CS 8', section: 'Block B', courseState: 'ACTIVE' }],
+  students: { gc1: [kid('sam@students.school.org', 'Sam King'), kid('lee@students.school.org', 'Lee Park')], gc2: [kid('ava@students.school.org', 'Ava Reyes')] },
+};
 
 const RUN = `<script>window.google={script:{run:(function(){
   function make(ok,no){return new Proxy({}, {get:function(_,name){

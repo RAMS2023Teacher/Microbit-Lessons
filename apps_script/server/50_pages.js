@@ -32,6 +32,12 @@ function doGet(e) {
 
 function studentPage_(me, path) {
   var rec = loadStudent_(me.email), cfg = config_();
+  var listed = rosterName_(cfg, me.email);
+  if (listed && (!rec || !rec.name)) {          // on a Google Classroom roster: no join page, use the Classroom name
+    rec = rec || newStudent_(me.email);
+    rec.name = listed;
+    saveStudent_(rec);
+  }
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
   var rewards = syncRewards_(rec, cfg);
   if (rewards.xp_gained) saveStudent_(rec);
@@ -51,6 +57,7 @@ function teacherPage_(path) {
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, teacherHome()) };
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
+  if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/teacher/standards') return { name: 'static', title: 'Standards', html: page_('_standards').html, data: base };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { units: catalogUnits_(), urls: cfg.videos }) };
@@ -63,6 +70,10 @@ function teacherPage_(path) {
   if (path === '/editor') return { name: 'playground', title: 'Editor', editor: true, html: page_('_playground').html, data: base };
   if ((m = /^\/lessons\/([\w-]+)$/.exec(path)) && PAGES_GZ[m[1]]) return lessonPage_(m[1], null, cfg, base, true);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
+}
+
+function classroomImportData_() {
+  try { return classroomCourses(); } catch (e) { return { courses: [], classes: [], problem: e.message }; }
 }
 
 function merge_(a, b) {
@@ -184,6 +195,8 @@ function checkInstall() {
     try { ok(firmwareInfo(v).parts > 0, 'micro:bit firmware ' + v + ' is saved'); } catch (e) { ok(false, 'firmware ' + v + ': ' + e.message); }
   });
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
+  try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
+  catch (e) { ok(false, 'Google Classroom: ' + e.message); }
   try { ok(ScriptApp.getService().isEnabled(), 'Web app is deployed: ' + ScriptApp.getService().getUrl()); } catch (e) { ok(false, 'Deployment: ' + e.message); }
   var report = lines.join('\n');
   Logger.log(report);

@@ -5,8 +5,8 @@ const { makeWorld } = require('./fake_google');
 const dist = process.argv[2];
 const w = makeWorld(dist);
 /** A page's HTML plus its decoded data and page setup, the way the browser's loader sees it. */
-function pageView(who, p) {
-  const html = w.page(who, p).getContent();
+function pageView(who, p, world) {
+  const html = (world || w).page(who, p).getContent();
   const m = /<div id="ml-code" hidden>([^<]*)<\/div>/.exec(html);
   if (!m) return html;
   const setup = Buffer.from(m[1].split('.')[0].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
@@ -113,8 +113,65 @@ w.advance(120000);
 assert.strictEqual(w.call(T, 'gradebook', [cls.id]).students.length, 1);
 assert.match(pageView(S2), /"page":"join"/);
 
+// Google Classroom: import a class and its roster; rostered students skip the join page
+const prof = (email, fullName) => ({ userId: email, profile: { emailAddress: email, name: { fullName } } });
+w.state.classroom = {
+  courses: [{ id: 'gc1', name: 'Makers', section: 'Period 3', courseState: 'ACTIVE', alternateLink: 'https://classroom.google.com/c/gc1' },
+            { id: 'gc2', name: 'CS 8', section: '', courseState: 'ACTIVE' }, { id: 'gc3', name: 'Old class', courseState: 'ARCHIVED' }],
+  students: { gc1: [prof('Lee@Students.school.org', 'Lee Park'), prof('max@students.school.org', 'Max Diaz'), { userId: 'x', profile: {} }],
+              gc2: [prof(S, 'Samuel King')] },
+};
+const L1 = 'lee@students.school.org';
+let gc = w.call(T, 'classroomCourses');
+assert.deepStrictEqual(gc.courses.map((c) => c.id), ['gc1', 'gc2']);          // archived classes are left out
+assert.throws(() => w.call(S, 'classroomCourses'), /Only the teacher/);
+let imp = w.call(T, 'importClassroom', [[{ course_id: 'gc1', target: 'new' }, { course_id: 'gc2', target: cls.id }, { course_id: 'nope', target: 'new' }]]);
+assert.strictEqual(imp.classes.length, 2);
+assert.deepStrictEqual([imp.classes[0].students, imp.classes[0].missing], [2, 1]);
+const gcCid = imp.classes[0].id;
+assert.strictEqual(w.call(T, 'teacherHome').classes.find((c) => c.id === gcCid).name, 'Makers (Period 3)');
+assert.strictEqual(w.call(T, 'classroomCourses').courses.find((c) => c.id === 'gc2').linked, cls.id);
+gb = w.call(T, 'gradebook', [gcCid]);                       // on the roster before they ever sign in
+assert.deepStrictEqual(gb.students.map((s) => [s.name, s.not_yet]), [['Lee Park', true], ['Max Diaz', true]]);
+assert.ok(pageView(T, `/teacher/classes/${gcCid}/students/${encodeURIComponent(L1)}`).includes('"name":"Lee Park"'));
+const leePage = pageView(L1);
+assert.match(leePage, /"page":"dashboard"/);                 // no join page
+assert.match(leePage, /"name":"Lee Park"/);
+assert.match(leePage, /Makers \(Period 3\)/);
+w.call(T, 'assignLessons', [gcCid, ['blink-external-led'], '2030-01-01', '']);
+assert.strictEqual(api(L1, 'blink-external-led', 'save', { warmup_answer: 'a light' }).status, 200);
+w.advance(120000);
+gb = w.call(T, 'gradebook', [gcCid]);
+const lee = gb.students.find((s) => s.email === L1);
+assert.ok(!lee.not_yet && gb.grid[L1 + '|' + gb.cols[0].id].pct > 0);
+assert.ok(w.call(T, 'gradebook', [cls.id]).students.some((s) => s.email === S && s.name === 'Samuel King'));  // Classroom name wins
+// roster changes: Max leaves, Kai arrives
+w.state.classroom.students.gc1 = [prof(L1, 'Lee Park'), prof('kai@students.school.org', 'Kai Wu')];
+let sync = w.call(T, 'syncClassroom', [gcCid]);
+assert.deepStrictEqual([sync.students, sync.added, sync.left, sync.missing], [2, 1, 1, 0]);
+assert.deepStrictEqual(w.call(T, 'gradebook', [gcCid]).students.map((s) => s.name).sort(), ['Kai Wu', 'Lee Park']);
+assert.match(pageView('max@students.school.org'), /"page":"join"/);
+assert.strictEqual(w.call(T, 'syncAllClassroom').classes.length, 2);
+// a student removed by the teacher stays out after the roster is updated
+w.call(T, 'removeStudent', [gcCid, 'kai@students.school.org']);
+w.call(T, 'syncClassroom', [gcCid]);
+assert.ok(!w.call(T, 'gradebook', [gcCid]).students.some((s) => s.name === 'Kai Wu'));
+// linking a course to another class moves it; unlinking drops the roster but keeps work
+w.call(T, 'importClassroom', [[{ course_id: 'gc2', target: gcCid }]]);
+assert.ok(!w.call(T, 'teacherHome').classes.find((c) => c.id === cls.id).classroom);
+w.call(T, 'unlinkClassroom', [gcCid]);
+assert.ok(!w.call(T, 'gradebook', [gcCid]).students.some((s) => s.email === L1));
+assert.match(pageView(L1), /"page":"join"/);
+assert.match(pageView(T, '/teacher/google-import'), /"page":"gc-import"/);
+// without the Classroom service turned on, the import page explains what to do
+const noGc = makeWorld(dist, { noClassroom: true });
+noGc.call(noGc.owner, 'setup');
+assert.match(pageView(noGc.owner, '/teacher/google-import', noGc), /"page":"gc-import".*Classroom service is not turned on/s);
+assert.throws(() => noGc.call(noGc.owner, 'classroomCourses'), /Classroom service is not turned on/);
+assert.match(noGc.call(noGc.owner, 'checkInstall'), /❌ Google Classroom/);
+
 // every page renders for the teacher and the student
-for (const p of ['/', '/lessons', '/map', '/editor', '/teacher/standards', '/teacher/videos', `/teacher/classes/${cls.id}`,
+for (const p of ['/', '/lessons', '/map', '/editor', '/teacher/standards', '/teacher/videos', '/teacher/google-import', `/teacher/classes/${cls.id}`,
   `/teacher/classes/${cls.id}/students/${encodeURIComponent(S)}`, `/teacher/classes/${cls.id}/google-classroom`, '/lessons/radio-remote']) {
   const html = pageView(T, p);
   assert.ok(!/"page":"error"/.test(html), 'teacher page failed: ' + p + ' ' + (html.match(/"message":"[^"]*"/) || [''])[0]);

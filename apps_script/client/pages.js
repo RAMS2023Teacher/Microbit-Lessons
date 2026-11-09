@@ -172,15 +172,61 @@
     var h = ['<h1>My classes</h1><div class="class-cards">'];
     d.classes.forEach(function (c) {
       h.push('<a class="card class-card" href="/teacher/classes/' + E(c.id) + '"><h2>' + E(c.name) + '</h2><div class="join-code small">Code <b>' + E(c.code) +
-        '</b></div><p class="muted">' + c.students + ' students · ' + c.assignments + ' assignments</p></a>');
+        '</b></div><p class="muted">' + c.students + ' students · ' + c.assignments + ' assignments' + (c.classroom ? '<br>🔗 Google Classroom' : '') + '</p></a>');
     });
-    h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><button class="btn" id="new-go" type="button">Create</button></div></div>' +
-      '<section class="card tip"><h2>Getting started</h2><ol><li>Create a class. Each class gets a 6-letter <b>join code</b>.</li>' +
-      '<li>Share this page\'s web address with students. The first time they open it, they type the code and their name. No passwords.</li>' +
+    var linked = d.classes.filter(function (c) { return c.classroom; }).length;
+    h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><button class="btn" id="new-go" type="button">Create</button></div>' +
+      '<div class="card class-card new"><h2>🔗 Google Classroom</h2><p class="muted small">Bring in your Classroom classes and their students. No join codes needed.</p>' +
+      '<a class="btn" href="/teacher/google-import">Import classes</a>' + (linked ? ' <button class="btn ghost small" id="gc-sync-all" type="button">Update all rosters</button>' : '') + '</div></div>' +
+      '<section class="card tip"><h2>Getting started</h2><ol><li><b>Import classes</b> from Google Classroom, or create a class. Each class also gets a 6-letter <b>join code</b>.</li>' +
+      '<li>Share this page\'s web address with students. Students on an imported roster are already in. Anyone else types the code and their name once. No passwords.</li>' +
       '<li>Assign lessons with due dates. The gradebook shows who\'s done what.</li><li>Open any lesson to see the <b>teacher answer key</b>. Add videos on the <a href="/teacher/videos">Videos</a> page.</li></ol></section>');
     main.innerHTML = h.join('');
     document.getElementById('new-go').addEventListener('click', function () {
       act(this, 'createClass', [document.getElementById('new-class').value], function (c) { ML.go('/teacher/classes/' + c.id); });
+    });
+    var all = document.getElementById('gc-sync-all');
+    if (all) all.addEventListener('click', function () {
+      act(this, 'syncAllClassroom', [], function (r) { alert(syncReport(r.classes)); window.top.location.reload(); });
+    });
+  };
+
+  var syncReport = function (list) {
+    return list.map(function (c) {
+      if (c.error) return c.name + ': ' + c.error;
+      return c.name + ': ' + c.students + ' students' + (c.added ? ', ' + c.added + ' new' : '') + (c.left ? ', ' + c.left + ' left' : '') +
+        (c.missing ? '. ' + c.missing + ' had no email shared by Classroom (they can still join with the code)' : '');
+    }).join('\n') || 'Nothing to update.';
+  };
+
+  pages['gc-import'] = function () {
+    var h = ['<a class="muted small" href="/">← My classes</a><h1>Import from Google Classroom</h1>'];
+    if (d.problem) {
+      h.push('<section class="card"><p class="bad">' + E(d.problem) + '</p><p class="muted small">After fixing it, deploy a new version and reload this page.</p></section>');
+      main.innerHTML = h.join('');
+      return;
+    }
+    if (!d.courses.length) {
+      h.push('<section class="card"><p>No active Google Classroom classes where you are a teacher.</p></section>');
+      main.innerHTML = h.join('');
+      return;
+    }
+    h.push('<section class="card"><p class="muted">Pick what each Classroom class becomes in Maker Lab. Students on the roster are in the class ' +
+      'the first time they open Maker Lab, with the name from Classroom. Nothing is changed in Google Classroom.</p>' +
+      '<div class="table-scroll"><table class="gradebook"><thead><tr><th>Google Classroom class</th><th>In Maker Lab</th></tr></thead><tbody>');
+    d.courses.forEach(function (c) {
+      var opts = '<option value="">Skip</option><option value="new"' + (c.linked ? '' : '') + '>New Maker Lab class</option>';
+      d.classes.forEach(function (k) { opts += '<option value="' + E(k.id) + '"' + (c.linked === k.id ? ' selected' : '') + '>Link to: ' + E(k.name) + '</option>'; });
+      h.push('<tr><th class="who"><span><b>' + E(c.name) + '</b>' + (c.section ? '<small>' + E(c.section) + '</small>' : '') + '</span></th>' +
+        '<td><select class="gc-pick" data-id="' + E(c.id) + '">' + opts + '</select>' + (c.linked ? ' <small class="muted">already linked</small>' : '') + '</td></tr>');
+    });
+    h.push('</tbody></table></div><button class="btn" id="gc-go" type="button">Import</button></section>');
+    main.innerHTML = h.join('');
+    document.getElementById('gc-go').addEventListener('click', function () {
+      var choices = Array.prototype.map.call(document.querySelectorAll('.gc-pick'), function (x) { return { course_id: x.dataset.id, target: x.value }; })
+        .filter(function (c) { return c.target; });
+      if (!choices.length) { flash('Pick at least one class to import.', 'error'); return; }
+      act(this, 'importClassroom', [choices], function (r) { alert(syncReport(r.classes)); ML.go('/'); });
     });
   };
 
@@ -188,8 +234,16 @@
     main.className = 'container wide';
     var c = d.cls, h = [];
     h.push('<div class="page-head"><div><a class="muted small" href="/">← My classes</a><h1>' + E(c.name) + '</h1></div>' +
-      '<div class="row"><a class="btn ghost" href="/teacher/classes/' + E(c.id) + '/google-classroom">Google Classroom</a></div>' +
-      '<div class="join-code">Join code <b>' + E(c.code) + '</b><small>' + E(d.url) + '</small></div></div><section class="card"><h2>Gradebook</h2>');
+      '<div class="row"><a class="btn ghost" href="/teacher/classes/' + E(c.id) + '/google-classroom">Google Classroom grades</a></div>' +
+      '<div class="join-code">Join code <b>' + E(c.code) + '</b><small>' + E(d.url) + '</small></div></div>');
+    if (c.classroom) {
+      h.push('<section class="card tip gc-link"><b>🔗 Linked to Google Classroom:</b> ' + E(c.classroom.name) + (c.classroom.section ? ' (' + E(c.classroom.section) + ')' : '') +
+        ' <small class="muted">roster updated ' + E(shortDate(c.classroom.synced_at)) + '</small> ' +
+        '<button class="btn small" id="gc-sync" type="button">Update roster</button> <button class="linklike small" id="gc-unlink" type="button">unlink</button>' +
+        (c.classroom.missing ? '<p class="small bad">' + c.classroom.missing + ' student(s) had no email shared by Classroom. They can join with the code above.</p>' : '') +
+        '<p class="muted small">Students on the roster just open the web address above, signed in to their school account. No code needed.</p></section>');
+    }
+    h.push('<section class="card"><h2>Gradebook</h2>');
     if (!d.students.length) h.push('<p class="muted">No students yet. Share the web address above and the code <b>' + E(c.code) + '</b>.</p>');
     else if (!d.cols.length) h.push('<p class="muted">No assignments yet — assign lessons below.</p>');
     else {
@@ -198,8 +252,8 @@
       h.push('</tr></thead><tbody>');
       d.students.forEach(function (s) {
         var link = '/teacher/classes/' + E(c.id) + '/students/' + encodeURIComponent(s.email);
-        h.push('<tr><th class="who"><span data-avatar="' + A(s.avatar || {}) + '" data-size="34"></span><span><a href="' + link + '">' + E(s.name) + '</a><small>Lv ' +
-          s.level + ' · ' + (s.xp || 0) + ' XP</small></span></th>');
+        h.push('<tr' + (s.not_yet ? ' class="muted"' : '') + '><th class="who"><span data-avatar="' + A(s.avatar || {}) + '" data-size="34"></span><span><a href="' + link + '">' + E(s.name) + '</a><small>' +
+          (s.not_yet ? 'hasn\'t opened Maker Lab yet' : 'Lv ' + s.level + ' · ' + (s.xp || 0) + ' XP') + '</small></span></th>');
         d.cols.forEach(function (a) {
           var cell = d.grid[s.email + '|' + a.id];
           if (cell.status === 'other-branch') { h.push('<td class="cell other-branch" title="This student didn\'t pick this branch">—</td>'); return; }
@@ -239,7 +293,7 @@
     h.push('</section><section class="card"><h2>Roster (' + d.students.length + ')</h2><ul class="roster plain">');
     if (d.students.length) d.students.forEach(function (s) {
       h.push('<li><span data-avatar="' + A(s.avatar || {}) + '" data-size="26"></span> <a href="/teacher/classes/' + E(c.id) + '/students/' + encodeURIComponent(s.email) + '">' +
-        E(s.name) + '</a> <small class="muted">' + E(s.email) + ' · Lv ' + s.level + '</small></li>');
+        E(s.name) + '</a> <small class="muted">' + E(s.email) + (s.not_yet ? ' · not signed in yet' : ' · Lv ' + s.level) + '</small></li>');
     });
     else h.push('<li class="muted">Nobody yet.</li>');
     h.push('</ul><details class="danger-zone"><summary>Delete this class</summary><p class="small">Type <b>' + E(c.name) + '</b> to confirm. Student work is kept.</p>' +
@@ -253,6 +307,10 @@
     });
     document.querySelectorAll('.un-assign').forEach(function (b) {
       b.addEventListener('click', function () { if (confirm('Remove this assignment? Student work is kept.')) act(b, 'updateAssignment', [b.dataset.id, '', '', true]); });
+    });
+    if ($('gc-sync')) $('gc-sync').addEventListener('click', function () { act(this, 'syncClassroom', [c.id], function (r) { alert(syncReport([r])); window.top.location.reload(); }); });
+    if ($('gc-unlink')) $('gc-unlink').addEventListener('click', function () {
+      if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
     $('del-go').addEventListener('click', function () { act(this, 'deleteClass', [c.id, $('del-name').value], function () { ML.go('/'); }); });
   };

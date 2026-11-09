@@ -4,7 +4,7 @@ The same site, run as a Google Apps Script web app in the teacher's school accou
 no passwords, and student work stays in the teacher's Google Drive.
 
 **To install or update it, follow [dist/apps-script/INSTALL.md](../dist/apps-script/INSTALL.md).**
-You paste 4 Script files into a project, run `setup` once, and deploy.
+You paste 4 Script files and the `appsscript.json` manifest into a project, run `setup` once, and deploy.
 
 ## How it works for students and teachers
 
@@ -18,6 +18,9 @@ You paste 4 Script files into a project, run `setup` once, and deploy.
   compared with up to 20 seconds, or failures, with one shared Sheet).
 * **Gradebook:** reads a summary that catches up with new work within about a minute.
 * **Bonus XP and Teacher's Pick:** show up the next time the student opens Maker Lab.
+* **Google Classroom classes and students:** **My classes → Import classes** copies your active Classroom classes
+  and their rosters (read-only). Students on a roster are in the class the first time they open Maker Lab, with
+  their Classroom name and no join code. **Update roster** picks up students who joined or left.
 * **Google Classroom grades:** a class's **Google Classroom** page copies the same grades package as the
   Flask site, for the existing sender (`app/static/apps-script/maker-lab-classroom.gs`).
 

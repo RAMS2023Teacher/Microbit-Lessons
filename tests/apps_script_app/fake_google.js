@@ -12,7 +12,7 @@ function stripLikeAppsScript(html) {
 function makeWorld(dist, opts) {
   opts = opts || {};
   const owner = opts.owner || 'teacher@school.org';
-  const state = { user: owner, files: {}, folders: {}, props: {}, cache: {}, nextId: 1, clock: Date.now() };
+  const state = { user: owner, files: {}, folders: {}, props: {}, cache: {}, nextId: 1, clock: Date.now(), classroom: { courses: [], students: {} } };
   const newId = (p) => p + (state.nextId++);
   const tick = () => (state.clock += 1000);
 
@@ -105,6 +105,27 @@ function makeWorld(dist, opts) {
       return { getContentText: () => text };
     } },
     ScriptApp: { getService: () => ({ getUrl: () => opts.url || 'https://script.google.com/a/macros/school.org/s/TEST/exec', isEnabled: () => true }) },
+    // Google Classroom advanced service: state.classroom = { courses: [...], students: { courseId: [...] } }
+    Classroom: opts.noClassroom ? undefined : {
+      Courses: {
+        list: (o) => {
+          if (o.teacherId !== 'me') throw new Error('teacherId must be me');
+          const all = (state.classroom.courses || []).filter((c) => !o.courseStates || o.courseStates.includes(c.courseState || 'ACTIVE'));
+          const start = o.pageToken ? Number(o.pageToken) : 0, size = Math.min(o.pageSize || 30, 2);    // tiny pages, so paging is tested
+          const page = all.slice(start, start + size);
+          return start + size < all.length ? { courses: page, nextPageToken: String(start + size) } : { courses: page };
+        },
+        Students: {
+          list: (courseId, o) => {
+            const all = (state.classroom.students || {})[courseId];
+            if (!all) throw new Error('Requested entity was not found.');
+            const start = o && o.pageToken ? Number(o.pageToken) : 0, size = 2;
+            const page = all.slice(start, start + size);
+            return start + size < all.length ? { students: page, nextPageToken: String(start + size) } : { students: page };
+          },
+        },
+      },
+    },
     Logger: { log: () => {} },
     HtmlService: {
       createHtmlOutputFromFile: (name) => {

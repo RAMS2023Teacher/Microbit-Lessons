@@ -270,7 +270,18 @@ def main():
     print(f"Built {len(pages) - 2} lesson pages into {OUT}")
 
 
+OAUTH_SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/classroom.courses.readonly",
+    "https://www.googleapis.com/auth/classroom.rosters.readonly",
+    "https://www.googleapis.com/auth/classroom.profile.emails",
+]
+
+
 def install_md(files):
+    scopes = ",\n".join(f'    "{x}"' for x in OAUTH_SCOPES)
     gs = sorted(n for n in files if n.endswith(".gs"))
     rows = "\n".join(f"| `{n}` | Script (+ → Script), name it `{n[:-3]}` | {len(files[n]) // 1000} KB |" for n in gs)
     return f"""# Installing Maker Lab in Google Apps Script
@@ -305,9 +316,19 @@ change the lessons or the code in the repository and build again.
   "timeZone": "America/New_York",
   "runtimeVersion": "V8",
   "exceptionLogging": "STACKDRIVER",
-  "webapp": {{ "executeAs": "USER_DEPLOYING", "access": "DOMAIN" }}
+  "webapp": {{ "executeAs": "USER_DEPLOYING", "access": "DOMAIN" }},
+  "dependencies": {{
+    "enabledAdvancedServices": [{{ "userSymbol": "Classroom", "serviceId": "classroom", "version": "v1" }}]
+  }},
+  "oauthScopes": [
+{scopes}
+  ]
 }}
 ```
+
+   The `dependencies` part turns on Google Classroom (read-only) so you can import your classes and students.
+   The `oauthScopes` list is everything Maker Lab is allowed to do: your Drive files, downloading the firmware,
+   knowing who's signed in, and reading (never changing) your Classroom classes, rosters and students' emails.
 
 2. Open `Code.gs`, choose **setup** in the function menu at the top, and press **Run**. Allow access when Google
    asks ("Advanced → Go to micro:bit Maker Lab" if it warns you). This makes the **Maker Lab data** folder in your
@@ -323,10 +344,22 @@ Open that address yourself first: you're the teacher, so you'll see **My classes
 then share the address and the class's join code with students. Students sign in with their school Google
 account, type the code and their name once, and they're in.
 
+## Bring in your Google Classroom classes (optional)
+
+1. On **My classes**, click **Import classes** on the Google Classroom card.
+2. For each Classroom class, choose **New Maker Lab class**, **Link to:** an existing class, or **Skip**. Click **Import**.
+3. Students on those rosters just open the web address. They're already in the class with their Classroom name: no join code.
+4. When students are added to or leave a Classroom class, click **Update roster** on the class page (or
+   **Update all rosters** on My classes). The join code still works for anyone not on a roster.
+
+If the import page says the Classroom service isn't turned on, check `appsscript.json` matches step 2, save,
+and run **checkInstall** once so Google asks you to allow Classroom access.
+
 ## Updating later
 
 Paste the new files over the old ones, save, then **Deploy → Manage deployments → ✏️ → Version: New version →
 Deploy**. The web address stays the same and student work is kept (it lives in your Drive, not in the code).
+If `appsscript.json` changed, paste it too, then run **checkInstall** once so Google asks for any new access.
 
 ## Where the data lives
 

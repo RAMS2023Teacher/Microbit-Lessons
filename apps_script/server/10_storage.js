@@ -46,12 +46,13 @@ function writeNamed_(key, value) {
 // ---------------------------------------------------------------- teacher settings
 // Only the teacher writes this file: classes, assignments, videos, feedback and bonus XP.
 function emptyConfig_() {
-  return { v: 1, classes: {}, assignments: [], videos: {}, feedback: {}, bonuses: {}, picks: {}, removed: {}, next_id: 1 };
+  return { v: 1, classes: {}, assignments: [], videos: {}, feedback: {}, bonuses: {}, picks: {}, removed: {}, rosters: {}, next_id: 1 };
 }
 function config_() {
   var c = CacheService.getScriptCache().get('config');
-  if (c) return JSON.parse(c);
+  if (c) { var cached = JSON.parse(c); cached.rosters = cached.rosters || {}; return cached; }
   var cfg = readNamed_('config', null) || emptyConfig_();
+  cfg.rosters = cfg.rosters || {};              // added with the Google Classroom import
   cacheConfig_(cfg);
   return cfg;
 }
@@ -66,9 +67,11 @@ function saveConfig_(cfg) {
 }
 function nextId_(cfg) { var id = cfg.next_id || 1; cfg.next_id = id + 1; return id; }
 
-/** Classes a student belongs to: joined, and not removed by the teacher. */
+/** Classes a student belongs to: joined with a code or on a Google Classroom roster, and not removed by the teacher. */
 function studentClassIds_(rec, cfg) {
-  return (rec.classes || []).filter(function (cid) {
+  var ids = (rec.classes || []).slice();
+  Object.keys(cfg.rosters || {}).forEach(function (cid) { if (cfg.rosters[cid][rec.email] && ids.indexOf(cid) < 0) ids.push(cid); });
+  return ids.filter(function (cid) {
     return cfg.classes[cid] && (cfg.removed[cid] || []).indexOf(rec.email) < 0;
   });
 }
