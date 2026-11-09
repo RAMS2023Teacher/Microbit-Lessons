@@ -133,16 +133,17 @@ function saveStudent_(rec) {
 function summary_() {
   var s = readNamed_('summary', null) || { built_ms: 0, students: {} };
   if (Date.now() - (s.built_ms || 0) < SUMMARY_MAX_AGE_MS) return s;
-  var since = new Date((s.built_ms || 0) - 120000);       // overlap a little, Drive times are rounded
+  var since = (s.built_ms || 0) - 120000;       // overlap a little, Drive times are rounded
   var started = Date.now();
   var props = PropertiesService.getScriptProperties().getProperties();
   var byId = {};
   Object.keys(props).forEach(function (k) { if (k.indexOf('student:') === 0) byId[props[k]] = k.slice(8); });
-  var it = studentFolder_().searchFiles("modifiedDate > '" + Utilities.formatDate(since, 'UTC', "yyyy-MM-dd'T'HH:mm:ss") + "'");
+  // Walk the folder instead of using a Drive search query (real Drive rejected the query: "Invalid argument: q").
+  var it = studentFolder_().getFiles();
   while (it.hasNext()) {
     var f = it.next();
     var email = byId[f.getId()];
-    if (!email) continue;
+    if (!email || f.getLastUpdated().getTime() <= since) continue;
     try { s.students[email] = studentSummary_(JSON.parse(f.getBlob().getDataAsString())); } catch (e) { /* skip a bad file */ }
   }
   s.built_ms = started;
@@ -1120,10 +1121,10 @@ function escapeHtml_(s) {
 /** Every pasted Script file must be there, complete (its last line sets its stamp), and from the same build. */
 function installProblems_() {
   var out = [], stamps = typeof BUILD_STAMPS === 'undefined' ? {} : BUILD_STAMPS;
-  BUILD_FILES.forEach(function (name) {
-    var key = name.replace(/\.gs$/, ''), got = stamps[key];
+  Object.keys(BUILD_EXPECT).forEach(function (key) {
+    var got = stamps[key], name = key + '.gs';
     if (!got) out.push(name + ' is missing or was cut short while pasting. Add it as a Script file named "' + key + '" and paste all of it.');
-    else if (got !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
+    else if (got !== BUILD_EXPECT[key]) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
   });
   return out;
 }
@@ -1132,7 +1133,7 @@ function installProblems_() {
 function checkInstall() {
   var lines = [], ok = function (good, text) { lines.push((good ? '✅ ' : '❌ ') + text); };
   var problems = installProblems_();
-  ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and from build ' + BUILD_ID);
+  ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and match (Code.gs ' + BUILD_ID + ')');
   try {
     ['styles', 'app', 'editor'].forEach(function (k) { if (asset_(k).length < 1000) throw new Error(k + ' is empty'); });
     ok(true, 'The site\'s styles and code unpack');
@@ -1212,8 +1213,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-
-var BUILD_STAMPS = BUILD_STAMPS || {};
-BUILD_STAMPS["Code"] = "43107b8ba8";
-var BUILD_ID = "43107b8ba8";
+var BUILD_ID = "f698e74f8f";
+var BUILD_EXPECT = {"Assets": "7739bf9359", "Data": "22978377cf", "Pages1": "78e15dbaa8"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];

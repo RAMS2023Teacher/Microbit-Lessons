@@ -157,10 +157,10 @@ function escapeHtml_(s) {
 /** Every pasted Script file must be there, complete (its last line sets its stamp), and from the same build. */
 function installProblems_() {
   var out = [], stamps = typeof BUILD_STAMPS === 'undefined' ? {} : BUILD_STAMPS;
-  BUILD_FILES.forEach(function (name) {
-    var key = name.replace(/\.gs$/, ''), got = stamps[key];
+  Object.keys(BUILD_EXPECT).forEach(function (key) {
+    var got = stamps[key], name = key + '.gs';
     if (!got) out.push(name + ' is missing or was cut short while pasting. Add it as a Script file named "' + key + '" and paste all of it.');
-    else if (got !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
+    else if (got !== BUILD_EXPECT[key]) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
   });
   return out;
 }
@@ -169,7 +169,7 @@ function installProblems_() {
 function checkInstall() {
   var lines = [], ok = function (good, text) { lines.push((good ? '✅ ' : '❌ ') + text); };
   var problems = installProblems_();
-  ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and from build ' + BUILD_ID);
+  ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and match (Code.gs ' + BUILD_ID + ')');
   try {
     ['styles', 'app', 'editor'].forEach(function (k) { if (asset_(k).length < 1000) throw new Error(k + ' is empty'); });
     ok(true, 'The site\'s styles and code unpack');

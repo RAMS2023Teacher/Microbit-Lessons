@@ -212,14 +212,20 @@ def pack(value):
 
 
 def stamp(files):
-    """Gives every file the same build id and an end marker, so the app can tell when a file is
-    missing, cut short while pasting, or left over from an older build."""
-    build = hashlib.sha1("".join(files[k] for k in sorted(files)).encode("utf-8")).hexdigest()[:10]
-    for name in list(files):
-        if name.endswith(".gs"):
-            key = name[:-3]
-            files[name] = files[name] + f"\nvar BUILD_STAMPS = BUILD_STAMPS || {{}};\nBUILD_STAMPS[{json.dumps(key)}] = {json.dumps(build)};\n"
-    files["Code.gs"] = files["Code.gs"] + f"var BUILD_ID = {json.dumps(build)};\nvar BUILD_FILES = {json.dumps(sorted(files))};\n"
+    """Gives every .gs file a fingerprint of its own content, and tells Code.gs what each one should be.
+    The app can then say which file is missing, cut short while pasting, or out of date, and an update
+    only needs the files that really changed."""
+    expect = {}
+    for name in sorted(files):
+        if name == "Code.gs":
+            continue
+        key = name[:-3]
+        h = hashlib.sha1(files[name].encode("utf-8")).hexdigest()[:10]
+        expect[key] = h
+        files[name] += f"\nvar BUILD_STAMPS = BUILD_STAMPS || {{}};\nBUILD_STAMPS[{json.dumps(key)}] = {json.dumps(h)};\n"
+    code_hash = hashlib.sha1(files["Code.gs"].encode("utf-8")).hexdigest()[:10]
+    files["Code.gs"] += (f"var BUILD_ID = {json.dumps(code_hash)};\nvar BUILD_EXPECT = {json.dumps(expect)};\n"
+                         f"var BUILD_FILES = {json.dumps(sorted(files))};\n")
 
 
 def split_gs(name, header, entries):

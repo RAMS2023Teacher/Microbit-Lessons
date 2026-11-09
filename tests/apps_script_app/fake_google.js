@@ -41,7 +41,13 @@ function makeWorld(dist, opts) {
         let i = 0;
         return { hasNext: () => i < hits.length, next: () => fileObj(hits[i++]) };
       },
-      searchFiles: (q) => {
+      getFiles: () => {
+        const hits = Object.keys(state.files).filter((k) => state.files[k].parent === id);
+        let i = 0;
+        return { hasNext: () => i < hits.length, next: () => fileObj(hits[i++]) };
+      },
+      searchFiles: () => { throw new Error('Invalid argument: q'); },   // what real Drive said; the app mustn't use it
+      searchFilesOld: (q) => {
         const m = /modifiedDate > '([^']+)'/.exec(q);
         const since = m ? Date.parse(m[1] + 'Z') : 0;
         const hits = Object.keys(state.files).filter((k) => state.files[k].parent === id && state.files[k].modified > since);

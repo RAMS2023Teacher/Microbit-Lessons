@@ -110,16 +110,17 @@ function saveStudent_(rec) {
 function summary_() {
   var s = readNamed_('summary', null) || { built_ms: 0, students: {} };
   if (Date.now() - (s.built_ms || 0) < SUMMARY_MAX_AGE_MS) return s;
-  var since = new Date((s.built_ms || 0) - 120000);       // overlap a little, Drive times are rounded
+  var since = (s.built_ms || 0) - 120000;       // overlap a little, Drive times are rounded
   var started = Date.now();
   var props = PropertiesService.getScriptProperties().getProperties();
   var byId = {};
   Object.keys(props).forEach(function (k) { if (k.indexOf('student:') === 0) byId[props[k]] = k.slice(8); });
-  var it = studentFolder_().searchFiles("modifiedDate > '" + Utilities.formatDate(since, 'UTC', "yyyy-MM-dd'T'HH:mm:ss") + "'");
+  // Walk the folder instead of using a Drive search query (real Drive rejected the query: "Invalid argument: q").
+  var it = studentFolder_().getFiles();
   while (it.hasNext()) {
     var f = it.next();
     var email = byId[f.getId()];
-    if (!email) continue;
+    if (!email || f.getLastUpdated().getTime() <= since) continue;
     try { s.students[email] = studentSummary_(JSON.parse(f.getBlob().getDataAsString())); } catch (e) { /* skip a bad file */ }
   }
   s.built_ms = started;
