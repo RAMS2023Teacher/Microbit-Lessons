@@ -294,9 +294,19 @@ challenge:
     Make your servo do something useful or silly. Use buttons A and B to
     control it!
   levels:
-    - "Mild: Button A points to 0°. Button B points to 180°."
-    - "Medium: Make a smooth sweep: a for loop that moves 5° at a time."
-    - "Spicy: Add a second servo on P14. Make the two servos wave in opposite directions."
+    - "Bronze: Button A points to 0°. Button B points to 180°."
+    - "Silver: Make a smooth sweep: a for loop that moves 5° at a time."
+    - "Gold: Add a second servo on P14. Make the two servos wave in opposite directions."
+  hints:
+    Bronze:
+      - "Use `if button_a.was_pressed():` and then `angle(0)`. Do the same for B with `angle(180)`."
+      - "Remove the `angle` lines from the loop so the servo stops moving by itself."
+    Silver:
+      - "Use `for deg in range(0, 181, 5):`. Inside, call `angle(deg)` and `sleep(30)`."
+      - "Sweep back with a negative step: `range(180, -1, -5)`."
+    Gold:
+      - "Set up the second servo: `SERVO2 = pin14`, then `SERVO2.set_analog_period(20)`."
+      - "Opposite means the angles add up to 180. If one is at `deg`, the other is `180 - deg`."
   submit_prompt: What does your servo do, and which part of your code was hardest to get right?
   visual:
     type: leds
@@ -307,7 +317,7 @@ teacher_notes: |
   * **The micro:bit resets when a servo moves:** the battery pack is missing or low. USB alone can't power servos.
   * **Continuous servo won't stop at 77:** that's normal. Each servo stops at a slightly different value (often 74-80). Some have a trim screw to adjust it.
   * **Servo only jitters:** check that `set_analog_period(20)` runs, and that the orange wire is on S at pin 13.
-  * **Fast finishers:** have them write `def smooth(start, end):` that steps 2° at a time, then use it in the Spicy challenge.
+  * **Fast finishers:** have them write `def smooth(start, end):` that steps 2° at a time, then use it in the Gold challenge.
   * **Students who need a quick win:** the starter runs as-is. Changing the three angles to make it "wave" counts as a win.
 standards:
   - code: 6-8.CS.a.4

@@ -388,9 +388,19 @@ challenge:
     to the shaft. Then program a show with `forward()`, `backward()`, `stop()`
     and different speeds.
   levels:
-    - "Mild: Make a wiggle. Go forward and back fast 5 times with a `for` loop, then rest."
-    - "Medium: Build a fan. Button A speeds it up, button B slows it down. Show the speed on the display."
-    - "Spicy: Tilt control! Use `accelerometer.get_x()`. Tilt right to spin forward, left to spin back. Tilt more to go faster."
+    - "Bronze: Make a wiggle. Go forward and back fast 5 times with a `for` loop, then rest."
+    - "Silver: Build a fan. Button A speeds it up, button B slows it down. Show the speed on the display."
+    - "Gold: Tilt control! Use `accelerometer.get_x()`. Tilt right to spin forward, left to spin back. Tilt more to go faster."
+  hints:
+    Bronze:
+      - "`for i in range(5):` repeats 5 times. Put forward, sleep, backward and sleep inside."
+      - "Keep sleeps short, like 200 ms. After the loop, call `stop()` and `sleep()` to rest."
+    Silver:
+      - "Use `button_a.was_pressed()` to add to `speed`. Button B takes away."
+      - "Stay in range with `speed = max(0, min(1023, speed))`. Then call `forward(speed)`."
+    Gold:
+      - "Read `x = accelerometer.get_x()`. Go forward when x is above 100, backward when below -100."
+      - "Get speed from tilt with `speed = min(1023, abs(x))`. Stop when the tilt is small."
   submit_prompt: What does your motor machine do, and how do your functions control direction and speed?
 teacher_notes: |
   * **Motor spins the wrong way:** that's normal. Swap the two motor wires on AOUT1/AOUT2, or swap the bodies of forward() and backward(). Physically swapping wires is the habit to build for the robot lessons.

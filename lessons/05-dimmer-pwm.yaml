@@ -331,9 +331,19 @@ challenge:
     Design a light show for your LED. Make it calm, creepy or exciting! Use
     for loops and write_analog to make a pattern nobody else has.
   levels:
-    - "Mild: Make a heartbeat. Do two quick fades up and down, then pause."
-    - "Medium: Make a candle flicker. Use random.randint to pick a new brightness every few ms."
-    - "Spicy: Use button A to switch light modes, like fade, flicker and strobe. Show the mode number: 1, 2 or 3."
+    - "Bronze: Make a heartbeat. Do two quick fades up and down, then pause."
+    - "Silver: Make a candle flicker. Use random.randint to pick a new brightness every few ms."
+    - "Gold: Use button A to switch light modes, like fade, flicker and strobe. Show the mode number: 1, 2 or 3."
+  hints:
+    Bronze:
+      - "Make `step` bigger so each fade is quick. Try 32."
+      - "Put two fades in a row. Then add `sleep(800)` before the loop repeats."
+    Silver:
+      - "Add `import random` near the top of your code."
+      - "Pick a number with `random.randint(200, 1023)`. Give it to `pin0.write_analog()`, then wait a little."
+    Gold:
+      - "Keep a `mode` variable. Button A adds 1. After mode 3, go back to 1."
+      - "Use `if mode == 1:` and `elif` for each effect. Keep effects short so the button still works."
   submit_prompt: Describe your light show and explain how your for loop or random numbers change the brightness.
 teacher_notes: |
   * **"value must be 0 or 1" error:** a student used `write_digital` with a brightness number.

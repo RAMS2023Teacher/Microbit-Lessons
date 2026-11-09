@@ -333,9 +333,19 @@ challenge:
     Engineers use math to guess what a circuit will do *before* they build
     it. Be a resistor detective. Predict, then test, then explain!
   levels:
-    - "Mild: Find the current for 100, 220 and 1000 Ω. Predict each one: brighter or dimmer?"
-    - "Medium: Work backwards. Pick a target, like 10 mA. Find the resistor you need with R = V / I."
-    - "Spicy: Make button A step through a list like [100, 220, 470, 1000]. Scroll the current for each one."
+    - "Bronze: Find the current for 100, 220 and 1000 Ω. Predict each one: brighter or dimmer?"
+    - "Silver: Work backwards. Pick a target, like 10 mA. Find the resistor you need with R = V / I."
+    - "Gold: Make button A step through a list like [100, 220, 470, 1000]. Scroll the current for each one."
+  hints:
+    Bronze:
+      - "Use the starter code. Change `resistor_ohms` to one value at a time and run it."
+      - "More resistance means less current. Less current means a dimmer LED."
+    Silver:
+      - "Change 10 mA into amps first: divide by 1000."
+      - "The resistor gets 3.3 - 2.0 = 1.3 volts. Divide those volts by your amps."
+    Gold:
+      - "Keep your spot in the list with a variable: `i = 0`. Button A adds 1."
+      - "Go back to the start with `i = (i + 1) % len(values)`. Then use `values[i]`."
   submit_prompt: Which resistor values did you test, what did your math predict, and did the real LED agree?
   visual:
     type: part

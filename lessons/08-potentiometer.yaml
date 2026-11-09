@@ -314,13 +314,24 @@ challenge:
     Use the knob to control something fun: a volume meter, a game controller, a
     mood dial, or a timer. Turning the knob should change what happens.
   levels:
-    - "Mild: Make the knob pick a picture. Scale it to 0-3 and show a different Image for each number."
-    - "Medium: Make the knob set the LED's blink speed. Scale 0-1023 to a sleep time from 50 to 1000 ms."
-    - "Spicy: Paddle game! The knob moves a dot along the bottom row to catch a falling pixel. Keep score!"
+    - "Bronze: Make the knob pick a picture. Scale it to 0-3 and show a different Image for each number."
+    - "Silver: Make the knob set the LED's blink speed. Scale 0-1023 to a sleep time from 50 to 1000 ms."
+    - "Gold: Paddle game! The knob moves a dot along the bottom row to catch a falling pixel. Keep score!"
+  hints:
+    Bronze:
+      - "Scale it with `pick = value * 4 // 1024`. That gives 0, 1, 2 or 3."
+      - "Use `if pick == 0:`, then `elif` for the other numbers. Show a different `Image` in each."
+    Silver:
+      - "The range is 950 wide. Try `wait = 50 + value * 950 // 1023`."
+      - "Then blink: pin on, `sleep(wait)`, pin off, `sleep(wait)`. Use `write_digital` for this."
+    Gold:
+      - "Find the paddle spot with `x = value * 5 // 1024`. Light it with `display.set_pixel(x, 4, 9)`."
+      - "Track the falling pixel with `fx` and `fy`. When `fy == 4`, compare `fx` with `x`."
+      - "Call `display.clear()` at the start of each frame, or old dots stay lit."
   visual:
     type: leds
     image: "00900:00000:00000:00000:09000"
-    caption: "Spicy idea: move your paddle to catch the falling pixel."
+    caption: "Gold idea: move your paddle to catch the falling pixel."
   submit_prompt: What does your knob control, and what scaling math did you use to turn 0-1023 into the numbers you needed?
 teacher_notes: |
   * **Reading stuck at 0 or 1023:** the wiper wire is on an outer leg, or one outer leg isn't connected

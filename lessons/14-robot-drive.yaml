@@ -399,9 +399,19 @@ challenge:
     with tape. Then program the robot to follow it, using drive() with
     different speeds and times. Bonus points for style.
   levels:
-    - "Mild: Drive a triangle or a figure-of-eight path (hint: what does drive(700, 350) do?)."
-    - "Medium: Program a 15-second robot dance with spins, wiggles and a display show. Put each move in its own function, like wiggle()."
-    - "Spicy: Tape an obstacle course: a start box, 3 cups to weave around, and a parking space. Calibrate until you finish without touching a cup."
+    - "Bronze: Drive a triangle or a figure-of-eight path (hint: what does drive(700, 350) do?)."
+    - "Silver: Program a 15-second robot dance with spins, wiggles and a display show. Put each move in its own function, like wiggle()."
+    - "Gold: Tape an obstacle course: a start box, 3 cups to weave around, and a parking space. Calibrate until you finish without touching a cup."
+  hints:
+    Bronze:
+      - "In `drive(700, 350)` one wheel is faster, so the robot curves. Try it first."
+      - "A triangle corner is a bigger turn. Make `TURN_TIME` longer and use `range(3)`."
+    Silver:
+      - "Write one function for each move, like `def wiggle():`, with `drive()` and `sleep()` inside."
+      - "Add up your `sleep()` times. They should total about 15000 ms."
+    Gold:
+      - "Walk the course first. Break it into short moves and write them in order."
+      - "Change one number at a time. Test after each change."
   submit_prompt: What path or dance did you program? Which number took the most calibrating, and what value did you end up with?
 teacher_notes: |
   * **One wheel spins backward:** the motors are mirrored on the chassis, so this happens on most robots. Swap that motor's two wires on the driver. (Changing code works too, but then every future lesson's code would need the same change.)

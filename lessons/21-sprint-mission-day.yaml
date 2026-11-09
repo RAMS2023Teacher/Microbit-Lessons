@@ -377,9 +377,19 @@ challenge:
   prompt: >-
     Get your mission as far up the milestones as you can. Then make it smarter.
   levels:
-    - "Mild: Reach milestone 3: your robot or gadget reacts to the sensor all by itself."
-    - "Medium: Polish it: show a different icon for each move, and tune your times until it works 5 runs in a row."
-    - "Spicy: Rewrite mission() with no sleep(). Use running_time() and a mode variable, so the robot can react even mid-turn."
+    - "Bronze: Reach milestone 3: your robot or gadget reacts to the sensor all by itself."
+    - "Silver: Polish it: show a different icon for each move, and tune your times until it works 5 runs in a row."
+    - "Gold: Rewrite mission() with no sleep(). Use running_time() and a mode variable, so the robot can react even mid-turn."
+  hints:
+    Bronze:
+      - "Test the sensor alone first. Does it read 0 when something is in front?"
+      - "If it won't react, show the reading with `display.show(pin0.read_digital())`."
+    Silver:
+      - "Add a `display.show()` before each `drive()` so you can see which move is running."
+      - "Change one time, then run it 5 times. Write down how many runs work."
+    Gold:
+      - "Use `mode = 'go'` and `until = 0`. Each loop, check the mode instead of sleeping."
+      - "To back up, set `mode = 'back'` and `until = running_time() + 600`. When time is up, change mode."
   submit_prompt: Which mission did you pick, which milestone did you reach, and what was the hardest part?
   visual:
     type: flow
@@ -396,7 +406,7 @@ teacher_notes: |
   * **Edge Explorer loses the line:** slow it down, or swap the two drive() lines so it follows the other edge.
   * **Bump Bot:** the crash sensor is on P1, which the ultrasonic Echo also uses in Sprint 6. Only one can be plugged in at a time.
   * **Mission D** is for students without a chassis, or who prefer building a machine. The servo on P13 here is a 180° servo: 26 = 0°, 128 = 180°.
-  * **Fast finishers:** the Spicy no-sleep() rewrite is a real state machine. Ask them to store `turn_until = running_time() + random.randint(300, 900)` and check it each loop. Combining missions A and B (IR on P0 plus line on P8) is another stretch.
+  * **Fast finishers:** the Gold no-sleep() rewrite is a real state machine. Ask them to store `turn_until = running_time() + random.randint(300, 900)` and check it each loop. Combining missions A and B (IR on P0 plus line on P8) is another stretch.
   * **Students who need a quick win:** the starter runs Mission A as-is. Seeing the screen flip from arrow to X when they wave a hand is milestone 2.
 standards:
   - code: 6-8.CS.a.5

@@ -331,9 +331,20 @@ challenge:
     Turn your gate into a real gadget: a candy dispenser, a trash-can lid or an
     alarm flag that pops up. Build it from cardboard and tape!
   levels:
-    - "Mild: Change the angles and wait times so your gadget works well. Show a matching picture when it moves."
-    - "Medium: Count how many times it opens. Button A shows the count. Lock it after 5 opens for a candy limit."
-    - "Spicy: Replace the sleep() waits with running_time() timers, so it keeps sensing. Close 3 s after the hand leaves; scroll a countdown."
+    - "Bronze: Change the angles and wait times so your gadget works well. Show a matching picture when it moves."
+    - "Silver: Count how many times it opens. Button A shows the count. Lock it after 5 opens for a candy limit."
+    - "Gold: Replace the sleep() waits with running_time() timers, so it keeps sensing. Close 3 s after the hand leaves; scroll a countdown."
+  hints:
+    Bronze:
+      - "Change `angle(90)` to the angle your gadget needs. Test small changes."
+      - "`sleep(2000)` sets how long it stays open. Put each `display.show()` next to a move."
+    Silver:
+      - "Start `opens = 0` before the loop. Add 1 right where the gate opens."
+      - "Lock it by adding `and opens < 5` to the test that opens the gate."
+    Gold:
+      - "While a hand is there, keep saving `last_seen = running_time()`. Remove the long sleeps."
+      - "Close when `running_time() - last_seen > 3000`."
+      - "Scrolling pauses your code. Use `display.scroll(n, wait=False)` so it keeps sensing."
   submit_prompt: What gadget did you build? How did you stop it from flapping?
   visual:
     type: leds
@@ -344,9 +355,9 @@ teacher_notes: |
   * **Quick win:** the starter runs as-is. A student whose gate opens for their hand has succeeded. Changing 90 to 150 is the next easy win.
   * **Gate opens by itself:** the IR sensor is seeing the servo arm, the table or the cardboard. Point the sensor away from the gate, or turn its knob to shorten the range.
   * **Gate never opens:** check the IR sensor's own LED. If it lights for a hand but the gate doesn't move, check the battery pack, the brown wire on G and that `set_analog_period(20)` runs.
-  * **Why a cooldown:** near the edge of its range the IR reading flickers, and a moving servo arm can trigger the sensor too. A `sleep()` after each move is the simple fix. The Spicy level replaces it with `running_time()` so the loop keeps sensing while it waits.
+  * **Why a cooldown:** near the edge of its range the IR reading flickers, and a moving servo arm can trigger the sensor too. A `sleep()` after each move is the simple fix. The Gold level replaces it with `running_time()` so the loop keeps sensing while it waits.
   * **Debug checks** accept any cooldown of 300 ms or more, or a `running_time()` timer.
-  * **Fast finishers:** the Spicy timer pattern is `opened_at = running_time()`, then later `if running_time() - opened_at > 3000:`. Push them to also make a "locked" state toggled by button A, so the gadget has three states.
+  * **Fast finishers:** the Gold timer pattern is `opened_at = running_time()`, then later `if running_time() - opened_at > 3000:`. Push them to also make a "locked" state toggled by button A, so the gadget has three states.
   * **Students who need a quick win:** let them decorate the gate and pick the YES/NO pictures. Changing one number and seeing the result counts.
 standards:
   - code: 6-8.CS.a.4

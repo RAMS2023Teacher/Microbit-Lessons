@@ -332,12 +332,22 @@ challenge:
     with a pen taped on. Build something fun that your code controls, and give
     it a name!
   levels:
-    - "Mild: Make a desk fan with three speeds. Show L, M or H on the display."
-    - "Medium: Turn the fan on by itself when it's warm. Use temperature() and a threshold from the temperature lesson."
-    - "Spicy: Shake to start a spin-art machine. Ramp up, run a random time with `random.randint()`, then slow down and stop."
+    - "Bronze: Make a desk fan with three speeds. Show L, M or H on the display."
+    - "Silver: Turn the fan on by itself when it's warm. Use temperature() and a threshold from the temperature lesson."
+    - "Gold: Shake to start a spin-art machine. Ramp up, run a random time with `random.randint()`, then slow down and stop."
+  hints:
+    Bronze:
+      - "Pick three speeds, like 400, 700 and 1023. Use the buttons to choose one."
+      - "Set the speed and `display.show('L')` inside the same `if`."
+    Silver:
+      - "Read `t = temperature()` in your loop. Compare it with a threshold: `if t >= HOT:`."
+      - "Set `HOT` 1 degree above the room. Warm the micro:bit with your thumb to test it."
+    Gold:
+      - "A `for` loop can ramp up: `for s in range(300, 1024, 20):`. Add a short sleep inside."
+      - "Run for `sleep(random.randint(3000, 8000))`. Then ramp down with a negative step."
   visual:
     type: leds
-    caption: "Mild: show L, M or H for the fan speed."
+    caption: "Bronze: show L, M or H for the fan speed."
     frames: ["09000:09000:09000:09000:09990", "90009:99099:90909:90009:90009", "90009:90009:99999:90009:90009"]
   submit_prompt: What did you build, how does your code control the motor's speed, and what does the transistor do in your circuit?
 teacher_notes: |

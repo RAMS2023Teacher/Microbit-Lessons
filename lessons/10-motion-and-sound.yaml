@@ -315,9 +315,20 @@ challenge:
     a game that beeps when you tilt too far, or a "magic wand" with sound
     effects. Make it surprising!
   levels:
-    - "Mild: Give 'left', 'right', 'face down' and 'shake' each their own melody."
-    - "Medium: Make a steady-hand game. Tilt past 300 either way and the buzzer buzzes. You lose a life. Show lives on the display."
-    - "Spicy: Make the theremin play only real notes from a scale, or use get_y() to set how long each note lasts."
+    - "Bronze: Give 'left', 'right', 'face down' and 'shake' each their own melody."
+    - "Silver: Make a steady-hand game. Tilt past 300 either way and the buzzer buzzes. You lose a life. Show lives on the display."
+    - "Gold: Make the theremin play only real notes from a scale, or use get_y() to set how long each note lasts."
+  hints:
+    Bronze:
+      - "Use `accelerometer.was_gesture('left')`, and the same for 'right', 'face down' and 'shake'."
+      - "Give each gesture its own `if`, with a different tune inside. Try `music.NYAN`."
+    Silver:
+      - "Read `x = accelerometer.get_x()`. Test both sides: `if x > 300 or x < -300:`."
+      - "Start with `lives = 3`. Take away 1 for each buzz. Add `sleep(1000)` so one tilt counts once."
+    Gold:
+      - "Put a scale in a list: `notes = [262, 294, 330, 392, 440]`. These are in hertz."
+      - "Turn the tilt into a list spot from 0 to 4. Then use `music.pitch(notes[i], 200)`."
+      - "For note length, read `get_y()` the same way. Use it as the second number in `music.pitch()`."
   submit_prompt: What does your gadget do, which motions does it react to, and how did you turn motion into sound?
 teacher_notes: |
   **Common problems**

@@ -135,7 +135,15 @@ def validate_lesson(data: dict) -> list[str]:
         elif not st.get("how"):
             errs.append(f"standards: {st['code']} needs a 'how' explaining what in the lesson meets it")
     if not data["challenge"].get("levels"):
-        errs.append("challenge: add 'levels' (mild / medium / spicy ideas)")
+        errs.append("challenge: add 'levels' (bronze / silver / gold ideas)")
+    hints = data["challenge"].get("hints") or {}
+    for level in data["challenge"].get("levels") or []:
+        name = level.split(":", 1)[0]
+        if not 1 <= len(hints.get(name) or []) <= 3:
+            errs.append(f"challenge: give the {name} level 1-3 hints")
+        for hint in hints.get(name) or []:
+            if len(hint.split()) > 20:
+                errs.append(f"challenge: {name} hint is over 20 words: {hint}")
     return errs
 
 

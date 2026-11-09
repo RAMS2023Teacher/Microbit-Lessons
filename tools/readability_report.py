@@ -87,6 +87,9 @@ def screens(lesson: dict):
     ch = lesson["challenge"]
     for i, level in enumerate(ch.get("levels", []), 1):
         yield (f"challenge {i}", prose(ch.get("prompt", "")) + " " + prose(level), bool(ch.get("visual")))
+    for name, hints in (ch.get("hints") or {}).items():
+        for i, hint in enumerate(hints, 1):
+            yield (f"{name} hint {i}", prose(hint), False)
 
 
 def flag(n, g):

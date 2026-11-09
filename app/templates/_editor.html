@@ -16,3 +16,26 @@
   </div>
 </div>
 {% endmacro %}
+
+{% macro library_entries(entries) %}
+{% for e in entries %}
+<div class="lib-entry">
+  <div class="lib-entry-head"><b>{{ e.title }}</b>{% if not e.not_python %}<button type="button" class="linklike lib-copy">Copy</button>{% endif %}</div>
+  <pre class="code-block">{{ e.code.rstrip() }}</pre>
+  {% if e.note %}<p class="muted small">{{ e.note }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endmacro %}
+
+{% macro code_library(id, library) %}
+<section class="helper-panel" id="{{ id }}" aria-label="Code library" hidden>
+  <h3>📚 Code library</h3>
+  <p class="muted small">Copy what you need, then change it to fit.</p>
+  {% if library.here %}
+  <details class="lib-group" open><summary>In this lesson</summary>{{ library_entries(library.here) }}</details>
+  {% endif %}
+  {% for g in library.groups %}
+  <details class="lib-group"><summary>{{ g.name }}</summary>{{ library_entries(g.entries) }}</details>
+  {% endfor %}
+</section>
+{% endmacro %}

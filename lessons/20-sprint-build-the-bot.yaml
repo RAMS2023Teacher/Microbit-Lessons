@@ -373,9 +373,19 @@ challenge:
     Use your drive() function to make the robot do a planned path. Test,
     tweak one number, and test again.
   levels:
-    - "Mild: Drive a triangle or a bigger square by changing only the times and the loop count."
-    - "Medium: Add back_up(ms) and turn_left(ms) functions. Use them to drive a figure 8 or a dance."
-    - "Spicy: Write ramp(left, right, ms) that speeds up in 10 small steps. Drive a square that ends where it started."
+    - "Bronze: Drive a triangle or a bigger square by changing only the times and the loop count."
+    - "Silver: Add back_up(ms) and turn_left(ms) functions. Use them to drive a figure 8 or a dance."
+    - "Gold: Write ramp(left, right, ms) that speeds up in 10 small steps. Drive a square that ends where it started."
+  hints:
+    Bronze:
+      - "A triangle has 3 sides, so change `range(4)` to `range(3)`. Its corners need longer turns."
+      - "Change the number in `forward(1000)` for longer sides. Change one number at a time."
+    Silver:
+      - "Copy `forward` to make `back_up(ms)`. Use `drive(-60, -60)`, then `sleep(ms)`."
+      - "Copy `turn_right` to make `turn_left(ms)`. Swap the signs: `drive(-60, 60)`."
+    Gold:
+      - "Inside `ramp`, use `for i in range(1, 11):`. Each step drives at `left * i // 10`."
+      - "Each step waits `ms // 10`. After the loop, the robot is at full speed."
   submit_prompt: What path did your robot drive, and which number took the most tries to get right?
   visual:
     type: leds
@@ -387,7 +397,7 @@ teacher_notes: |
   * **Stop values:** each continuous servo stops at a slightly different number (often 74-80). Some have a trim screw. Have students write both numbers on tape on the chassis.
   * **Robot drives backward:** that's just which way the servos were mounted. Swapping the `+` and `-` in `drive()` fixes it for good.
   * **Turn times change** with battery level and floor surface. That's normal and a good test-and-tweak moment.
-  * **Fast finishers:** the Spicy ramp() is real algorithm work: a for loop that steps both speeds from 0 to the target. Ask them why ramping makes the square more accurate (less wheel slip).
+  * **Fast finishers:** the Gold ramp() is real algorithm work: a for loop that steps both speeds from 0 to the target. Ask them why ramping makes the square more accurate (less wheel slip).
   * **Students who need a quick win:** the starter drives a square as-is. Getting B to hold both wheels still counts as a win, and so does one good corner.
 standards:
   - code: 6-8.CS.a.4

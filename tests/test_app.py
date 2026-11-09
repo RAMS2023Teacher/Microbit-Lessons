@@ -139,3 +139,31 @@ def test_no_lesson_screen_is_a_wall_of_text():
             if R.flag(R.words(text), R.grade(text)):
                 problems.append(f"{lesson['id']} {name}: {R.words(text)} words, grade {R.grade(text)}")
     assert not problems, "\n".join(problems)
+
+
+def test_code_library_snippets_are_valid():
+    import ast
+    import re
+    from app import code_library as C
+    for group in C.groups():
+        for entry in group["entries"]:
+            re.compile(entry["uses"])
+            if not entry.get("not_python"):
+                ast.parse(entry["code"])
+    for lesson in L.all_lessons():
+        lib = C.for_lesson(lesson)
+        assert lib["here"], lesson["id"]
+        # nothing is lost or listed twice
+        names = [e["title"] for e in lib["here"]] + [e["title"] for g in lib["groups"] for e in g["entries"]]
+        assert sorted(names) == sorted(e["title"] for g in C.groups() for e in g["entries"])
+
+
+def test_challenge_levels_and_hints(client):
+    for lesson in L.all_lessons():
+        names = [lv.split(":", 1)[0] for lv in lesson["challenge"]["levels"]]
+        assert names == ["Bronze", "Silver", "Gold"], lesson["id"]
+    register_teacher(client)
+    r = client.get(f"/lessons/{LID}")
+    assert b"Code library" in r.data and b"hint-set" in r.data
+    assert b"Spicy" not in r.data
+
