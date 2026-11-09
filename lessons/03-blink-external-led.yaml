@@ -53,27 +53,17 @@ learn:
       * `pin0.write_digital(1)` → pin 0 is **ON** (3 volts)
       * `pin0.write_digital(0)` → pin 0 is **OFF** (0 volts)
 
-      Wire the LED to **P0** and your code decides when it lights.
+      Wire the LED to **P0** and your code decides when it lights. Try it!
     visual:
-      type: compare
-      items:
-        - {icon: "💡", title: "write_digital(1)", text: "ON: 3 volts"}
-        - {icon: "⚫", title: "write_digital(0)", text: "OFF: 0 volts"}
-  - text: |
-      ### Breadboard refresher
-      Hidden metal strips join the holes.
-
-      * Holes **a–e** in one column are joined.
-      * Holes **f–j** in one column are joined.
-      * The **+** and **–** rails run the whole length.
-
-      Two legs in the **same column** are connected.
-    visual:
-      type: circuit
-      caption: "The black wire joins GND to the blue (–) rail."
-      add:
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: wire, from: a5, to: e5, color: green}
+      type: try
+      kind: pin
+      pin: 0
+    check:
+      question: Which line turns pin 0 **off**?
+      choices: ["pin0.write_digital(1)", "pin0.write_digital(0)", "pin0.write_digital(3)"]
+      answer: 1
+      why: 0 means OFF, so the pin sends 0 volts and the LED goes dark.
+      hint: One number means ON and one means OFF. Which is which?
   - text: |
       ### Electricity needs a loop
       It flows out of **P0**, through the resistor and LED, and back to **GND**.
@@ -88,6 +78,12 @@ learn:
         - {icon: "〰️", label: "resistor"}
         - {icon: "💡", label: "LED + → –"}
         - {icon: "⏚", label: "GND"}
+    check:
+      question: Where does the electricity go after it passes through the LED?
+      choices: ["It stops inside the LED", "Back out of P0", "Back to GND"]
+      answer: 2
+      why: The loop goes P0, resistor, LED, then back to GND to finish the circuit.
+      hint: Follow the loop in the picture. What comes after the LED?
   - text: |
       ### Which LED leg is which?
       An LED only works **one way round**.
@@ -98,6 +94,12 @@ learn:
       type: part
       part: led
       color: red
+    check:
+      question: Which LED leg goes toward GND?
+      choices: ["The short leg", "The long leg", "Either leg works"]
+      answer: 0
+      why: The short leg is the minus (–) side, so it goes toward GND.
+      hint: Each leg is either the + side or the – side. Which side belongs with ground?
 circuit:
   intro: >-
     You'll build the loop P0 → resistor → LED → GND. Unplug the USB cable
@@ -105,6 +107,17 @@ circuit:
   safety:
     - Always build with the micro:bit unplugged.
     - Never connect 3V straight to GND with a wire - that's a short circuit.
+  remember:
+    - text: |
+        **Breadboard refresher:** hidden metal strips join the holes. Holes **a–e** in one column are joined,
+        and so are holes **f–j**. The **+** and **–** rails run the whole length.
+        Two legs in the **same column** are connected.
+      visual:
+        type: circuit
+        caption: "The black wire joins GND to the blue (–) rail."
+        add:
+          - {type: wire, from: mb.GND, to: T-1, color: black}
+          - {type: wire, from: a5, to: e5, color: green}
   steps:
     - title: Ground rail
       instruction: >-

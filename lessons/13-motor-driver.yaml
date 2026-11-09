@@ -51,68 +51,53 @@ warmup:
     spin the other way?
 learn:
   - text: |
-      ### One way only
-      Last time, an **NPN transistor** let a pin switch a motor **on** and **off**.
+      ### Flip the flow
+      Last time, a **transistor** switched a motor **on** and **off**. But current only flowed **one way**.
 
-      But current always flowed the **same way**. So the motor always spun the same direction.
-
-      To reverse a DC motor, **swap its two wires**. Today, **code** will do the swap for us.
-    visual:
-      type: part
-      part: dcmotor
-      caption: Swap the two wires and the motor spins the other way.
-  - text: |
-      ### The H-bridge
-      Picture **four switches** around the motor, in the shape of an **H**.
-      The motor is the bar across the middle.
+      An **H-bridge** can reverse it, with **four switches** around the motor in an **H** shape:
 
       * Close two **diagonal** switches: current flows one way.
-      * Close the other diagonal pair: current flows the other way.
+      * Close the other pair: it flows the other way.
       * Open them all: the motor **coasts** to a stop.
+    more: |
+      **Why it works:** swapping a DC motor's two wires makes it spin the other way. The H-bridge does
+      that swap for you, so **code** can reverse the motor with no rewiring. The motor is the bar
+      across the middle of the "H".
     visual:
       type: compare
       items:
         - {icon: "➡️", title: "Forward", text: "Top-left + bottom-right closed. Current flows left to right."}
         - {icon: "⬅️", title: "Backward", text: "Top-right + bottom-left closed. Current flows right to left."}
         - {icon: "⏸️", title: "Coast", text: "All four open. The motor slows to a stop."}
+    check:
+      question: All four H-bridge switches are open. What does the motor do?
+      choices: ["Spins forward", "Coasts to a stop", "Spins backward"]
+      answer: 1
+      why: With every switch open, no current flows, so the motor just slows down and stops.
+      hint: Forward and backward each need a diagonal pair to be closed. Is any pair closed?
   - text: |
       ### Let a chip do the switching
       Never close both switches on the **same side**. That makes a **short**: a path with almost no resistance, so huge current flows and parts get hot.
 
-      A **motor driver** chip has the H-bridge built in.
+      A **motor driver** chip, like the **DRV8833**, has the H-bridge built in.
 
       * It won't let that short happen.
       * It has **flyback diodes** built in too.
+    more: |
+      **Inside the DRV8833:** it has **two** H-bridges, **A** and **B**. Today we only use **A**.
+      Its inputs understand **3 V** signals, so the micro:bit can talk to it directly, while the big
+      motor current comes from the battery pack.
     visual:
       type: compare
       items:
         - {icon: "⚠️", title: "Same side closed", text: "Battery + meets battery –. A short circuit!"}
         - {icon: "✅", title: "Motor driver chip", text: "Blocks that short. Flyback diodes built in."}
-  - text: |
-      ### The DRV8833 driver
-      It has **two** H-bridges, **A** and **B**. Today we only use **A**.
-
-      * **VM** ← battery **+** (motor power)
-      * **GND** ← battery **–** and micro:bit **GND** (shared ground)
-      * **AIN1, AIN2** ← **P13, P14** (the micro:bit's orders)
-      * **AOUT1, AOUT2** → the motor's two wires
-
-      It understands **3 V** signals, so the micro:bit can talk to it directly.
-    visual:
-      type: circuit
-      caption: Battery + goes only to VM. All three grounds join.
-      add:
-        - {type: module, id: drv1, label: "DRV8833 motor driver", terminals: [VM, GND, AIN1, AIN2, AOUT1, AOUT2]}
-        - {type: battery, id: bat1, label: "4×AA 6V"}
-        - {type: dcmotor, id: motor1}
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: wire, from: drv1.GND, to: T-5, color: black}
-        - {type: wire, from: bat1.minus, to: T-3, color: black}
-        - {type: wire, from: bat1.plus, to: drv1.VM, color: red}
-        - {type: wire, from: mb.P13, to: drv1.AIN1, color: yellow}
-        - {type: wire, from: mb.P14, to: drv1.AIN2, color: green}
-        - {type: wire, from: drv1.AOUT1, to: motor1.a, color: orange}
-        - {type: wire, from: drv1.AOUT2, to: motor1.b, color: white}
+    check:
+      question: Why use a motor driver chip instead of four loose switches?
+      choices: ["It lets the motor run without a battery", "It makes the motor spin faster", "It blocks the short circuit and has flyback diodes"]
+      answer: 2
+      why: The chip can't close both switches on one side, and its diodes handle the motor's spikes.
+      hint: Think about the danger the card warned you about first.
   - text: |
       ### Two pins, four moves
       **AIN1** (P13) and **AIN2** (P14) work as a team.
@@ -127,6 +112,12 @@ learn:
         - {icon: "⬇️", title: "0 and 1", text: "Backward"}
         - {icon: "⏸️", title: "0 and 0", text: "Stop (coast)"}
         - {icon: "🛑", title: "1 and 1", text: "Brake (quick stop)"}
+    check:
+      question: P13 and P14 are **both** 1. What does the motor do?
+      choices: ["Brake (quick stop)", "Forward", "Coast to a stop"]
+      answer: 0
+      why: "In the truth table, 1 and 1 means brake: a quick stop."
+      hint: Find the row in the truth table where both numbers are the same and not 0.
   - text: |
       ### Speed with PWM
       For **speed**, use `write_analog()` on the "1" pin instead of `write_digital(1)`.
@@ -146,6 +137,12 @@ learn:
         - {at: 0, label: "0 off"}
         - {at: 400, label: "400 slower", pointer: true}
         - {at: 1023, label: "1023 full"}
+    check:
+      question: You want the motor to go forward **slower**. Which line goes on P13?
+      choices: ["pin13.write_digital(1)", "pin13.write_analog(1023)", "pin13.write_analog(600)"]
+      answer: 2
+      why: write_analog with a number below 1023 gives less power, so the motor spins slower.
+      hint: write_digital can only be fully on or off. Which line uses a number in the middle of the scale?
 circuit:
   intro: >-
     P13 and P14 send tiny signals to the driver. The battery pack sends the big
@@ -155,6 +152,11 @@ circuit:
     - Battery red (+) goes ONLY to the driver's VM. Never to the micro:bit's 3V - 6 V can destroy it.
     - Never connect the motor straight to a micro:bit pin.
     - Driver chip hot? Switch the battery off and check your wiring.
+  remember:
+    - text: |
+        **DRV8833 pins:** **VM** ← battery **+** (motor power). **GND** ← battery **–** and micro:bit
+        **GND** (shared ground). **AIN1, AIN2** ← **P13, P14** (the micro:bit's orders).
+        **AOUT1, AOUT2** → the motor's two wires.
   steps:
     - title: Ground rail
       instruction: >-

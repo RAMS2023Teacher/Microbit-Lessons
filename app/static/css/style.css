@@ -631,3 +631,36 @@ figure.vz { margin: 10px 0; text-align: center; }
 .predict-explain { display: block !important; margin-top: 8px !important; font-weight: 600; }
 .predict-explain[hidden] { display: none !important; }
 
+
+/* ---- Learn quick checks, "more", read to me, Remember boxes ---- */
+.learn-check { grid-column: 1 / -1; margin-top: 14px; padding: 12px 14px; border: 2px dashed #b9c4e4; border-radius: 10px; background: #fff; font-size: 1rem; }
+.learn-check.passed { border-style: solid; border-color: var(--ok); background: #f6fcf8; }
+.learn-check > p:first-of-type { display: inline; }
+.learn-check-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lc-choice.right { background: #e4f7d8; border-color: var(--ok); color: #145c33; opacity: 1; }
+.lc-choice.wrong { background: var(--bad-bg); border-color: var(--bad); color: #8a1f1f; opacity: 1; text-decoration: line-through; }
+.lc-feedback { margin: 10px 0 0; font-weight: 600; }
+.lc-feedback.good { color: #145c33; } .lc-feedback.bad { color: #8a1f1f; }
+.learn-more { margin-top: 10px; font-size: .98rem; }
+.learn-more summary { cursor: pointer; color: var(--teal-d); font-weight: 600; }
+.read-aloud { float: right; margin: 0 0 6px 10px; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 3px 10px; font: inherit; font-size: .82rem; color: var(--muted); cursor: pointer; }
+.read-aloud:hover, .read-aloud.on { color: var(--teal-d); border-color: var(--teal); }
+.remember-box { background: #fffbea; border: 1px solid #f2dd8b; border-left: 5px solid var(--accent); border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+.remember-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.remember-head .read-aloud { float: none; margin: 0; }
+.remember-item > :first-child { margin-top: 6px; } .remember-item > :last-child { margin-bottom: 4px; }
+.remember-item + .remember-item { border-top: 1px dashed #ecd98a; margin-top: 6px; }
+.remember-item .vz { max-width: 240px; margin: 4px auto; }
+.skip-learn-form { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 8px; }
+
+/* ---- interactive "try it" visuals ---- */
+.vz-try { display: grid; gap: 10px; justify-items: center; }
+.try-art { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; }
+.try-art svg[aria-label^="LED"], .try-art svg[aria-label="an LED"] { width: 110px; height: auto; }
+.try-controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.try-controls button { font: inherit; font-size: .9rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+.try-controls button.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.try-controls input[type=range] { width: min(240px, 70vw); }
+.try-code { font-family: var(--mono); font-size: .9rem; background: #0f1730; color: #e8ecff; padding: 6px 10px; border-radius: 8px; white-space: pre; max-width: 100%; overflow-x: auto; }
+.try-out { font-weight: 700; text-align: center; min-height: 1.4em; }
+.try-hint { font-size: .82rem; color: var(--muted); text-align: center; }

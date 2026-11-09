@@ -64,34 +64,33 @@ learn:
         - {icon: "🦾", label: "Act: move the servo"}
       loop: true
       loop_label: "repeat forever"
-  - text: |
-      ### Today's parts
-      * The **IR obstacle sensor** on pin 0 gives **0** when your hand is in front. It gives 1 when the path is clear.
-      * A **180° servo** on pin 13 points to an angle and holds it. That makes a great gate arm.
-    visual:
-      type: board
-      board: shield
-      jumpers: {V1: "3.3V", V2: "5V"}
-      power: "6×AA"
-      plugs:
-        - {pin: 0, device: "IR obstacle", kind: sensor}
-        - {pin: 13, device: "Gate servo", kind: servo}
+    check:
+      question: Which step uses `if` to choose what to do?
+      choices: ["Sense", "Decide", "Act"]
+      answer: 1
+      why: Decide is where the code looks at what it sensed and picks an action with if.
+      hint: One step reads, one step chooses, and one step moves. Which one chooses?
   - text: |
       ### Gate angles
-      In code, `write_analog` sends the servo a pulse. The pulse sets the angle.
+      Today a **180° servo** on pin 13 is the gate arm. `write_analog` sends it a pulse. The pulse sets the angle.
 
       * **26** → 0°: gate **closed**
       * **77** → 90°: gate **open**
       * **128** → 180°
 
-      A small function, `angle(deg)`, does this math for you.
+      A small function, `angle(deg)`, does this math for you. Drag the slider to try it.
     visual:
-      type: dial
-      caption: "Closed at 0°, open at 90°"
-      marks:
-        - {angle: 0, label: "closed · 26", pointer: true}
-        - {angle: 90, label: "open · 77"}
-        - {angle: 180, label: "180° · 128"}
+      type: try
+      kind: servo
+      code: "pin13.write_analog({value})"
+      map: [26, 128]
+      start: 0
+    check:
+      question: Which `write_analog` number **closes** the gate?
+      choices: ["26", "77", "128"]
+      answer: 0
+      why: 26 points the arm to 0°, and 0° is the closed gate.
+      hint: The gate is closed at 0°. Which number goes with the smallest angle?
   - text: |
       ### Remember the state
       The gate should only open if it's **closed**. A **state** variable remembers which one it is.
@@ -105,6 +104,12 @@ learn:
       items:
         - {icon: "🚪", title: "closed", text: "hand seen? Then open it"}
         - {icon: "🔓", title: "open", text: "hand gone? Then close it"}
+    check:
+      question: The gate is already **open** and your hand is still there. What does the code do?
+      choices: ["Opens it again", "Nothing new, because it only opens when closed", "Closes it right away"]
+      answer: 1
+      why: The state variable says "open", so the open rule doesn't run again.
+      hint: Look at the rule for each state. Which rule runs when the state is open and a hand is seen?
   - text: |
       ### Add a cooldown
       At the edge of its range, a sensor can flicker: 0, 1, 0, 1. Then the gate **flaps** open and shut.
@@ -118,6 +123,12 @@ learn:
       x_label: "time"
       y_label: "IR reading"
       caption: "A hand at the edge makes the reading flicker."
+    check:
+      question: What problem does a cooldown fix?
+      choices: ["The servo running out of power", "The sensor seeing too far away", "The gate flapping when the reading flickers"]
+      answer: 2
+      why: Waiting after each move stops a flickering reading from flipping the gate back and forth.
+      hint: Look at the graph. What would the gate do if it followed every flicker?
 circuit:
   intro: >-
     You'll plug the IR sensor into pin 0 and a 180° servo into pin 13. The servo
@@ -126,6 +137,11 @@ circuit:
     - Unplug the battery pack before you plug in or move anything.
     - Brown servo wire to G. A backwards servo can be damaged.
     - The two small chips on the shield get hot. Don't touch them.
+  remember:
+    - text: |
+        **Today's parts:** the **IR obstacle sensor** on pin 0 gives **0** when your hand is in front
+        and 1 when the path is clear. The **180° servo** on pin 13 points to an angle and **holds** it,
+        so it makes a great gate arm.
   steps:
     - title: Set the jumpers
       instruction: >-

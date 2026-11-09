@@ -16,10 +16,10 @@ change the lessons or the code in the repository and build again.
 
 | File | Add it as | Size |
 |---|---|---|
-| `Assets.gs` | Script (+ → Script), name it `Assets` | 251 KB |
-| `Code.gs` | Script (+ → Script), name it `Code` | 71 KB |
-| `Data.gs` | Script (+ → Script), name it `Data` | 108 KB |
-| `Pages1.gs` | Script (+ → Script), name it `Pages1` | 652 KB |
+| `Assets.gs` | Script (+ → Script), name it `Assets` | 257 KB |
+| `Code.gs` | Script (+ → Script), name it `Code` | 73 KB |
+| `Data.gs` | Script (+ → Script), name it `Data` | 132 KB |
+| `Pages1.gs` | Script (+ → Script), name it `Pages1` | 672 KB |
 
 4. Press **Ctrl+S**.
 

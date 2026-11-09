@@ -47,19 +47,20 @@ learn:
       A thermostat, a washing machine and a car's airbag sensor all have one.
 
       Many have no screen. They just sense, decide and act, all day.
+
+      Your micro:bit V2 can be one. It senses **temperature**, **light** and **sound** with no wires.
     visual:
       type: compare
       items:
         - {icon: "🌡️", title: "Thermostat", text: "Keeps a room warm."}
         - {icon: "🧺", title: "Washer", text: "Runs each cycle."}
         - {icon: "🚗", title: "Airbag", text: "Senses a crash."}
-  - text: |
-      ### Three built-in sensors
-      The micro:bit V2 can sense these with no wires:
-
-      * `temperature()`: degrees Celsius
-      * `display.read_light_level()`: 0 (dark) to 255 (bright)
-      * `microphone.sound_level()`: 0 (quiet) to 255 (loud)
+    check:
+      question: Which one is an **embedded computer**?
+      choices: ["A laptop for homework, games and videos", "A thermostat that keeps a room warm", "A website"]
+      answer: 1
+      why: A thermostat's computer is built into it and does one job.
+      hint: Look for the computer that is built into a thing and does just one job.
   - text: |
       ### Save it with log
       Put `import log` at the top.
@@ -75,6 +76,12 @@ learn:
         - {icon: "🌡️", label: "Read a sensor"}
         - {icon: "💾", label: "log.add() saves a row"}
         - {icon: "📈", label: "Open MY_DATA.HTM"}
+    check:
+      question: Each time you call `log.add()`, what does it save?
+      choices: ["A new column", "A new file", "A new row"]
+      answer: 2
+      why: Labels are the columns, and each log.add() adds one row of readings.
+      hint: The card says what the labels are. log.add() makes the other thing.
   - text: |
       ### How often should you read?
       The **sample rate** is how often you take a reading.
@@ -83,6 +90,12 @@ learn:
       * Sound changes **fast**. Try every second.
 
       Too many readings will fill the memory.
+    check:
+      question: You want to log room temperature all day. How often should you read?
+      choices: ["About every minute", "Every second", "As fast as it can"]
+      answer: 0
+      why: Room temperature changes slowly, so every minute is plenty and saves memory.
+      hint: Does room temperature change fast or slowly? And what happens with too many readings?
   - text: |
       ### Waiting without stopping
       `sleep(5000)` freezes your code for 5 seconds. Buttons have to wait too.
@@ -90,8 +103,19 @@ learn:
       So ask, "Is it time yet?"
 
       `running_time()` counts milliseconds since power-on. Save the next time to read, then check it over and over.
+    check:
+      question: Why not just use `sleep(5000)` between readings?
+      choices: ["It reads the sensors too fast", "It freezes the code, so buttons have to wait", "It deletes the log"]
+      answer: 1
+      why: During a sleep the code is frozen, so a button press isn't noticed until it ends.
+      hint: What happens to everything else while the code sleeps?
 code:
   intro: Press **A** to start logging and **B** to stop. Then plug it in, open the **MICROBIT** drive and double-click **MY_DATA.HTM**.
+  remember:
+    - text: |
+        **Built-in sensors (V2):** `temperature()` gives degrees Celsius.
+        `display.read_light_level()` gives 0 (dark) to 255 (bright).
+        `microphone.sound_level()` gives 0 (quiet) to 255 (loud).
   starter: |
     from microbit import *
     import log

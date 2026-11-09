@@ -55,6 +55,12 @@ learn:
       items:
         - {icon: "❌", title: "Weak", text: "Is lunch fun?"}
         - {icon: "✅", title: "Strong", text: "Which door is busiest at lunch?"}
+    check:
+      question: Which is a **strong** question for a sensor study?
+      choices: ["Do people like the gym?", "Which hallway has more people walking by between classes?", "Is recess fun?"]
+      answer: 1
+      why: It names what you measure (people passing), where (hallways) and when (between classes).
+      hint: Can a sensor measure liking or fun? Look for what, where and when.
   - text: |
       ### Make it a fair test
       Change only **one thing**. Keep the rest the same.
@@ -62,6 +68,12 @@ learn:
       Comparing two doors? Use the same sensor, the same time of day and the same height.
 
       Otherwise, you can't tell what caused the difference.
+    check:
+      question: You compare two doors. One sensor is at knee height, the other at head height. What's wrong?
+      choices: ["Nothing, two sensors is fine", "You need a third door", "More than one thing is different, so it's not fair"]
+      answer: 2
+      why: The height changed as well as the door, so you can't tell what caused the difference.
+      hint: Count how many things are different between the two setups.
   - text: |
       ### Don't count twice
       The loop checks 50 times a second. One person could count 20 times!
@@ -77,18 +89,23 @@ learn:
         - {icon: "⬜", label: "Clear"}
         - {icon: "🚶", label: "Just arrived: count"}
         - {icon: "🚶", label: "Still there: skip"}
-  - text: |
-      ### Trust, but check
-      Before you collect data, **calibrate**.
-
-      Walk past the sensor **10 times**. Did it count 10?
-
-      If not, fix it with the tuning knob or a better spot. Bad sensors give bad evidence.
+    check:
+      question: "Why does the code use `if now and not blocked:`?"
+      choices: ["To count only when something just arrived", "To make the loop run faster", "To skip every other person"]
+      answer: 0
+      why: It's true only when something is there now but wasn't last time, so each pass counts once.
+      hint: The loop checks 50 times a second. What would happen if it counted every check?
   - text: |
       ### Respect people
       * Count people. Never record who they are. That keeps data **anonymous**.
       * Ask your teacher before you put a sensor in a shared space.
       * Tell people what you are measuring.
+    check:
+      question: What should your sensor study record about people?
+      choices: ["Each person's name", "How many people passed", "A photo of each person"]
+      answer: 1
+      why: Counting people without recording who they are keeps the data anonymous.
+      hint: Read the first bullet. What keeps data anonymous?
 circuit:
   intro: You'll plug the IR sensor into pin 0, just like Sprint 2. No servos today.
   safety:
@@ -117,6 +134,10 @@ circuit:
       check: Did the sensor's LED react to your hand?
 code:
   intro: This counts how many things pass the sensor each minute, then saves the count. Point it across a doorway, or test it with your hand.
+  remember:
+    - text: |
+        **Calibrate first:** walk past the sensor **10 times**. Did it count 10? If not, fix it with
+        the tuning knob or a better spot. Bad sensors give bad evidence.
   starter: |
     from microbit import *
     import log

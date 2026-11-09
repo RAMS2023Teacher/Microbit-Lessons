@@ -110,6 +110,17 @@ def delete_class(cid):
     return redirect(url_for("teacher.home"))
 
 
+@bp.post("/classes/<int:cid>/skip-learn")
+@teacher_required
+def skip_learn(cid):
+    c = _own_class(cid)
+    c.skip_learn = request.form.get("skip") == "1"
+    db.session.commit()
+    flash("Learn cards are hidden for this class: you'll teach that part live." if c.skip_learn
+          else "Learn cards are back on for this class.", "info")
+    return redirect(url_for("teacher.classroom", cid=cid))
+
+
 @bp.post("/classes/<int:cid>/assign")
 @teacher_required
 def assign(cid):
@@ -356,7 +367,8 @@ def student(cid, sid):
         assigned = any(a.lesson_id == lesson["id"] for a in c.assignments)
         if p or assigned:
             items.append({"lesson": lesson, "p": p, "assigned": assigned, "partner": mates.get((s.id, lesson["id"])),
-                          "pct": p.percent(L.section_keys(lesson)) if p else 0})
+                          "pct": p.percent(L.section_keys(lesson)) if p else 0,
+                          "checks": L.learn_check_summary(lesson, p.learn_checks) if p else None})
     return render_template("teacher/student.html", c=c, s=s, items=items,
                            level=gamify.level_info(s.xp or 0), badges=gamify.badge_list(s))
 

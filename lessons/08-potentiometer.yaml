@@ -57,26 +57,23 @@ learn:
       * The two **outer legs** go to **3V** and **GND**.
       * The **wiper** (middle leg) slides along the strip as you turn.
 
-      Its voltage goes smoothly from 0 to 3 volts. `pin2.read_analog()` turns that into **0 to 1023**.
+      `pin2.read_analog()` turns the wiper's voltage into **0 to 1023**. Your code sends that number straight to the LED. Drag the slider like a knob.
     visual:
-      type: part
-      part: potentiometer
-      labels: {left: "3V", wiper: "wiper → P2", right: "GND"}
-  - text: |
-      ### A voltage divider you can turn
-      Last lesson, **light** changed the resistances. Now **your hand** does.
-
-      Same idea: two resistances share 3 volts, and the pin reads the middle.
-    visual:
-      type: circuit
-      caption: "Outer legs to 3V and GND. The wiper (green) goes to P2."
-      add:
-        - {type: wire, from: mb.GND, to: T-1, color: black}
-        - {type: wire, from: mb.3V, to: T+1, color: red}
-        - {type: potentiometer, id: pot1, left: e24, wiper: e25, right: e26}
-        - {type: wire, from: T+24, to: a24, color: red}
-        - {type: wire, from: mb.P2, to: a25, color: green}
-        - {type: wire, from: a26, to: T-26, color: black}
+      type: try
+      kind: pwm
+      code: "pin0.write_analog({value})"
+      max: 1023
+      start: 512
+    more: |
+      **A voltage divider you can turn.** Last lesson, **light** changed the resistances. Now **your hand** does.
+      Same idea: two resistances share 3 volts, and the pin reads the middle. As you turn, the wiper's
+      voltage goes smoothly from 0 to 3 volts.
+    check:
+      question: You turn the knob all the way. What is the biggest number `read_analog()` can give?
+      choices: ["3", "100", "1023"]
+      answer: 2
+      why: read_analog turns 0 to 3 volts into a number from 0 to 1023.
+      hint: The wiper gives up to 3 volts, but the pin doesn't report volts. What range does the card give?
   - text: |
       ### One / or two //?
       * One `/` gives a decimal: `7 / 2` is `3.5`.
@@ -88,6 +85,12 @@ learn:
       items:
         - {icon: "🔢", title: "7 / 2", text: "3.5, a decimal"}
         - {icon: "✅", title: "7 // 2", text: "3, a whole number"}
+    check:
+      question: What is `9 // 2` in Python?
+      choices: ["4", "4.5", "5"]
+      answer: 0
+      why: 9 / 2 is 4.5, and // drops the remainder, leaving 4.
+      hint: First work out 9 / 2. Then remember that // doesn't round, it just throws away the leftover part.
   - text: |
       ### Scaling numbers
       The knob gives **0-1023**. But the display has only **5** rows. A bar can be **6 heights**: empty, or 1 to 5 rows.
@@ -108,6 +111,12 @@ learn:
       map: [0, 5]
       map_label: bars
       caption: "The whole knob range squeezes into 0 to 5 bars."
+    check:
+      question: Why do we multiply by **6**, when the display only has 5 rows?
+      choices: ["1024 divides evenly by 6", "A bar has 6 heights: empty, or 1 to 5 rows", "The display really has 6 rows"]
+      answer: 1
+      why: An empty bar counts as a height too, so there are 6 possible heights.
+      hint: Count every bar height you could show, including the smallest one of all.
   - text: |
       ### The display's grid
       `display.set_pixel(x, y, brightness)` lights one LED.
@@ -121,17 +130,12 @@ learn:
       type: leds
       image: "00000:00000:00000:00000:99999"
       caption: "The bottom row is y = 4."
-  - text: |
-      ### Drawing a bar graph
-      `range(5)` with one number counts **0, 1, 2, 3, 4**.
-
-      A loop goes through the 5 rows. Each row lights up if it is **part of the bar**.
-
-      A second loop **inside** it lights all 5 LEDs across that row. Bigger number = taller bar.
-    visual:
-      type: leds
-      frames: ["00000:00000:00000:00000:99999", "00000:00000:99999:99999:99999", "99999:99999:99999:99999:99999"]
-      caption: "bars = 1, then 3, then 5"
+    check:
+      question: You want to light an LED in the **bottom** row. Which y do you use?
+      choices: ["y = 0", "y = 5", "y = 4"]
+      answer: 2
+      why: y counts from 0 at the top down to 4 at the bottom.
+      hint: Does y count up from the bottom, or down from the top? And where does it start?
 circuit:
   intro: >-
     Keep the LED on pin 0 and add a knob on pin 2. You'll use both rails: red
@@ -185,6 +189,14 @@ circuit:
         - {type: wire, from: T+24, to: a24, color: red}
         - {type: wire, from: mb.P2, to: a25, color: green}
         - {type: wire, from: a26, to: T-26, color: black}
+  remember:
+    - text: |
+        **Pot legs:** the two **outer legs** go to **3V** and **GND**. The **wiper** (middle leg)
+        goes to **P2**. Never wire the wiper to 3V or GND.
+      visual:
+        type: part
+        part: potentiometer
+        labels: {left: "3V", wiper: "wiper → P2", right: "GND"}
   verify:
     connected:
       - [mb.P0, r1.a]
@@ -230,6 +242,15 @@ code:
       explain: Row 0 is the bottom. If `row < bars`, that row lights up (9). Otherwise it's dark (0).
     - lines: "14-15"
       explain: A loop **inside** a loop lights the whole row. `4 - row` puts row 0 at the bottom.
+  remember:
+    - text: |
+        **Drawing a bar graph:** `range(5)` with one number counts **0, 1, 2, 3, 4**. The outer loop goes
+        through the 5 rows, and each row lights up if it's **part of the bar**. A second loop **inside** it
+        lights all 5 LEDs across that row. Bigger number = taller bar.
+      visual:
+        type: leds
+        frames: ["00000:00000:00000:00000:99999", "00000:00000:99999:99999:99999", "99999:99999:99999:99999:99999"]
+        caption: "bars = 1, then 3, then 5"
   try_it:
     - Which way makes the bar go up? Swap the red and black pot wires. What changes?
     - Show the knob as a single digit with display.show(value * 10 // 1024) instead.

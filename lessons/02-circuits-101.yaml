@@ -52,58 +52,57 @@ warmup:
 learn:
   - text: |
       ### A circuit is a loop
-      Electricity needs a **complete loop**. That loop is called a **circuit**.
+      Electricity needs a **complete loop**, called a **circuit**.
 
-      * It flows out of the **+** side (the 3V pin).
-      * It goes through the parts.
-      * It comes back to the **–** side, called **GND** (ground).
+      It flows out of the **+** side (the 3V pin), through the parts, and back to **GND** (–).
 
-      A gap anywhere means **nothing flows**.
+      A gap **anywhere** means nothing flows. Try it: make a gap and watch the LED.
     visual:
-      type: flow
-      loop: true
-      loop_label: back to the start
-      steps:
-        - {icon: "🔋", label: "3V (+)"}
-        - {icon: "〰️", label: "resistor"}
-        - {icon: "💡", label: "LED"}
-        - {icon: "⏚", label: "GND (–)"}
+      type: try
+      kind: loop
+      steps: ["3V (+)", "resistor", "LED", "GND (–)"]
+    check:
+      question: One wire pops out of your loop. What happens to the LED?
+      choices: ["It stays on", "It goes out", "It gets brighter"]
+      answer: 1
+      why: A gap anywhere breaks the loop, so no electricity flows.
+      hint: Think about the loop. Can electricity get all the way around with a gap?
   - text: |
-      ### Think of water in pipes
-      * **Voltage** is the **push**, like water pressure. The 3V pin pushes with about **3 volts**.
-      * **Current** is **how much flows**. We measure it in **milliamps (mA)**.
-      * **Resistance** **slows the flow**, like a skinny pipe. We measure it in **ohms (Ω)**.
+      ### Push, flow and squeeze
+      Think of water in pipes:
 
-      More push → more flow. More resistance → less flow.
+      * **Voltage** is the **push**, like water pressure.
+      * **Current** is **how much flows**, measured in **milliamps (mA)**.
+      * **Resistance** **slows the flow**, like a skinny pipe, measured in **ohms (Ω)**.
+    more: |
+      **Every model leaves things out.** Cut a water pipe and water spills, but cut a wire and
+      nothing leaks: it just stops. Wires are already full of tiny charges, so a light turns on
+      **instantly**. Models help us think, but check them against real life.
     visual:
       type: compare
       items:
         - {icon: "💪", title: "Voltage (V)", text: "The push, like water pressure"}
         - {icon: "🌊", title: "Current (I)", text: "How much flows"}
         - {icon: "🚰", title: "Resistance (R)", text: "Slows the flow, like a skinny pipe"}
-  - text: |
-      ### Where the water model breaks
-      Every model leaves things out. Water pipes are **like** a circuit, not the same.
-
-      * Cut a water pipe and water spills. Cut a wire and **nothing leaks out**. It just stops.
-      * Wires are already full of tiny charges, so a light turns on **instantly**.
-
-      Models help us think, but always check them against real life.
-    visual:
-      type: compare
-      items:
-        - {icon: "✅", title: "Model matches", text: "push, flow, skinny pipe"}
-        - {icon: "❌", title: "Model misses", text: "cut wires don't leak; the flow starts instantly"}
+    check:
+      question: Which one is the **push**?
+      choices: ["Voltage", "Current", "Resistance"]
+      answer: 0
+      why: Voltage is the push. Current is the flow it causes.
+      hint: Water pressure pushes water through a pipe. Which word matches pressure?
   - text: |
       ### Ohm's law
       One tiny formula links all three:
 
       **I = V / R** (current = voltage ÷ resistance)
 
-      * A **bigger** resistor means **less** current.
-      * A **smaller** resistor means **more** current.
+      * **Bigger** resistor → **less** current.
+      * **Smaller** resistor → **more** current.
 
-      Most LEDs are happiest under about **20 mA**.
+      Most LEDs are happiest **under 20 mA**.
+    more: |
+      **The math for your circuit:** the 3V pin gives about **3.3 V** and the LED uses about **2 V**,
+      so the resistor gets **1.3 V**. With 220 Ω: 1.3 ÷ 220 ≈ 0.006 A = **6 mA**. Safe and happy.
     visual:
       type: scale
       min: 0
@@ -118,49 +117,28 @@ learn:
         - {at: 6, label: "220 Ω", pointer: true}
         - {at: 13, label: "100 Ω"}
         - {at: 28, label: "47 Ω"}
-  - text: |
-      ### Do the math
-      The 3V pin gives about **3.3 V**. An LED "uses up" about **2 V**.
-
-      So the resistor gets what's left: **3.3 − 2 = 1.3 V**.
-
-      With a 220 Ω resistor: 1.3 ÷ 220 ≈ **0.006 A**. That's **6 mA**, a safe, happy LED.
-    visual:
-      type: flow
-      steps:
-        - {icon: "🔋", label: "3.3 V from the pin"}
-        - {icon: "💡", label: "LED uses about 2 V"}
-        - {icon: "〰️", label: "1.3 V left for resistor"}
-        - {icon: "🧮", label: "1.3 ÷ 220 ≈ 6 mA"}
-  - text: |
-      ### The breadboard's secret wiring
-      Hidden metal strips join the holes.
-
-      * Each hole has a **letter and a number**, like **c10**.
-      * Holes **a–e** in one column are joined. So are **f–j**.
-      * The long **+** and **–** **rails** run the whole board. **T+1** means the top + rail at spot 1.
-
-      Two legs in the **same column** are connected.
-  - text: |
-      ### LEDs have a + and a –
-      An LED only works **one way round**. This is called **polarity**.
-
-      * **Long leg = anode (+).** It goes toward the power.
-      * **Short leg = cathode (–).** It goes toward GND. The rim is flat on this side.
-    visual:
-      type: part
-      part: led
-      color: red
+    check:
+      question: You swap the 220 Ω resistor for a 1000 Ω one. The current…
+      choices: ["goes up", "goes down", "stays the same"]
+      answer: 1
+      why: A bigger resistor squeezes the flow more, so less current flows.
+      hint: Look at the scale. Is 1 kΩ on the high-current or low-current end?
   - text: |
       ### The resistor is a bodyguard
-      Without a **resistor**, nothing slows the current down. The LED could pull too much current and **burn out**.
+      Without a **resistor**, nothing slows the current. The LED can pull too much and **burn out**.
 
-      A resistor has no + or –. Either way round works.
+      So every LED in this course gets a resistor in its loop.
     visual:
       type: compare
       items:
         - {icon: "😊", title: "With a 220 Ω resistor", text: "About 6 mA: a safe glow"}
         - {icon: "🔥", title: "No resistor", text: "Too much current: the LED can burn out"}
+    check:
+      question: Why does the LED need a resistor?
+      choices: ["To make it brighter", "To limit the current so it doesn't burn out", "To give it a + and – side"]
+      answer: 1
+      why: The resistor keeps the current low enough for the LED to survive.
+      hint: What did the card say happens with no resistor?
 circuit:
   intro: >-
     You'll build the loop 3V → resistor → LED → GND. There's no code
@@ -170,6 +148,15 @@ circuit:
     - Always build with the micro:bit unplugged.
     - Never connect 3V straight to GND with a wire - that's a short circuit and it can damage the micro:bit.
     - Always put a resistor in the loop with an LED.
+  remember:
+    - text: |
+        **Breadboard secret wiring:** holes **a–e** in one column are joined, and so are **f–j**.
+        The long **+** and **–** rails run the whole board (**T+1** = top + rail, spot 1).
+        Two legs in the **same column** are connected.
+    - text: |
+        **LED legs:** the **long leg (+)** goes toward the power. The **short leg (–)** goes toward GND;
+        its side of the rim is flat. Backwards = no light (but no damage).
+      visual: {type: part, part: led, color: red}
   steps:
     - title: Power and ground rails
       instruction: >-
@@ -178,7 +165,7 @@ circuit:
         at **T+1**. Run a **black** wire from the breakout's **GND** pin to the
         top **blue (–) rail** at **T-1**.
       check: Is the red wire in the + rail and the black wire in the – rail (not both in the same rail)?
-      tip: Mixing up the two separate rails is the #1 way to make a short circuit.
+      tip: "Mixing up the two separate rails is the #1 way to make a short circuit."
       add:
         - {type: wire, from: mb.3V, to: T+1, color: red}
         - {type: wire, from: mb.GND, to: T-1, color: black}
@@ -222,6 +209,10 @@ code:
     Your LED doesn't need code to glow - but Python makes a great calculator!
     This program uses **variables** and Ohm's law to work out how much current
     flows through your LED, then scrolls the answer.
+  remember:
+    - text: |
+        **Ohm's law in Python:** `amps = volts / ohms`. The resistor gets the volts the LED
+        doesn't use: 3.3 − 2 = **1.3 V**. Multiply amps by 1000 to get **milliamps**.
   starter: |
     from microbit import *
 

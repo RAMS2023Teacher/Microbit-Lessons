@@ -28,12 +28,14 @@ XP = {
     "clean_fix": 10,      # debug fixed without hints
     "quiz_perfect": 15,   # best quiz score is 100%
     "quiz_first_try": 10,  # 100% on the first attempt
+    "learn_check": 5,     # each Learn card's quick check, right on the first try
     "badge": 25,          # every badge is also worth XP
 }
 SECTION_LABELS = {"warmup": "Warm-up", "learn": "Learn", "circuit": "Circuit built", "lab": "AI lab done", "practice": "Your turn solved", "code": "Code ran",
                   "debug": "Bug fixed", "quiz": "Quiz done", "challenge": "Challenge submitted",
                   "complete": "Lesson complete!", "clean_fix": "Fixed with no hints",
-                  "quiz_perfect": "Perfect quiz", "quiz_first_try": "Perfect on the first try"}
+                  "quiz_perfect": "Perfect quiz", "quiz_first_try": "Perfect on the first try",
+                  "learn_check": "Quick check right first try"}
 
 # ---------------------------------------------------------------- levels
 LEVELS = [  # (XP needed, title)
@@ -163,7 +165,8 @@ def map_data(user, assigned_ids=()) -> dict:
 def possible_xp(lesson: dict) -> int:
     keys = L.section_keys(lesson)
     clean = XP["clean_fix"] if lesson.get("debug") else 0
-    return sum(XP[k] for k in keys) + XP["complete"] + clean + XP["quiz_perfect"] + XP["quiz_first_try"]
+    return (sum(XP[k] for k in keys) + XP["complete"] + clean + XP["quiz_perfect"] + XP["quiz_first_try"]
+            + XP["learn_check"] * L.learn_check_count(lesson))
 
 
 # ---------------------------------------------------------------- badges
@@ -178,6 +181,7 @@ BADGES = [
     ("quiz-whiz", "🧠", "Quiz Whiz", "Get a perfect quiz score."),
     ("sharpshooter", "🎯", "Sharpshooter", "Get 3 quizzes perfect on the first try."),
     ("inventor", "🛠️", "Inventor", "Submit 3 open-ended challenges."),
+    ("eagle-eye", "🦅", "Eagle Eye", "Get 15 Learn quick checks right on the first try."),
     ("finisher", "🏁", "Finisher", "Complete a whole lesson."),
     ("star-collector", "⭐", "Star Collector", "Earn all 3 stars on 5 lessons."),
     ("early-bird", "🐦", "Early Bird", "Finish an assignment before it's due."),
@@ -218,6 +222,8 @@ def _badge_checks(user, progress: list[Progress], xp_keys: set[str]) -> set[str]
         earned.add("quiz-whiz")
     if sum(1 for k in xp_keys if k.startswith("quiz_first_try:")) >= 3:
         earned.add("sharpshooter")
+    if sum(1 for k in xp_keys if k.startswith("learn_check_")) >= 15:
+        earned.add("eagle-eye")
     if sum(1 for p in prog if p.challenge_submitted_at) >= 3:
         earned.add("inventor")
     if done:
@@ -282,6 +288,9 @@ def sync_rewards(user) -> dict:
             if p.quiz_attempts == 1:
                 _award(user, f"quiz_first_try:{lid}", XP["quiz_first_try"],
                        f"{SECTION_LABELS['quiz_first_try']} · {title}", existing, gained)
+        for i, row in sorted((p.learn_checks or {}).items()):
+            if row.get("ok") and row.get("tries") == 1 and i.isdigit() and int(i) < len(lesson.get("learn") or []):
+                _award(user, f"learn_check_{i}:{lid}", XP["learn_check"], f"{SECTION_LABELS['learn_check']} · {title}", existing, gained)
         if p.percent(L.section_keys(lesson)) == 100:
             _award(user, f"complete:{lid}", XP["complete"], f"{SECTION_LABELS['complete']} · {title}", existing, gained)
 

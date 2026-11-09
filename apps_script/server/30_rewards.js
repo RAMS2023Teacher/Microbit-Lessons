@@ -35,6 +35,7 @@ function badgeChecks_(rec, cfg) {
   if (keys.some(function (k) { return k.indexOf('clean_fix:') === 0; })) earned['clean-fix'] = 1;
   if (keys.some(function (k) { return k.indexOf('quiz_perfect:') === 0; })) earned['quiz-whiz'] = 1;
   if (keys.filter(function (k) { return k.indexOf('quiz_first_try:') === 0; }).length >= 3) earned['sharpshooter'] = 1;
+  if (keys.filter(function (k) { return k.indexOf('learn_check_') === 0; }).length >= 15) earned['eagle-eye'] = 1;
   if (count(function (p) { return p.challenge_submitted_at; }) >= 3) earned['inventor'] = 1;
   if (done.length) earned['finisher'] = 1;
   if (count(function (p, L) { return lessonStars_(L, p) === 3; }) >= 5) earned['star-collector'] = 1;
@@ -85,6 +86,11 @@ function syncRewards_(rec, cfg) {
       award_(rec, 'quiz_perfect:' + lid, X.quiz_perfect, labels.quiz_perfect + ' · ' + L.title, gained);
       if (p.quiz_attempts === 1) award_(rec, 'quiz_first_try:' + lid, X.quiz_first_try, labels.quiz_first_try + ' · ' + L.title, gained);
     }
+    Object.keys(p.learn_checks || {}).sort().forEach(function (i) {
+      var row = p.learn_checks[i];
+      if (row && row.ok && row.tries === 1 && (L.learn_checks || [])[+i])
+        award_(rec, 'learn_check_' + i + ':' + lid, X.learn_check, labels.learn_check + ' · ' + L.title, gained);
+    });
     if (percent_(p, L) === 100) award_(rec, 'complete:' + lid, X.complete, labels.complete + ' · ' + L.title, gained);
   });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });

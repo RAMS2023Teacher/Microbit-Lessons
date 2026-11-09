@@ -300,7 +300,12 @@
     });
     else h.push('<li class="muted">Nobody yet.</li>');
     h.push('</ul><details class="danger-zone"><summary>Delete this class</summary><p class="small">Type <b>' + E(c.name) + '</b> to confirm. Student work is kept.</p>' +
-      '<input id="del-name"> <button class="btn small danger" id="del-go" type="button">Delete class</button></details></section></div>');
+      '<input id="del-name"> <button class="btn small danger" id="del-go" type="button">Delete class</button></details>' +
+      '<div class="skip-learn-form"><h3>Learn cards</h3>' + (c.skip_learn
+        ? '<p class="small">🧑‍🏫 <b>Hidden.</b> You teach the Learn part live; students go straight from the warm-up to the next step (they still get the Learn XP).</p>' +
+          '<button class="btn small ghost" id="skip-learn" data-skip="0" type="button">Show Learn cards again</button>'
+        : '<p class="small muted">Teaching the Learn part yourself as a mini-lesson? Hide the Learn cards for this class.</p>' +
+          '<button class="btn small ghost" id="skip-learn" data-skip="1" type="button">Skip Learn for this class</button>') + '</div></section></div>');
     main.innerHTML = h.join('');
     var $ = function (id) { return document.getElementById(id); };
     $('sp-go').addEventListener('click', function () { act(this, 'assignSprint', [c.id, $('sp-branch').value, $('sp-due').value, $('sp-note').value]); });
@@ -315,6 +320,7 @@
     if ($('gc-unlink')) $('gc-unlink').addEventListener('click', function () {
       if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
+    $('skip-learn').addEventListener('click', function () { act(this, 'setSkipLearn', [c.id, this.dataset.skip === '1']); });
     $('del-go').addEventListener('click', function () { act(this, 'deleteClass', [c.id, $('del-name').value], function () { ML.go('/'); }); });
   };
 
@@ -343,6 +349,15 @@
         h.push('<dt>Code</dt><dd>' + ((p.sections || {}).code ? 'Ran it ✓' : 'not yet') + ' · downloaded ' + (p.sends || 0) + '×' + pre('view code', p.code) + '</dd>');
         h.push('<dt>Debug</dt><dd>' + (p.debug_solved ? '✅ fixed' : '❌ not fixed') + ' · ' + (p.debug_attempts || 0) + ' checks · ' + (p.debug_hints_used || 0) + ' hints' +
           pre('view their fix', p.debug_code) + (p.debug_reflection ? '<blockquote>' + E(p.debug_reflection) + '</blockquote>' : '') + '</dd>');
+      }
+      if (it.learn_titles && it.learn_titles.length) {
+        var lc = p.learn_checks || {}, firsts = 0, notes = [];
+        it.learn_titles.forEach(function (title, i) {
+          var r = lc[i] || {};
+          if (r.ok && r.tries === 1) { firsts++; return; }
+          notes.push('<br><small class="muted">' + (r.ok ? '🔁 ' : r.tries ? '❌ ' : '· ') + E(title) + (r.tries ? ' (' + r.tries + ' tries)' : ' (not answered)') + '</small>');
+        });
+        h.push('<dt>Quick checks</dt><dd>' + firsts + ' of ' + it.learn_titles.length + ' right first try' + notes.join('') + '</dd>');
       }
       h.push('<dt>Quiz</dt><dd>' + (p.quiz_total ? 'latest ' + p.quiz_score + '/' + p.quiz_total + ' · best ' + p.quiz_best + '/' + p.quiz_total + ' · ' + p.quiz_attempts + ' attempt(s)' : '—') +
         '</dd><dt>Challenge</dt><dd>' + (p.challenge_submitted_at ? 'submitted ' + E(shortDate(p.challenge_submitted_at)) + '<blockquote>' + E(p.challenge_response) + '</blockquote>' +

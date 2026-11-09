@@ -46,6 +46,26 @@ learn:
       One dropped book makes one loud reading. That doesn't mean the room is loud.
 
       A monitor that warns about every spike makes a **false alarm**. Soon people ignore it.
+
+      This alarm checks just **one** reading. Drag it up for one loud moment.
+    visual:
+      type: try
+      kind: sensor
+      read: "microphone.sound_level()"
+      min: 0
+      max: 255
+      threshold: 120
+      op: ">"
+      start: 40
+      label: sound
+      then: "Too loud! Alarm on, even if it was just one dropped book."
+      else: "Quiet. No alarm."
+    check:
+      question: A monitor warns about every loud spike. What happens?
+      choices: ["People trust it more", "It makes false alarms, and people start to ignore it", "The room gets quieter"]
+      answer: 1
+      why: One spike doesn't mean the room is loud, so warning every time gives false alarms.
+      hint: Think about a dropped book. Is the room really loud?
   - text: |
       ### Smooth it with an average
       A **list** holds many readings. Keep only the newest 5.
@@ -61,6 +81,12 @@ learn:
       line: {y: 120, label: "limit"}
       y_label: sound
       caption: One spike isn't a loud room.
+    check:
+      question: Which line removes the **oldest** reading from the list?
+      choices: ["readings.pop(0)", "readings.append(sound)", "len(readings)"]
+      answer: 0
+      why: pop(0) takes out the first item, which is the oldest reading.
+      hint: append adds to the end. Which one takes something out?
   - text: |
       ### Stop the flicker
       If the average sits right at the limit, the alarm flips on and off.
@@ -77,6 +103,12 @@ learn:
         - {icon: "🔴", title: "Above 120", text: "Alarm on."}
         - {icon: "🟡", title: "100 to 120", text: "Stay the same."}
         - {icon: "🟢", title: "Below 100", text: "Alarm off."}
+    check:
+      question: The alarm is **on** and the average drops to 110. What happens?
+      choices: ["It turns off", "It stays on", "It flickers on and off"]
+      answer: 1
+      why: 110 is between 100 and 120, so nothing changes. It turns off only below 100.
+      hint: Find 110 on the card. Which zone is it in?
   - text: |
       ### Say what you found
       A good report has three parts:
@@ -86,6 +118,12 @@ learn:
       * **Limits:** what could have made it wrong.
 
       Saying what you **don't** know makes your claim stronger.
+    check:
+      question: "\"We only measured on one day.\" Which part of a report is that?"
+      choices: ["Claim", "Evidence", "Limits"]
+      answer: 2
+      why: It says what could have made the result wrong, and that's a limit.
+      hint: Is it what you found, the numbers, or something that could make it wrong?
 code:
   intro: This is a noise monitor. It logs the sound every second, averages the last 5 readings, and shows a sad face when the room stays loud.
   starter: |

@@ -5,6 +5,11 @@
 {% endblock %}
 {% block main_class %}lesson-layout{% endblock %}
 {% block content %}
+{% macro read_btn() %}<button type="button" class="read-aloud" data-read title="Read this to me" aria-label="Read this to me">🔊 Read to me</button>{% endmacro %}
+{% macro remember(boxes) %}{% if boxes %}
+<aside class="remember-box"><div class="remember-head"><b>💡 Remember</b>{{ read_btn() }}</div>
+  {% for b in boxes %}<div class="remember-item">{{ b.text|md }}{% if b.visual %}<figure class="vz" data-visual='{{ b.visual|tojson }}'></figure>{% endif %}</div>{% endfor %}
+</aside>{% endif %}{% endmacro %}
 <aside class="lesson-nav">
   <div class="lesson-nav-inner">
     <a class="muted small" href="{{ url_for('student.catalog') }}">← All lessons</a>
@@ -121,9 +126,15 @@
     <h2><span class="sec-num">2</span> Learn</h2>
     <div class="step-count" id="learn-count" aria-live="polite"></div>
     <div class="learn-cards" id="learn-cards">
-      {% for card in lesson.learn %}<div class="learn-card{{ ' has-visual' if card.visual }}" tabindex="-1">
-        <div class="learn-text">{{ card.text|md }}</div>
+      {% for card in lesson.learn %}<div class="learn-card{{ ' has-visual' if card.visual }}" tabindex="-1" data-card="{{ loop.index0 }}">
+        <div class="learn-text">{{ read_btn() }}{{ card.text|md }}
+          {% if card.more %}<details class="learn-more"><summary>More about this</summary>{{ card.more|md }}</details>{% endif %}</div>
         {% if card.visual %}<figure class="vz" data-visual='{{ card.visual|tojson }}'></figure>{% endif %}
+        {% if card.check %}<div class="learn-check" data-card="{{ loop.index0 }}">
+          <b>⚡ Quick check:</b> {{ card.check.question|md }}
+          <div class="learn-check-choices">{% for c in card.check.choices %}<button type="button" class="btn small ghost lc-choice" data-choice="{{ loop.index0 }}">{{ c }}</button>{% endfor %}</div>
+          <p class="lc-feedback" aria-live="polite" hidden></p>
+        </div>{% endif %}
       </div>{% endfor %}
     </div>
     <div class="learn-nav">
@@ -161,6 +172,7 @@
           <button type="button" class="btn" id="step-next">Next step →</button>
         </div>
         <ol class="step-dots" id="step-dots"></ol>
+        {{ remember(lesson.circuit.remember) }}
       </div>
     </div>
   </section>
@@ -170,6 +182,7 @@
   <section data-step class="card step-section" id="lab">
     <h2><span class="sec-num">3</span> {{ lesson.lab.title or "AI lab" }}</h2>
     <p class="prompt">{{ lesson.lab.intro }}</p>
+    {{ remember(lesson.lab.remember) }}
     <p><a class="btn" href="{{ lesson.lab.url }}" target="_blank" rel="noopener">Open {{ lesson.lab.tool }} ↗</a>
       <span class="muted small">It opens in a new tab. Come back here for each step.</span></p>
     <div class="step-panel lab-panel">
@@ -192,6 +205,7 @@
   <section data-step class="card step-section" id="code">
     <h2><span class="sec-num">{{ n }}</span> Code it</h2>
     {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
+    {{ remember(lesson.code.remember) }}
     {% if lesson.code.predict %}{% set pq = lesson.code.predict %}
     <div class="predict-box" id="predict-box">
       <b>🤔 Predict first:</b> {{ pq.question|md }}
@@ -224,6 +238,7 @@
   <section data-step class="card step-section" id="practice">
     <h2><span class="sec-num">{{ m }}</span> Your turn ✍️</h2>
     <p class="prompt">{{ lesson.practice.prompt }}</p>
+    {{ remember(lesson.practice.remember) }}
     <div class="workspace">
       <div class="helper-toggles">
         <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="practice-library">📚 Code library</button>
@@ -245,6 +260,7 @@
   <section data-step class="card step-section" id="debug">
     <h2><span class="sec-num">{{ m + 1 }}</span> Debug it 🐞</h2>
     {{ lesson.debug.story|md }}
+    {{ remember(lesson.debug.remember) }}
     <div class="workspace">
       <div class="helper-toggles">
         <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="debug-library">📚 Code library</button>
