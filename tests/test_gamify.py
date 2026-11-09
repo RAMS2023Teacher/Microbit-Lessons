@@ -117,3 +117,27 @@ def test_standards_pages(client):
     r = client.get("/teacher/standards")
     assert r.status_code == 200 and b"6-8.CT.b.1" in r.data and b"Not addressed" in r.data
     assert b"Massachusetts DLCS standards" in client.get(f"/lessons/{LID}").data
+
+
+def test_sprint_branches_unlock(client):
+    from app import lessons as L
+    from app.models import Progress, db
+    _student(client)
+    user = User.query.filter_by(username="sam").one()
+    branches = [b["lesson"] for b in L.get_lesson("sprint-sense-decide-act")["branches"]]
+    assert len(branches) == 3 and all(L.get_lesson(b) for b in branches)
+    nodes = {n["id"]: n for n in gamify.map_data(user)["nodes"]}
+    assert all(nodes[b]["state"] == "locked" for b in branches)
+    assert nodes["ai-rules-or-learning"]["or_titles"]
+
+    def finish(lesson_id):
+        lesson = L.get_lesson(lesson_id)
+        db.session.add(Progress(user_id=user.id, lesson_id=lesson_id, circuit_steps=[],
+                                sections={k: True for k in L.section_keys(lesson)}))
+        db.session.commit()
+
+    finish("sprint-sense-decide-act")
+    nodes = {n["id"]: n for n in gamify.map_data(user)["nodes"]}
+    assert all(nodes[b]["state"] == "open" for b in branches)
+    assert nodes["ai-teach-your-microbit"]["state"] == "locked"
+

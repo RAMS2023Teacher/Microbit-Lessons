@@ -1,0 +1,208 @@
+id: embedded-monitor-and-report
+label: E3
+unit: 7
+order: 29
+title: "Embedded 3: Monitor and Report"
+subtitle: Build a noise monitor that doesn't cry wolf, then present your findings
+duration_minutes: 35
+level: Embedded
+big_idea: >-
+  A good monitor smooths out noisy readings before it warns anyone, because
+  people stop trusting an alarm that goes off for no reason.
+objectives:
+  - Average readings to smooth out noise
+  - Warn only when a reading stays high
+  - Stop an alarm from flickering on and off
+  - Report findings with evidence and limits
+vocabulary:
+  - term: Monitor
+    definition: A system that watches something over time and reacts.
+  - term: Smoothing
+    definition: Averaging readings so one odd value doesn't matter much.
+  - term: False alarm
+    definition: A warning when nothing is really wrong.
+  - term: Conclusion
+    definition: What your evidence shows.
+materials:
+  - micro:bit V2 + USB cable
+  - Battery pack
+  - Your data from Embedded 2
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: code, name: Code it, minutes: 9}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 12}
+video:
+  title: Sensors that monitor the world
+  note: What does each monitor do when a reading looks wrong?
+warmup:
+  prompt: Have you ever ignored an alarm or a notification because it went off too often? What made you stop trusting it?
+learn:
+  - text: |
+      ### Real readings are messy
+      One dropped book makes one loud reading. That doesn't mean the room is loud.
+
+      A monitor that warns about every spike makes a **false alarm**. Soon people ignore it.
+  - text: |
+      ### Smooth it with an average
+      A **list** holds many readings. Keep only the newest 5.
+
+      * `readings.append(sound)` adds to the end.
+      * `readings.pop(0)` removes the oldest.
+      * `sum(readings) // len(readings)` is the average.
+
+      One spike barely moves it.
+    visual:
+      type: graph
+      points: [40, 42, 200, 44, 41, 43, 45]
+      line: {y: 120, label: "limit"}
+      y_label: sound
+      caption: One spike isn't a loud room.
+  - text: |
+      ### Stop the flicker
+      If the average sits right at the limit, the alarm flips on and off.
+
+      Use **two** numbers:
+
+      * Turn **on** above 120.
+      * Turn **off** below 100.
+
+      In between, nothing changes.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔴", title: "Above 120", text: "Alarm on."}
+        - {icon: "🟡", title: "100 to 120", text: "Stay the same."}
+        - {icon: "🟢", title: "Below 100", text: "Alarm off."}
+  - text: |
+      ### Say what you found
+      A good report has three parts:
+
+      * **Claim:** what you found.
+      * **Evidence:** the numbers that show it.
+      * **Limits:** what could have made it wrong.
+
+      Saying what you **don't** know makes your claim stronger.
+code:
+  intro: This is a noise monitor. It logs the sound every second, averages the last 5 readings, and shows a sad face when the room stays loud.
+  starter: |
+    from microbit import *
+    import log
+
+    LIMIT = 120     # how loud is too loud
+    SIZE = 5        # how many readings to average
+    log.set_labels('sound', 'average', timestamp=log.SECONDS)
+    readings = []
+    alarm = False
+    display.show(Image.HAPPY)
+
+    while True:
+        sound = microphone.sound_level()
+        readings.append(sound)
+        if len(readings) > SIZE:
+            readings.pop(0)
+        average = sum(readings) // len(readings)
+
+        if average > LIMIT and not alarm:
+            alarm = True
+            display.show(Image.SAD)
+        elif average < LIMIT - 20 and alarm:
+            alarm = False
+            display.show(Image.HAPPY)
+
+        log.add(sound=sound, average=average)
+        sleep(1000)
+  walkthrough:
+    - lines: "4-8"
+      explain: "Your settings, the columns, an empty list, and whether the alarm is on."
+    - lines: "12-16"
+      explain: Read the sound. Keep the newest 5 readings. Work out the average.
+    - lines: "18-23"
+      explain: On above the limit. Off 20 below it. In between, nothing changes.
+    - lines: "25-26"
+      explain: Save the raw sound and the average, once a second.
+  try_it:
+    - Clap once. Does the face change? Now talk for 10 seconds.
+    - Change SIZE to 2, then 10. Which one reacts faster? Which has fewer false alarms?
+    - Open your chart. Compare the sound line with the average line.
+debug:
+  story: >-
+    Noah's average never builds up and stays too low. There are **two** bugs in
+    how it handles the list. Fix them, then press **Check my fix**.
+  buggy_code: |
+    from microbit import *
+
+    while True:
+        readings = []
+        readings.append(microphone.sound_level())
+        average = sum(readings) // 5
+        display.show(min(9, average // 28))
+        sleep(1000)
+  solution: |
+    from microbit import *
+
+    readings = []
+
+    while True:
+        readings.append(microphone.sound_level())
+        if len(readings) > 5:
+            readings.pop(0)
+        average = sum(readings) // len(readings)
+        display.show(min(9, average // 28))
+        sleep(1000)
+  checks:
+    - {type: syntax}
+    - {type: not_contains, pattern: '^[ \t]+readings\s*=\s*\[\s*\]', message: "The list is emptied on every loop. Make it once, before the loop."}
+    - {type: contains, pattern: 'sum\(readings\)\s*//\s*len\(readings\)', message: "Divide by how many readings you really have: len(readings)."}
+  hints:
+    - How many items are in the list after each loop?
+    - The list might hold fewer than 5 readings. What should you divide by?
+  reflection_prompt: How could a bug like this lead someone to the wrong conclusion?
+quiz:
+  - question: Why average several readings?
+    choices: ["One odd reading won't set off the alarm", "It makes the microphone louder", "It saves more data"]
+    answer: 0
+    explain: Averaging smooths out single spikes.
+  - question: "Why use two numbers: one to turn the alarm on and a lower one to turn it off?"
+    choices: ["So it doesn't flicker near the limit", "So it uses less power", "So the code is longer"]
+    answer: 0
+    explain: The gap stops small changes from flipping the alarm.
+  - question: What is a false alarm?
+    choices: ["A warning when nothing is really wrong", "A broken speaker", "An alarm that is too quiet"]
+    answer: 0
+    explain: Too many false alarms teach people to ignore warnings.
+  - question: Which belongs in the Limits part of a report?
+    choices: ["My favorite result", "We only tested on one day", "The title"]
+    answer: 1
+    explain: Limits say what could have made your conclusion wrong.
+challenge:
+  title: Research Brief
+  prompt: Use your data to make a short report. Give a claim, your evidence and your limits.
+  levels:
+    - "Bronze: Write your claim, evidence and limits in three sentences with real numbers."
+    - "Silver: Tune LIMIT and SIZE, then count false alarms before and after in 5 minutes."
+    - "Gold: Send the alarm by radio to a second micro:bit across the room."
+  hints:
+    Bronze:
+      - "Start with: We found that ___. Our data showed ___. But ___."
+      - "Use a number from your chart in your evidence."
+    Silver:
+      - "Change only one setting at a time."
+      - "Keep a tally: every time the face changes with no real noise, add 1."
+    Gold:
+      - "Add `import radio`, then `radio.config(group=7)` and `radio.on()` on both boards."
+      - "Use `radio.send('LOUD')` when the alarm turns on. The other board uses `radio.receive()`."
+  submit_prompt: "Write your report. What is your claim? What is your evidence? What are the limits?"
+teacher_notes: |
+  * **The microphone** gives a relative level from 0 to 255, not decibels, so students shouldn't claim real decibel values.
+  * The challenge has 12 minutes on purpose: students should finish with a report based on real data. A gallery walk or short share-out works well.
+  * A noise monitor can feel like surveillance. Measure sound level only, and don't use it to single out students.
+standards:
+  - code: 6-8.DTC.c.4
+    how: Students create a report that answers a research question and communicates conclusions from their data.
+  - code: 6-8.CT.c.5
+    how: Students gather, view and analyze logged sensor data and report the results.
+  - code: 6-8.CS.a.5
+    how: Students design and demonstrate a monitoring device that does a task on its own.

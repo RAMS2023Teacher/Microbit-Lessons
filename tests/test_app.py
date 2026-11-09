@@ -4,7 +4,7 @@ import re
 
 from app import lessons as L
 from app.circuits import check_circuit
-from app.models import Progress, User
+from app.models import Assignment, Progress, User
 
 from .conftest import logout, make_class, register_student, register_teacher
 
@@ -207,4 +207,128 @@ def test_teacher_sees_lab_work(client, app):
     assert client.get("/teacher/standards").status_code == 200
     assert client.get(f"/teacher/classes/{cid}/export.csv").status_code == 200
     assert client.get("/lessons/ai-test-and-fix").status_code == 200
+
+
+def _sprint_class(client, branch):
+    register_teacher(client)
+    c = make_class(client)
+    cid, code = c.id, c.join_code
+    r = client.post(f"/teacher/classes/{cid}/assign-sprint", data={"branch": branch, "due_date": "2030-01-01"})
+    assert r.status_code == 302
+    logout(client)
+    register_student(client, code)
+    return cid
+
+
+def _teach_login(client):
+    logout(client)
+    client.post("/login", data={"username": "teach", "password": "pass1234"})
+
+
+def test_assign_sprint_fixed_branch(client):
+    cid = _sprint_class(client, "embedded")
+    expected = L.SPRINT_TRUNK + L.SPRINT_BRANCHES["embedded"]
+    assigned = {a.lesson_id: a for a in Assignment.query.filter_by(classroom_id=cid)}
+    assert set(assigned) == set(expected) and all(a.due_date.year == 2030 and not a.branch for a in assigned.values())
+    assert b"Embedded 1" in client.get("/dashboard").data
+
+
+def test_assign_sprint_student_choice(client):
+    cid = _sprint_class(client, "choice")
+    page = client.get("/dashboard").data
+    assert b"Sprint 3" in page and b"Build the Bot" not in page     # no branch owed yet
+    client.post("/api/lessons/ai-rules-or-learning/save", json={"warmup_answer": "pattern"})
+    page = client.get("/dashboard").data
+    assert b"AI 1" in page and b"Build the Bot" not in page and b"Embedded 1" not in page
+    _teach_login(client)
+    assert b"didn't pick this branch" in client.get(f"/teacher/classes/{cid}").data
+
+
+def test_classroom_screen(client):
+    cid = _sprint_class(client, "robots")
+    client.post("/api/lessons/sprint-sensor-lab/save", json={"warmup_answer": "a robot"})
+    assert client.get(f"/teacher/classes/{cid}/screen").status_code in (302, 403)      # students can't open it
+    _teach_login(client)
+    assert client.get(f"/teacher/classes/{cid}/screen").status_code == 200
+    d = client.get(f"/teacher/classes/{cid}/screen/data").json
+    assert d["students"][0]["name"] == "Sam" and "Sensor Lab" in d["students"][0]["where"]
+    assert "username" not in d["students"][0] and d["question"] and "xp" in d["students"][0]
+    d = client.post(f"/teacher/classes/{cid}/screen/settings",
+                    json={"lesson_id": "traffic-light", "question": "Why is yellow short?", "xp": "hide"}).json
+    assert d["lesson"]["id"] == "traffic-light" and d["question"] == "Why is yellow short?"
+    assert d["total_xp"] == 0 and "xp" not in d["students"][0]
+
+
+def _login(client, name):
+    logout(client)
+    client.post("/login", data={"username": name, "password": "pass1234"})
+
+
+def test_partners_share_a_submission(client):
+    register_teacher(client)
+    c = make_class(client)
+    cid, code = c.id, c.join_code
+    logout(client)
+    register_student(client, code, "sam")
+    logout(client)
+    register_student(client, code, "ana")
+    ana_id = User.query.filter_by(username="ana").one().id
+    sam_id = User.query.filter_by(username="sam").one().id
+    url = f"/api/lessons/{LID}/partner"
+
+    _login(client, "sam")
+    assert [m["id"] for m in client.get(url).json["classmates"]] == [ana_id]
+    assert client.post(url, json={"action": "invite", "partner_id": ana_id}).json["status"] == "sent"
+
+    # not partners until accepted
+    client.post(f"/api/lessons/{LID}/challenge", json={"code": "x", "response": "Our secret signal blinks SOS."})
+    assert not Progress.query.filter_by(user_id=ana_id, lesson_id=LID).first()
+
+    _login(client, "ana")
+    assert client.get(url).json["status"] == "incoming"
+    assert client.post(url, json={"action": "accept"}).json["status"] == "paired"
+    done = client.post(f"/api/lessons/{LID}/challenge", json={"code": "print(1)", "response": "Our secret signal blinks SOS."}).json
+    assert done["partner"] == "Sam K."
+    theirs = Progress.query.filter_by(user_id=sam_id, lesson_id=LID).one()
+    assert theirs.challenge_submitted_at and theirs.challenge_code == "print(1)" and theirs.sections["challenge"]
+
+    client.post(f"/teacher/classes/{cid}/assign", data={"lesson_id": [LID]})   # students can't assign
+    _login(client, "teach")
+    client.post(f"/teacher/classes/{cid}/assign", data={"lesson_id": [LID]})
+    assert "👥 Sam K.".encode() in client.get(f"/teacher/classes/{cid}").data
+    assert client.get(f"/teacher/classes/{cid}/students/{ana_id}").status_code == 200
+
+
+def test_partners_must_share_a_class(client):
+    register_teacher(client)
+    one = make_class(client, "One")
+    two = make_class(client, "Two")
+    code_one, code_two = one.join_code, two.join_code
+    logout(client)
+    register_student(client, code_one, "sam")
+    logout(client)
+    register_student(client, code_two, "ana")
+    ana_id = User.query.filter_by(username="ana").one().id
+    _login(client, "sam")
+    r = client.post(f"/api/lessons/{LID}/partner", json={"action": "invite", "partner_id": ana_id})
+    assert r.status_code == 400 and client.get(f"/api/lessons/{LID}/partner").json["classmates"] == []
+
+
+def test_google_classroom_package(client):
+    cid = _sprint_class(client, "choice")
+    client.post("/api/lessons/sprint-sensor-lab/save", json={"warmup_answer": "a robot"})
+    assert client.post(f"/teacher/classes/{cid}/google-classroom/package",
+                       json={"score": "complete", "lessons": ["sprint-sensor-lab"]}).status_code != 200
+    _login(client, "teach")
+    assert client.get(f"/teacher/classes/{cid}/google-classroom").status_code == 200
+    lessons = ["sprint-sensor-lab", "sprint-servo-skills", "sprint-build-the-bot"]
+    url = f"/teacher/classes/{cid}/google-classroom/package"
+    d = client.post(url, json={"score": "complete", "lessons": lessons}).json
+    assert d["source"] == "microbit-maker-lab" and d["version"] == 1 and len(d["assignments"]) == 3
+    assert d["assignments"][0]["due"] == "2030-01-01"
+    grades = d["students"][0]["grades"]
+    assert grades["sprint-sensor-lab"] > 0
+    assert "sprint-servo-skills" not in grades and "sprint-build-the-bot" not in grades   # unstarted stays blank
+    assert client.post(url, json={"score": "quiz", "lessons": lessons}).json["students"][0]["grades"] == {}
+    assert client.post(url, json={"score": "nope", "lessons": lessons}).status_code == 400
 

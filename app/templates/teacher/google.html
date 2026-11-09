@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Google Classroom · {{ c.name }}{% endblock %}
+{% block content %}
+<a class="muted small" href="{{ url_for('teacher.classroom', cid=c.id) }}">← {{ c.name }}</a>
+<h1>Send grades to Google Classroom</h1>
+<p class="muted">Grades arrive in Classroom as drafts. Students can't see them until you return them there.</p>
+
+{% if not cols %}
+<section class="card"><p>Assign some lessons first. Then you can send their grades here.</p></section>
+{% else %}
+<section class="card">
+  <h2>1. Choose what to send</h2>
+  <label class="field"><span>How should each grade be worked out?</span>
+    <select id="g-score">
+      <option value="complete">Percent of the lesson completed</option>
+      <option value="quiz">Best quiz score</option>
+      <option value="both">Half completion, half quiz</option>
+    </select></label>
+  <fieldset class="google-pick"><legend>Assignments</legend>
+    {% for a, l in cols %}<label class="check"><input type="checkbox" name="lesson" value="{{ l.id }}" checked> {{ l.number }}. {{ l.title }}</label>{% endfor %}
+  </fieldset>
+  <p class="muted small">Students who haven't started a lesson are left blank, not given a 0. Grades are out of 100.</p>
+  <div class="row"><button type="button" class="btn" id="g-copy">Copy grades</button><span class="muted small" id="g-status" role="status"></span></div>
+  <textarea id="g-output" rows="4" hidden readonly aria-label="Grades to copy"></textarea>
+</section>
+
+<section class="card">
+  <h2>2. Paste them into your Classroom sender</h2>
+  <label class="field"><span>Your sender's web address</span><input type="url" id="g-url" placeholder="https://script.google.com/macros/s/.../exec"></label>
+  <a class="btn ghost" id="g-open" target="_blank" rel="noopener" hidden>Open my Classroom sender ↗</a>
+  <p class="muted small">This address stays in this browser.</p>
+</section>
+{% endif %}
+
+<details class="card"{% if not cols %} open{% endif %}>
+  <summary><b>First time? Set up your sender (about 5 minutes, once)</b></summary>
+  <p>This runs in your own Google account with Apps Script. You don't need Google Cloud.</p>
+  <ol class="google-steps">
+    <li>Go to <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com</a> while signed in to your school account. A new project opens.</li>
+    <li>Delete what's in <b>Code.gs</b>. <button type="button" class="btn small" id="g-script">Copy the script</button> and paste it in. <span class="muted small" id="g-script-status" role="status"></span></li>
+    <li>On the left, press <b>+</b> next to <b>Services</b>. Choose <b>Google Classroom API</b>, then <b>Add</b>.</li>
+    <li>Press <b>Deploy</b>, then <b>New deployment</b>. Click the gear and pick <b>Web app</b>.</li>
+    <li>Set <b>Execute as: Me</b> and <b>Who has access: Only myself</b>. Press <b>Deploy</b>, then allow access when Google asks.</li>
+    <li>Copy the <b>Web app URL</b> into step 2 above.</li>
+  </ol>
+  <p class="muted small">If Google says the app is blocked or unverified, your school's Google admin may need to allow Apps Script to use Classroom.</p>
+</details>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const SCRIPT_URL = {{ url_for('static', filename='apps-script/maker-lab-classroom.gs')|tojson }};
+  const PACKAGE_URL = {{ url_for('teacher.google_package', cid=c.id)|tojson }};
+  const KEY = 'classroom-sender-url';
+
+  async function copyText(text, status, fallback) {
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = 'Copied ✓';
+      if (fallback) fallback.hidden = true;
+    } catch (e) {
+      if (fallback) {
+        fallback.value = text;
+        fallback.hidden = false;
+        fallback.select();
+        status.textContent = 'Press Ctrl+C to copy.';
+      } else {
+        status.textContent = 'Could not copy. Open the script link instead.';
+      }
+    }
+  }
+
+  if ($('g-copy')) {
+    $('g-copy').addEventListener('click', async () => {
+      const lessons = [...document.querySelectorAll('input[name=lesson]:checked')].map((i) => i.value);
+      if (!lessons.length) { $('g-status').textContent = 'Pick at least one assignment.'; return; }
+      $('g-status').textContent = 'Getting grades…';
+      const r = await fetch(PACKAGE_URL, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content },
+        body: JSON.stringify({ score: $('g-score').value, lessons }),
+      });
+      if (!r.ok) { $('g-status').textContent = 'Could not get the grades.'; return; }
+      await copyText(await r.text(), $('g-status'), $('g-output'));
+    });
+    const showLink = () => {
+      const url = $('g-url').value.trim();
+      const good = url.startsWith('https://script.google.com/');
+      $('g-open').hidden = !good;
+      if (good) $('g-open').href = url;
+      try { localStorage.setItem(KEY, url); } catch (e) { /* ignore */ }
+    };
+    try { $('g-url').value = localStorage.getItem(KEY) || ''; } catch (e) { /* ignore */ }
+    $('g-url').addEventListener('input', showLink);
+    showLink();
+  }
+  $('g-script').addEventListener('click', async () => {
+    const r = await fetch(SCRIPT_URL);
+    await copyText(await r.text(), $('g-script-status'));
+  });
+})();
+</script>
+{% endblock %}

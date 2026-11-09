@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ c.name }} screen · {{ site_name }}{% endblock %}
+{% block body_class %}screen-page{% endblock %}
+{% block main_class %}screen-main{% endblock %}
+{% block content %}
+<header class="screen-head">
+  <div>
+    <h1>{{ c.name }}</h1>
+    <p id="screen-lesson"></p>
+  </div>
+  <b id="screen-total" class="screen-total"></b>
+  <div class="screen-tools">
+    <button type="button" class="btn small ghost" id="set-open">⚙ Set up</button>
+    <button type="button" class="btn small ghost" id="set-full">⛶ Full screen</button>
+    <a class="btn small ghost" href="{{ url_for('teacher.classroom', cid=c.id) }}">Exit</a>
+  </div>
+</header>
+<p class="screen-offline" id="screen-offline" hidden>Can't reach the site. Retrying…</p>
+
+<section class="card screen-setup" id="screen-setup" hidden>
+  <label class="field"><span>Today's lesson</span>
+    <select id="set-lesson">{% for u in units %}<optgroup label="{{ u.title }}">{% for l in u.lessons %}<option value="{{ l.id }}">{{ l.number }}. {{ l.title }}</option>{% endfor %}</optgroup>{% endfor %}</select></label>
+  <label class="field"><span>Question of the day</span>
+    <textarea id="set-question" rows="2" maxlength="300" placeholder="Leave blank to use this lesson's warm-up question."></textarea></label>
+  <label class="field"><span>Standard of the day</span><select id="set-standard"></select></label>
+  <div class="grid-2">
+    <label class="field"><span>Show students as</span>
+      <select id="set-names"><option value="first">First names</option><option value="robot">Robot names</option></select></label>
+    <label class="field"><span>XP</span>
+      <select id="set-xp"><option value="each">Each student and class total</option><option value="total">Class total only</option><option value="hide">Hide XP</option></select></label>
+  </div>
+  <div class="row"><button type="button" class="btn" id="set-save">Save</button><span class="muted small" id="set-status"></span></div>
+</section>
+
+<div class="screen-grid">
+  <section class="card screen-roster" aria-label="Where everyone is">
+    <h2>Where everyone is</h2>
+    <div class="screen-students" id="screen-students"></div>
+  </section>
+  <aside class="screen-side">
+    <section class="card screen-timer" aria-label="Timer">
+      <div id="timer-big" class="timer-big" role="timer">35:00</div>
+      <div class="row screen-timer-row">
+        <button type="button" class="btn" id="timer-go">Start</button>
+        <button type="button" class="btn ghost" id="timer-reset">Reset</button>
+        <label>Minutes <input type="number" id="timer-mins" min="1" max="180" value="35"></label>
+      </div>
+    </section>
+    <section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p></section>
+    <section class="card"><h2>🎯 Standard of the day</h2><p class="eyebrow" id="screen-standard-code"></p><p class="screen-std" id="screen-standard"></p></section>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.SCREEN = {
+    classId: {{ c.id }},
+    dataUrl: {{ url_for('teacher.screen_data', cid=c.id)|tojson }},
+    settingsUrl: {{ url_for('teacher.screen_settings', cid=c.id)|tojson }},
+    csrf: document.querySelector('meta[name=csrf-token]').content,
+    refreshMs: 15000,
+  };
+</script>
+<script src="{{ url_for('static', filename='js/screen.js') }}"></script>
+{% endblock %}

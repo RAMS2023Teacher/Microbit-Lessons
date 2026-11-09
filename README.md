@@ -26,8 +26,12 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 - Pop-ups celebrate XP, new badges and level-ups. Rewards are given only once, and any work a student did earlier still counts.
 - All the rules (XP values, levels, badges, the skill tree and avatar unlocks) are at the top of `app/gamify.py`.
 
+- Students can pair up with a classmate on any lesson. Once a partner accepts, one challenge submission counts for both.
+
 **For teachers**
-- Create classes and assign lessons with due dates and notes.
+- Create classes and assign lessons with due dates and notes. One form assigns the whole Robot Sprint, with a set branch or a student choice.
+- **Send grades to Google Classroom** as drafts, through a small Apps Script in your own Google account. See [docs/GOOGLE_CLASSROOM.md](docs/GOOGLE_CLASSROOM.md).
+- A **Classroom Screen** for the projector shows where each student is, XP, the question and standard of the day, and a timer. Students appear alphabetically, with no ranking, and XP can be hidden.
 - A **gradebook** for each class: % complete, best quiz score, debug fixed, challenge submitted, and late work.
 - **Side-by-side class responses** for each assignment, covering warm-ups, debug reflections and challenge write-ups. These are good for class discussion.
 - A page per student showing their code, debug attempts, hints used, quiz history and challenge code. You can leave feedback, which the student sees at the top of the lesson. You can also re-open a debug challenge, reset a password, or export the gradebook to CSV.
@@ -44,12 +48,13 @@ It's built for grades 6–8, and every lesson is designed to take about **35 min
 | 2 Sensing the World | 6 Buttons & inputs · 7 Light sensor night light · 8 Potentiometers · 9 Temperature data |
 | 3 Making Things Move | 10 Motion & sound · 11 Servo motor · 12 DC motor + transistor · 13 Motor driver |
 | 4 Robots | 14 Drive your robot · 15 Line follower · 16 Radio remote control |
+| 7 Embedded Computing | E1 Field station · E2 Sensor study · E3 Monitor and report |
 | 6 AI Lab | A1 Rules or learning? · A2 Teach your micro:bit · A3 Test, break, fix · A4 Build with your model |
 | 5 Robot Sprint *(stand-alone)* | S1 Servo skills · S2 Sensor lab · S3 Sense → decide → act · S4 Build the bot · S5 Mission day · S6 Test, upgrade, showcase |
 
 **AI Lab** follows Lesson 10. A1 uses Python here on the site, and A2–A4 use the free [micro:bit CreateAI](https://createai.microbit.org/) tool and MakeCode in another tab. It needs Chrome or Edge and a micro:bit V2 to run a model. Computers without Bluetooth need a second micro:bit for each pair.
 
-**Robot Sprint** is a 6-lesson motors and sensors project for classes that already know micro:bit basics. It can start at any time and doesn't need the core lessons. It's written for the Keyestudio KS0360 sensor shield, the KS4009 45-in-1 sensor kit, 180° and continuous servos, a two-servo robot chassis and, optionally, the KS4033 motor board. Setup, pin map and wiring safety notes are in [docs/ROBOT_SPRINT_HARDWARE.md](docs/ROBOT_SPRINT_HARDWARE.md).
+**Robot Sprint** is a 6-lesson motors and sensors project for classes that already know micro:bit basics. After Sprint 3 it splits into three branches: **Robots** (S4–S6), **AI** (the AI Lab) and **Embedded Computing** (E1–E3, data logging and sensor research). It can start at any time and doesn't need the core lessons. It's written for the Keyestudio KS0360 sensor shield, the KS4009 45-in-1 sensor kit, 180° and continuous servos, a two-servo robot chassis and, optionally, the KS4033 motor board. Setup, pin map and wiring safety notes are in [docs/ROBOT_SPRINT_HARDWARE.md](docs/ROBOT_SPRINT_HARDWARE.md).
 
 Lessons are YAML files in `lessons/`. See [docs/LESSON_FORMAT.md](docs/LESSON_FORMAT.md) for how to edit them or write new ones.
 

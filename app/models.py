@@ -57,6 +57,7 @@ class Classroom(db.Model):
     join_code = db.Column(db.String(10), unique=True, nullable=False, index=True)
     teacher_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow)
+    screen = db.Column(db.JSON)     # Classroom Screen settings
 
     teacher = db.relationship("User", foreign_keys=[teacher_id])
     students = db.relationship("User", secondary=enrollments, back_populates="classes",
@@ -72,6 +73,7 @@ class Assignment(db.Model):
     due_date = db.Column(db.Date)
     note = db.Column(db.String(500), default="")
     created_at = db.Column(db.DateTime, default=utcnow)
+    branch = db.Column(db.String(20))   # set when students choose a Sprint branch; they only owe the one they pick
 
     classroom = db.relationship("Classroom", back_populates="assignments")
 
@@ -115,6 +117,16 @@ class Progress(db.Model):
     def percent(self, keys):
         s = self.sections or {}
         return round(100 * sum(1 for k in keys if s.get(k)) / len(keys)) if keys else 0
+
+
+class Partnership(db.Model):
+    """Two students working together on one lesson. Inactive until the partner accepts."""
+    id = db.Column(db.Integer, primary_key=True)
+    lesson_id = db.Column(db.String(80), nullable=False, index=True)
+    inviter_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    partner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    accepted = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
 
 class LessonVideo(db.Model):

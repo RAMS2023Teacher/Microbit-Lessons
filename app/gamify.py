@@ -76,17 +76,23 @@ TREE = {
     "line-follower":       {"requires": ["robot-drive", "light-sensor"], "pos": (1.2, 9.1)},
     "radio-remote":        {"requires": ["robot-drive", "motion-and-sound"], "pos": (3.2, 9.1)},
     # Robot Sprint: its own trail on the right, open from the start
-    "sprint-servo-skills":  {"requires": [], "pos": (5.6, 0)},
-    "sprint-sensor-lab":    {"requires": ["sprint-servo-skills"], "pos": (5.6, 1.3)},
-    "sprint-sense-decide-act": {"requires": ["sprint-sensor-lab"], "pos": (5.6, 2.6)},
-    "sprint-build-the-bot": {"requires": ["sprint-sense-decide-act"], "pos": (5.6, 3.9)},
-    "sprint-mission-day":   {"requires": ["sprint-build-the-bot"], "pos": (5.6, 5.2)},
-    "sprint-showcase":      {"requires": ["sprint-mission-day"], "pos": (5.6, 6.5)},
-    # AI Lab: builds on the accelerometer in Shake, Tilt and Play
-    "ai-rules-or-learning":     {"requires": ["motion-and-sound"], "pos": (5.6, 8.0)},
-    "ai-teach-your-microbit":   {"requires": ["ai-rules-or-learning"], "pos": (5.6, 9.2)},
-    "ai-test-and-fix":          {"requires": ["ai-teach-your-microbit"], "pos": (5.6, 10.4)},
-    "ai-build-with-your-model": {"requires": ["ai-test-and-fix"], "pos": (5.6, 11.6)},
+    "sprint-servo-skills":  {"requires": [], "pos": (6.4, 0)},
+    "sprint-sensor-lab":    {"requires": ["sprint-servo-skills"], "pos": (6.4, 1.3)},
+    "sprint-sense-decide-act": {"requires": ["sprint-sensor-lab"], "pos": (6.4, 2.6)},
+    # After Sprint 3 the trail splits into three branches.
+    # Robots
+    "sprint-build-the-bot": {"requires": ["sprint-sense-decide-act"], "pos": (5.4, 4.1)},
+    "sprint-mission-day":   {"requires": ["sprint-build-the-bot"], "pos": (5.4, 5.4)},
+    "sprint-showcase":      {"requires": ["sprint-mission-day"], "pos": (5.4, 6.7)},
+    # AI: also opens after Shake, Tilt and Play, for classes on the core course
+    "ai-rules-or-learning":     {"requires": ["sprint-sense-decide-act"], "or_after": ["motion-and-sound"], "pos": (6.4, 4.1)},
+    "ai-teach-your-microbit":   {"requires": ["ai-rules-or-learning"], "pos": (6.4, 5.4)},
+    "ai-test-and-fix":          {"requires": ["ai-teach-your-microbit"], "pos": (6.4, 6.7)},
+    "ai-build-with-your-model": {"requires": ["ai-test-and-fix"], "pos": (6.4, 8.0)},
+    # Embedded computing: also opens after Temperature Data Detective
+    "embedded-field-station":      {"requires": ["sprint-sense-decide-act"], "or_after": ["temperature-data"], "pos": (7.4, 4.1)},
+    "embedded-sensor-study":       {"requires": ["embedded-field-station"], "pos": (7.4, 5.4)},
+    "embedded-monitor-and-report": {"requires": ["embedded-sensor-study"], "pos": (7.4, 6.7)},
 }
 
 
@@ -132,12 +138,14 @@ def map_data(user, assigned_ids=()) -> dict:
         p = pm.get(lid)
         pct = p.percent(L.section_keys(lesson)) if p else 0
         reqs = [r for r in info["requires"] if L.get_lesson(r)]
-        unlocked = all(r in complete for r in reqs) or lid in assigned_ids or pct > 0
+        also = [r for r in info.get("or_after", []) if L.get_lesson(r)]     # a second way in, not drawn on the map
+        unlocked = all(r in complete for r in reqs) or any(r in complete for r in also) or lid in assigned_ids or pct > 0
         state = "complete" if lid in complete else "progress" if pct > 0 else "open" if unlocked else "locked"
         nodes.append({
             "id": lid, "number": lesson["number"], "title": lesson["title"], "unit": lesson["unit"],
             "x": info["pos"][0], "y": info["pos"][1], "requires": reqs,
             "requires_titles": [L.get_lesson(r)["title"] for r in reqs if r not in complete],
+            "or_titles": [L.get_lesson(r)["title"] for r in also],
             "state": state, "pct": pct, "stars": lesson_stars(lesson, p),
             "assigned": lid in assigned_ids, "xp_possible": possible_xp(lesson),
         })
@@ -175,6 +183,7 @@ BADGES = [
     ("unit-4", "🤖", "Robot Wrangler", "Complete every lesson in Unit 4: Robots."),
     ("unit-5", "🏎️", "Sprint Champion", "Complete every lesson in the Robot Sprint."),
     ("unit-6", "🧠", "Model Maker", "Complete every lesson in the AI Lab."),
+    ("unit-7", "📡", "Field Scientist", "Complete every lesson in Embedded Computing."),
     ("graduate", "🎓", "Graduate", "Complete all 16 core lessons."),
     ("teachers-pick", "🍎", "Teacher's Pick", "Given by your teacher for great work."),
 ]

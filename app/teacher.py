@@ -3,12 +3,13 @@ import io
 import secrets
 from datetime import date, datetime
 
-from flask import (Blueprint, Response, abort, flash, redirect, render_template, request,
+from flask import (Blueprint, Response, abort, flash, jsonify, redirect, render_template, request,
                    url_for)
 from flask_login import current_user
 
 from . import gamify
 from . import lessons as L
+from . import partners
 from . import standards as STD
 from .auth import teacher_required
 from .models import Assignment, Classroom, LessonVideo, Progress, User, db, new_join_code
@@ -51,8 +52,16 @@ def gradebook(c):
                                        Progress.lesson_id.in_(lesson_ids)):
             progress[(p.user_id, p.lesson_id)] = p
     cols = [(a, L.get_lesson(a.lesson_id)) for a in c.assignments if L.get_lesson(a.lesson_id)]
-    grid = {(s.id, a.id): status_cell(lesson, progress.get((s.id, a.lesson_id)), a.due_date)
-            for s in students for a, lesson in cols}
+    started = {s.id: {lid for (uid, lid) in progress if uid == s.id} for s in students}
+    mates = partners.names_for({s.id for s in students}, lesson_ids)
+    grid = {}
+    for s in students:
+        for a, lesson in cols:
+            if L.owes_assignment(a, started[s.id]):
+                grid[(s.id, a.id)] = status_cell(lesson, progress.get((s.id, a.lesson_id)), a.due_date)
+                grid[(s.id, a.id)]["partner"] = mates.get((s.id, a.lesson_id))
+            else:
+                grid[(s.id, a.id)] = {"p": None, "pct": 0, "status": "other-branch", "late": False}
     return cols, grid
 
 
@@ -123,6 +132,176 @@ def assign(cid):
     return redirect(url_for("teacher.classroom", cid=cid))
 
 
+@bp.post("/classes/<int:cid>/assign-sprint")
+@teacher_required
+def assign_sprint(cid):
+    c = _own_class(cid)
+    choice = request.form.get("branch", "")
+    if choice != "choice" and choice not in L.SPRINT_BRANCHES:
+        abort(400)
+    try:
+        due = datetime.strptime(request.form.get("due_date", ""), "%Y-%m-%d").date()
+    except ValueError:
+        flash("Pick a due date for the Sprint.", "error")
+        return redirect(url_for("teacher.classroom", cid=cid))
+    note = request.form.get("note", "").strip()[:500]
+    wanted = [(lid, None) for lid in L.SPRINT_TRUNK]
+    if choice == "choice":
+        wanted += [(lid, name) for name, ids in L.SPRINT_BRANCHES.items() for lid in ids]
+    else:
+        wanted += [(lid, None) for lid in L.SPRINT_BRANCHES[choice]]
+    existing = {a.lesson_id: a for a in c.assignments}
+    added = 0
+    for lid, branch in wanted:
+        if not L.get_lesson(lid):
+            continue
+        if lid in existing:                 # assigning again updates the date
+            existing[lid].due_date = due
+            existing[lid].branch = branch
+        else:
+            db.session.add(Assignment(classroom=c, lesson_id=lid, due_date=due, note=note, branch=branch))
+            added += 1
+    db.session.commit()
+    flash(f"Robot Sprint assigned: {added} new lesson(s), due {due.strftime('%b %-d')}.", "success")
+    return redirect(url_for("teacher.classroom", cid=cid))
+
+
+def _shown_names(students, mode):
+    """First names for the projector, with an initial when two students share one."""
+    def first(s):
+        return (s.display_name.split() or ["Student"])[0]
+    counts = {}
+    for s in students:
+        counts[first(s)] = counts.get(first(s), 0) + 1
+    names = {}
+    for s in students:
+        parts = s.display_name.split()
+        name = first(s)
+        if counts[name] > 1 and len(parts) > 1:
+            name = f"{name} {parts[1][0]}."
+        if mode == "robot":
+            name = (s.avatar or {}).get("name") or name
+        names[s.id] = name
+    return names
+
+
+def _where(student, progress):
+    """A student's most recent unfinished lesson, or their last finished one."""
+    rows = sorted(progress, key=lambda p: p.updated_at or p.started_at, reverse=True)
+    rows = [(p, L.get_lesson(p.lesson_id)) for p in rows if L.get_lesson(p.lesson_id)]
+    for p, lesson in rows:
+        pct = p.percent(L.section_keys(lesson))
+        if pct < 100:
+            return {"where": f"{lesson['number']}. {lesson['title']}", "pct": pct, "status": "working"}
+    if rows:
+        p, lesson = rows[0]
+        return {"where": f"✓ {lesson['number']}. {lesson['title']}", "pct": 100, "status": "done"}
+    return {"where": "Not started", "pct": 0, "status": "waiting"}
+
+
+def _screen_payload(c):
+    saved = dict(c.screen or {})
+    settings = {"lesson_id": saved.get("lesson_id", ""), "question": saved.get("question", ""),
+                "standard": saved.get("standard", ""), "names": saved.get("names", "first"),
+                "xp": saved.get("xp", "each")}
+    lesson = L.get_lesson(settings["lesson_id"])
+    if not lesson:                          # default: the next assignment due
+        dated = sorted(c.assignments, key=lambda a: (a.due_date is None, a.due_date or date.max, a.created_at))
+        upcoming = [a for a in dated if not a.due_date or a.due_date >= date.today()] or dated
+        lesson = L.get_lesson(upcoming[0].lesson_id) if upcoming else L.all_lessons()[0]
+    standards = STD.for_lesson(lesson)
+    standard = next((s for s in standards if s["code"] == settings["standard"]), standards[0] if standards else None)
+    by_student = {}
+    if c.students:
+        for p in Progress.query.filter(Progress.user_id.in_([s.id for s in c.students])):
+            by_student.setdefault(p.user_id, []).append(p)
+    names = _shown_names(c.students, settings["names"])
+    students = []
+    for s in sorted(c.students, key=lambda st: names[st.id].lower()):
+        row = {"name": names[s.id], "avatar": gamify.avatar_of(s), **_where(s, by_student.get(s.id, []))}
+        if settings["xp"] == "each":        # hidden XP never reaches the browser
+            row["xp"] = s.xp or 0
+        students.append(row)
+    return {"settings": settings, "students": students,
+            "total_xp": 0 if settings["xp"] == "hide" else sum(s.xp or 0 for s in c.students),
+            "lesson": {"id": lesson["id"], "number": lesson["number"], "title": lesson["title"]},
+            "question": settings["question"] or lesson["warmup"]["prompt"],
+            "standard": {"code": standard["code"], "text": standard["text"]} if standard else None,
+            "standards": [{"code": s["code"], "text": s["text"]} for s in standards]}
+
+
+@bp.route("/classes/<int:cid>/google-classroom")
+@teacher_required
+def google(cid):
+    c = _own_class(cid)
+    cols, _ = gradebook(c)
+    return render_template("teacher/google.html", c=c, cols=cols)
+
+
+def _score(cell, how):
+    """A 0-100 grade, or None if there's nothing to grade yet."""
+    p = cell["p"]
+    if not p:
+        return None
+    quiz = round(100 * (p.quiz_best or 0) / p.quiz_total) if p.quiz_total else None
+    if how == "complete":
+        return cell["pct"]
+    if how == "quiz":
+        return quiz
+    return round((cell["pct"] + quiz) / 2) if quiz is not None else None
+
+
+@bp.post("/classes/<int:cid>/google-classroom/package")
+@teacher_required
+def google_package(cid):
+    c = _own_class(cid)
+    data = request.get_json(silent=True) or {}
+    how = data.get("score")
+    wanted = data.get("lessons")
+    if how not in ("complete", "quiz", "both") or not isinstance(wanted, list):
+        abort(400)
+    cols, grid = gradebook(c)
+    cols = [(a, lesson) for a, lesson in cols if lesson["id"] in wanted]
+    students = []
+    for s in c.students:
+        grades = {}
+        for a, lesson in cols:
+            score = _score(grid[(s.id, a.id)], how)
+            if score is not None:
+                grades[lesson["id"]] = score
+        students.append({"ref": str(s.id), "name": s.display_name, "grades": grades})
+    return jsonify({"source": "microbit-maker-lab", "version": 1, "class": c.name, "students": students,
+                    "assignments": [{"key": lesson["id"], "title": f"{lesson['number']}. {lesson['title']}",
+                                     "due": a.due_date.isoformat() if a.due_date else ""} for a, lesson in cols]})
+
+
+@bp.route("/classes/<int:cid>/screen")
+@teacher_required
+def screen(cid):
+    return render_template("teacher/screen.html", c=_own_class(cid), units=L.lessons_by_unit())
+
+
+@bp.route("/classes/<int:cid>/screen/data")
+@teacher_required
+def screen_data(cid):
+    return jsonify(_screen_payload(_own_class(cid)))
+
+
+@bp.post("/classes/<int:cid>/screen/settings")
+@teacher_required
+def screen_settings(cid):
+    c = _own_class(cid)
+    data = request.get_json(silent=True) or {}
+    lesson_id = data.get("lesson_id", "")
+    c.screen = {"lesson_id": lesson_id if L.get_lesson(lesson_id) else "",
+                "question": str(data.get("question", "")).strip()[:300],
+                "standard": str(data.get("standard", ""))[:20],
+                "names": "robot" if data.get("names") == "robot" else "first",
+                "xp": data.get("xp") if data.get("xp") in ("each", "total", "hide") else "each"}
+    db.session.commit()
+    return jsonify(_screen_payload(c))
+
+
 @bp.post("/assignments/<int:aid>/update")
 @teacher_required
 def update_assignment(aid):
@@ -169,12 +348,13 @@ def student(cid, sid):
     c = _own_class(cid)
     s = _student_in(c, sid)
     pm = {p.lesson_id: p for p in s.progress}
+    mates = partners.names_for({s.id}, list(pm))
     items = []
     for lesson in L.all_lessons():
         p = pm.get(lesson["id"])
         assigned = any(a.lesson_id == lesson["id"] for a in c.assignments)
         if p or assigned:
-            items.append({"lesson": lesson, "p": p, "assigned": assigned,
+            items.append({"lesson": lesson, "p": p, "assigned": assigned, "partner": mates.get((s.id, lesson["id"])),
                           "pct": p.percent(L.section_keys(lesson)) if p else 0})
     return render_template("teacher/student.html", c=c, s=s, items=items,
                            level=gamify.level_info(s.xp or 0), badges=gamify.badge_list(s))
@@ -248,7 +428,7 @@ def export(cid):
     header = ["Student", "Username", "XP", "Level"]
     for a, lesson in cols:
         t = lesson["title"]
-        header += [f"{t} - % complete", f"{t} - quiz best", f"{t} - debug solved", f"{t} - challenge"]
+        header += [f"{t} - % complete", f"{t} - quiz best", f"{t} - debug solved", f"{t} - challenge", f"{t} - partner"]
     w.writerow(header)
     for s in c.students:
         lv = gamify.level_info(s.xp or 0)
@@ -259,7 +439,8 @@ def export(cid):
             row += [cell["pct"],
                     f"{p.quiz_best}/{p.quiz_total}" if p and p.quiz_total else "",
                     "yes" if p and p.debug_solved else "no",
-                    "submitted" if p and p.challenge_submitted_at else ""]
+                    "submitted" if p and p.challenge_submitted_at else "",
+                    cell.get("partner") or ""]
         w.writerow(row)
     fname = f"{c.name.replace(' ', '_')}_progress.csv"
     return Response(out.getvalue(), mimetype="text/csv",
