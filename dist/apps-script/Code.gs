@@ -694,7 +694,12 @@ function setup() {
     if (props.getProperty(key)) {
       try { DriveApp.getFileById(props.getProperty(key)); return; } catch (e) { /* re-download */ }
     }
-    var text = UrlFetchApp.fetch(FIRMWARE[name]).getContentText();
+    if (firmwareFromFolder_(name)) return;          // uploaded by hand
+    var text;
+    try { text = UrlFetchApp.fetch(FIRMWARE[name]).getContentText(); } catch (e) {
+      throw new Error('Could not download the ' + name + ' firmware (' + e.message + '). Upload firmware-' + name +
+        '.hex to the "' + DATA_FOLDER + '" folder in Drive instead, then run setup again.');
+    }
     if (text.charAt(0) !== ':' || text.length < 100000) throw new Error('The ' + name + ' firmware download did not look like a .hex file.');
     props.setProperty(key, folder.createFile('firmware-' + name + '.hex', text, 'text/plain').getId());
   });
@@ -702,8 +707,17 @@ function setup() {
   return 'Set up: data folder "' + DATA_FOLDER + '" and the micro:bit firmware are ready.';
 }
 
+/** A firmware-v1.hex / firmware-v2.hex file the teacher uploaded to the data folder. */
+function firmwareFromFolder_(name) {
+  var it = dataFolder_().getFilesByName('firmware-' + name + '.hex');
+  if (!it.hasNext()) return null;
+  var id = it.next().getId();
+  PropertiesService.getScriptProperties().setProperty('firmware:' + name, id);
+  return id;
+}
+
 function firmwareText_(name) {
-  var id = PropertiesService.getScriptProperties().getProperty('firmware:' + name);
+  var id = PropertiesService.getScriptProperties().getProperty('firmware:' + name) || firmwareFromFolder_(name);
   if (!id) throw new Error('The micro:bit firmware is not set up yet. Ask your teacher to run setup.');
   return DriveApp.getFileById(id).getBlob().getDataAsString();
 }
@@ -1119,7 +1133,7 @@ function installProblems_() {
       out.push(name + ' is missing. Add it as an HTML file named "' + key2 + '" (+ next to Files → HTML).');
       return;
     }
-    var end = /maker-lab-end (\w+)/.exec(text.slice(-200));
+    var end = /maker-lab-end (\w+)/.exec(text);
     if (!end) out.push(name + ' was cut short while pasting (its last line is missing). Paste all of it again.');
     else if (end[1] !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
   });
@@ -1131,6 +1145,12 @@ function checkInstall() {
   var lines = [], ok = function (good, text) { lines.push((good ? '✅ ' : '❌ ') + text); };
   var problems = installProblems_();
   ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and from build ' + BUILD_ID);
+  ['Styles', 'App', 'Editor'].forEach(function (k) {
+    try {
+      var t = HtmlService.createHtmlOutputFromFile(k).getContent(), want = BUILD_SIZES[k + '.html'];
+      lines.push('   ' + k + '.html: ' + t.length + ' of ' + want + ' characters, ends with: ' + JSON.stringify(t.slice(-60)));
+    } catch (e) { lines.push('   ' + k + '.html: ' + e.message); }
+  });
   try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
   try {
     var n = Object.keys(PAGES_GZ).length, first = page_(DATA.order[0]);
@@ -1188,6 +1208,7 @@ function render_(me, page) {
 }
 
 var BUILD_STAMPS = BUILD_STAMPS || {};
-BUILD_STAMPS["Code"] = "f0494a9485";
-var BUILD_ID = "f0494a9485";
+BUILD_STAMPS["Code"] = "0e64ecd5a0";
+var BUILD_ID = "0e64ecd5a0";
 var BUILD_FILES = ["App.html", "Code.gs", "Data.gs", "Editor.html", "Pages1.gs", "Styles.html"];
+var BUILD_SIZES = {"Styles.html": 65018, "App.html": 105535, "Editor.html": 502107};

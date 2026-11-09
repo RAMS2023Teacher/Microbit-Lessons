@@ -170,7 +170,7 @@ function installProblems_() {
       out.push(name + ' is missing. Add it as an HTML file named "' + key2 + '" (+ next to Files → HTML).');
       return;
     }
-    var end = /maker-lab-end (\w+)/.exec(text.slice(-200));
+    var end = /maker-lab-end (\w+)/.exec(text);
     if (!end) out.push(name + ' was cut short while pasting (its last line is missing). Paste all of it again.');
     else if (end[1] !== BUILD_ID) out.push(name + ' is from a different version than Code.gs. Paste the new ' + name + '.');
   });
@@ -182,6 +182,12 @@ function checkInstall() {
   var lines = [], ok = function (good, text) { lines.push((good ? '✅ ' : '❌ ') + text); };
   var problems = installProblems_();
   ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and from build ' + BUILD_ID);
+  ['Styles', 'App', 'Editor'].forEach(function (k) {
+    try {
+      var t = HtmlService.createHtmlOutputFromFile(k).getContent(), want = BUILD_SIZES[k + '.html'];
+      lines.push('   ' + k + '.html: ' + t.length + ' of ' + want + ' characters, ends with: ' + JSON.stringify(t.slice(-60)));
+    } catch (e) { lines.push('   ' + k + '.html: ' + e.message); }
+  });
   try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
   try {
     var n = Object.keys(PAGES_GZ).length, first = page_(DATA.order[0]);

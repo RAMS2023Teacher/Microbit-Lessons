@@ -210,8 +210,13 @@ def stamp(files):
             key = name[:-3]
             files[name] = files[name] + f"\nvar BUILD_STAMPS = BUILD_STAMPS || {{}};\nBUILD_STAMPS[{json.dumps(key)}] = {json.dumps(build)};\n"
         else:
-            files[name] = files[name] + f"<!-- maker-lab-end {build} -->\n"
-    files["Code.gs"] = files["Code.gs"] + f"var BUILD_ID = {json.dumps(build)};\nvar BUILD_FILES = {json.dumps(sorted(files))};\n"
+            # inside the <style>/<script>, where Apps Script can't strip it like an HTML comment
+            tag = "</style>" if name == "Styles.html" else "</script>"
+            i = files[name].rindex(tag)
+            files[name] = files[name][:i] + f"/* maker-lab-end {build} */\n" + files[name][i:]
+    sizes = {n: len(t) for n, t in files.items() if n.endswith(".html")}
+    files["Code.gs"] = files["Code.gs"] + (f"var BUILD_ID = {json.dumps(build)};\nvar BUILD_FILES = {json.dumps(sorted(files))};\n"
+                                           f"var BUILD_SIZES = {json.dumps(sizes)};\n")
 
 
 def split_gs(name, header, entries):

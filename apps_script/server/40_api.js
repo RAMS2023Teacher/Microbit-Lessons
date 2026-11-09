@@ -171,7 +171,12 @@ function setup() {
     if (props.getProperty(key)) {
       try { DriveApp.getFileById(props.getProperty(key)); return; } catch (e) { /* re-download */ }
     }
-    var text = UrlFetchApp.fetch(FIRMWARE[name]).getContentText();
+    if (firmwareFromFolder_(name)) return;          // uploaded by hand
+    var text;
+    try { text = UrlFetchApp.fetch(FIRMWARE[name]).getContentText(); } catch (e) {
+      throw new Error('Could not download the ' + name + ' firmware (' + e.message + '). Upload firmware-' + name +
+        '.hex to the "' + DATA_FOLDER + '" folder in Drive instead, then run setup again.');
+    }
     if (text.charAt(0) !== ':' || text.length < 100000) throw new Error('The ' + name + ' firmware download did not look like a .hex file.');
     props.setProperty(key, folder.createFile('firmware-' + name + '.hex', text, 'text/plain').getId());
   });
@@ -179,8 +184,17 @@ function setup() {
   return 'Set up: data folder "' + DATA_FOLDER + '" and the micro:bit firmware are ready.';
 }
 
+/** A firmware-v1.hex / firmware-v2.hex file the teacher uploaded to the data folder. */
+function firmwareFromFolder_(name) {
+  var it = dataFolder_().getFilesByName('firmware-' + name + '.hex');
+  if (!it.hasNext()) return null;
+  var id = it.next().getId();
+  PropertiesService.getScriptProperties().setProperty('firmware:' + name, id);
+  return id;
+}
+
 function firmwareText_(name) {
-  var id = PropertiesService.getScriptProperties().getProperty('firmware:' + name);
+  var id = PropertiesService.getScriptProperties().getProperty('firmware:' + name) || firmwareFromFolder_(name);
   if (!id) throw new Error('The micro:bit firmware is not set up yet. Ask your teacher to run setup.');
   return DriveApp.getFileById(id).getBlob().getDataAsString();
 }

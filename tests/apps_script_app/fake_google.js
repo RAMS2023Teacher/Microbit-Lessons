@@ -29,6 +29,11 @@ function makeWorld(dist, opts) {
         state.files[nid] = { name, content: String(content), mime, parent: id, modified: tick() };
         return fileObj(nid);
       },
+      getFilesByName: (name) => {
+        const hits = Object.keys(state.files).filter((k) => state.files[k].parent === id && state.files[k].name === name);
+        let i = 0;
+        return { hasNext: () => i < hits.length, next: () => fileObj(hits[i++]) };
+      },
       searchFiles: (q) => {
         const m = /modifiedDate > '([^']+)'/.exec(q);
         const since = m ? Date.parse(m[1] + 'Z') : 0;

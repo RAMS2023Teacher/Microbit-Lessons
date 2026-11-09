@@ -13,7 +13,7 @@ change the lessons or the code in the repository and build again.
 
 | File | Add it as | Size |
 |---|---|---|
-| `Code.gs` | Script (+ → Script), name it `Code` | 61 KB |
+| `Code.gs` | Script (+ → Script), name it `Code` | 62 KB |
 | `Data.gs` | Script (+ → Script), name it `Data` | 108 KB |
 | `Pages1.gs` | Script (+ → Script), name it `Pages1` | 653 KB |
 | `Styles.html` | HTML (+ → HTML), name it `Styles` | 65 KB |
