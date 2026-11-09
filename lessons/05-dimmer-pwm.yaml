@@ -332,18 +332,18 @@ challenge:
     for loops and write_analog to make a pattern nobody else has.
   levels:
     - "Bronze: Make a heartbeat. Do two quick fades up and down, then pause."
-    - "Silver: Make a candle flicker. Use random.randint to pick a new brightness every few ms."
-    - "Gold: Use button A to switch light modes, like fade, flicker and strobe. Show the mode number: 1, 2 or 3."
+    - "Silver: Make a slow sunrise. Fade up over about 10 seconds, stay bright, then snap off."
+    - "Gold: Build a light show with three parts in a row: a slow fade, a fast fade, then quick flashes."
   hints:
     Bronze:
       - "Make `step` bigger so each fade is quick. Try 32."
       - "Put two fades in a row. Then add `sleep(800)` before the loop repeats."
     Silver:
-      - "Add `import random` near the top of your code."
-      - "Pick a number with `random.randint(200, 1023)`. Give it to `pin0.write_analog()`, then wait a little."
+      - "1024 ÷ `step` is how many steps you get. Steps × `wait` is the total time in ms."
+      - "After the fade-up loop, use `sleep(2000)`, then `pin0.write_analog(0)`."
     Gold:
-      - "Keep a `mode` variable. Button A adds 1. After mode 3, go back to 1."
-      - "Use `if mode == 1:` and `elif` for each effect. Keep effects short so the button still works."
+      - "Write three `for` loops, one after another, inside `while True`."
+      - "For quick flashes, loop over `write_digital(1)`, a short sleep, `write_digital(0)`, and another sleep."
   submit_prompt: Describe your light show and explain how your for loop or random numbers change the brightness.
 teacher_notes: |
   * **"value must be 0 or 1" error:** a student used `write_digital` with a brightness number.

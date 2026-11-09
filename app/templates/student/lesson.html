@@ -52,8 +52,10 @@
   <details class="card teacher-key">
     <summary>🍎 Teacher answer key &amp; notes (only teachers see this)</summary>
     {% if lesson.teacher_notes %}<h3>Teacher notes</h3>{{ lesson.teacher_notes|md }}{% endif %}
+    {% if lesson.debug %}
     <h3>Debug solution</h3>
     <pre class="code-block">{{ lesson.debug.solution }}</pre>
+    {% endif %}
     <h3>Quiz answers</h3>
     <ol>{% for q in lesson.quiz %}<li>{{ q.question }} — <b>{{ q.choices[q.answer] }}</b></li>{% endfor %}</ol>
   </details>
@@ -155,7 +157,29 @@
   </section>
   {% endif %}
 
-  {% set n = 4 if lesson.circuit else 3 %}
+  {% if lesson.lab %}
+  <section data-step class="card step-section" id="lab">
+    <h2><span class="sec-num">3</span> {{ lesson.lab.title or "AI lab" }}</h2>
+    <p class="prompt">{{ lesson.lab.intro }}</p>
+    <p><a class="btn" href="{{ lesson.lab.url }}" target="_blank" rel="noopener">Open {{ lesson.lab.tool }} ↗</a>
+      <span class="muted small">It opens in a new tab. Come back here for each step.</span></p>
+    <div class="step-panel lab-panel">
+      <div class="step-count" id="lab-count" aria-live="polite"></div>
+      <h3 id="lab-title"></h3>
+      <div id="lab-text"></div>
+      <div id="lab-tip" class="tip-box" hidden></div>
+      <label class="check big-check"><input type="checkbox" id="lab-check"> <span id="lab-check-label"></span></label>
+      <div class="row">
+        <button type="button" class="btn ghost" id="lab-prev">← Back</button>
+        <button type="button" class="btn" id="lab-next">Next step →</button>
+      </div>
+      <ol class="step-dots" id="lab-dots"></ol>
+    </div>
+  </section>
+  {% endif %}
+
+  {% set n = 2 if lesson.lab else 4 if lesson.circuit else 3 %}
+  {% if lesson.code %}
   <section data-step class="card step-section" id="code">
     <h2><span class="sec-num">{{ n }}</span> Code it</h2>
     {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
@@ -204,6 +228,8 @@
     </div>
   </section>
 
+  {% endif %}
+
   <section data-step class="card step-section" id="quiz">
     <h2><span class="sec-num">{{ n + 2 }}</span> Check for understanding</h2>
     <form id="quiz-form">
@@ -235,19 +261,22 @@
       {% for lv in lesson.challenge.levels %}{% set parts = lv.split(':', 1) %}
       <button type="button" role="tab" class="level-tab level-{{ loop.index }}" data-level="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ ['🥉','🥈','🥇'][loop.index0 % 3] }} {{ parts[0] if parts|length > 1 else ['Bronze','Silver','Gold'][loop.index0 % 3] }}</button>
       {% endfor %}
+      <button type="button" role="tab" class="level-tab level-4" data-level="3" aria-selected="false">💡 My idea</button>
     </div>
     <div class="levels">
       {% for lv in lesson.challenge.levels %}{% set parts = lv.split(':', 1) %}
       <div class="level level-{{ loop.index }}" data-level="{{ loop.index0 }}" role="tabpanel" {{ '' if loop.first else 'hidden' }}>{{ (parts[1] if parts|length > 1 else lv)|md }}</div>
       {% endfor %}
+      <div class="level level-4" data-level="3" role="tabpanel" hidden><p>Invent your own! Use today's parts to solve a small problem for someone you know.</p></div>
     </div>
-    <div class="workspace">
+    <p class="muted small">{% if lesson.code %}Your code from today is already in the editor. {% endif %}Bronze fits in class. The others are for extra time.</p>
+    <div class="workspace{{ ' no-editor' if lesson.lab }}">
       <div class="helper-toggles">
-        <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="challenge-library">📚 Code library</button>
+        {% if lesson.code %}<button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="challenge-library">📚 Code library</button>{% endif %}
         <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="challenge-hints">💡 Hints</button>
       </div>
       <div class="workspace-main">
-        {{ editor("ed-challenge", state.challenge_code, "challenge", lesson.id ~ "-challenge") }}
+        {% if lesson.code %}{{ editor("ed-challenge", state.challenge_code, "challenge", lesson.id ~ "-challenge", reset_code=lesson.code.starter) }}{% endif %}
         <div class="helper-panels" hidden>
           <section class="helper-panel" id="challenge-hints" aria-label="Hints" hidden>
             <h3>💡 Hints</h3>
@@ -258,8 +287,17 @@
               <button type="button" class="btn small hint-next">Show a hint</button>
             </div>
             {% endfor %}
+            <div class="hint-set" data-level="3" hidden>
+              <p class="muted small">Your own idea. Open one hint at a time.</p>
+              <ul class="hints">
+                <li hidden>Fill this in: When ___ happens, my gadget will ___.</li>
+                <li hidden>Who would use it? What bugs them now?</li>
+                <li hidden>Start small. Get one part working, then add the next.</li>
+              </ul>
+              <button type="button" class="btn small hint-next">Show a hint</button>
+            </div>
           </section>
-          {{ code_library("challenge-library", library) }}
+          {% if lesson.code %}{{ code_library("challenge-library", library) }}{% endif %}
         </div>
       </div>
     </div>

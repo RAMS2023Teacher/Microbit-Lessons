@@ -29,8 +29,8 @@ materials:
   - A computer with a web browser
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 6}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: learn, name: Learn, minutes: 7}
+  - {key: code, name: Code it, minutes: 9}
   - {key: debug, name: Debug, minutes: 6}
   - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
@@ -125,6 +125,14 @@ learn:
         - {icon: "📤", label: "Send to micro:bit"}
         - {icon: "🟡", label: "yellow light blinks"}
         - {icon: "▶️", label: "your code runs"}
+  - text: |
+      ### When Python finds a mistake
+      Everyone's code breaks. An **error message** helps you fix it.
+
+      * It names the **line number**. Look there first, then the line above.
+      * `SyntaxError`: Python can't read it. Check colons and quotes.
+      * `NameError`: Python doesn't know a word. Check spelling and capitals.
+      * `TypeError`: the wrong kind of value, like text + a number.
   - text: |
       ### Free code you can look inside
       **MicroPython** is **open source**. Anyone can read, change and share its code. They just follow its **license**. Its MIT License mostly asks you to keep the credit.

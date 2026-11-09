@@ -124,11 +124,12 @@ learn:
         - {icon: "🔈", title: "speaker.off()", text: "only the buzzer on pin 0"}
   - text: |
       ### Turning tilt into a note
-      A **theremin** changes pitch as you move. Turn the tilt number into a frequency:
+      **Frequency** is how fast a sound shakes, in **hertz (Hz)**. Higher Hz = higher note.
 
+      A **theremin** changes pitch as you move:
       `freq = 600 + x * 400 // 1024`
 
-      * Left (x = -1024) → **200 Hz**
+      * Left: x is **negative**, so it drops to **200 Hz**
       * Flat (x = 0) → **600 Hz**
       * Right (x = 1024) → **1000 Hz**
     visual:

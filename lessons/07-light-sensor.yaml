@@ -35,9 +35,9 @@ materials:
   - 7 jumper wires
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 4}
+  - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
+  - {key: code, name: Code it, minutes: 6}
   - {key: debug, name: Debug, minutes: 5}
   - {key: quiz, name: Check for understanding, minutes: 2}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
@@ -125,6 +125,8 @@ learn:
       * Reading **above** it? It's bright. Turn it **off**.
 
       Every room is different, so test first. That's called **calibrating**.
+
+      That's **sense → decide → act**: read the light, choose with `if`, then switch the LED.
     visual:
       type: scale
       min: 0
@@ -136,6 +138,17 @@ learn:
         - {at: 0, label: "0"}
         - {at: 300, label: "threshold 300", pointer: true}
         - {at: 1023, label: "1023"}
+  - text: |
+      ### More than two choices: elif
+      ```python
+      if light < 300:
+          display.show("D")
+      elif light < 700:
+          display.show("M")
+      else:
+          display.show("B")
+      ```
+      `elif` means **else if**. Python checks from the top and runs only the **first** match.
 circuit:
   intro: >-
     You'll keep the LED on pin 0 and add a light sensor on pin 1. This time we
@@ -339,7 +352,7 @@ challenge:
   levels:
     - "Bronze: Show a different picture for bright, medium and dark. Use if / elif / else and two thresholds."
     - "Silver: Make the LED fade brighter as the room gets darker using write_analog."
-    - "Gold: Cookie-jar alarm! When the sensor suddenly sees light, play `music.play(music.BA_DING)` and count how many times the jar opened."
+    - "Gold: Cookie-jar alarm! When the sensor suddenly sees light, flash the LED and count how many times the jar opened."
   hints:
     Bronze:
       - "Test first. Press button A to see the reading in bright light and in shade."
@@ -348,7 +361,7 @@ challenge:
       - "You need the opposite of the reading. A small light number should give a big LED number."
       - "Try `pin0.write_analog(1023 - light)`."
     Gold:
-      - "Add `import music` at the top, and `count = 0` before the loop."
+      - "Start `count = 0` before the loop. Add 1 each time the jar opens."
       - "To count each opening once, remember the last state with `was_open = False`. Act only when it changes."
   submit_prompt: What does your gadget do, what threshold(s) did you choose, and how did you pick them?
 teacher_notes: |

@@ -116,19 +116,22 @@ def lesson(lesson_id):
         abort(404)
     p = Progress.query.filter_by(user_id=current_user.id, lesson_id=lesson_id).first()
     prev, nxt = L.neighbors(lesson_id)
+    starter = lesson["code"]["starter"] if lesson.get("code") else ""      # lab lessons have no Python
+    buggy = lesson["debug"]["buggy_code"] if lesson.get("debug") else ""
     state = {
         "sections": (p.sections if p else {}) or {},
         "circuit_steps": (p.circuit_steps if p else []) or [],
         "warmup_answer": p.warmup_answer if p else "",
-        "code": p.code if p and p.code else lesson["code"]["starter"],
-        "debug_code": p.debug_code if p and p.debug_code else lesson["debug"]["buggy_code"],
+        "code": p.code if p and p.code else starter,
+        "debug_code": p.debug_code if p and p.debug_code else buggy,
         "debug_solved": bool(p and p.debug_solved),
         "debug_hints_used": p.debug_hints_used if p else 0,
         "debug_reflection": p.debug_reflection if p else "",
         "quiz_answers": p.quiz_answers if p else None,
         "quiz_score": p.quiz_score if p else None,
         "quiz_best": p.quiz_best if p else None,
-        "challenge_code": p.challenge_code if p and p.challenge_code else "from microbit import *\n\n",
+        "challenge_code": (p.challenge_code if p and p.challenge_code else
+                           p.code if p and p.code else starter),
         "challenge_response": p.challenge_response if p else "",
         "challenge_submitted": bool(p and p.challenge_submitted_at),
         "feedback": p.feedback if p else "",

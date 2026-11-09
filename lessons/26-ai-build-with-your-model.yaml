@@ -1,0 +1,160 @@
+id: ai-build-with-your-model
+label: A4
+unit: 6
+order: 26
+title: "AI 4: Build With Your Model"
+subtitle: Code a real AI gadget in MakeCode and say what it can't do
+duration_minutes: 35
+level: AI Lab
+big_idea: >-
+  A model only estimates. Your code decides what happens next, and you decide
+  where it is safe to trust it.
+objectives:
+  - Open your model in MakeCode
+  - Use a Machine Learning block in a program
+  - Run your model on a micro:bit
+  - Write a model card about its limits
+vocabulary:
+  - term: MakeCode
+    definition: A website where you code the micro:bit with blocks.
+  - term: Event
+    definition: Something that runs your code when it happens, like an action starting.
+  - term: Model card
+    definition: A short note on what a model is for, who it was tested on, and its limits.
+materials:
+  - Your HEX file from AI 3
+  - micro:bit V2 + USB data cable
+  - Battery pack
+  - Computer with Chrome or Edge
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: lab, name: AI lab, minutes: 15}
+  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: challenge, name: Open-ended challenge, minutes: 10}
+video:
+  title: Coding with your model
+  note: Find the Machine Learning blocks at the top of the toolbox.
+warmup:
+  prompt: Name one job where it's fine if an AI is wrong sometimes. Name one job where a person should always check its work.
+learn:
+  - text: |
+      ### Sense, decide, act, with AI
+      It's the same loop you already know. The model does the **deciding** about what the move is.
+
+      Then your code does the rest.
+    visual:
+      type: flow
+      steps:
+        - {icon: "📳", label: "Sense: accelerometer"}
+        - {icon: "🧠", label: "Decide: the model"}
+        - {icon: "💡", label: "Act: your code"}
+  - text: |
+      ### Blocks for your model
+      CreateAI uses **MakeCode** blocks. Find the **Machine Learning** group at the top.
+
+      * **on ML ... start** runs when an action begins.
+      * **is ML ... detected** is true during an action.
+      * **certainty (%) ML ...** gives a number.
+  - text: |
+      ### Same ideas, new look
+      Blocks and Python share the same ideas.
+
+      * **is ML ... detected** works like the test in an `if`.
+      * **on ML ... start** is an **event**. It runs when that action begins, so you don't need your own loop.
+    visual:
+      type: compare
+      items:
+        - {icon: "🐍", title: "Python", text: "You type if and test the numbers."}
+        - {icon: "🧩", title: "Blocks", text: "You snap in an event for the action."}
+  - text: |
+      ### What AI can't do
+      Your model doesn't **understand** a clap. It only matches numbers to its data.
+
+      It can be wrong, and it can't tell you why. So someone has to decide when it's **safe** to use.
+
+      That someone is **you**.
+  - text: |
+      ### Write a model card
+      A **model card** is an honest label for an AI.
+
+      * **What it's for**
+      * **Who it was tested on**
+      * **How accurate it was**
+      * **When not to use it**
+lab:
+  title: "AI lab: Code your model"
+  tool: CreateAI
+  url: https://createai.microbit.org/
+  intro: Open your project, then code what happens for each action. You'll finish with an AI that runs on the micro:bit by itself.
+  steps:
+    - title: Open your project
+      instruction: Open CreateAI. Open your project from **My projects**, or use **Import** with your HEX file. Train your model if you need to.
+      check: My trained project is open.
+    - title: Go to MakeCode
+      instruction: Press **Edit in MakeCode**. Find **Machine Learning** at the top of the toolbox.
+      tip: The back arrow returns to CreateAI, so you can change your data.
+      check: I can see the Machine Learning blocks.
+    - title: Add your first action
+      instruction: Drag out an **on ML ... start** block. Choose your first action. Snap in a **show icon** block.
+      check: One action shows an icon.
+    - title: Add the other actions
+      instruction: Add one **on ML ... start** block for each action. Give each a different icon. For **still**, try **clear screen**.
+      check: Every action does something different.
+    - title: Download
+      instruction: Press **Download** and follow the steps to put it on a micro:bit **V2**. Then unplug it and use a battery pack.
+      tip: Downloading to the micro:bit you record with disconnects it from CreateAI.
+      check: My code is on the micro:bit.
+    - title: Test it without the computer
+      instruction: Do each move 5 times. Is it as good as it was in CreateAI? Change your code or your data if you need to.
+      check: I tested it without the computer.
+    - title: Save your work
+      instruction: Use the three dots next to **Download**, then **Download as File**. That HEX file keeps your data, model and code.
+      check: I saved my final HEX file.
+quiz:
+  - question: What does an on ML ... start block do?
+    choices: ["Runs its code when that action begins", "Records new data", "Trains the model"]
+    answer: 0
+    explain: It's an event block. Your code runs when the model estimates that action has started.
+  - question: In sense, decide, act, which part does the model do here?
+    choices: ["Decide which move it is", "Move the micro:bit", "Write the code"]
+    answer: 0
+    explain: The accelerometer senses, the model estimates the move, and your code acts.
+  - question: Which micro:bit can run a model after you download it?
+    choices: ["V1 only", "V2", "Any device with a screen"]
+    answer: 1
+    explain: Running a model in MakeCode needs the faster processor on the V2.
+  - question: Which belongs on a model card?
+    choices: ["Your favorite color", "Who it was tested on, and when not to use it", "The computer's price"]
+    answer: 1
+    explain: A model card tells people what a model is for and what its limits are.
+challenge:
+  title: AI Gadget
+  prompt: Build something useful with your model. Then write a model card, so people know when to trust it.
+  levels:
+    - "Bronze: Make each action play a different sound or show a different picture."
+    - "Silver: Count one action with a variable. Press A to see the count."
+    - "Gold: Use certainty (%) so your gadget only reacts when the model is very sure."
+  hints:
+    Bronze:
+      - "Look in the Music group for a sound block."
+      - "Put one sound inside each on ML ... start block."
+    Silver:
+      - "Make a variable in the Variables group. Add 1 inside on ML ... start."
+      - "Use an on button A pressed block to show your number."
+    Gold:
+      - "Use a forever block with an if. Compare certainty (%) ML with a number."
+      - "Try 80 first. Test, then change one number at a time."
+  submit_prompt: "Write your model card. What is it for? Who was it tested on? How accurate was it? When should no one use it?"
+teacher_notes: |
+  * **Why blocks?** CreateAI's documented coding path is MakeCode. Students have used Python so far, so point out what stays the same: events, conditions and variables.
+  * **V2 only:** a V1 can't run the downloaded model.
+  * **Time:** the challenge gets 10 minutes here on purpose. The My idea tab is a good place for students to design their own gadget.
+  * **Language:** model cards are a good place to practice talking about limits honestly.
+standards:
+  - code: 6-8.CS.a.5
+    how: Students design and demonstrate a micro:bit device that uses a trained model to do a task.
+  - code: 6-8.CT.d.3
+    how: Students create a program that uses their model's output to reach a goal.
+  - code: 6-8.CAS.c.1
+    how: Students write a model card describing the uses and limits of an AI system.

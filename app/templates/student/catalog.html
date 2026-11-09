@@ -15,7 +15,7 @@
       <p>{{ l.subtitle }}</p>
       <div class="tags">
         <span class="tag">⏱ {{ l.duration_minutes }} min</span>
-        {% if l.circuit %}<span class="tag">⚡ circuit</span>{% endif %}
+        {% if l.circuit %}<span class="tag">⚡ circuit</span>{% endif %}{% if l.lab %}<span class="tag">🤖 AI lab</span>{% endif %}
         <span class="tag">{{ l.level }}</span>
         {% for st in (l.standards or [])[:3] %}<span class="tag std">{{ st.code }}</span>{% endfor %}
       </div>

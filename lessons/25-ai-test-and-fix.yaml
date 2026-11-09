@@ -1,0 +1,167 @@
+id: ai-test-and-fix
+label: A3
+unit: 6
+order: 25
+title: "AI 3: Test, Break, Fix"
+subtitle: Find out who your model works for, and fix the gaps in its data
+duration_minutes: 35
+level: AI Lab
+big_idea: >-
+  A model can only be as fair as its data. If some people are missing from the
+  examples, it may not work for them.
+objectives:
+  - Measure how accurate your model is
+  - Test your model on another person
+  - Explain how gaps in data cause bias
+  - Improve a model with better data
+vocabulary:
+  - term: Accuracy
+    definition: How often the model is right. Correct tests divided by all tests.
+  - term: Bias
+    definition: When a system works better for some people than for others.
+  - term: Data gap
+    definition: People or situations that are missing from the training data.
+  - term: Recognition point
+    definition: How certain the model must be before it counts as that action.
+  - term: Consent
+    definition: Saying yes to something after you understand it.
+materials:
+  - Your HEX file from AI 2
+  - micro:bit V2 + USB data cable
+  - Battery pack for the micro:bit you move
+  - Computer with Chrome or Edge
+  - A partner from another team
+agenda:
+  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: learn, name: Learn, minutes: 5}
+  - {key: lab, name: AI lab, minutes: 18}
+  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: challenge, name: Open-ended challenge, minutes: 6}
+video:
+  title: Testing a model
+  note: Notice who took part in making the data.
+warmup:
+  prompt: Imagine a voice helper that was only trained on adults. Who might it have trouble hearing? What could that feel like?
+learn:
+  - text: |
+      ### Measure it
+      Don't guess how good your model is. **Test it.**
+
+      **Accuracy** = correct tests ÷ all tests.
+
+      Your model got 8 of 10 right? 8 ÷ 10 = 0.8. That's **80%**.
+    visual:
+      type: compare
+      items:
+        - {icon: "✅", title: "8 right", text: "The model estimated the move correctly."}
+        - {icon: "❌", title: "2 wrong", text: "Look for what these have in common."}
+  - text: |
+      ### Who is in your data?
+      If only you recorded the data, the model learned **your** moves.
+
+      Someone taller, shorter or left-handed may move in a different way. Those people are a **data gap**.
+
+      A gap can make a model **unfair**.
+  - text: |
+      ### Bias in the real world
+      **Bias** means a system works better for some people than for others.
+
+      Some real face and voice systems have worked worse for people missing from their data.
+
+      The computer isn't being mean. The **data** had gaps, and people chose that data.
+  - text: |
+      ### Ask first
+      Data comes from people. So ask before you use theirs.
+
+      * Say what you'll record.
+      * Say what it's for.
+      * Let them say **no**.
+
+      That's **consent**. Saying yes after you understand is what counts.
+  - text: |
+      ### How sure is sure enough?
+      The **recognition point** is how certain the model must be before an action counts.
+
+      * Set it **high**: fewer false alarms, but it may miss real moves.
+      * Set it **low**: it catches more, but it makes more mistakes.
+lab:
+  title: "AI lab: Test and fix"
+  tool: CreateAI
+  url: https://createai.microbit.org/
+  intro: Open the project you saved last time. Then you'll test it, find its gaps and make it better. Write down your numbers as you go.
+  steps:
+    - title: Open your project
+      instruction: Open CreateAI. Look under **My projects**, or press **Import** to open your HEX file. Connect your micro:bit and press **Train model** if you need to.
+      check: My project is open and trained.
+    - title: Test on yourself
+      instruction: Do each action **10 times**. Count the correct ones. Work out your accuracy.
+      check: I wrote down my own accuracy.
+    - title: Ask your partner
+      instruction: Say what you'll record and what it's for. Ask if they're okay with that. If they say no, ask someone else.
+      check: My partner said yes.
+    - title: Test on your partner
+      instruction: Your partner does each action **10 times**, without practice. Count the correct ones. Work out the accuracy.
+      tip: Don't show them how. You want to see how they really move.
+      check: I wrote down my partner's accuracy.
+    - title: Find the gap
+      instruction: Compare the two scores. Which action failed most? How did your partner move differently from you?
+      check: I found at least one gap.
+    - title: Add new data
+      instruction: Your partner records **5 new samples** of each action. Then press **Train model** again.
+      check: I added my partner's data and retrained.
+    - title: Test again
+      instruction: Repeat both tests. Did the scores go up? Did either one go down?
+      check: I wrote down my new scores.
+    - title: Try the recognition point
+      instruction: Find the **recognition point** slider for one action. Move it up. Then move it down. What changes when you test?
+      check: I tried a higher and a lower recognition point.
+    - title: Save your work
+      instruction: Press **Save** to download a new HEX file. You'll build with it next time.
+      check: I saved my HEX file.
+quiz:
+  - question: Your model got 6 of 10 tests right. What is its accuracy?
+    choices: ["6%", "60%", "10%"]
+    answer: 1
+    explain: 6 divided by 10 is 0.6, which is 60%.
+  - question: Your model works for you but not for your partner. What is the most likely cause?
+    choices: ["The model is mean", "Your partner's moves are missing from the data", "The battery is low"]
+    answer: 1
+    explain: A model only knows the kinds of moves in its data.
+  - question: What is the best way to reduce this kind of bias?
+    choices: ["Train on data from more kinds of people", "Delete all of your data", "Make the micro:bit louder"]
+    answer: 0
+    explain: Filling data gaps helps a model work for more people.
+  - question: You raise the recognition point. What is likely to happen?
+    choices: ["It needs more certainty, so it may miss some real moves", "It will never be wrong", "It records more data"]
+    answer: 0
+    explain: A higher point means fewer false alarms but more missed moves.
+challenge:
+  title: Fair for Everyone
+  prompt: Make your model work for more people. Use your numbers to prove it got better.
+  levels:
+    - "Bronze: Add data from one more person. Show your score before and after."
+    - "Silver: Test on 3 people who didn't train it. Find who it works worst for."
+    - "Gold: Try recording data from your other hand. Does more variety always help? Show your numbers."
+  hints:
+    Bronze:
+      - "Ask first. Then have them record 5 samples of each action."
+      - "Use the same test both times, so it's fair to compare."
+    Silver:
+      - "Give each person the same 10 tests. Write each score."
+      - "Look for a pattern. What is different about how that person moved?"
+    Gold:
+      - "Change one thing at a time, then test again."
+      - "More variety can help some moves and blur others. Check every action."
+  submit_prompt: Who did your model work worst for? What did you change, and what happened to the numbers?
+teacher_notes: |
+  * **Keep it about data.** Students may blame a partner for "doing it wrong." Point out that real users won't practice first.
+  * **Real-world bias** can be a sensitive topic. Keep to how missing data causes the problem, and don't ask students to speak for any group.
+  * **Consent:** treat a "no" as a normal answer. Have a backup partner ready.
+  * If a project is missing, the browser data may have been cleared. Use the HEX file and **Import**.
+standards:
+  - code: 6-8.CAS.c.1
+    how: Students examine how machine learning, an emerging technology, can work better for some people than others.
+  - code: 6-8.CT.c.5
+    how: Students collect, organize and compare accuracy data from different people, then report the results.
+  - code: 6-8.CS.b.2
+    how: Students see how people choose and fix the data that a machine learns from.

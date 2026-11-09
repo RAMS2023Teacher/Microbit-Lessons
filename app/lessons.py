@@ -18,7 +18,8 @@ UNITS = {
     2: {"title": "Sensing the World", "blurb": "Buttons, light, temperature, knobs and motion."},
     3: {"title": "Making Things Move", "blurb": "Sound, servos, DC motors and motor drivers."},
     4: {"title": "Robots", "blurb": "Build, program and remote-control a two-wheel robot."},
-    5: {"title": "Robot Sprint", "blurb": "A 6-lesson motors + sensors project. Start any time: no earlier lessons needed."},
+    5: {"title": "Robot Sprint", "blurb": "A 6-lesson motors + sensors project for classes that already know micro:bit basics."},
+    6: {"title": "AI Lab", "blurb": "Teach a micro:bit with machine learning, test it for fairness, and build with it."},
 }
 
 REQUIRED = ["id", "unit", "order", "title", "duration_minutes", "big_idea",
@@ -70,9 +71,30 @@ def run_checks(code: str, checks: list[dict]) -> list[dict]:
     return results
 
 
+def _check_lab(lab: dict) -> list[str]:
+    errs = []
+    if not str(lab.get("url", "")).startswith("https://"):
+        errs.append("lab: 'url' must start with https://")
+    if not lab.get("tool"):
+        errs.append("lab: add 'tool', the name shown on the open button")
+    steps = lab.get("steps") or []
+    if len(steps) < 3:
+        errs.append("lab: add at least 3 steps")
+    for i, step in enumerate(steps, 1):
+        for key in ("title", "instruction", "check"):
+            if not step.get(key):
+                errs.append(f"lab step {i}: missing '{key}'")
+        if len(str(step.get("instruction", "")).split()) > 45:
+            errs.append(f"lab step {i}: instruction is over 45 words")
+    return errs
+
+
 def validate_lesson(data: dict) -> list[str]:
     errs = []
+    is_lab = bool(data.get("lab"))     # lab lessons happen in an outside tool, so they have no Python sections
     for key in REQUIRED:
+        if is_lab and key in ("code", "debug"):
+            continue
         if key not in data:
             errs.append(f"missing '{key}'")
     if errs:
@@ -89,15 +111,18 @@ def validate_lesson(data: dict) -> list[str]:
             errs.append(f"quiz {q_i}: add an 'explain'")
     if not 3 <= len(data["quiz"]) <= 6:
         errs.append("quiz should have 3-6 questions")
-    for label, src in (("code.starter", data["code"].get("starter", "")),
-                       ("debug.solution", data["debug"].get("solution", ""))):
+    sources = () if is_lab else (("code.starter", data["code"].get("starter", "")),
+                                 ("debug.solution", data["debug"].get("solution", "")))
+    for label, src in sources:
         try:
             ast.parse(src)
         except SyntaxError as e:
             errs.append(f"{label} has a syntax error on line {e.lineno}: {e.msg}")
-    dbg = data["debug"]
+    if is_lab:
+        errs += _check_lab(data["lab"])
+    dbg = data.get("debug") or {}
     for key in ("story", "buggy_code", "solution", "checks", "hints", "reflection_prompt"):
-        if key not in dbg:
+        if key not in dbg and not is_lab:
             errs.append(f"debug: missing '{key}'")
     if "checks" in dbg and "buggy_code" in dbg and "solution" in dbg:
         sol = run_checks(dbg["solution"], dbg["checks"])
@@ -194,7 +219,8 @@ def public_view(lesson: dict) -> dict:
     view = {k: v for k, v in lesson.items() if k not in ("quiz", "debug")}
     view["quiz"] = [{"question": q["question"], "choices": q["choices"], "visual": q.get("visual")}
                     for q in lesson["quiz"]]
-    view["debug"] = {k: v for k, v in lesson["debug"].items() if k not in ("solution", "checks")}
+    if lesson.get("debug"):
+        view["debug"] = {k: v for k, v in lesson["debug"].items() if k not in ("solution", "checks")}
     return view
 
 
@@ -210,6 +236,8 @@ def grade_quiz(lesson: dict, answers: list) -> dict:
 
 def section_keys(lesson: dict) -> list[str]:
     """Trackable sections, in lesson order."""
+    if lesson.get("lab"):
+        return ["warmup", "learn", "lab", "quiz", "challenge"]
     keys = ["warmup", "learn"]
     if lesson.get("circuit"):
         keys.append("circuit")

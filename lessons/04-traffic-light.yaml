@@ -363,18 +363,18 @@ challenge:
     a new pattern: a crosswalk, a party light, a race start, or your own idea.
   levels:
     - "Bronze: Make a race start. Red, then red + yellow, then all three. Then all off, and show Image.YES for GO!"
-    - "Silver: Add a crosswalk button. When button_a.is_pressed(), go to red. Show Image.STICKFIGURE for 5 seconds."
-    - "Gold: Write a function with parameters, like def flash(pin, times):. Use it to build a whole light show."
+    - "Silver: Add a walk signal. Show `Image.STICKFIGURE` during red and `Image.NO` during green."
+    - "Gold: Write your own function, like `party()`, that calls your other functions. Use it to build a whole light show."
   hints:
     Bronze:
       - "The `red()` function turns the others off first. For red + yellow, use the pin lines instead."
       - "Red is `pin0`, yellow is `pin1` and green is `pin2`. Use `all_off()` before GO."
     Silver:
-      - "Check `if button_a.is_pressed():` inside the `while True` loop, before the green light starts."
-      - "During `sleep(3000)` the code can't see the button. Hold the button, or use shorter waits."
+      - "Put `display.show()` right after `red()` in the loop."
+      - "Keep the order: call the light, show the picture, then `sleep()`."
     Gold:
-      - "Give the function two inputs: `def flash(pin, times):`. Inside, use `pin.write_digital(1)`."
-      - "Put a `for` loop inside to repeat. Call it with a pin name: `flash(pin0, 3)`."
+      - "Inside `party()`, call `red()`, `sleep()`, `green()` and so on. Indent every line."
+      - "Define `party()` above the loop. Then call it inside the loop with `party()`."
   submit_prompt: What pattern did you make, and which function are you proudest of? Why did using functions help?
   visual:
     type: flow

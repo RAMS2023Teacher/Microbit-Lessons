@@ -110,9 +110,10 @@ learn:
       caption: "Flat side facing you: E - B - C, left to right."
   - text: |
       ### The flyback diode
-      When a motor switches off, its coil makes a quick **voltage spike**. It can zap the transistor.
+      A motor is full of coiled wire. When it switches off, the coil makes a quick **voltage spike**. It can zap the transistor.
 
-      * A **diode** placed backwards across the motor gives the spike a safe loop.
+      * A **diode** lets current flow only one way.
+      * Placed backwards across the motor, it gives the spike a safe loop.
       * The **stripe (cathode)** goes to the **battery +** side.
     visual:
       type: part
@@ -344,7 +345,8 @@ challenge:
       - "Set `HOT` 1 degree above the room. Warm the micro:bit with your thumb to test it."
     Gold:
       - "A `for` loop can ramp up: `for s in range(300, 1024, 20):`. Add a short sleep inside."
-      - "Run for `sleep(random.randint(3000, 8000))`. Then ramp down with a negative step."
+      - "`random.randint(3000, 8000)` picks a number from 3000 to 8000. Add `import random` at the top."
+      - "After the random `sleep()`, ramp down with a negative step."
   visual:
     type: leds
     caption: "Bronze: show L, M or H for the fan speed."

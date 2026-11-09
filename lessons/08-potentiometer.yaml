@@ -77,11 +77,23 @@ learn:
         - {type: wire, from: mb.P2, to: a25, color: green}
         - {type: wire, from: a26, to: T-26, color: black}
   - text: |
-      ### Scaling numbers
-      The knob gives **0-1023**. But the display has only **5** rows. To shrink the range:
+      ### One / or two //?
+      * One `/` gives a decimal: `7 / 2` is `3.5`.
+      * Two `//` **drops the remainder**: `7 // 2` is `3`.
 
-      * **Multiply** by the new size (6 bar heights).
-      * **Integer-divide** by the old size (1024 readings).
+      You can't light 3.5 rows! So use `//` to get a whole number.
+    visual:
+      type: compare
+      items:
+        - {icon: "🔢", title: "7 / 2", text: "3.5, a decimal"}
+        - {icon: "✅", title: "7 // 2", text: "3, a whole number"}
+  - text: |
+      ### Scaling numbers
+      The knob gives **0-1023**. But the display has only **5** rows. A bar can be **6 heights**: empty, or 1 to 5 rows.
+
+      * **Multiply** by the number of heights (6).
+      * **Integer-divide** by the number of readings (1024).
+
       ```python
       bars = value * 6 // 1024     # 0, 1, 2, 3, 4 or 5
       ```
@@ -95,17 +107,6 @@ learn:
       map: [0, 5]
       map_label: bars
       caption: "The whole knob range squeezes into 0 to 5 bars."
-  - text: |
-      ### One / or two //?
-      * One `/` gives a decimal: `7 / 2` is `3.5`.
-      * Two `//` **drops the remainder**: `7 // 2` is `3`.
-
-      You can't light 3.5 rows! So use `//` to get a whole number.
-    visual:
-      type: compare
-      items:
-        - {icon: "🔢", title: "7 / 2", text: "3.5, a decimal"}
-        - {icon: "✅", title: "7 // 2", text: "3, a whole number"}
   - text: |
       ### The display's grid
       `display.set_pixel(x, y, brightness)` lights one LED.
@@ -121,11 +122,11 @@ learn:
       caption: "The bottom row is y = 4."
   - text: |
       ### Drawing a bar graph
+      `range(5)` with one number counts **0, 1, 2, 3, 4**.
+
       A loop goes through the 5 rows. Each row lights up if it is **part of the bar**.
 
-      A second loop **inside** it lights all 5 LEDs across that row.
-
-      Bigger number = taller bar.
+      A second loop **inside** it lights all 5 LEDs across that row. Bigger number = taller bar.
     visual:
       type: leds
       frames: ["00000:00000:00000:00000:99999", "00000:00000:99999:99999:99999", "99999:99999:99999:99999:99999"]

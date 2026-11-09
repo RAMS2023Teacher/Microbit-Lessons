@@ -75,13 +75,20 @@ def screens(lesson: dict):
         for i, step in enumerate(c["steps"], 1):
             yield (f"circuit {i}", prose(step.get("instruction", "")) + " " +
                    prose(step.get("tip", "")) + " " + prose(step.get("check", "")), True)
-    code = lesson["code"]
-    yield ("code", prose(code.get("intro", "")), True)   # the editor is the picture
+    lab = lesson.get("lab")
+    if lab:
+        yield ("lab intro", prose(lab.get("intro", "")), True)
+        for i, step in enumerate(lab["steps"], 1):
+            yield (f"lab {i}", prose(step["instruction"]) + " " + prose(step.get("tip", "")) + " " + prose(step["check"]), False)
+    code = lesson.get("code") or {}
+    if code:
+        yield ("code", prose(code.get("intro", "")), True)   # the editor is the picture
     for i, w in enumerate(code.get("walkthrough", []), 1):
         yield (f"how-it-works {i}", prose(w["explain"]), True)
     for i, idea in enumerate(code.get("try_it", []), 1):
         yield (f"try-it {i}", prose(idea), True)
-    yield ("debug", prose(lesson["debug"]["story"]), True)
+    if lesson.get("debug"):
+        yield ("debug", prose(lesson["debug"]["story"]), True)
     for i, q in enumerate(lesson["quiz"], 1):
         yield (f"quiz {i}", prose(q["question"] + ". " + ". ".join(map(str, q["choices"]))), bool(q.get("visual")))
     ch = lesson["challenge"]

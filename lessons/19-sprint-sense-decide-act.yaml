@@ -342,8 +342,8 @@ challenge:
       - "Start `opens = 0` before the loop. Add 1 right where the gate opens."
       - "Lock it by adding `and opens < 5` to the test that opens the gate."
     Gold:
-      - "While a hand is there, keep saving `last_seen = running_time()`. Remove the long sleeps."
-      - "Close when `running_time() - last_seen > 3000`."
+      - "`running_time()` counts milliseconds since power-on. While a hand is there, keep saving it in `last_seen`."
+      - "Remove the long sleeps. Close when `running_time() - last_seen > 3000`."
       - "Scrolling pauses your code. Use `display.scroll(n, wait=False)` so it keeps sensing."
   submit_prompt: What gadget did you build? How did you stop it from flapping?
   visual:

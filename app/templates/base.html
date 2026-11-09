@@ -7,6 +7,7 @@
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101935'/><g fill='%23ffd23f'><circle cx='9' cy='9' r='3'/><circle cx='23' cy='9' r='3'/><circle cx='9' cy='23' r='3'/><circle cx='16' cy='16' r='3'/><circle cx='23' cy='23' r='3'/></g></svg>">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/aero.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">

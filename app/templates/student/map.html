@@ -4,7 +4,7 @@
 <div class="page-head">
   <div>
     <h1>Maker Map</h1>
-    <p class="muted">Follow the trail from your first blink to a radio-controlled robot. Finish a lesson to unlock the paths after it. The Robot Sprint on the right can start any time.</p>
+    <p class="muted">Follow the circuit from your first blink to a radio-controlled robot. Finish a lesson to send power down the paths after it. The Robot Sprint on the right can start any time.</p>
   </div>
   {% if not current_user.is_teacher %}
   <a class="level-chip card" href="{{ url_for('student.profile') }}">
@@ -29,7 +29,7 @@
         <li><span class="dot open"></span> Unlocked — ready to go</li>
         <li><span class="dot locked"></span> Locked</li>
         <li>📌 Assigned by your teacher</li>
-        <li>★ Stars: bug fixed · perfect quiz · challenge done</li>
+        <li>★ The 3 star lights on a chip: bug fixed · perfect quiz · challenge done</li>
       </ul>
       <h3>Units</h3>
       <ul>{% for n, u in data.units.items() %}<li><span class="dot unit-{{ n }}"></span> {{ u.title }}</li>{% endfor %}</ul>

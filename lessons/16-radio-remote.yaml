@@ -32,9 +32,9 @@ materials:
   - Cups, cones or tape for a course
 agenda:
   - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 6}
+  - {key: learn, name: Learn, minutes: 7}
   - {key: circuit, name: Check the robot wiring, minutes: 3}
-  - {key: code, name: Code it, minutes: 9}
+  - {key: code, name: Code it, minutes: 8}
   - {key: debug, name: Debug, minutes: 5}
   - {key: quiz, name: Check for understanding, minutes: 2}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
@@ -154,6 +154,13 @@ learn:
             display.show(Image.NO)
         sleep(20)
     ```
+  - text: |
+      ### Reading the robot's program
+      You met `set_motor()` and `drive()` in Lesson 14. The new part is the loop:
+
+      * `radio.receive()` gives a message, or **None** if nothing came.
+      * `if msg:` means "if something arrived."
+      * The last `if` is the **fail-safe**.
   - text: |
       ### Wired or wireless?
       A **network** connects devices so they can send each other messages.
@@ -463,8 +470,9 @@ challenge:
       - "On the remote, add `elif y < -TILT:` and set `command = 'B'`."
       - "On the robot, add a check for 'B' that drives both wheels backward."
     Silver:
-      - "Scale the tilt on the remote: `level = min(9, abs(y) // 100)`."
-      - "Send `'F' + str(level)`. On the robot, `msg[0]` is the letter and `int(msg[1])` is the number."
+      - "Scale the tilt on the remote: `level = min(9, abs(y) // 100)`. `abs()` drops the minus sign."
+      - "Send `'F' + str(level)`. On the robot, `msg[0]` is the first letter."
+      - "`int(msg[1])` turns the text digit into a number you can use for speed."
     Gold:
       - "A kick is a short burst: full speed for about 200 ms, then back to normal."
       - "Send one new letter for the kick and one for the horn. Use the remote's buttons."

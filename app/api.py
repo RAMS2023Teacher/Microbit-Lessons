@@ -52,11 +52,12 @@ def save(lesson_id):
         p.mark("warmup", len(p.warmup_answer.strip()) >= 3)
     if "debug_hints_used" in data and isinstance(data["debug_hints_used"], int):
         p.debug_hints_used = max(p.debug_hints_used or 0, min(data["debug_hints_used"], 10))
-    if "circuit_steps" in data and lesson.get("circuit"):
-        n = len(lesson["circuit"]["steps"])
+    stepped = lesson.get("circuit") or lesson.get("lab")     # lab steps are tracked the same way
+    if "circuit_steps" in data and stepped:
+        n = len(stepped["steps"])
         steps = sorted({int(i) for i in data["circuit_steps"] if isinstance(i, int) and 0 <= i < n})
         p.circuit_steps = steps
-        p.mark("circuit", len(steps) == n)
+        p.mark("circuit" if lesson.get("circuit") else "lab", len(steps) == n)
     for key in ("learn", "code"):
         if key in (data.get("mark") or {}):
             p.mark(key, bool(data["mark"][key]))
@@ -78,6 +79,8 @@ def sent(lesson_id):
 @login_required
 def debug(lesson_id):
     lesson, p = _lesson_and_progress(lesson_id)
+    if not lesson.get("debug"):
+        abort(404)
     code = _text((request.get_json(silent=True) or {}).get("code", ""))
     p.debug_code = code
     p.debug_attempts = (p.debug_attempts or 0) + 1

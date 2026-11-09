@@ -16,7 +16,8 @@ def groups() -> list[dict]:
 
 def _lesson_text(lesson: dict) -> str:
     cards = [c["text"] if isinstance(c, dict) else c for c in lesson["learn"]]
-    return "\n".join([lesson["code"]["starter"], lesson["debug"]["solution"], *cards])
+    code = [lesson["code"]["starter"], lesson["debug"]["solution"]] if lesson.get("code") else []
+    return "\n".join([*code, *cards])
 
 
 def for_lesson(lesson: dict) -> dict:

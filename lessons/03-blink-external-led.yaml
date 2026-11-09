@@ -59,7 +59,7 @@ learn:
         - {icon: "💡", title: "write_digital(1)", text: "ON: 3 volts"}
         - {icon: "⚫", title: "write_digital(0)", text: "OFF: 0 volts"}
   - text: |
-      ### The breadboard's secret wiring
+      ### Breadboard refresher
       Hidden metal strips join the holes.
 
       * Holes **a–e** in one column are joined.
@@ -235,7 +235,7 @@ challenge:
   levels:
     - "Bronze: Flash an SOS: 3 short, 3 long, 3 short."
     - "Silver: Use variables `dot` and `dash` for the times and spell your initials."
-    - "Gold: Add a second LED on pin 1 that lights between letters, or make button A start the message."
+    - "Gold: Add a second LED on pin 1 that lights between letters."
   hints:
     Bronze:
       - "Write one short blink: on, `sleep(200)`, off, `sleep(200)`. Repeat it 3 times."
@@ -245,7 +245,7 @@ challenge:
       - "Look up your initials in Morse code. Leave a longer pause between letters."
     Gold:
       - "The second LED uses `pin1.write_digital()`. Wire it like the first LED, with its own resistor."
-      - "To start with button A, wait first: `while not button_a.was_pressed():` with `sleep(20)` inside."
+      - "After each letter, turn pin 1 on, `sleep()`, then turn it off."
   submit_prompt: What message did your LED send, and how does your code make dots and dashes?
   visual:
     type: leds
