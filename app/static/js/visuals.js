@@ -393,11 +393,11 @@
   }
   function fan(level) {   // a motor with a spinning fan blade; faster spin = more power
     const secs = level > 0.02 ? (0.25 / level).toFixed(2) : 0;
-    let b = `<rect x="40" y="70" width="80" height="44" rx="10" fill="#9aa3b8" stroke="${INK}" stroke-width="2"/>` + t(80, 98, 'MOTOR', 'class="vz-tiny" text-anchor="middle" fill="#fff"');
-    b += `<line x1="120" y1="92" x2="138" y2="92" stroke="${INK}" stroke-width="4"/>`;
-    b += `<g transform="translate(138 92)"><g>${secs ? `<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="${secs}s" repeatCount="indefinite"/>` : ''}` +
+    let b = `<rect x="40" y="58" width="80" height="44" rx="10" fill="#9aa3b8" stroke="${INK}" stroke-width="2"/>` + t(80, 86, 'MOTOR', 'class="vz-tiny" text-anchor="middle" fill="#fff"');
+    b += `<line x1="120" y1="80" x2="138" y2="80" stroke="${INK}" stroke-width="4"/>`;
+    b += `<g transform="translate(138 80)"><g>${secs ? `<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="${secs}s" repeatCount="indefinite"/>` : ''}` +
       `<ellipse cx="0" cy="-26" rx="7" ry="24" fill="${TEAL}"/><ellipse cx="0" cy="26" rx="7" ry="24" fill="${TEAL}"/></g><circle r="5" fill="${INK}"/></g>`;
-    return svg(180, 130, b, level > 0.02 ? `motor spinning at ${Math.round(100 * level)}% power` : 'motor stopped');
+    return svg(180, 160, b, level > 0.02 ? `motor spinning at ${Math.round(100 * level)}% power` : 'motor stopped');
   }
   function tryIt(v, box) {
     const k = v.kind;
@@ -457,7 +457,10 @@
       const set = () => {
         const n = +r.value, T = v.threshold;
         const yes = op === '<' ? n < T : op === '<=' ? n <= T : op === '>=' ? n >= T : n > T;
-        art.innerHTML = scale({ min: v.min, max: v.max, marks: [{ at: v.threshold, label: `${v.threshold}` }, { at: n, label: `${n}${v.unit || ''}` }] });
+        const low = op[0] === '<';
+        art.innerHTML = scale({ min: v.min, max: v.max, label: v.label || '',
+          zones: [{ from: low ? v.min : T, to: low ? T : v.max, label: `if ${op} ${T}: True`, color: '#dff4e4' }],
+          marks: [{ at: T, label: `${T}` }, { at: n, label: `${n}${v.unit || ''}`, pointer: true }] });
         code.textContent = `reading = ${v.read}   # ${n}\nif reading ${op} ${v.threshold}:   # ${yes ? 'True' : 'False'}`;
         out.textContent = yes ? v.then : v.else;
       };

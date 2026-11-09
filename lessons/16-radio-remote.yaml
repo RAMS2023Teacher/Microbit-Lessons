@@ -264,7 +264,7 @@ circuit:
 code:
   intro: >-
     This is the **controller** program - flash it onto the micro:bit you'll
-    hold. Flash the **robot** program from the Learn section onto the robot.
+    hold. Flash the **robot** program onto the robot. It is on the first Learn card: open **More about this**.
     Change group=12 in BOTH programs to your team's number. Hold the
     controller flat with the logo pointing away from you, then tilt to drive.
   remember:
@@ -514,7 +514,7 @@ teacher_notes: |
   * **Forward and back feel swapped:** students may be holding the controller the other way round. Have them scroll accelerometer.get_y() while tilting to see which way is positive, then adjust the comparison.
   * **A wheel spins backward** or the robot turns the wrong way: swap that motor's wires on the driver (same fix as lesson 14).
   * **Robot stutters or stops randomly:** the controller may be too far away or sending too slowly, or the batteries are low (the 4×AA pack, the robot's 2×AAA or the controller's 2×AAA). The fail-safe makes low batteries show up as "stops by itself" - that's the safe way to fail.
-  * The robot program lives in the Learn section because the starter box holds one program. Students can copy it into a second editor tab.
+  * The robot program lives on the first Learn card, under **More about this**, because the starter box holds one program. Students can copy it into a second editor tab.
   * Radio is not private: any micro:bit in the same group can listen. Good discussion starter about security - a Gold extension is a "secret password" letter at the start of each message.
 
 standards:  # Massachusetts DLCS framework (2016), grades 6-8

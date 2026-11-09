@@ -369,6 +369,7 @@ function badgeChecks_(rec, cfg) {
   if (keys.some(function (k) { return k.indexOf('clean_fix:') === 0; })) earned['clean-fix'] = 1;
   if (keys.some(function (k) { return k.indexOf('quiz_perfect:') === 0; })) earned['quiz-whiz'] = 1;
   if (keys.filter(function (k) { return k.indexOf('quiz_first_try:') === 0; }).length >= 3) earned['sharpshooter'] = 1;
+  if (keys.filter(function (k) { return k.indexOf('learn_check_') === 0; }).length >= 15) earned['eagle-eye'] = 1;
   if (count(function (p) { return p.challenge_submitted_at; }) >= 3) earned['inventor'] = 1;
   if (done.length) earned['finisher'] = 1;
   if (count(function (p, L) { return lessonStars_(L, p) === 3; }) >= 5) earned['star-collector'] = 1;
@@ -419,6 +420,11 @@ function syncRewards_(rec, cfg) {
       award_(rec, 'quiz_perfect:' + lid, X.quiz_perfect, labels.quiz_perfect + ' · ' + L.title, gained);
       if (p.quiz_attempts === 1) award_(rec, 'quiz_first_try:' + lid, X.quiz_first_try, labels.quiz_first_try + ' · ' + L.title, gained);
     }
+    Object.keys(p.learn_checks || {}).sort().forEach(function (i) {
+      var row = p.learn_checks[i];
+      if (row && row.ok && row.tries === 1 && (L.learn_checks || [])[+i])
+        award_(rec, 'learn_check_' + i + ':' + lid, X.learn_check, labels.learn_check + ' · ' + L.title, gained);
+    });
     if (percent_(p, L) === 100) award_(rec, 'complete:' + lid, X.complete, labels.complete + ' · ' + L.title, gained);
   });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });
@@ -569,15 +575,19 @@ function failing_(results) {
 function api(path, bodyJson) {
   try {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
-    var m = /^\/api\/lessons\/([\w-]+)\/(save|sent|practice|debug|quiz|challenge|partner)$/.exec(path);
+    var m = /^\/api\/lessons\/([\w-]+)\/(save|sent|practice|debug|quiz|challenge|partner|learn-check)$/.exec(path);
     if (path === '/api/avatar') return apiAvatar_(body);
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];
     if (!L) return { status: 404, body: { error: 'No such lesson' } };
     if (m[2] === 'partner') return { status: 200, body: { status: 'none', classmates: [] } };   // partners come later
+    if (m[2] === 'learn-check' && whoIs_().teacher) {      // the teacher can try the checks; nothing is saved
+      var g = gradeLearnCheck_(L, body.card, body.choice);
+      return g ? { status: 200, body: { ok: true, check: g } } : { status: 400, body: { ok: false, error: 'No such check' } };
+    }
     var ctx = student_();
     var p = ctx.rec.progress[L.id] || (ctx.rec.progress[L.id] = newProgress_());
-    return { status: 200, body: API_[m[2]](ctx, L, p, body) };
+    return { status: 200, body: API_[m[2].replace('-', '_')](ctx, L, p, body) };
   } catch (e) {
     if (e && e.status) return { status: e.status, body: { ok: false, error: e.message } };
     return { status: 400, body: { ok: false, error: (e && e.message) || 'Something went wrong.' } };
@@ -586,7 +596,28 @@ function api(path, bodyJson) {
 
 function badRequest_(msg) { var e = new Error(msg); e.status = 400; return e; }
 
+/** A Learn card's quick check, graded here so the answers never reach the browser. Null if there's no check. */
+function gradeLearnCheck_(L, card, choice) {
+  var ck = (L.learn_checks || [])[card];
+  if (typeof card !== 'number' || !ck) return null;
+  var correct = choice === ck.answer;
+  return { correct: correct, why: correct ? ck.why : '', hint: correct ? '' : ck.hint };
+}
+
 var API_ = {
+  learn_check: function (ctx, L, p, d) {
+    var g = gradeLearnCheck_(L, d.card, d.choice);
+    if (!g) throw badRequest_('No such check');
+    p.learn_checks = p.learn_checks || {};
+    var row = p.learn_checks[String(d.card)] || { tries: 0, ok: false };
+    if (!row.ok) {
+      row.tries++;
+      row.ok = g.correct;
+      if (g.correct) row.pick = d.choice;
+    }
+    p.learn_checks[String(d.card)] = row;
+    return finish_(ctx, L, p, { check: g, learn_checks: p.learn_checks });
+  },
   save: function (ctx, L, p, d) {
     ['code', 'practice_code', 'debug_code', 'challenge_code', 'challenge_response', 'debug_reflection'].forEach(function (f) {
       if (d[f] !== undefined) p[f] = text_(d[f]);
@@ -867,6 +898,15 @@ function giveBonus(email, amount, reason, badge) {
   return { ok: true, xp: amount };
 }
 
+/** Hide the Learn cards for a class when the teacher teaches that part live. */
+function setSkipLearn(cid, skip) {
+  var cfg = teacher_();
+  if (!cfg.classes[cid]) throw new Error('No such class.');
+  cfg.classes[cid].skip_learn = !!skip;
+  saveConfig_(cfg);
+  return { ok: true, skip_learn: !!skip };
+}
+
 function saveVideos(map) {
   var cfg = teacher_(), out = {};
   Object.keys(map || {}).forEach(function (lid) {
@@ -944,7 +984,8 @@ function studentDetail(cid, email) {
   var items = lessonList_().filter(function (L) { return rec.progress[L.id] || assigned[L.id]; }).map(function (L) {
     var p = rec.progress[L.id] || null;
     return { id: L.id, number: L.number, title: L.title, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0, p: p,
-             feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug };
+             feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug,
+             learn_titles: (L.learn_checks || []).some(function (c) { return c; }) ? L.learn_titles : [] };
   });
   return { cls: cfg.classes[cid], student: { email: email, name: rec.name, xp: rec.xp || 0, level: levelInfo_(rec.xp || 0),
            avatar: avatarOf_(rec), badges: badgeList_(rec).filter(function (b) { return b.earned; }) }, items: items };
@@ -1246,11 +1287,26 @@ function lessonState_(L, p, rec, cfg) {
     challenge_code: (p && (p.challenge_code || p.code)) || L.starter,
     challenge_response: (p && p.challenge_response) || '', challenge_submitted: !!(p && p.challenge_submitted_at),
     feedback: rec ? ((cfg.feedback[rec.email] || {})[L.id] || '') : '',
+    learn_checks: (p && p.learn_checks) || {},
+    skip_learn: !!(rec && L.section_keys.indexOf('learn') >= 0 && skipsLearn_(rec, cfg)),
   };
+}
+
+/** True when one of the student's classes has the teacher teaching Learn live. */
+function skipsLearn_(rec, cfg) {
+  return studentClassIds_(rec, cfg).some(function (cid) { return cfg.classes[cid].skip_learn; });
 }
 
 function lessonPage_(lid, rec, cfg, base, teacher) {
   var L = DATA.lessons[lid], pg = page_(lid), p = rec ? rec.progress[lid] : null;
+  if (rec && L.section_keys.indexOf('learn') >= 0 && skipsLearn_(rec, cfg) && !(p && p.sections && p.sections.learn)) {
+    p = rec.progress[lid] || (rec.progress[lid] = newProgress_());     // taught live, so it counts as done
+    mark_(p, 'learn', true);
+    p.updated_at = now_();
+    var got = syncRewards_(rec, cfg);
+    saveStudent_(rec);
+    if (got.xp_gained) base = merge_(base, { rewards: got, level: got.level });
+  }
   var state = lessonState_(L, p, rec, cfg);
   if (p && p.quiz_answers) state.quiz_results = gradeQuiz_(L, p.quiz_answers);
   return { name: 'lesson', title: L.title, editor: true, lesson: true, html: pg.html, mainClass: 'lesson-layout',
@@ -1373,6 +1429,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "1aca82c6e7";
-var BUILD_EXPECT = {"Assets": "2c1c77fd4e", "Data": "22978377cf", "Pages1": "78e15dbaa8"};
+var BUILD_ID = "5097188f3f";
+var BUILD_EXPECT = {"Assets": "70842bc289", "Data": "37e56916b7", "Pages1": "5f62d7fb8d"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];
