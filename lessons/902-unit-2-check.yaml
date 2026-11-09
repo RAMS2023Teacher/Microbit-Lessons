@@ -1,0 +1,25 @@
+id: unit-2-check
+label: U2
+kind: check
+unit: 2
+order: 902
+title: "Unit 2 Check: Sensing the World"
+subtitle: A short check on what you can do without looking back
+duration_minutes: 15
+level: Unit check
+big_idea: "Show what you remember from Sensing the World. Then go back to anything you missed."
+objectives:
+  - Answer from memory first
+  - Read the explanation for anything you miss
+  - Go back to any lesson you need
+materials:
+  - Just your brain
+agenda:
+  - {key: quiz, name: Unit check, minutes: 15}
+quiz:
+  - {"question": "`if pin1.read_digital() == 0:` with a pull-up. When is this true?", "choices": ["When the button is pressed", "When it isn't pressed", "Always"], "answer": 0, "explain": "With a pull-up, pressed reads 0."}
+  - {"question": "Which line stores a value?", "choices": ["x == 5", "x = 5", "if x:"], "answer": 1, "explain": "One equals sign stores."}
+  - {"question": "`light` is 800. `if light < 300:` shows A, `elif light < 700:` shows B, `else:` shows C. What shows?", "choices": ["A", "B", "C"], "answer": 2, "explain": "800 fails both tests."}
+  - {"question": "What is `512 * 6 // 1024`?", "choices": ["3", "3.5", "6"], "answer": 0, "explain": "3072 // 1024 is 3."}
+  - {"question": "`nums = [4, 9, 1]`. What is `max(nums)`?", "choices": ["1", "4", "9"], "answer": 2, "explain": "max finds the biggest value."}
+  - {"question": "Your readings are 600 in light and 150 in the dark. What is a good threshold?", "choices": ["375", "50", "900"], "answer": 0, "explain": "Pick a number between the two."}

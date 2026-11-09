@@ -1,0 +1,25 @@
+id: unit-4-check
+label: U4
+kind: check
+unit: 4
+order: 904
+title: "Unit 4 Check: Robots"
+subtitle: A short check on what you can do without looking back
+duration_minutes: 15
+level: Unit check
+big_idea: "Show what you remember from Robots. Then go back to anything you missed."
+objectives:
+  - Answer from memory first
+  - Read the explanation for anything you miss
+  - Go back to any lesson you need
+materials:
+  - Just your brain
+agenda:
+  - {key: quiz, name: Unit check, minutes: 15}
+quiz:
+  - {"question": "What does `drive(600, -600)` do?", "choices": ["Goes straight", "Spins on the spot", "Stops"], "answer": 1, "explain": "The wheels go opposite ways."}
+  - {"question": "A robot curves when it should go straight. What do you do first?", "choices": ["Adjust one wheel's speed and test", "Rewrite the program", "Change the radio group"], "answer": 0, "explain": "Change one number at a time."}
+  - {"question": "Why check 'both sensors' before 'left sensor'?", "choices": ["left == LINE is also true when both see the line", "It runs faster", "Python requires it"], "answer": 0, "explain": "Python stops at the first true test."}
+  - {"question": "A robot loses the line. What does last_seen help it do?", "choices": ["Search the correct way", "Go faster", "Turn off"], "answer": 0, "explain": "It remembers where the line went."}
+  - {"question": "Controller group 4, robot group 5. What happens?", "choices": ["The robot doesn't hear it", "It works normally", "The robot goes backward"], "answer": 0, "explain": "Both must use the same group."}
+  - {"question": "What is a fail-safe?", "choices": ["Going to a safe state when something goes wrong", "A stronger battery", "A faster loop"], "answer": 0, "explain": "The robot stops when messages stop."}

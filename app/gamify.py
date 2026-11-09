@@ -19,6 +19,7 @@ XP = {
     "learn": 10,
     "circuit": 30,
     "lab": 40,
+    "practice": 20,
     "code": 20,
     "debug": 30,
     "quiz": 15,
@@ -29,7 +30,7 @@ XP = {
     "quiz_first_try": 10,  # 100% on the first attempt
     "badge": 25,          # every badge is also worth XP
 }
-SECTION_LABELS = {"warmup": "Warm-up", "learn": "Learn", "circuit": "Circuit built", "lab": "AI lab done", "code": "Code ran",
+SECTION_LABELS = {"warmup": "Warm-up", "learn": "Learn", "circuit": "Circuit built", "lab": "AI lab done", "practice": "Your turn solved", "code": "Code ran",
                   "debug": "Bug fixed", "quiz": "Quiz done", "challenge": "Challenge submitted",
                   "complete": "Lesson complete!", "clean_fix": "Fixed with no hints",
                   "quiz_perfect": "Perfect quiz", "quiz_first_try": "Perfect on the first try"}
@@ -63,18 +64,19 @@ TREE = {
     "circuits-101":        {"requires": ["hello-microbit"], "pos": (2, 1)},
     "blink-external-led":  {"requires": ["circuits-101"], "pos": (2, 2)},
     "traffic-light":       {"requires": ["blink-external-led"], "pos": (0.4, 3)},
-    "dimmer-pwm":          {"requires": ["blink-external-led"], "pos": (1.9, 3.2)},
-    "buttons-and-inputs":  {"requires": ["blink-external-led"], "pos": (3.5, 3)},
-    "potentiometer":       {"requires": ["dimmer-pwm"], "pos": (0.5, 4.4)},
-    "servo-motor":         {"requires": ["dimmer-pwm"], "pos": (1.7, 4.6)},
-    "temperature-data":    {"requires": ["buttons-and-inputs"], "pos": (2.9, 4.4)},
-    "light-sensor":        {"requires": ["buttons-and-inputs"], "pos": (4.1, 4.3)},
-    "dc-motor-transistor": {"requires": ["servo-motor"], "pos": (1.4, 5.8)},
-    "motion-and-sound":    {"requires": ["buttons-and-inputs"], "pos": (3.4, 5.7)},
-    "motor-driver":        {"requires": ["dc-motor-transistor"], "pos": (1.8, 6.9)},
-    "robot-drive":         {"requires": ["motor-driver"], "pos": (2.3, 8)},
-    "line-follower":       {"requires": ["robot-drive", "light-sensor"], "pos": (1.2, 9.1)},
-    "radio-remote":        {"requires": ["robot-drive", "motion-and-sound"], "pos": (3.2, 9.1)},
+    "dimmer-pwm":          {"requires": ["blink-external-led"], "pos": (2.0, 3.2)},
+    "buttons-and-inputs":  {"requires": ["blink-external-led"], "pos": (3.4, 3)},
+    # Each lesson below requires the lessons that teach the ideas it uses (tests check this).
+    "light-sensor":        {"requires": ["buttons-and-inputs"], "pos": (4.0, 4.3)},
+    "temperature-data":    {"requires": ["buttons-and-inputs"], "pos": (3.0, 4.4)},
+    "potentiometer":       {"requires": ["dimmer-pwm", "light-sensor"], "pos": (2.0, 5.6)},
+    "motion-and-sound":    {"requires": ["potentiometer", "temperature-data"], "pos": (3.3, 6.8)},
+    "servo-motor":         {"requires": ["traffic-light", "dimmer-pwm", "temperature-data"], "pos": (0.8, 5.6)},
+    "dc-motor-transistor": {"requires": ["servo-motor", "potentiometer"], "pos": (1.3, 6.9)},
+    "motor-driver":        {"requires": ["dc-motor-transistor"], "pos": (1.3, 8.1)},
+    "robot-drive":         {"requires": ["motor-driver"], "pos": (1.8, 9.3)},
+    "line-follower":       {"requires": ["robot-drive"], "pos": (1.0, 10.5)},
+    "radio-remote":        {"requires": ["robot-drive", "motion-and-sound"], "pos": (2.9, 10.5)},
     # Robot Sprint: its own trail on the right, open from the start
     "sprint-servo-skills":  {"requires": [], "pos": (6.4, 0)},
     "sprint-sensor-lab":    {"requires": ["sprint-servo-skills"], "pos": (6.4, 1.3)},
@@ -102,6 +104,8 @@ def tree() -> dict:
     prev, row = None, max((v["pos"][1] for v in TREE.values()), default=-1)
     for lesson in L.all_lessons():
         lid = lesson["id"]
+        if lesson.get("kind") == "check":       # unit checks aren't stops on the map
+            continue
         if lid not in t:
             row += 1.1
             t[lid] = {"requires": [prev] if prev else [], "pos": (2, row)}
@@ -134,6 +138,8 @@ def map_data(user, assigned_ids=()) -> dict:
         current = recent[0].lesson_id
     for lesson in L.all_lessons():
         lid = lesson["id"]
+        if lid not in t:
+            continue
         info = t[lid]
         p = pm.get(lid)
         pct = p.percent(L.section_keys(lesson)) if p else 0
@@ -223,10 +229,10 @@ def _badge_checks(user, progress: list[Progress], xp_keys: set[str]) -> set[str]
     if user.avatar:
         earned.add("robot-stylist")
     for unit in L.UNITS:
-        ids = [l["id"] for l in lessons.values() if l["unit"] == unit]
+        ids = [l["id"] for l in lessons.values() if l["unit"] == unit and l.get("kind") != "check"]
         if ids and all(i in done for i in ids):
             earned.add(f"unit-{unit}")
-    core = [i for i, l in lessons.items() if l["unit"] <= 4]
+    core = [i for i, l in lessons.items() if l["unit"] <= 4 and l.get("kind") != "check"]
     if core and all(i in done for i in core):
         earned.add("graduate")
     class_ids = [c.id for c in user.classes]

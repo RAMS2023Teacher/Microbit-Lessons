@@ -34,12 +34,13 @@ materials:
   - About 12 jumper wires
   - Masking tape
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How tank-steering robots turn
@@ -268,6 +269,7 @@ code:
 
     stop()
     display.show(Image.HAPPY)
+  predict: {"question": "What does `drive(700, 350)` do?", "choices": ["Drives straight", "Curves toward the slower right wheel", "Spins on the spot"], "answer": 1, "explain": "A robot curves toward its slower wheel."}
   walkthrough:
     - lines: "3-6"
       explain: All the numbers you'll **calibrate** live at the top, in CAPITALS so they stand out.
@@ -281,6 +283,18 @@ code:
     - "Calibrate TURN_TIME: turns too far? Make it smaller. Not far enough? Bigger. Change it 25 ms at a time."
     - Does your robot drift? Try drive(700, 670) or drive(670, 700) to balance the motors.
     - Write turn_left() and drive a square the other way.
+practice:
+  level: "write"
+  prompt: "Write turn_left(). Spin left with the left wheel backward and the right wheel forward, at TURN_SPEED, for TURN_TIME. Then stop."
+  starter: "from microbit import *\n\nTURN_SPEED = 600\nTURN_TIME = 450\n\ndef drive(left, right):\n    pass   # your real drive() goes here\n\n# define turn_left here\n\nturn_left()\n"
+  solution: "from microbit import *\n\nTURN_SPEED = 600\nTURN_TIME = 450\n\ndef drive(left, right):\n    pass   # your real drive() goes here\n\ndef turn_left():\n    drive(-TURN_SPEED, TURN_SPEED)\n    sleep(TURN_TIME)\n    drive(0, 0)\n\nturn_left()\n"
+  hints: ["It's turn_right with the signs swapped."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "def\\s+turn_left\\(\\s*\\)\\s*:", "message": "Start with def turn_left():"}
+    - {"type": "contains", "pattern": "drive\\(\\s*-\\s*TURN_SPEED\\s*,\\s*TURN_SPEED\\s*\\)", "message": "The left wheel goes backward, so its speed is negative."}
+    - {"type": "contains", "pattern": "sleep\\(\\s*TURN_TIME\\s*\\)", "message": "Wait for TURN_TIME."}
+    - {"type": "contains", "pattern": "drive\\(\\s*0\\s*,\\s*0\\s*\\)", "message": "Stop at the end."}
 debug:
   story: >-
     Malik's robot is supposed to drive a square. Instead it drives in one long
@@ -392,6 +406,8 @@ quiz:
       - Variables use less battery
     answer: 2
     explain: Calibrating means changing numbers again and again. Having them in one place makes that quick and avoids mistakes.
+  - {"question": "`for side in range(4):` has `drive(SPEED, SPEED)` inside. How many times does drive run?", "choices": ["3", "4", "5"], "answer": 1, "explain": "range(4) gives four numbers."}
+  - {"question": "From Lesson 13: how does an H-bridge make a motor spin the other way?", "choices": ["It reverses the current through the motor", "It uses a bigger battery", "It turns the motor over"], "answer": 0, "explain": "Closing the other pair of switches flips the current."}
 challenge:
   title: Robot Choreographer
   prompt: >-

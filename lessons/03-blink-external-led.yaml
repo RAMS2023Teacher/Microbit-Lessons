@@ -30,12 +30,13 @@ materials:
   - 1 resistor, 220 Ω (red-red-brown)
   - 2-3 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Blinking an external LED
@@ -157,6 +158,7 @@ code:
         sleep(delay)
         pin0.write_digital(0)   # LED off
         sleep(delay)
+  predict: {"question": "You delete the last `sleep(delay)`. What will the LED look like?", "choices": ["It blinks twice as fast", "It looks like it stays on", "It stays off"], "answer": 1, "explain": "The off time is so short that your eyes can't see it."}
   walkthrough:
     - lines: "1"
       explain: Loads the micro:bit library so Python knows about pin0, sleep and display.
@@ -170,6 +172,18 @@ code:
     - Change delay to 100. Then 2000. What changes?
     - Make the LED stay on for a long time and off for a short time (use two different numbers).
     - Add display.show(Image.HEART) before the loop.
+practice:
+  level: "fill"
+  prompt: "Fill in the blanks. Make the LED on pin 0 stay on for 1 second, then off for 1 second."
+  starter: "from microbit import *\n\nwhile True:\n    pin0.write_digital(___)\n    sleep(1000)\n    pin0.write_digital(___)\n    sleep(___)\n"
+  solution: "from microbit import *\n\nwhile True:\n    pin0.write_digital(1)\n    sleep(1000)\n    pin0.write_digital(0)\n    sleep(1000)\n"
+  hints: ["1 means on, and 0 means off."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "not_contains", "pattern": "___", "message": "Fill in every blank first."}
+    - {"type": "contains", "pattern": "write_digital\\(\\s*1\\s*\\)", "message": "Which number turns the pin on?"}
+    - {"type": "contains", "pattern": "write_digital\\(\\s*0\\s*\\)", "message": "Which number turns the pin off?"}
+    - {"type": "contains", "pattern": "sleep\\(\\s*1000\\s*\\)", "message": "1 second is 1000 milliseconds."}
 debug:
   story: >-
     Jordan's LED is supposed to blink, but it just stays on. There are **two**
@@ -227,6 +241,8 @@ quiz:
       - It stores electricity
     answer: 1
     explain: Without it, too much current could flow through the LED and the pin.
+  - {"question": "`delay = 500`, then `delay = 200`, then `sleep(delay)`. How long does it wait?", "choices": ["500 ms", "200 ms", "700 ms"], "answer": 1, "explain": "A variable keeps only its newest value."}
+  - {"question": "From Lesson 2: if you use a bigger resistor, what happens to the current?", "choices": ["It goes down", "It goes up", "It doesn't change"], "answer": 0, "explain": "More resistance means less current."}
 challenge:
   title: Secret Signal
   prompt: >-

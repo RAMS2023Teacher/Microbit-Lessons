@@ -33,11 +33,12 @@ materials:
   - A cup or box to prop the robot up
 agenda:
   - {key: warmup, name: Warm-up, minutes: 2}
-  - {key: learn, name: Learn, minutes: 5}
+  - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build it, minutes: 8}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 4}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 4}
 video:
   title: A two-wheel robot drives a square
@@ -256,6 +257,7 @@ code:
         if button_b.was_pressed():
             stop()
             display.show(Image.SQUARE)
+  predict: {"question": "What does `drive(60, -60)` do?", "choices": ["Goes forward", "Spins right on the spot", "Stops"], "answer": 1, "explain": "The left wheel goes forward and the right wheel goes back."}
   walkthrough:
     - lines: "8-9"
       explain: Your two **stop numbers**. Change each one until that wheel stays dead still.
@@ -269,6 +271,18 @@ code:
     - Press B. If a wheel creeps, change its STOP number by 1 and try again.
     - Does the robot go backward? Swap the + and - in drive().
     - Corners too wide or too tight? Change only the 500 in turn_right(500).
+practice:
+  level: "write"
+  prompt: "Write back_up(ms). Drive both wheels at -60, wait ms milliseconds, then stop."
+  starter: "from microbit import *\n\ndef drive(left, right):\n    pass   # your real drive() goes here\n\n# define back_up here\n\nback_up(800)\n"
+  solution: "from microbit import *\n\ndef drive(left, right):\n    pass   # your real drive() goes here\n\ndef back_up(ms):\n    drive(-60, -60)\n    sleep(ms)\n    drive(0, 0)\n\nback_up(800)\n"
+  hints: ["Use forward() from the starter code as a pattern."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "def\\s+back_up\\(\\s*ms\\s*\\)\\s*:", "message": "Start with def back_up(ms):"}
+    - {"type": "contains", "pattern": "drive\\(\\s*-\\s*\\d+\\s*,\\s*-\\s*\\d+\\s*\\)", "message": "Both speeds should be negative."}
+    - {"type": "contains", "pattern": "sleep\\(\\s*ms\\s*\\)", "message": "Wait for ms milliseconds."}
+    - {"type": "contains", "pattern": "drive\\(\\s*0\\s*,\\s*0\\s*\\)", "message": "Stop at the end."}
 debug:
   story: >-
     Jordan's robot should drive a square when you press A. Instead the code
@@ -367,6 +381,8 @@ quiz:
       - Loop 3 times instead of 4
     answer: 0
     explain: The robot turns by time. Less time spinning means a smaller turn.
+  - {"question": "`STOP_R` is 77 and `right` is 0. What is `STOP_R - right * 25 // 100`?", "choices": ["77", "52", "0"], "answer": 0, "explain": "0 times anything is 0, so it stays at the stop number."}
+  - {"question": "From Sprint 3: what are the three steps of the robot loop?", "choices": ["Sense, decide, act", "Start, stop, repeat", "Read, write, sleep"], "answer": 0, "explain": "Robots repeat sense, decide, act."}
 challenge:
   title: Bot Moves
   prompt: >-

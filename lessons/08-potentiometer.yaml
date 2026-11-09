@@ -33,12 +33,13 @@ materials:
   - 1 potentiometer, 10 kΩ (breadboard-friendly knob)
   - 7 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Build the circuit, minutes: 7}
-  - {key: code, name: Code it, minutes: 8}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How a potentiometer works
@@ -219,6 +220,7 @@ code:
                 display.set_pixel(x, 4 - row, brightness)
 
         sleep(50)
+  predict: {"question": "The knob is near the middle, at 512. How many rows light up?", "choices": ["1", "3", "5"], "answer": 1, "explain": "512 × 6 // 1024 is 3."}
   walkthrough:
     - lines: "4-5"
       explain: Reads the knob (0-1023). write_analog also uses 0-1023, so it goes straight to the LED.
@@ -232,6 +234,16 @@ code:
     - Which way makes the bar go up? Swap the red and black pot wires. What changes?
     - Show the knob as a single digit with display.show(value * 10 // 1024) instead.
     - Make the LED do the opposite of the bar. Hint - 1023 - value.
+practice:
+  level: "write"
+  prompt: "Write the scaling line. Turn the knob reading into one digit from 0 to 9, then show it."
+  starter: "from microbit import *\n\nwhile True:\n    value = pin2.read_analog()\n    # make digit: scale value down to 0-9\n    # show digit\n    sleep(50)\n"
+  solution: "from microbit import *\n\nwhile True:\n    value = pin2.read_analog()\n    digit = value * 10 // 1024\n    display.show(digit)\n    sleep(50)\n"
+  hints: ["There are 10 digits from 0 to 9.", "Use the same pattern as bars = value * 6 // 1024."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "value\\s*\\*\\s*10\\s*//\\s*1024", "message": "Multiply by how many digits there are, then // by 1024."}
+    - {"type": "contains", "pattern": "display\\.show\\(", "message": "Show your digit on the display."}
 debug:
   story: >-
     Riley wants a row of lights that grows as the knob turns. Instead the
@@ -309,6 +321,8 @@ quiz:
       - The LED ignores big numbers
     answer: 0
     explain: read_analog gives 0-1023 and write_analog takes 0-1023, so they already match.
+  - {"question": "What numbers does `range(4)` make?", "choices": ["1, 2, 3, 4", "0, 1, 2, 3", "0, 1, 2, 3, 4"], "answer": 1, "explain": "With one number, it starts at 0 and stops before that number."}
+  - {"question": "From Lesson 7: what is a threshold?", "choices": ["A cut-off number", "A type of resistor", "A kind of loop"], "answer": 0, "explain": "Readings on each side of it trigger different actions."}
 challenge:
   title: Knob-Controlled Gadget
   prompt: >-

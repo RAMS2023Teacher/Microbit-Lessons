@@ -31,12 +31,13 @@ materials:
   - 180° servo
   - Cardboard, tape and scissors for the gate
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Plug it in, minutes: 4}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Automatic doors
@@ -205,6 +206,7 @@ code:
             display.show(Image.NO)
             sleep(500)     # cooldown so it doesn't flap
         sleep(50)
+  predict: {"question": "You hold your hand in front of the sensor and keep it there. What does the gate do?", "choices": ["Opens once and stays open", "Keeps opening and closing", "Stays shut"], "answer": 0, "explain": "The state variable stops it from opening again."}
   walkthrough:
     - lines: "3-8"
       explain: Name the pins, send servo pulses every 20 ms, and make an `angle()` function.
@@ -218,6 +220,18 @@ code:
     - Change the open angle from 90 to 150. Does your gate open wider?
     - Change sleep(2000) to sleep(5000). How long does the gate stay open now?
     - "Delete the cooldown sleep(500). Hold your hand at the edge of the range. What happens?"
+practice:
+  level: "write"
+  prompt: "Write a toggle. A variable called state starts as 'off'. Each press of A flips it. Show Y for on and N for off."
+  starter: "from microbit import *\n\nstate = \"off\"\n\nwhile True:\n    # if A was pressed, flip state\n    # show Y or N\n    sleep(50)\n"
+  solution: "from microbit import *\n\nstate = \"off\"\n\nwhile True:\n    if button_a.was_pressed():\n        if state == \"off\":\n            state = \"on\"\n        else:\n            state = \"off\"\n    if state == \"on\":\n        display.show(\"Y\")\n    else:\n        display.show(\"N\")\n    sleep(50)\n"
+  hints: ["Put an if inside the button's if."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "button_a\\.was_pressed\\(\\)", "message": "Check for a press of A."}
+    - {"type": "contains", "pattern": "state\\s*==\\s*['\\\"](on|off)['\\\"]", "message": "Ask what state is now."}
+    - {"type": "contains", "pattern": "(?m)^\\s+state\\s*=\\s*['\\\"]on['\\\"]", "message": "Set state to 'on' when it's off."}
+    - {"type": "contains", "pattern": "display\\.show\\(\\s*['\\\"]Y['\\\"]\\s*\\)", "message": "Show Y when it's on."}
 debug:
   story: >-
     Jordan built a trash-can lid. The servo doesn't move. After a fix, the lid
@@ -325,6 +339,8 @@ quiz:
       - "1023"
     answer: 0
     explain: 26 is 0°, 77 is 90° and 128 is 180°.
+  - {"question": "`state = \"closed\"`. Which test is true?", "choices": ["state == \"open\"", "state == \"closed\"", "state == closed"], "answer": 1, "explain": "Text needs quote marks, and state holds \"closed\"."}
+  - {"question": "From Sprint 2: the IR sensor reads 0. What does that mean?", "choices": ["Something is in front", "Nothing is there", "It's broken"], "answer": 0, "explain": "0 means the sensor sees something."}
 challenge:
   title: Build a Real Gadget
   prompt: >-

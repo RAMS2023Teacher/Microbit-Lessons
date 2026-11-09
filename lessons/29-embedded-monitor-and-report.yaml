@@ -28,11 +28,12 @@ materials:
   - Battery pack
   - Your data from Embedded 2
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
-  - {key: code, name: Code it, minutes: 9}
+  - {key: code, name: Code it, minutes: 6}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 4}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 12}
 video:
   title: Sensors that monitor the world
@@ -114,6 +115,7 @@ code:
 
         log.add(sound=sound, average=average)
         sleep(1000)
+  predict: {"question": "One very loud clap comes in a quiet room. Does the alarm turn on?", "choices": ["Probably not", "Yes, right away", "It crashes"], "answer": 0, "explain": "The average of 5 readings barely moves."}
   walkthrough:
     - lines: "4-8"
       explain: "Your settings, the columns, an empty list, and whether the alarm is on."
@@ -127,6 +129,16 @@ code:
     - Clap once. Does the face change? Now talk for 10 seconds.
     - Change SIZE to 2, then 10. Which one reacts faster? Which has fewer false alarms?
     - Open your chart. Compare the sound line with the average line.
+practice:
+  level: "write"
+  prompt: "Write the average. Work out the average of the list with sum and len, then scroll it."
+  starter: "from microbit import *\n\nreadings = [40, 50, 60]\n\n# work out average\n# scroll average\n"
+  solution: "from microbit import *\n\nreadings = [40, 50, 60]\n\naverage = sum(readings) // len(readings)\ndisplay.scroll(average)\n"
+  hints: ["Average means total divided by how many."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "average\\s*=\\s*sum\\(\\s*readings\\s*\\)\\s*//?\\s*len\\(\\s*readings\\s*\\)", "message": "Divide sum(readings) by len(readings)."}
+    - {"type": "contains", "pattern": "display\\.(scroll|show)\\(\\s*average", "message": "Scroll the average."}
 debug:
   story: >-
     Noah's average never builds up and stays too low. There are **two** bugs in
@@ -177,6 +189,8 @@ quiz:
     choices: ["My favorite result", "We only tested on one day", "The title"]
     answer: 1
     explain: Limits say what could have made your conclusion wrong.
+  - {"question": "`readings = [10, 20, 30]`. What is `sum(readings) // len(readings)`?", "choices": ["20", "60", "3"], "answer": 0, "explain": "60 // 3 is 20."}
+  - {"question": "From Embedded 2: what makes a fair test?", "choices": ["Changing only one thing", "Changing everything", "Testing once"], "answer": 0, "explain": "Otherwise you can't tell what caused the difference."}
 challenge:
   title: Research Brief
   prompt: Use your data to make a short report. Give a claim, your evidence and your limits.

@@ -400,7 +400,7 @@ thead th small, tbody th small { display: block; color: var(--muted); font-weigh
 .unit-1 { --unit: #f5b700; } .unit-2 { --unit: #0fa3a3; } .unit-3 { --unit: #f9733d; } .unit-4 { --unit: #7c5cff; } .unit-5 { --unit: #e5397b; } .unit-6 { --unit: #2aa5e0; } .unit-7 { --unit: #2fb57a; }
 .map-unit-label { position: absolute; transform: translate(-100%, -100%); font-weight: 800; font-size: .68rem; letter-spacing: .06em; color: #fff; background: #0b5a3c; border: 1.5px solid #fff; border-radius: 3px; padding: 2px 8px; white-space: nowrap; }
 .map-unit-label.center { transform: translate(-50%, -100%); }
-.map-stamp { position: absolute; left: 44px; bottom: 34px; font: 700 .75rem var(--mono); letter-spacing: .08em; color: rgba(255,255,255,.8); border: 1.5px solid rgba(255,255,255,.8); border-radius: 3px; padding: 3px 8px; }
+.map-stamp { position: absolute; right: 44px; bottom: 34px; font: 700 .75rem var(--mono); letter-spacing: .08em; color: rgba(255,255,255,.8); border: 1.5px solid rgba(255,255,255,.8); border-radius: 3px; padding: 3px 8px; }
 .map-me { position: absolute; z-index: 2; margin: -38px 0 0 -128px; display: flex; flex-direction: column; align-items: center; pointer-events: none; animation: bob 2.2s ease-in-out infinite; }
 .map-me span { font-size: .7rem; font-weight: 800; background: var(--navy); color: var(--accent); border-radius: 99px; padding: 0 7px; margin-top: -4px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
@@ -622,4 +622,12 @@ figure.vz { margin: 10px 0; text-align: center; }
 .google-pick { border: 1px solid var(--line); border-radius: 10px; columns: 2; }
 .google-steps li { margin-bottom: 8px; }
 @media (max-width: 560px) { .google-pick { columns: 1; } }
+
+.predict-box { background: var(--warn-bg); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+.predict-box p { display: inline; margin: 0; }
+.predict-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.predict-choice.right { background: #e4f7d8; border-color: var(--ok); color: #145c33; opacity: 1; }
+.predict-choice.wrong { background: var(--bad-bg); border-color: var(--bad); color: #8a1f1f; opacity: 1; }
+.predict-explain { display: block !important; margin-top: 8px !important; font-weight: 600; }
+.predict-explain[hidden] { display: none !important; }
 

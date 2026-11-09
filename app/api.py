@@ -45,7 +45,7 @@ def _finish(lesson, p, **extra):
 def save(lesson_id):
     lesson, p = _lesson_and_progress(lesson_id)
     data = request.get_json(silent=True) or {}
-    for field in ("code", "debug_code", "challenge_code", "challenge_response", "debug_reflection"):
+    for field in ("code", "practice_code", "debug_code", "challenge_code", "challenge_response", "debug_reflection"):
         if field in data:
             setattr(p, field, _text(data[field]))
     if "warmup_answer" in data:
@@ -74,6 +74,24 @@ def sent(lesson_id):
     if data.get("section") == "code":
         p.mark("code")
     return _finish(lesson, p)
+
+
+@bp.post("/lessons/<lesson_id>/practice")
+@login_required
+def practice(lesson_id):
+    lesson, p = _lesson_and_progress(lesson_id)
+    task = lesson.get("practice")
+    if not task:
+        abort(404)
+    code = _text((request.get_json(silent=True) or {}).get("code", ""))
+    p.practice_code = code
+    results = L.run_checks(code, task["checks"])
+    solved = all(r["ok"] for r in results)
+    if solved:
+        p.practice_solved = True
+        p.mark("practice")
+    failing = [r["message"] for r in results if not r["ok"] and r["message"]]
+    return _finish(lesson, p, solved=solved, messages=failing[:1], passed=sum(r["ok"] for r in results), total=len(results))
 
 
 @bp.post("/lessons/<lesson_id>/debug")

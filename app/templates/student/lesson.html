@@ -31,7 +31,7 @@
 
 <article class="lesson" id="lesson">
   <header class="lesson-head">
-    <div class="eyebrow">Lesson {{ lesson.number }} · Unit {{ lesson.unit }} · {{ lesson.level }} · ⏱ {{ lesson.duration_minutes }} min</div>
+    <div class="eyebrow">{% if lesson.kind != "check" %}Lesson {{ lesson.number }} · {% endif %} Unit {{ lesson.unit }} · {{ lesson.level }} · ⏱ {{ lesson.duration_minutes }} min</div>
     <h1>{{ lesson.title }}</h1>
     {% if lesson.subtitle %}<p class="subtitle">{{ lesson.subtitle }}</p>{% endif %}
     <div class="big-idea"><b>Big idea</b> {{ lesson.big_idea }}</div>
@@ -52,6 +52,10 @@
   <details class="card teacher-key">
     <summary>🍎 Teacher answer key &amp; notes (only teachers see this)</summary>
     {% if lesson.teacher_notes %}<h3>Teacher notes</h3>{{ lesson.teacher_notes|md }}{% endif %}
+    {% if lesson.practice %}
+    <h3>Your turn solution</h3>
+    <pre class="code-block">{{ lesson.practice.solution }}</pre>
+    {% endif %}
     {% if lesson.debug %}
     <h3>Debug solution</h3>
     <pre class="code-block">{{ lesson.debug.solution }}</pre>
@@ -102,6 +106,7 @@
     {% endif %}
   </section>
 
+  {% if lesson.warmup %}
   <section data-step class="card step-section" id="warmup">
     <h2><span class="sec-num">1</span> Warm-up</h2>
     <p class="prompt">{{ lesson.warmup.prompt }}</p>
@@ -109,6 +114,9 @@
     <div class="row"><span class="save-status muted small" id="warmup-status"></span></div>
   </section>
 
+  {% endif %}
+
+  {% if lesson.learn %}
   <section data-step class="card step-section" id="learn">
     <h2><span class="sec-num">2</span> Learn</h2>
     <div class="step-count" id="learn-count" aria-live="polite"></div>
@@ -125,6 +133,7 @@
       <ol class="step-dots" id="learn-dots"></ol>
     </div>
   </section>
+  {% endif %}
 
   {% if lesson.circuit %}
   <section data-step class="card step-section" id="circuit">
@@ -183,6 +192,13 @@
   <section data-step class="card step-section" id="code">
     <h2><span class="sec-num">{{ n }}</span> Code it</h2>
     {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
+    {% if lesson.code.predict %}{% set pq = lesson.code.predict %}
+    <div class="predict-box" id="predict-box">
+      <b>🤔 Predict first:</b> {{ pq.question|md }}
+      <div class="predict-choices">{% for c in pq.choices %}<button type="button" class="btn small ghost predict-choice" data-right="{{ 'yes' if loop.index0 == pq.answer else 'no' }}">{{ c }}</button>{% endfor %}</div>
+      <p class="predict-explain" id="predict-explain" hidden>{{ pq.explain }} Now run it and see.</p>
+    </div>
+    {% endif %}
     {{ editor("ed-code", state.code, "code", lesson.id, reset_code=lesson.code.starter) }}
     <div class="code-tools" role="tablist">
       {% if lesson.code.walkthrough %}<button type="button" class="pill" data-panel="walk" aria-expanded="false">🔍 How does it work?</button>{% endif %}
@@ -203,8 +219,31 @@
     <button type="button" class="btn" id="code-done">✓ I ran my code</button>
   </section>
 
+  {% set m = n + 1 if lesson.practice else n %}
+  {% if lesson.practice %}
+  <section data-step class="card step-section" id="practice">
+    <h2><span class="sec-num">{{ m }}</span> Your turn ✍️</h2>
+    <p class="prompt">{{ lesson.practice.prompt }}</p>
+    <div class="workspace">
+      <div class="helper-toggles">
+        <button type="button" class="btn small ghost helper-toggle" aria-expanded="false" aria-controls="practice-library">📚 Code library</button>
+      </div>
+      <div class="workspace-main">
+        {{ editor("ed-practice", state.practice_code, "practice", lesson.id ~ "-practice", reset_code=lesson.practice.starter) }}
+        <div class="helper-panels" hidden>{{ code_library("practice-library", library) }}</div>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="practice-check">🔍 Check my code</button>
+      <button type="button" class="btn ghost" id="practice-hint">💡 Hint</button>
+    </div>
+    <ul class="hints" id="practice-hints"></ul>
+    <div class="debug-result" id="practice-result" role="status" aria-live="polite"></div>
+  </section>
+  {% endif %}
+
   <section data-step class="card step-section" id="debug">
-    <h2><span class="sec-num">{{ n + 1 }}</span> Debug it 🐞</h2>
+    <h2><span class="sec-num">{{ m + 1 }}</span> Debug it 🐞</h2>
     {{ lesson.debug.story|md }}
     <div class="workspace">
       <div class="helper-toggles">
@@ -231,7 +270,7 @@
   {% endif %}
 
   <section data-step class="card step-section" id="quiz">
-    <h2><span class="sec-num">{{ n + 2 }}</span> Check for understanding</h2>
+    <h2><span class="sec-num">{{ (m if lesson.code else n) + 2 if lesson.kind != "check" else 1 }}</span> Check for understanding</h2>
     <form id="quiz-form">
       {% for q in view.quiz %}{% set qi = loop.index0 %}
       <fieldset class="q" data-q="{{ qi }}">
@@ -253,8 +292,9 @@
     </form>
   </section>
 
+  {% if lesson.challenge %}
   <section data-step class="card step-section challenge" id="challenge">
-    <h2><span class="sec-num">{{ n + 3 }}</span> Challenge: {{ lesson.challenge.title }} 🚀</h2>
+    <h2><span class="sec-num">{{ (m if lesson.code else n) + 3 }}</span> Challenge: {{ lesson.challenge.title }} 🚀</h2>
     {{ lesson.challenge.prompt|md }}
     {% if lesson.challenge.visual %}<figure class="vz" data-visual='{{ lesson.challenge.visual|tojson }}'></figure>{% endif %}
     <div class="level-picker" role="tablist" aria-label="Pick a level">
@@ -306,6 +346,8 @@
     {% if not is_teacher %}<div class="partner-box" id="partner-box" aria-live="polite"></div>{% endif %}
     <div class="row"><button type="button" class="btn" id="challenge-submit">📤 Submit my challenge</button><span class="save-status muted small" id="challenge-status">{% if state.challenge_submitted %}Submitted ✓ (you can resubmit){% endif %}</span></div>
   </section>
+
+  {% endif %}
 
   <nav class="section-nav" aria-label="Lesson sections">
     <button type="button" class="btn ghost" id="section-prev"></button>

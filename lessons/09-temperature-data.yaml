@@ -34,12 +34,13 @@ materials:
   - 3 jumper wires
   - Optional - a cup of cool water in a sealed zip bag, or a warm hand, to change the temperature
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Build the warning light, minutes: 6}
-  - {key: code, name: Code it, minutes: 9}
+  - {key: code, name: Code it, minutes: 6}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Lists and temperature data on the micro:bit
@@ -228,6 +229,7 @@ code:
             display.scroll("Avg " + str(round(average, 1)))
 
         sleep(1000)
+  predict: {"question": "The list is `[20, 22, 24]` and you press A. What does it show?", "choices": ["Lo 20, Hi 24", "Lo 24, Hi 20", "Lo 22, Hi 22"], "answer": 0, "explain": "min() finds the lowest and max() finds the highest."}
   walkthrough:
     - lines: "3-4"
       explain: "`HOT` is your **threshold**. `[]` makes an **empty list**, once, before the loop."
@@ -241,6 +243,17 @@ code:
     - Set HOT one degree above the room's temperature. Warm the micro:bit in your hand until the LED turns on.
     - Press A right away, then again after warming it. How do Lo and Hi change?
     - "When A and B are both pressed (`button_a.is_pressed() and button_b.is_pressed()`), clear the list with `readings = []`."
+practice:
+  level: "write"
+  prompt: "Write it yourself. Scroll the biggest number in the list, then how many numbers are in it."
+  starter: "from microbit import *\n\nnums = [3, 7, 2, 9, 4]\n\n# scroll the biggest number\n# scroll how many numbers there are\n"
+  solution: "from microbit import *\n\nnums = [3, 7, 2, 9, 4]\n\ndisplay.scroll(max(nums))\ndisplay.scroll(len(nums))\n"
+  hints: ["max() and len() both take the list inside the parentheses."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "max\\(\\s*nums\\s*\\)", "message": "Which tool finds the biggest value?"}
+    - {"type": "contains", "pattern": "len\\(\\s*nums\\s*\\)", "message": "Which tool counts the items?"}
+    - {"type": "contains", "pattern": "display\\.(scroll|show)\\(", "message": "Show your answers on the display."}
 debug:
   story: >-
     Priya's temperature tracker crashes with an error. Even once it runs, the
@@ -349,6 +362,8 @@ quiz:
       - When t is less than 28
     answer: 1
     explain: ">= means 'greater than or equal to', so 28, 29, 30... all turn the LED on."
+  - {"question": "`nums = [5, 8, 2]`. What is `nums[0]`?", "choices": ["5", "8", "2"], "answer": 0, "explain": "Positions start at 0, so 0 is the first item."}
+  - {"question": "From Lesson 8: what is `7 // 2`?", "choices": ["3.5", "3", "4"], "answer": 1, "explain": "Two slashes drop the remainder."}
 challenge:
   title: Mini Weather Station
   prompt: >-

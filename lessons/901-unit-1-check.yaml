@@ -1,0 +1,25 @@
+id: unit-1-check
+label: U1
+kind: check
+unit: 1
+order: 901
+title: "Unit 1 Check: Light It Up"
+subtitle: A short check on what you can do without looking back
+duration_minutes: 15
+level: Unit check
+big_idea: "Show what you remember from Light It Up. Then go back to anything you missed."
+objectives:
+  - Answer from memory first
+  - Read the explanation for anything you miss
+  - Go back to any lesson you need
+materials:
+  - Just your brain
+agenda:
+  - {key: quiz, name: Unit check, minutes: 15}
+quiz:
+  - {"question": "What does a `while True:` loop do?", "choices": ["Runs its indented lines forever", "Runs them once", "Stops the program"], "answer": 0, "explain": "while True repeats forever."}
+  - {"question": "Why does an LED need a resistor?", "choices": ["To limit the current", "To make it blink", "To store code"], "answer": 0, "explain": "Without one, too much current can burn it out."}
+  - {"question": "What does `pin0.write_digital(1)` do?", "choices": ["Reads pin 0", "Turns pin 0 on", "Turns pin 0 off"], "answer": 1, "explain": "1 sends about 3 volts."}
+  - {"question": "`def wave():` is in your code, but the lights never move. What is missing?", "choices": ["A resistor", "A call to wave()", "A second def"], "answer": 1, "explain": "Defining isn't doing. You have to call it."}
+  - {"question": "What numbers does `range(0, 6, 2)` make?", "choices": ["0, 2, 4", "0, 2, 4, 6", "2, 4, 6"], "answer": 0, "explain": "It stops before 6."}
+  - {"question": "What does `pin0.write_analog(512)` do to an LED?", "choices": ["About half brightness", "Full brightness", "Off"], "answer": 0, "explain": "It's on about half the time."}

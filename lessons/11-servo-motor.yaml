@@ -33,12 +33,13 @@ materials:
   - 5 male-to-male jumpers
   - Paper and tape (optional)
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
-  - {key: learn, name: Learn, minutes: 6}
+  - {key: warmup, name: Warm-up, minutes: 2}
+  - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Build the circuit, minutes: 8}
-  - {key: code, name: Code it, minutes: 6}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How a servo motor works
@@ -236,6 +237,7 @@ code:
         angle = max(0, min(180, angle))   # stay between 0 and 180
         set_angle(angle)
         sleep(150)
+  predict: {"question": "The servo starts at 90°. Each check while A is held takes off 10. Where is it after 3 checks?", "choices": ["60°", "80°", "120°"], "answer": 0, "explain": "90 - 10 - 10 - 10 is 60."}
   walkthrough:
     - lines: "3"
       explain: Servos want one pulse every 20 ms, so we set the PWM period to 20 ms.
@@ -249,6 +251,16 @@ code:
     - Change the step from 10 to 1. Then to 45. Which is easier to control?
     - "Make it sweep: `for a in range(0, 181, 10):` then `set_angle(a)` and `sleep(100)`."
     - Tape a paper dial behind the arm. Mark 0°, 90° and 180°. Is your servo accurate?
+practice:
+  level: "write"
+  prompt: "Write a function called pulse. It takes an angle called deg and returns 26 + deg * 102 // 180."
+  starter: "from microbit import *\n\n# define pulse here\n\npin0.set_analog_period(20)\npin0.write_analog(pulse(90))\n"
+  solution: "from microbit import *\n\ndef pulse(deg):\n    return 26 + deg * 102 // 180\n\npin0.set_analog_period(20)\npin0.write_analog(pulse(90))\n"
+  hints: ["Indent the return line.", "return sends the answer back to whoever called the function."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "def\\s+pulse\\(\\s*deg\\s*\\)\\s*:", "message": "Start with def pulse(deg):"}
+    - {"type": "contains", "pattern": "(?m)^\\s+return\\s+26\\s*\\+\\s*deg\\s*\\*\\s*102\\s*//\\s*180", "message": "Return the math, using deg."}
 debug:
   story: >-
     Maya wants button A to point her servo to 0° and button B to 180°. A gives
@@ -338,6 +350,8 @@ quiz:
         - {angle: 0}
         - {angle: 90, pointer: true}
         - {angle: 180}
+  - {"question": "`def double(n): return n * 2`. What is `double(3) + 1`?", "choices": ["7", "6", "8"], "answer": 0, "explain": "double(3) gives 6, then add 1."}
+  - {"question": "From Lesson 10: which line checks for a shake?", "choices": ["accelerometer.was_gesture('shake')", "button_a.was_pressed('shake')", "music.play('shake')"], "answer": 0, "explain": "Gestures are named in quotes."}
 challenge:
   title: Servo Gadget
   prompt: >-

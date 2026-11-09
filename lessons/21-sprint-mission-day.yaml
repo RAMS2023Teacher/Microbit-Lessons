@@ -32,11 +32,12 @@ materials:
   - A 180° servo (Mission D)
 agenda:
   - {key: warmup, name: Warm-up, minutes: 2}
-  - {key: learn, name: Learn, minutes: 6}
+  - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Plug it in, minutes: 4}
-  - {key: code, name: Code it, minutes: 12}
+  - {key: code, name: Code it, minutes: 9}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 4}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Four robot missions
@@ -258,6 +259,7 @@ code:
         if running:
             mission()
         sleep(20)
+  predict: {"question": "The IR sensor reads 0 while the robot runs. What does `mission()` do?", "choices": ["Backs up, then spins", "Drives forward", "Stops for good"], "answer": 0, "explain": "0 means something is in front."}
   walkthrough:
     - lines: "11-13"
       explain: Your **drive()** from Sprint 4. Speeds go from -100 to 100.
@@ -269,6 +271,18 @@ code:
     - "Mission B: in mission(), if pin8.read_digital() == 1 use drive(50, 10), else drive(10, 50)."
     - "Mission C: if pin1.read_digital() == 0, back up, then turn for random.randint(300, 900) ms."
     - "Mission D: delete the wheel code. When pin0 reads 0, write_analog(128) on pin13, else write_analog(26)."
+practice:
+  level: "write"
+  prompt: "Write a Bump Bot rule. If the crash sensor on pin 1 reads 0, drive(-50, -50) for 600 ms. Otherwise, drive(50, 50)."
+  starter: "from microbit import *\n\ndef drive(left, right):\n    pass   # your real drive() goes here\n\nwhile True:\n    # your bump rule\n    sleep(20)\n"
+  solution: "from microbit import *\n\ndef drive(left, right):\n    pass   # your real drive() goes here\n\nwhile True:\n    if pin1.read_digital() == 0:\n        drive(-50, -50)\n        sleep(600)\n    else:\n        drive(50, 50)\n    sleep(20)\n"
+  hints: ["Put the backing-up lines inside the if."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "pin1\\.read_digital\\(\\)\\s*==\\s*0", "message": "Check whether the crash sensor reads 0."}
+    - {"type": "contains", "pattern": "drive\\(\\s*-50\\s*,\\s*-50\\s*\\)", "message": "Back up with drive(-50, -50)."}
+    - {"type": "contains", "pattern": "sleep\\(\\s*600\\s*\\)", "message": "Back up for 600 ms."}
+    - {"type": "contains", "pattern": "drive\\(\\s*50\\s*,\\s*50\\s*\\)", "message": "Otherwise, drive(50, 50)."}
 debug:
   story: >-
     Mo wrote a Bump Bot. It should drive until it bumps, then back up and turn
@@ -372,6 +386,8 @@ quiz:
       - Polish
     answer: 0
     explain: If the wheels don't move yet, nothing else can work. Build up one milestone at a time.
+  - {"question": "Which numbers can `random.randint(1, 3)` give?", "choices": ["1 or 2", "1, 2 or 3", "2 only"], "answer": 1, "explain": "randint includes both end numbers."}
+  - {"question": "From Sprint 4: your left wheel creeps at drive(0, 0). What should you change?", "choices": ["The left stop number", "The turn time", "The radio group"], "answer": 0, "explain": "Each wheel has its own stop number."}
 challenge:
   title: Mission Complete
   prompt: >-

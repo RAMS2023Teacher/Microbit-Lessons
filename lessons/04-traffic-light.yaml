@@ -32,12 +32,13 @@ materials:
   - 3 resistors, 220 Ω (red-red-brown)
   - 7 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Building a traffic light
@@ -230,6 +231,7 @@ code:
         sleep(1000)
         red()
         sleep(3000)
+  predict: {"question": "When Python first reaches `def green():`, what happens to the green LED?", "choices": ["It turns on", "It blinks", "Nothing yet, Python just saves the recipe"], "answer": 2, "explain": "Defining isn't doing. The LED changes when green() is called."}
   walkthrough:
     - lines: "3-6"
       explain: "`all_off()` turns every LED off. The other functions use it so only one light is on."
@@ -247,6 +249,18 @@ code:
     - Change the timing so green stays on for 5 seconds.
     - Add a `red_yellow()` function that lights red and yellow together.
     - Make yellow blink 3 times before going to red.
+practice:
+  level: "fill"
+  prompt: "Fill in the blanks. Finish a function that lights yellow and green together, then call it in the loop."
+  starter: "from microbit import *\n\ndef all_off():\n    pin0.write_digital(0)\n    pin1.write_digital(0)\n    pin2.write_digital(0)\n\ndef yellow_green():\n    all_off()\n    pin1.___(1)\n    pin2.write_digital(___)\n\nwhile True:\n    ___()\n    sleep(500)\n    all_off()\n    sleep(500)\n"
+  solution: "from microbit import *\n\ndef all_off():\n    pin0.write_digital(0)\n    pin1.write_digital(0)\n    pin2.write_digital(0)\n\ndef yellow_green():\n    all_off()\n    pin1.write_digital(1)\n    pin2.write_digital(1)\n\nwhile True:\n    yellow_green()\n    sleep(500)\n    all_off()\n    sleep(500)\n"
+  hints: ["To call a function, write its name and ()."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "not_contains", "pattern": "___", "message": "Fill in every blank first."}
+    - {"type": "contains", "pattern": "pin1\\.write_digital\\(\\s*1\\s*\\)", "message": "Turn on pin 1 with write_digital."}
+    - {"type": "contains", "pattern": "pin2\\.write_digital\\(\\s*1\\s*\\)", "message": "Pin 2 needs a 1 to turn on."}
+    - {"type": "contains", "pattern": "(?m)^\\s+yellow_green\\(\\)", "message": "Call your function inside the loop."}
 debug:
   story: >-
     Alex built a traffic light, but Python won't run the code. After that's
@@ -356,6 +370,8 @@ quiz:
       - It doesn't - one resistor is always enough
     answer: 0
     explain: Each LED is its own loop from its own pin, so each loop needs its own current limiter.
+  - {"question": "A program defines `hi()`, but never writes `hi()` anywhere else. What does `hi` do?", "choices": ["It runs once", "Nothing, it was never called", "It runs forever"], "answer": 1, "explain": "A function only runs when it's called."}
+  - {"question": "From Lesson 3: what does `pin0.write_digital(0)` do?", "choices": ["Turns pin 0 off", "Turns pin 0 on", "Reads pin 0"], "answer": 0, "explain": "0 sends 0 volts, so the pin is off."}
 challenge:
   title: Light Show Remix
   prompt: >-

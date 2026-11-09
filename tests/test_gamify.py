@@ -27,7 +27,7 @@ def test_levels():
 
 def test_tree_covers_every_lesson_and_references_real_lessons():
     t = gamify.tree()
-    ids = {l["id"] for l in L.all_lessons()}
+    ids = {l["id"] for l in L.all_lessons() if l.get("kind") != "check"}
     assert set(t) == ids
     for lid, info in t.items():
         assert set(info["requires"]) <= ids, lid
@@ -112,6 +112,8 @@ def test_standards_pages(client):
     from app import standards as STD
     assert len(STD.by_code()) == 67
     for lesson in L.all_lessons():
+        if lesson.get("kind") == "check":       # a unit check repeats what its lessons covered
+            continue
         assert STD.for_lesson(lesson), lesson["id"]
     register_teacher(client)
     r = client.get("/teacher/standards")

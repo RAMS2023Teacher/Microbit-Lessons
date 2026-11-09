@@ -31,12 +31,13 @@ materials:
   - Small screwdriver for the tuning knobs
   - A sheet of white paper with a thick black marker line
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Plug it in, minutes: 5}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 4}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: How robots see
@@ -208,6 +209,7 @@ code:
         bar(3, line == 1)
         bar(4, line == 1)
         sleep(50)
+  predict: {"question": "You hold your hand close to the IR sensor. Which side of the screen lights up?", "choices": ["Left", "Right", "Neither"], "answer": 0, "explain": "The left columns show the IR sensor."}
   walkthrough:
     - lines: "3-4"
       explain: Give each sensor's pin a name, so the code is easy to read.
@@ -221,6 +223,18 @@ code:
     - Slide your hand closer and farther. At what distance does the left side switch on?
     - "Turn the IR knob a little. Did that distance change? Tune it to about 10 cm."
     - "Lift the line sensor off the paper. Why does the right side light up?"
+practice:
+  level: "write"
+  prompt: "Write it yourself. Show a surprised face when the IR sensor on pin 0 sees something. Show a happy face otherwise."
+  starter: "from microbit import *\n\nwhile True:\n    # read pin 0 and choose a face\n    sleep(50)\n"
+  solution: "from microbit import *\n\nwhile True:\n    if pin0.read_digital() == 0:\n        display.show(Image.SURPRISED)\n    else:\n        display.show(Image.HAPPY)\n    sleep(50)\n"
+  hints: ["The IR sensor reads 0 when something is in front."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "pin0\\.read_digital\\(\\)", "message": "Read the sensor on pin 0."}
+    - {"type": "contains", "pattern": "==\\s*[01]", "message": "Compare the reading with 0 or 1."}
+    - {"type": "contains", "pattern": "Image\\.SURPRISED", "message": "Show Image.SURPRISED."}
+    - {"type": "contains", "pattern": "else\\s*:|Image\\.HAPPY", "message": "Show a happy face otherwise."}
 debug:
   story: >-
     Sam wants a surprised face when a hand is close and a down arrow over the
@@ -305,6 +319,8 @@ quiz:
       - It makes the distance read in inches
     answer: 0
     explain: Echo sends out 5 volts. The two resistors drop it to about 3.3 volts, which is safe.
+  - {"question": "`ir` is 0. Is `ir == 0` True or False?", "choices": ["True", "False", "0"], "answer": 0, "explain": "Two equals signs ask a question, and the answer is yes."}
+  - {"question": "From Sprint 1: which pulse number points a 180° servo to the middle?", "choices": ["26", "77", "128"], "answer": 1, "explain": "77 is the middle."}
 challenge:
   title: Sensor Detective
   prompt: >-

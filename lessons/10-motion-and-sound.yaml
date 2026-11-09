@@ -32,12 +32,13 @@ materials:
   - 3 jumper wires
   - Optional - headphones with alligator clips, or just the V2 built-in speaker
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
   - {key: circuit, name: Wire the buzzer, minutes: 5}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Motion and sound with the micro:bit
@@ -212,6 +213,7 @@ code:
             display.show("B")
             sleep(500)
             display.show(Image.MUSIC_CROTCHET)
+  predict: {"question": "The micro:bit is flat and you hold button A. About what pitch plays?", "choices": ["200 Hz", "600 Hz", "1000 Hz"], "answer": 1, "explain": "Flat means x is about 0, so freq is about 600."}
   walkthrough:
     - lines: "1-2"
       explain: "`from microbit import *` gets the buttons and sensors. `import music` adds sound."
@@ -225,6 +227,19 @@ code:
     - Swap `music.POWER_UP` for another tune, like `music.NYAN`.
     - Change 400 to 800 in the freq line. How does the range change?
     - Use `get_y()` instead of `get_x()`. Now tilt forward and back.
+practice:
+  level: "write"
+  prompt: "Write it yourself. Shake shows an angry face. Tilting right past 500 shows an arrow to the east."
+  starter: "from microbit import *\n\nwhile True:\n    # if it was shaken, show Image.ANGRY\n    # if x is more than 500, show Image.ARROW_E\n    sleep(50)\n"
+  solution: "from microbit import *\n\nwhile True:\n    if accelerometer.was_gesture('shake'):\n        display.show(Image.ANGRY)\n    if accelerometer.get_x() > 500:\n        display.show(Image.ARROW_E)\n    sleep(50)\n"
+  hints: ["Use two separate if lines."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "was_gesture\\(\\s*['\\\"]shake['\\\"]\\s*\\)", "message": "Check for the 'shake' gesture."}
+    - {"type": "contains", "pattern": "get_x\\(\\)|\\bx\\s*>", "message": "Read the tilt with accelerometer.get_x()."}
+    - {"type": "contains", "pattern": ">\\s*500", "message": "Compare the tilt with 500."}
+    - {"type": "contains", "pattern": "Image\\.ANGRY", "message": "Show Image.ANGRY for a shake."}
+    - {"type": "contains", "pattern": "Image\\.ARROW_E", "message": "Show Image.ARROW_E for a tilt."}
 debug:
   story: >-
     Leo built a "don't touch my stuff" alarm. It should scream when somebody
@@ -309,6 +324,8 @@ quiz:
       - The volume
     answer: 1
     explain: The first number is the frequency (440 Hz) and the second is the duration (200 ms).
+  - {"question": "`x = -1024`. What is `600 + x * 400 // 1024`?", "choices": ["200", "600", "1000"], "answer": 0, "explain": "-1024 × 400 // 1024 is -400, and 600 - 400 is 200."}
+  - {"question": "From Lesson 9: what does `len(readings)` give you?", "choices": ["The biggest reading", "How many readings there are", "The average"], "answer": 1, "explain": "len counts the items in a list."}
 challenge:
   title: Motion-Powered Music Machine
   prompt: >-

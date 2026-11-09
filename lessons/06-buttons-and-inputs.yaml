@@ -31,12 +31,13 @@ materials:
   - 1 pushbutton (4-leg tactile switch)
   - 5 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 4}
   - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 7}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Reading a pushbutton
@@ -209,6 +210,7 @@ code:
             display.show(presses)
 
         sleep(20)
+  predict: {"question": "You hold button A down for 5 seconds. How much does `presses` go up?", "choices": ["By 1", "By 5", "It keeps climbing"], "answer": 0, "explain": "was_pressed() counts one for each press, however long you hold it."}
   walkthrough:
     - lines: "3"
       explain: Turns on the built-in **pull-up resistor** once. Now pin 1 reads 1 until you press.
@@ -222,6 +224,18 @@ code:
     - Make the LED stay ON normally and turn OFF while you press the button.
     - Add button B with is_pressed() to show Image.HEART while you hold it.
     - Delete the set_pull line and press nothing. Does the LED act strangely? Put it back!
+practice:
+  level: "write"
+  prompt: "Your turn to write the logic. The LED on pin 0 should light only while button B is held. Follow the comments."
+  starter: "from microbit import *\n\nwhile True:\n    # if button B is held down, turn pin 0 on\n    # otherwise, turn pin 0 off\n    sleep(20)\n"
+  solution: "from microbit import *\n\nwhile True:\n    if button_b.is_pressed():\n        pin0.write_digital(1)\n    else:\n        pin0.write_digital(0)\n    sleep(20)\n"
+  hints: ["is_pressed() is true the whole time a button is held.", "Indent the lines inside if and else."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "if\\s+button_b\\.is_pressed\\(\\)\\s*:", "message": "Start with an if that checks whether button B is held."}
+    - {"type": "contains", "pattern": "else\\s*:", "message": "What should happen when it isn't held?"}
+    - {"type": "contains", "pattern": "pin0\\.write_digital\\(\\s*1\\s*\\)", "message": "Turn pin 0 on inside the if."}
+    - {"type": "contains", "pattern": "pin0\\.write_digital\\(\\s*0\\s*\\)", "message": "Turn pin 0 off in the else."}
 debug:
   story: >-
     Sam wired the button perfectly, but the code won't even run. Once it runs,
@@ -307,6 +321,8 @@ quiz:
       - It doesn't matter at all
     answer: 0
     explain: A pressed button is just a wire. A wire from 3V to GND is a short circuit - never do that!
+  - {"question": "`x = 0`, then `x = x + 1`, then `x = x + 1`. What is `x`?", "choices": ["0", "1", "2"], "answer": 2, "explain": "Each line adds 1 to the old value."}
+  - {"question": "From Lesson 5: what does `pin0.write_analog(0)` do?", "choices": ["Full brightness", "Always off", "Half brightness"], "answer": 1, "explain": "0 means the pin is on none of the time."}
 challenge:
   title: Reaction Time Game
   prompt: >-

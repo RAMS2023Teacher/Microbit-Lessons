@@ -27,11 +27,12 @@ materials:
   - micro:bit V2 + USB cable
   - A battery pack, if you have one
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
-  - {key: code, name: Code it, minutes: 11}
+  - {key: code, name: Code it, minutes: 8}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 6}
-  - {key: quiz, name: Check for understanding, minutes: 3}
+  - {key: quiz, name: Check for understanding, minutes: 4}
   - {key: challenge, name: Open-ended challenge, minutes: 7}
 video:
   title: Rules and machine learning
@@ -102,6 +103,7 @@ code:
             display.show("-")
 
         sleep(100)
+  predict: {"question": "You tilt it all the way right and hold it still. What will it show?", "choices": ["W", "C", "-"], "answer": 0, "explain": "A full tilt makes x about 1024, which beats the 800 limit."}
   walkthrough:
     - lines: "3"
       explain: "`LIMIT` is your cut-off number. Change it in one place."
@@ -115,6 +117,17 @@ code:
     - Tilt it slowly to the right and hold it. Does it think you are waving?
     - Change LIMIT to 1500. What works better? What gets worse?
     - Find one move your rules can't catch. Write it down for later.
+practice:
+  level: "write"
+  prompt: "Add a rule of your own. Read z with accelerometer.get_z(). If z is above LIMIT or below -LIMIT, show F."
+  starter: "from microbit import *\n\nLIMIT = 800\n\nwhile True:\n    # read z, then write your rule\n    sleep(100)\n"
+  solution: "from microbit import *\n\nLIMIT = 800\n\nwhile True:\n    z = accelerometer.get_z()\n    if z > LIMIT or z < -LIMIT:\n        display.show(\"F\")\n    sleep(100)\n"
+  hints: ["Copy the shape of the x rule."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "z\\s*=\\s*accelerometer\\.get_z\\(\\)", "message": "Save accelerometer.get_z() in z."}
+    - {"type": "contains", "pattern": "z\\s*>\\s*LIMIT\\s+or\\s+z\\s*<\\s*-\\s*LIMIT", "message": "Check both directions with or."}
+    - {"type": "contains", "pattern": "display\\.show\\(\\s*['\\\"]F['\\\"]\\s*\\)", "message": "Show F."}
 debug:
   story: >-
     Kai's wave detector won't run. After that's fixed, it never shows **W**, no
@@ -168,6 +181,8 @@ quiz:
     choices: ["Tilting changes x, and the rule only looks at x", "The battery is low", "The code learned a new move"]
     answer: 0
     explain: The rule can't tell a slow tilt from a fast wave. It only checks one number.
+  - {"question": "`x` is -900 and `LIMIT` is 800. Is `x > LIMIT or x < -LIMIT` true?", "choices": ["Yes", "No", "Only sometimes"], "answer": 0, "explain": "-900 is less than -800, and or needs only one side."}
+  - {"question": "From earlier: what does the accelerometer sense?", "choices": ["Movement and tilt", "Light", "Sound"], "answer": 0, "explain": "It measures movement and tilt in x, y and z."}
 challenge:
   title: Rule Breaker
   prompt: Make your rules better. Then ask a partner to try to fool your code.

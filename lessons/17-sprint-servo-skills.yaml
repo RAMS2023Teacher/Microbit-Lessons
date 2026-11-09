@@ -30,12 +30,13 @@ materials:
   - 1 servo of each kind (180° and continuous)
   - Small screwdriver (optional, for a servo's trim screw)
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 6}
   - {key: circuit, name: Plug it in, minutes: 5}
-  - {key: code, name: Code it, minutes: 10}
+  - {key: code, name: Code it, minutes: 7}
+  - {key: practice, name: Your turn, minutes: 3}
   - {key: debug, name: Debug, minutes: 4}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Two kinds of servos
@@ -208,6 +209,7 @@ code:
         angle(180)
         display.show(Image.ARROW_E)
         sleep(1000)
+  predict: {"question": "Which way does a 180° servo point during `angle(90)`?", "choices": ["Far left", "Straight up the middle", "Far right"], "answer": 1, "explain": "90° is halfway between 0° and 180°."}
   walkthrough:
     - lines: "3-4"
       explain: Name the servo's pin. Then send one pulse every **20 ms**. That's what servos expect.
@@ -219,6 +221,17 @@ code:
     - Swap in the **continuous servo**. If it keeps spinning, put a tape label on it.
     - "On the continuous servo, replace the loop with `SERVO.write_analog(77)`. Try 75 or 79 until it stops dead."
     - "Then try `write_analog(60)` and `write_analog(95)`. Which way does each spin?"
+practice:
+  level: "fill"
+  prompt: "Fill in the blanks. Send servo pulses every 20 ms and point the servo to the middle."
+  starter: "from microbit import *\n\nSERVO = pin13\nSERVO.set_analog_period(___)\nSERVO.write_analog(___)\n"
+  solution: "from microbit import *\n\nSERVO = pin13\nSERVO.set_analog_period(20)\nSERVO.write_analog(77)\n"
+  hints: ["The Learn cards list the number for 90°."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "not_contains", "pattern": "___", "message": "Fill in every blank first."}
+    - {"type": "contains", "pattern": "set_analog_period\\(\\s*20\\s*\\)", "message": "Servos expect a pulse every 20 ms."}
+    - {"type": "contains", "pattern": "write_analog\\(\\s*77\\s*\\)", "message": "Which number points a servo to 90°?"}
 debug:
   story: >-
     Riley's servo should swing from 0° to 180° and back. Instead it twitches or
@@ -295,6 +308,7 @@ quiz:
       - USB only works for the LED screen
     answer: 0
     explain: A moving servo gulps current. USB alone can't keep up, so the micro:bit restarts.
+  - {"question": "What is `26 + 90 * 102 // 180`?", "choices": ["77", "128", "26"], "answer": 0, "explain": "90 × 102 // 180 is 51, and 26 + 51 is 77."}
 challenge:
   title: Servo Show
   prompt: >-

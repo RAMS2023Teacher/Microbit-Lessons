@@ -34,12 +34,13 @@ materials:
   - 1 photoresistor (LDR)
   - 7 jumper wires
 agenda:
-  - {key: warmup, name: Warm-up, minutes: 3}
+  - {key: warmup, name: Warm-up, minutes: 2}
   - {key: learn, name: Learn, minutes: 5}
-  - {key: circuit, name: Build the circuit, minutes: 9}
-  - {key: code, name: Code it, minutes: 6}
-  - {key: debug, name: Debug, minutes: 5}
-  - {key: quiz, name: Check for understanding, minutes: 2}
+  - {key: circuit, name: Build the circuit, minutes: 8}
+  - {key: code, name: Code it, minutes: 5}
+  - {key: practice, name: Your turn, minutes: 3}
+  - {key: debug, name: Debug, minutes: 4}
+  - {key: quiz, name: Check for understanding, minutes: 3}
   - {key: challenge, name: Open-ended challenge, minutes: 5}
 video:
   title: Photoresistors and voltage dividers
@@ -246,6 +247,7 @@ code:
             display.scroll(light)
 
         sleep(100)
+  predict: {"question": "You cover the sensor with your hand. What happens to the night light?", "choices": ["It turns on", "It turns off", "Nothing"], "answer": 0, "explain": "Dark gives a small number, below the threshold."}
   walkthrough:
     - lines: "3"
       explain: The **threshold** is the cut-off between "day" and "night." You'll tune it for your room.
@@ -259,6 +261,18 @@ code:
     - Press A in normal light, then with the sensor covered. Set threshold halfway between.
     - Use pin0.write_analog() so the LED gets brighter as it gets darker. Hint - 1023 - light.
     - Use display.read_light_level() instead. It only goes up to 255. What threshold works now?
+practice:
+  level: "write"
+  prompt: "Write it yourself. Show 'D' for dark, 'M' for medium and 'B' for bright. Pick your own two cut-off numbers."
+  starter: "from microbit import *\n\nwhile True:\n    light = pin1.read_analog()\n    # choose D, M or B with if, elif and else\n    sleep(100)\n"
+  solution: "from microbit import *\n\nwhile True:\n    light = pin1.read_analog()\n    if light < 300:\n        display.show(\"D\")\n    elif light < 700:\n        display.show(\"M\")\n    else:\n        display.show(\"B\")\n    sleep(100)\n"
+  hints: ["Check the smallest group first.", "elif goes between if and else."]
+  checks:
+    - {"type": "syntax"}
+    - {"type": "contains", "pattern": "if\\s+light\\s*[<>]", "message": "Start with an if that compares light to a number."}
+    - {"type": "contains", "pattern": "elif\\s+light\\s*[<>]", "message": "Add an elif for the middle choice."}
+    - {"type": "contains", "pattern": "else\\s*:", "message": "Use else for the last choice."}
+    - {"type": "contains", "pattern": "display\\.show\\(", "message": "Show each letter on the display."}
 debug:
   story: >-
     Priya's night light does the **opposite** of what it should - and it
@@ -343,6 +357,8 @@ quiz:
       - "900"
     answer: 1
     explain: Pick a number in between the two readings. 50 would never trigger and 900 would always be "dark".
+  - {"question": "`light` is 500. `if light < 300:` shows A, `elif light < 700:` shows B, and `else:` shows C. What shows?", "choices": ["A", "B", "C"], "answer": 1, "explain": "500 isn't below 300, but it is below 700."}
+  - {"question": "From Lesson 6: which line asks if x equals 0?", "choices": ["if x = 0:", "if x == 0:", "x == 0:"], "answer": 1, "explain": "Two equals signs ask a question."}
 challenge:
   title: Smart Light Gadget
   prompt: >-

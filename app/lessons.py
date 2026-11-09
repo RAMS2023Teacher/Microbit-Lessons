@@ -79,6 +79,22 @@ def run_checks(code: str, checks: list[dict]) -> list[dict]:
     return results
 
 
+def _check_practice(practice: dict) -> list[str]:
+    errs = []
+    for key in ("level", "prompt", "starter", "solution", "checks", "hints"):
+        if key not in practice:
+            errs.append(f"practice: missing '{key}'")
+    if errs:
+        return errs
+    if practice["level"] not in ("fill", "write"):
+        errs.append("practice: level must be fill or write")
+    if not all(r["ok"] for r in run_checks(practice["solution"], practice["checks"])):
+        errs.append("practice: the solution fails its own checks")
+    if all(r["ok"] for r in run_checks(practice["starter"], practice["checks"])):
+        errs.append("practice: the starter already passes every check")
+    return errs
+
+
 def _check_lab(lab: dict) -> list[str]:
     errs = []
     if not str(lab.get("url", "")).startswith("https://"):
@@ -100,6 +116,19 @@ def _check_lab(lab: dict) -> list[str]:
 def validate_lesson(data: dict) -> list[str]:
     errs = []
     is_lab = bool(data.get("lab"))     # lab lessons happen in an outside tool, so they have no Python sections
+    is_check = data.get("kind") == "check"     # a unit check is only a quiz
+    if is_check:
+        for key in ("id", "unit", "order", "title", "duration_minutes", "agenda", "quiz"):
+            if key not in data:
+                errs.append(f"missing '{key}'")
+        if errs:
+            return errs
+        if not 4 <= len(data["quiz"]) <= 10:
+            errs.append("a unit check should have 4-10 questions")
+        for q_i, q in enumerate(data["quiz"], 1):
+            if not isinstance(q.get("answer"), int) or not (0 <= q["answer"] < len(q.get("choices", []))) or not q.get("explain"):
+                errs.append(f"quiz {q_i}: needs a valid answer and an explain")
+        return errs
     for key in REQUIRED:
         if is_lab and key in ("code", "debug"):
             continue
@@ -117,8 +146,8 @@ def validate_lesson(data: dict) -> list[str]:
             errs.append(f"quiz {q_i}: 'answer' must be a 0-based index into choices")
         if not q.get("explain"):
             errs.append(f"quiz {q_i}: add an 'explain'")
-    if not 3 <= len(data["quiz"]) <= 6:
-        errs.append("quiz should have 3-6 questions")
+    if not 3 <= len(data["quiz"]) <= 8:
+        errs.append("quiz should have 3-8 questions")
     sources = () if is_lab else (("code.starter", data["code"].get("starter", "")),
                                  ("debug.solution", data["debug"].get("solution", "")))
     for label, src in sources:
@@ -128,6 +157,12 @@ def validate_lesson(data: dict) -> list[str]:
             errs.append(f"{label} has a syntax error on line {e.lineno}: {e.msg}")
     if is_lab:
         errs += _check_lab(data["lab"])
+    elif not data.get("practice"):
+        errs.append("add 'practice', the Your turn task")
+    else:
+        errs += _check_practice(data["practice"])
+    if not is_lab and not data["code"].get("predict"):
+        errs.append("code: add 'predict', a question to answer before running it")
     dbg = data.get("debug") or {}
     for key in ("story", "buggy_code", "solution", "checks", "hints", "reflection_prompt"):
         if key not in dbg and not is_lab:
@@ -193,8 +228,13 @@ def _load_all() -> tuple[dict, ...]:
         data["learn"] = [c if isinstance(c, dict) else {"text": c} for c in data.get("learn", [])]
         lessons.append(data)
     lessons.sort(key=lambda l: (l["unit"], l["order"]))
-    for i, lesson in enumerate(lessons, 1):
-        lesson["number"] = lesson.get("label") or i   # e.g. "S1" for sprint lessons
+    count = 0
+    for lesson in lessons:
+        if lesson.get("label"):                     # e.g. "S1" for sprint lessons
+            lesson["number"] = lesson["label"]
+        else:
+            count += 1
+            lesson["number"] = count
     return tuple(lessons)
 
 
@@ -232,7 +272,9 @@ def neighbors(lesson_id: str):
 
 def public_view(lesson: dict) -> dict:
     """Lesson data safe to send to the browser (no answers or solutions)."""
-    view = {k: v for k, v in lesson.items() if k not in ("quiz", "debug")}
+    view = {k: v for k, v in lesson.items() if k not in ("quiz", "debug", "practice")}
+    if lesson.get("practice"):
+        view["practice"] = {k: v for k, v in lesson["practice"].items() if k not in ("solution", "checks")}
     view["quiz"] = [{"question": q["question"], "choices": q["choices"], "visual": q.get("visual")}
                     for q in lesson["quiz"]]
     if lesson.get("debug"):
@@ -252,10 +294,12 @@ def grade_quiz(lesson: dict, answers: list) -> dict:
 
 def section_keys(lesson: dict) -> list[str]:
     """Trackable sections, in lesson order."""
+    if lesson.get("kind") == "check":
+        return ["quiz"]
     if lesson.get("lab"):
         return ["warmup", "learn", "lab", "quiz", "challenge"]
     keys = ["warmup", "learn"]
     if lesson.get("circuit"):
         keys.append("circuit")
-    keys += ["code", "debug", "quiz", "challenge"]
+    keys += ["code", "practice", "debug", "quiz", "challenge"]
     return keys
