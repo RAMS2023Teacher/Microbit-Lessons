@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   Electricity only flows around a complete loop, and a resistor controls how
   much current flows so an LED glows safely instead of burning out.
+essential_question: "Why does electricity need a complete loop, and how do we keep parts safe?"
 objectives:
   - Explain voltage, current and resistance with water pipes
   - Light an LED from the 3V pin

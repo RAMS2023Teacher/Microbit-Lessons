@@ -9,6 +9,7 @@ level: AI Lab
 big_idea: >-
   You can make a computer spot a move by writing rules or by giving it
   examples. Rules are clear, but real movement is messy.
+essential_question: "When should we write rules for a computer, and when should it learn from examples?"
 objectives:
   - Explain AI as a machine that finds patterns
   - Tell rules apart from machine learning

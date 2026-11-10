@@ -9,6 +9,7 @@ level: Embedded
 big_idea: >-
   A sensor only gives you numbers. A clear question and a fair test turn those
   numbers into evidence.
+essential_question: "How do we turn sensor numbers into evidence that answers a real question?"
 objectives:
   - Write a question a sensor can answer
   - Plan a fair test with one change

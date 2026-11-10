@@ -9,6 +9,7 @@ level: Robot Sprint
 big_idea: >-
   Engineers test one thing at a time, so every change they make is one they
   understand.
+essential_question: "Why do engineers change only one thing at a time?"
 objectives:
   - Test one thing and change one number at a time
   - Fix common robot bugs

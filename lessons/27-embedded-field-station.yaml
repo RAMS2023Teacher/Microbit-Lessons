@@ -9,6 +9,7 @@ level: Embedded
 big_idea: >-
   An embedded computer lives inside a thing and does one job, often with no
   screen and nobody watching. A data logger is a good first example.
+essential_question: "What jobs do hidden computers do around us without anyone watching?"
 objectives:
   - Explain what an embedded computer is
   - Read temperature, light and sound together

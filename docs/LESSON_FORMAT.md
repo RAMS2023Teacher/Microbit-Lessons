@@ -43,6 +43,7 @@ python tools/validate_lessons.py
 | `agenda` | list of `{key, name, minutes}`; keys from warmup, learn, circuit, code, debug, quiz, challenge |
 | `video` | `{title, note}` — the teacher pastes a video URL later in the site |
 | `warmup` | `{prompt}` — a quick-write question, no wrong answers |
+| `essential_question` | one open question (≤ 25 words, ends in `?`) that the `big_idea` answers. Shown on the lesson overview and as the class display's question of the day |
 | `learn` | **3-4 cards** (max 4), each `{text, visual?, more?, check}`. Students see one card at a time and must answer its quick `check` to move on. `text` ≤ 60 words with a `###` heading. See *Learn cards* below |
 | `circuit` | optional; see below |
 | `code` | `{intro, starter, walkthrough: [{lines, explain}], try_it: [..]}` — `starter` must be valid Python |

@@ -9,6 +9,7 @@ level: Embedded
 big_idea: >-
   A good monitor smooths out noisy readings before it warns anyone, because
   people stop trusting an alarm that goes off for no reason.
+essential_question: "How do we build an alarm that people can trust?"
 objectives:
   - Average readings to smooth out noise
   - Warn only when a reading stays high

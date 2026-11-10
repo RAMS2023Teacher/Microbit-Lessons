@@ -204,11 +204,34 @@ def _where(student, progress):
     for p, lesson in rows:
         pct = p.percent(L.section_keys(lesson))
         if pct < 100:
-            return {"where": f"{lesson['number']}. {lesson['title']}", "pct": pct, "status": "working"}
+            return {"where": f"{lesson['number']}. {lesson['title']}", "pct": pct, "status": "working", "lesson_id": lesson["id"]}
     if rows:
         p, lesson = rows[0]
-        return {"where": f"✓ {lesson['number']}. {lesson['title']}", "pct": 100, "status": "done"}
-    return {"where": "Not started", "pct": 0, "status": "waiting"}
+        return {"where": f"✓ {lesson['number']}. {lesson['title']}", "pct": 100, "status": "done", "lesson_id": lesson["id"]}
+    return {"where": "Not started", "pct": 0, "status": "waiting", "lesson_id": None}
+
+
+STOP_ICONS = {"warmup": "✏️", "learn": "📖", "circuit": "🔌", "lab": "🧪", "code": "💻", "practice": "🧩",
+              "debug": "🐞", "quiz": "❓", "challenge": "🚀"}
+
+
+def track_stops(lesson: dict) -> list[dict]:
+    """The race-track stops for a lesson: one per section, named like its agenda."""
+    names = {a["key"]: a["name"] for a in lesson.get("agenda") or []}
+    return [{"key": k, "name": names.get(k, k.title()), "icon": STOP_ICONS.get(k, "⭐")} for k in L.section_keys(lesson)]
+
+
+def standards_in_play(lesson_counts: dict, focus: dict, limit=4) -> list[dict]:
+    """Standards from the lessons students are on right now, most students first (the focus lesson if nobody is)."""
+    counts = dict(lesson_counts) or {focus["id"]: 0}
+    out = {}
+    for lid, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+        lesson = L.get_lesson(lid)
+        for st in STD.for_lesson(lesson) if lesson else []:
+            row = out.setdefault(st["code"], {"code": st["code"], "text": st["text"], "students": 0, "lessons": []})
+            row["students"] += n
+            row["lessons"].append(f"{lesson['number']}. {lesson['title']}")
+    return sorted(out.values(), key=lambda r: -r["students"])[:limit]
 
 
 WIN_KINDS = (("badge:", "🏅"), ("complete:", "🏁"), ("quiz_perfect:", "🧠"), ("bonus:", "🍎"))
@@ -245,34 +268,48 @@ def _recent_wins(c, names, hours=12, limit=8):
 def _screen_payload(c):
     saved = dict(c.screen or {})
     settings = {"lesson_id": saved.get("lesson_id", ""), "question": saved.get("question", ""),
-                "standard": saved.get("standard", ""), "names": saved.get("names", "first"),
-                "xp": saved.get("xp", "each"), "bell": saved.get("bell", "")}
-    lesson = L.get_lesson(settings["lesson_id"])
-    if not lesson:                          # default: the next assignment due
-        dated = sorted(c.assignments, key=lambda a: (a.due_date is None, a.due_date or date.max, a.created_at))
-        upcoming = [a for a in dated if not a.due_date or a.due_date >= date.today()] or dated
-        upcoming = [a for a in upcoming if L.get_lesson(a.lesson_id)]
-        lesson = L.get_lesson(upcoming[0].lesson_id) if upcoming else L.all_lessons()[0]
-    standards = STD.for_lesson(lesson)
-    standard = next((s for s in standards if s["code"] == settings["standard"]), standards[0] if standards else None)
+                "names": saved.get("names", "first"), "xp": saved.get("xp", "each"), "bell": saved.get("bell", ""),
+                "view": saved.get("view", "track")}
     by_student = {}
     if c.students:
         for p in Progress.query.filter(Progress.user_id.in_([s.id for s in c.students])):
             by_student.setdefault(p.user_id, []).append(p)
     names = _shown_names(c.students, settings["names"])
+    wheres = {s.id: _where(s, by_student.get(s.id, [])) for s in c.students}
+    working = {}
+    for w in wheres.values():
+        if w["status"] == "working":
+            working[w["lesson_id"]] = working.get(w["lesson_id"], 0) + 1
+    lesson = L.get_lesson(settings["lesson_id"])
+    if not lesson and working:              # default: the lesson most students are on right now
+        lesson = L.get_lesson(max(sorted(working), key=lambda lid: working[lid]))
+    if not lesson:                          # ...or the next assignment due
+        dated = sorted(c.assignments, key=lambda a: (a.due_date is None, a.due_date or date.max, a.created_at))
+        upcoming = [a for a in dated if not a.due_date or a.due_date >= date.today()] or dated
+        upcoming = [a for a in upcoming if L.get_lesson(a.lesson_id)]
+        lesson = L.get_lesson(upcoming[0].lesson_id) if upcoming else L.all_lessons()[0]
+    keys = L.section_keys(lesson)
     students = []
     for s in sorted(c.students, key=lambda st: names[st.id].lower()):
+        w = wheres[s.id]
+        p = next((p for p in by_student.get(s.id, []) if p.lesson_id == lesson["id"]), None)
         row = {"name": names[s.id], "avatar": gamify.avatar_of(s), "level": gamify.level_info(s.xp or 0)["level"],
-               **_where(s, by_student.get(s.id, []))}
+               "where": w["where"], "pct": w["pct"], "status": w["status"],
+               # race track: sections done in today's lesson (None = busy with a different lesson, or not started)
+               "done": sum(1 for k in keys if (p.sections or {}).get(k)) if p else None}
+        if p is None and w["status"] == "working":
+            row["elsewhere"] = w["where"]
         if settings["xp"] == "each":        # hidden XP never reaches the browser
             row["xp"] = s.xp or 0
         students.append(row)
+    focus = {"id": lesson["id"], "number": lesson["number"], "title": lesson["title"]}
     return {"settings": settings, "students": students, "wins": _recent_wins(c, names),
             "total_xp": 0 if settings["xp"] == "hide" else sum(s.xp or 0 for s in c.students),
-            "lesson": {"id": lesson["id"], "number": lesson["number"], "title": lesson["title"]},
-            "question": settings["question"] or (lesson.get("warmup") or {}).get("prompt", ""),
-            "standard": {"code": standard["code"], "text": standard["text"]} if standard else None,
-            "standards": [{"code": s["code"], "text": s["text"]} for s in standards]}
+            "lesson": focus, "auto_lesson": not L.get_lesson(settings["lesson_id"]),
+            "track": track_stops(lesson),
+            "question": settings["question"] or lesson.get("essential_question", ""),
+            "big_idea": " ".join(str(lesson.get("big_idea", "")).split()),
+            "standards": standards_in_play(working, focus)}
 
 
 @bp.route("/classes/<int:cid>/google-classroom")
@@ -342,7 +379,7 @@ def screen_settings(cid):
     lesson_id = data.get("lesson_id", "")
     c.screen = {"lesson_id": lesson_id if L.get_lesson(lesson_id) else "",
                 "question": str(data.get("question", "")).strip()[:300],
-                "standard": str(data.get("standard", ""))[:20],
+                "view": "cards" if data.get("view") == "cards" else "track",
                 "names": "robot" if data.get("names") == "robot" else "first",
                 "xp": data.get("xp") if data.get("xp") in ("each", "total", "hide") else "each",
                 "bell": data["bell"] if re.fullmatch(r"\d{1,2}:\d{2}", str(data.get("bell", ""))) else ""}

@@ -228,6 +228,9 @@ def validate_lesson(data: dict) -> list[str]:
             errs.append(f"missing '{key}'")
     if errs:
         return errs
+    eq = str(data.get("essential_question") or "")
+    if not eq.endswith("?") or len(eq.split()) > 25:
+        errs.append("add 'essential_question': one open question (25 words max, ending in ?) that the big idea answers")
     total = sum(int(s.get("minutes", 0)) for s in data["agenda"])
     if total != data["duration_minutes"]:
         errs.append(f"agenda minutes add to {total}, duration_minutes is {data['duration_minutes']}")

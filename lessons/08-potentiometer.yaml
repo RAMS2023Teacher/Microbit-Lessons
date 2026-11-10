@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   Scaling turns one range of numbers into another, so a knob reading of
   0-1023 can become 0-5 bars on the display or any brightness you like.
+essential_question: "How do we turn one kind of number into another that's more useful?"
 objectives:
   - Wire a knob and read it on pin 2
   - Scale 0-1023 down to 0-5 with //

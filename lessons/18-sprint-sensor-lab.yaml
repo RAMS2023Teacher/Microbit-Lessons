@@ -9,6 +9,7 @@ level: Robot Sprint
 big_idea: >-
   A digital sensor answers a yes-or-no question with a 0 or a 1, and a small
   knob tunes when its answer flips.
+essential_question: "How does a sensor turn the world into a yes-or-no answer?"
 objectives:
   - Plug two sensors into the sensor shield
   - Read a sensor with read_digital()

@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   A micro:bit is a tiny computer that follows your Python instructions one
   line at a time, from top to bottom.
+essential_question: "How does a computer know what to do, and in what order?"
 objectives:
   - Name the main parts of the micro:bit
   - Show words and pictures on the LEDs

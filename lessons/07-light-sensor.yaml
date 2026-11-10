@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   An analog input gives a whole range of numbers instead of just 0 or 1, so
   the micro:bit can measure how bright it is and decide what to do.
+essential_question: "How can a computer measure the world instead of just switching it on and off?"
 objectives:
   - Compare digital and analog inputs
   - Measure light with the built-in sensor and an LDR

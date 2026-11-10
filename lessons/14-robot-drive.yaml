@@ -8,6 +8,7 @@ level: Intermediate
 big_idea: >-
   A two-wheel robot steers by giving its wheels different speeds, so one
   drive(left, right) function can make it go straight, curve, or spin.
+essential_question: "How does a robot with two wheels steer?"
 objectives:
   - Wire two motors to one motor driver
   - Write a drive(left, right) function with reverse speeds

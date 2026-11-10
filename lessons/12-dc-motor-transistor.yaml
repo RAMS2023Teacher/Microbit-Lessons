@@ -8,6 +8,7 @@ level: Intermediate
 big_idea: >-
   A transistor is an electronic switch: a small current from a micro:bit pin
   controls a much bigger current from a battery, so code can safely run a motor.
+essential_question: "How can a tiny signal safely control something much more powerful?"
 objectives:
   - Explain why a pin can't power a motor
   - Build a transistor switch with its own battery

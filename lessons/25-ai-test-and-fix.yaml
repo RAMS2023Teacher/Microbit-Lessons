@@ -9,6 +9,7 @@ level: AI Lab
 big_idea: >-
   A model can only be as fair as its data. If some people are missing from the
   examples, it may not work for them.
+essential_question: "Who might a model not work for, and how can we make it fairer?"
 objectives:
   - Measure how accurate your model is
   - Test your model on another person

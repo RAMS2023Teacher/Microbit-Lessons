@@ -9,6 +9,7 @@ level: AI Lab
 big_idea: >-
   A model only estimates. Your code decides what happens next, and you decide
   where it is safe to trust it.
+essential_question: "When is it safe to trust a computer's guess?"
 objectives:
   - Open your model in MakeCode
   - Use a Machine Learning block in a program

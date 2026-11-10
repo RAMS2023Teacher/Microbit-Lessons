@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   A micro:bit pin is a switch your code controls: write 1 to send 3 volts out
   of the pin, write 0 to turn it off.
+essential_question: "How can a line of code control something in the real world?"
 objectives:
   - Wire an LED to pin 0
   - Turn the LED on and off with code

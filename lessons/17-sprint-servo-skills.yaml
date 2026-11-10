@@ -9,6 +9,7 @@ level: Robot Sprint
 big_idea: >-
   A servo listens to a pulse: the length of the pulse says where to point (180°
   servo) or how fast to spin (continuous servo).
+essential_question: "How can the same signal mean an angle on one motor and a speed on another?"
 objectives:
   - Plug a servo into the sensor shield
   - Tell a 180° servo from a continuous servo

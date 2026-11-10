@@ -9,6 +9,7 @@ level: Robot Sprint
 big_idea: >-
   Every robot runs the same loop: sense the world, decide what to do, then act,
   and it remembers what it already did.
+essential_question: "What do all robots have in common, no matter what job they do?"
 objectives:
   - Connect a sensor and a servo on one shield
   - Write a sense, decide, act loop

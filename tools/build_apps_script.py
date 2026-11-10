@@ -98,7 +98,9 @@ def build_data():
             "has_debug": bool(dbg), "possible_xp": gamify.possible_xp(lesson),
             "quiz": [{"answer": q["answer"], "explain": q["explain"]} for q in lesson["quiz"]],
             "learn_titles": [L.card_title(c) for c in lesson.get("learn") or []],
-            "warmup": (lesson.get("warmup") or {}).get("prompt", ""),
+            "essential_question": lesson.get("essential_question", ""),
+            "big_idea": " ".join(str(lesson.get("big_idea", "")).split()),
+            "agenda_names": {a["key"]: a["name"] for a in lesson.get("agenda") or []},
             "standards": [{"code": s["code"], "text": s["text"]} for s in STD.for_lesson(lesson)],
             "learn_checks": [{k: c["check"][k] for k in ("answer", "why", "hint")} if c.get("check") else None
                              for c in lesson.get("learn") or []],

@@ -1061,34 +1061,67 @@ function shownNames_(students, mode) {
   return out;
 }
 
+var STOP_ICONS_ = { warmup: '✏️', learn: '📖', circuit: '🔌', lab: '🧪', code: '💻', practice: '🧩', debug: '🐞', quiz: '❓', challenge: '🚀' };
+
 function whereIs_(s) {
   var ids = Object.keys(s.lessons || {}).filter(function (l) { return DATA.lessons[l]; })
     .sort(function (a, b) { return String(s.lessons[b].updated_at || '').localeCompare(String(s.lessons[a].updated_at || '')); });
   for (var i = 0; i < ids.length; i++) {
     var x = s.lessons[ids[i]], L = DATA.lessons[ids[i]];
-    if (x.pct < 100) return { where: L.number + '. ' + L.title, pct: x.pct, status: 'working' };
+    if (x.pct < 100) return { where: L.number + '. ' + L.title, pct: x.pct, status: 'working', lesson_id: L.id };
   }
-  if (ids.length) { var D = DATA.lessons[ids[0]]; return { where: '✓ ' + D.number + '. ' + D.title, pct: 100, status: 'done' }; }
-  return { where: 'Not started', pct: 0, status: 'waiting' };
+  if (ids.length) { var D = DATA.lessons[ids[0]]; return { where: '✓ ' + D.number + '. ' + D.title, pct: 100, status: 'done', lesson_id: D.id }; }
+  return { where: 'Not started', pct: 0, status: 'waiting', lesson_id: null };
+}
+
+/** Race-track stops for a lesson: one per section, named like its agenda. */
+function trackStops_(L) {
+  return L.section_keys.map(function (k) {
+    return { key: k, name: (L.agenda_names || {})[k] || k.charAt(0).toUpperCase() + k.slice(1), icon: STOP_ICONS_[k] || '⭐' };
+  });
+}
+
+/** Standards from the lessons students are on right now, most students first (the focus lesson if nobody is). */
+function standardsInPlay_(counts, focusId) {
+  var c = Object.keys(counts).length ? counts : (function () { var o = {}; o[focusId] = 0; return o; })(), out = {}, order = [];
+  Object.keys(c).sort(function (a, b) { return c[b] - c[a]; }).forEach(function (lid) {
+    var L = DATA.lessons[lid];
+    (L.standards || []).forEach(function (st) {
+      if (!out[st.code]) { out[st.code] = { code: st.code, text: st.text, students: 0, lessons: [] }; order.push(st.code); }
+      out[st.code].students += c[lid];
+      out[st.code].lessons.push(L.number + '. ' + L.title);
+    });
+  });
+  return order.map(function (k) { return out[k]; }).sort(function (a, b) { return b.students - a.students; }).slice(0, 4);
 }
 
 function screenPayload_(cfg, cid) {
   var c = cfg.classes[cid], saved = c.screen || {};
-  var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', standard: saved.standard || '',
-                   names: saved.names || 'first', xp: saved.xp || 'each', bell: saved.bell || '' };
+  var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', names: saved.names || 'first',
+                   xp: saved.xp || 'each', bell: saved.bell || '', view: saved.view === 'cards' ? 'cards' : 'track' };
+  var sum = summary_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, settings.names), wins = [];
+  var wheres = {}, working = {};
+  students.forEach(function (s) {
+    var w = wheres[s.email] = whereIs_(s);
+    if (w.status === 'working') working[w.lesson_id] = (working[w.lesson_id] || 0) + 1;
+  });
   var L = DATA.lessons[settings.lesson_id];
-  if (!L) {                                 // default: the next assignment due
+  if (!L && Object.keys(working).length) {        // default: the lesson most students are on right now
+    L = DATA.lessons[Object.keys(working).sort().reduce(function (best, lid) { return working[lid] > working[best] ? lid : best; })];
+  }
+  if (!L) {                                         // ...or the next assignment due
     var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
     var mine = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; })
       .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
     var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
     L = next ? DATA.lessons[next.lesson_id] : DATA.lessons[DATA.order[0]];
   }
-  var standards = L.standards || [];
-  var standard = standards.filter(function (x) { return x.code === settings.standard; })[0] || standards[0] || null;
-  var sum = summary_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, settings.names), wins = [];
   var rows = students.map(function (s) {
-    var w = whereIs_(s), row = { name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status };
+    var w = wheres[s.email], here = (s.lessons || {})[L.id];
+    var row = { name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
+                // race track: sections done in today's lesson (null = busy with a different lesson, or not started)
+                done: here ? Math.round(here.pct * L.section_keys.length / 100) : null };
+    if (!here && w.status === 'working') row.elsewhere = w.where;
     if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
     ((sum.students[s.email] || {}).wins || []).forEach(function (x) {
       wins.push({ icon: WIN_ICONS_[x.kind] || '⭐', text: winText_(names[s.email], x), at: x.at });
@@ -1099,8 +1132,9 @@ function screenPayload_(cfg, cid) {
   wins = wins.filter(function (w) { return w.at >= since; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }).slice(0, 8);
   return { settings: settings, students: rows, wins: wins,
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
-           lesson: { id: L.id, number: L.number, title: L.title }, question: settings.question || L.warmup || '',
-           standard: standard, standards: standards };
+           lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
+           track: trackStops_(L), question: settings.question || L.essential_question || '', big_idea: L.big_idea || '',
+           standards: standardsInPlay_(working, L.id) };
 }
 
 function screenData(cid) {
@@ -1114,7 +1148,7 @@ function screenSave(cid, d) {
   if (!c) throw new Error('No such class.');
   d = d || {};
   c.screen = { lesson_id: DATA.lessons[d.lesson_id] ? d.lesson_id : '', question: String(d.question || '').trim().slice(0, 300),
-               standard: String(d.standard || '').slice(0, 20), names: d.names === 'robot' ? 'robot' : 'first',
+               names: d.names === 'robot' ? 'robot' : 'first', view: d.view === 'cards' ? 'cards' : 'track',
                xp: ['each', 'total', 'hide'].indexOf(d.xp) >= 0 ? d.xp : 'each',
                bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '' };
   saveConfig_(cfg);
@@ -1540,6 +1574,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "60d3bf40af";
-var BUILD_EXPECT = {"Assets": "4a16cb4664", "Data": "8f93b253e7", "Pages1": "48b0e2dc19"};
+var BUILD_ID = "aef706d82c";
+var BUILD_EXPECT = {"Assets": "f6b6e33c18", "Data": "581dce1e74", "Pages1": "f7156550e7"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];

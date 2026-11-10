@@ -9,6 +9,7 @@ level: Robot Sprint
 big_idea: >-
   A drive(left, right) function hides the messy pulse numbers, so moving the
   robot is as easy as saying how fast each wheel should go.
+essential_question: "How do good functions hide messy details so we can think about the big picture?"
 objectives:
   - Mount and plug in two wheel servos
   - Find the stop value for each wheel

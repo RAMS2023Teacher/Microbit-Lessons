@@ -9,6 +9,7 @@ big_idea: >-
   A list lets your program remember many readings, so it can find patterns
   like the highest, lowest and average temperature - and react when something
   goes wrong.
+essential_question: "How can collecting many readings help us see patterns we'd miss with just one?"
 objectives:
   - Read the temperature with temperature()
   - Store readings in a list with append()

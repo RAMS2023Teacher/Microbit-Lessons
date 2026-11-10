@@ -8,6 +8,7 @@ level: Intermediate
 big_idea: >-
   Two micro:bits can talk by radio: one sends short command messages, the
   other listens and drives - and stops by itself if the messages stop coming.
+essential_question: "How do devices talk to each other without wires, and what happens when they stop?"
 objectives:
   - Send and receive messages by radio
   - Use a radio group so teams stay apart

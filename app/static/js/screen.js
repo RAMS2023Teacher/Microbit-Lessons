@@ -1,5 +1,5 @@
-/* Class display for the projector: time left in class, an activity timer, question and standard of the day,
- * where everyone is (with their robot), and recent wins. Shared by the Flask site and the Apps Script version:
+/* Class display for the projector: time left in class, an activity timer, the question of the day (the lesson's
+ * essential question), a race track of where everyone is (with their robot), the standards in play, and recent wins. Shared by the Flask site and the Apps Script version:
  *   ClassScreen.start({ classId, className, backHref, units, load: () => Promise<data>, save: (settings) => Promise<data> })
  * Everything a student typed is put on the page with textContent, never as HTML. */
 (function () {
@@ -22,30 +22,35 @@
       '<section class="card screen-setup" id="screen-setup" hidden>' +
       '<label class="field"><span>Today\'s lesson</span><select id="set-lesson"></select></label>' +
       '<label class="field"><span>Question of the day</span><textarea id="set-question" rows="2" maxlength="300" ' +
-      'placeholder="Leave blank to use this lesson\'s warm-up question."></textarea></label>' +
-      '<label class="field"><span>Standard of the day</span><select id="set-standard"></select></label>' +
+      'placeholder="Leave blank to use the lesson\'s essential question."></textarea></label>' +
+
       '<div class="grid-3"><label class="field"><span>Class ends at (for "time left")</span><input type="time" id="set-bell"></label>' +
       '<label class="field"><span>Show students as</span><select id="set-names"><option value="first">First names</option>' +
       '<option value="robot">Robot names</option></select></label>' +
       '<label class="field"><span>XP</span><select id="set-xp"><option value="each">Each student and class total</option>' +
-      '<option value="total">Class total only</option><option value="hide">Hide XP</option></select></label></div>' +
+      '<option value="total">Class total only</option><option value="hide">Hide XP</option></select></label>' +
+      '<label class="field"><span>Show progress as</span><select id="set-view"><option value="track">Race track</option>' +
+      '<option value="cards">Cards</option></select></label></div>' +
       '<div class="row"><button type="button" class="btn" id="set-save">Save</button><span class="muted small" id="set-status"></span></div></section>' +
-      '<div class="screen-grid"><section class="card screen-roster" aria-label="Where everyone is">' +
-      '<div class="screen-roster-head"><h2>Where everyone is</h2><span class="muted" id="screen-counts"></span></div>' +
-      '<div class="screen-students" id="screen-students"></div></section>' +
+      '<div class="screen-grid"><div class="screen-left"><section class="card screen-roster" aria-label="Where everyone is">' +
+      '<div class="screen-roster-head"><h2 id="roster-title">Where everyone is</h2><span class="muted" id="screen-counts"></span></div>' +
+      '<div class="screen-students" id="screen-students"></div><div class="track-wrap" id="screen-track"></div>' +
+      '<div class="track-elsewhere" id="screen-elsewhere"></div></section>' +
+      '<section class="card"><h2>🎯 Standards we\'re working on</h2><ul class="screen-stds" id="screen-standards"></ul></section></div>' +
       '<aside class="screen-side">' +
       '<section class="card screen-timer" aria-label="Time"><div class="screen-clock-label" id="clock-label">Time left in class</div>' +
       '<div id="timer-big" class="timer-big" role="timer">--:--</div><div class="muted small" id="clock-note"></div>' +
       '<div class="screen-activity"><b>Activity timer</b> <span id="act-clock" class="act-clock">5:00</span>' +
       '<button type="button" class="btn small" id="act-go">Start</button><button type="button" class="btn small ghost" id="act-reset">Reset</button>' +
       '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div></section>' +
-      '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p></section>' +
+      '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p>' +
+      '<p class="screen-bigidea" id="screen-bigidea"></p></section>' +
       '<section class="card"><h2>🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
-      '<section class="card"><h2>🎯 Standard of the day</h2><p class="eyebrow" id="screen-standard-code"></p><p class="screen-std" id="screen-standard"></p></section>' +
       '</aside></div>';
     const $ = (id) => document.getElementById(id);
     $('screen-class').textContent = C.className || 'Class';
     $('screen-exit').setAttribute('href', C.backHref || '/');
+    $('set-lesson').appendChild(el('option', '', 'Automatic: the lesson most students are on')).value = '';
     (C.units || []).forEach((u) => {
       const g = $('set-lesson').appendChild(el('optgroup'));
       g.label = u.title;
@@ -69,19 +74,82 @@
       const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
       return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`;
     };
+    // ----- race track: one stop per section of today's lesson; each robot sits where its student is -----
+    const lastPos = {};
+    function racer(st, moved) {
+      const r = el('div', 'racer' + (moved ? ' moved' : '') + (st.status === 'waiting' ? ' idle' : ''));
+      const av = r.appendChild(el('div', 'racer-bot'));
+      av.innerHTML = window.RobotAvatar.svg(st.avatar, 42);
+      r.appendChild(el('b', '', st.name));
+      if (data.settings.xp === 'each') r.appendChild(el('small', '', `Lv ${st.level || 1}`));
+      r.title = `${st.name}: ${st.where}`;
+      return r;
+    }
+    function renderTrack() {
+      const wrap = $('screen-track'), stops = data.track || [], n = stops.length;
+      wrap.textContent = '';
+      const cols = [{ icon: '🚦', name: 'Start' }].concat(stops, [{ icon: '🏁', name: 'Finish!' }]);
+      const track = wrap.appendChild(el('div', 'track'));
+      track.style.setProperty('--cols', cols.length);
+      const lanes = cols.map((c, i) => {
+        const col = track.appendChild(el('div', 'track-col' + (i === 0 ? ' start' : i === cols.length - 1 ? ' finish' : '')));
+        const head = col.appendChild(el('div', 'track-stop'));
+        head.appendChild(el('span', 'track-icon', c.icon));
+        head.appendChild(el('span', 'track-name', c.name));
+        return col.appendChild(el('div', 'track-lane'));
+      });
+      const elsewhere = [];
+      data.students.forEach((st) => {
+        if (st.done == null && st.elsewhere) { elsewhere.push(st); return; }
+        // on stop k = working on section k; all n done = finish line
+        const pos = st.done == null ? 0 : st.done >= n ? n + 1 : st.done + 1;
+        const moved = lastPos[st.name] != null && pos > lastPos[st.name];
+        lastPos[st.name] = pos;
+        lanes[pos].appendChild(racer(st, moved));
+      });
+      lanes.forEach((lane, i) => { if (lane.children.length) lane.parentElement.classList.add('busy'); });
+      const box = $('screen-elsewhere');
+      box.textContent = '';
+      if (elsewhere.length) {
+        box.appendChild(el('b', '', 'On other lessons: '));
+        elsewhere.forEach((st) => {
+          const chip = box.appendChild(el('span', 'else-chip'));
+          chip.appendChild(el('span', 'else-bot')).innerHTML = window.RobotAvatar.svg(st.avatar, 26);
+          chip.appendChild(el('span', '', `${st.name} · ${st.elsewhere.split('.')[0]}`));
+          chip.title = st.elsewhere;
+        });
+      }
+    }
+
     function render() {
+      const cards = data.settings.view === 'cards';
       const box = $('screen-students');
       box.textContent = '';
-      if (!data.students.length) box.textContent = 'No students in this class yet.';
-      data.students.forEach((s) => box.appendChild(tile(s, data.settings.xp === 'each')));
+      box.hidden = !cards;
+      $('screen-track').hidden = cards;
+      $('screen-elsewhere').hidden = cards;
+      if (!data.students.length) (cards ? box : $('screen-track')).textContent = 'No students in this class yet.';
+      if (cards) data.students.forEach((s) => box.appendChild(tile(s, data.settings.xp === 'each')));
+      else if (data.students.length) renderTrack();
+      $('roster-title').textContent = cards ? 'Where everyone is' : `🏎️ Race to the finish: ${data.lesson.number}. ${data.lesson.title}`;
       const n = (st) => data.students.filter((s) => s.status === st).length;
       $('screen-counts').textContent = data.students.length ? `${n('working')} working · ${n('done')} done · ${n('waiting')} not started` : '';
       $('screen-total').hidden = data.settings.xp === 'hide';
       $('screen-total').textContent = `⚡ ${data.total_xp} class XP`;
       $('screen-lesson').textContent = data.lesson ? `Today: ${data.lesson.number}. ${data.lesson.title}` : '';
       $('screen-question').textContent = data.question || 'Add a question in ⚙ Set up.';
-      $('screen-standard-code').textContent = data.standard ? data.standard.code : '';
-      $('screen-standard').textContent = data.standard ? data.standard.text : 'This lesson has no standard listed.';
+      $('screen-bigidea').textContent = data.big_idea ? `Big idea: ${data.big_idea}` : '';
+      const stds = $('screen-standards');
+      stds.textContent = '';
+      (data.standards || []).forEach((st) => {
+        const li = stds.appendChild(el('li'));
+        const top = li.appendChild(el('div', 'std-top'));
+        top.appendChild(el('b', 'std-code', st.code));
+        if (st.students) top.appendChild(el('span', 'std-count', `${st.students} student${st.students === 1 ? '' : 's'}`));
+        li.appendChild(el('div', 'std-text', st.text));
+        li.title = st.lessons.join(', ');
+      });
+      if (!(data.standards || []).length) stds.appendChild(el('li', 'muted', 'This lesson has no standards listed.'));
       const wins = $('screen-wins');
       wins.textContent = '';
       if (!(data.wins || []).length) wins.appendChild(el('li', 'muted', 'Badges, finished lessons and perfect quizzes show up here.'));
@@ -109,24 +177,20 @@
     // ----- setup panel: only the teacher needs this, so it stays closed -----
     let filled = false;
     function fillSetup() {
-      const std = $('set-standard');
-      const keep = data.settings.standard || (data.standard && data.standard.code) || '';
-      std.textContent = '';
-      (data.standards || []).forEach((s) => { const o = std.appendChild(el('option', '', `${s.code}: ${s.text.slice(0, 70)}`)); o.value = s.code; });
-      std.value = keep;
       if (filled) return;
       filled = true;
-      $('set-lesson').value = data.lesson ? data.lesson.id : '';
+      $('set-lesson').value = data.auto_lesson ? '' : data.lesson.id;
       $('set-question').value = data.settings.question || '';
       $('set-names').value = data.settings.names;
       $('set-xp').value = data.settings.xp;
       $('set-bell').value = data.settings.bell || '';
+      $('set-view').value = data.settings.view || 'track';
     }
     async function save(extra) {
       $('set-status').textContent = 'Saving…';
       try {
         data = await C.save(Object.assign({
-          lesson_id: $('set-lesson').value, question: $('set-question').value, standard: $('set-standard').value,
+          lesson_id: $('set-lesson').value, question: $('set-question').value, view: $('set-view').value,
           names: $('set-names').value, xp: $('set-xp').value, bell: $('set-bell').value,
         }, extra || {}));
         $('set-status').textContent = 'Saved ✓';
@@ -137,7 +201,8 @@
     }
     $('set-open').addEventListener('click', () => { $('screen-setup').hidden = !$('screen-setup').hidden; });
     $('set-save').addEventListener('click', () => save());
-    $('set-lesson').addEventListener('change', () => save({ standard: '' }));   // a new lesson brings its own standards
+    $('set-lesson').addEventListener('change', () => save());
+    $('set-view').addEventListener('change', () => save());
     $('set-full').addEventListener('click', () => {
       const d = document;
       if (d.fullscreenElement) { d.exitFullscreen(); return; }

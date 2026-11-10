@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   A function is a named recipe of instructions - define it once with def, then
   run it any time just by calling its name.
+essential_question: "Why do programmers give a set of steps a name instead of writing them again?"
 objectives:
   - Wire three LEDs, each with its own pin and resistor
   - Define functions with def and call them by name

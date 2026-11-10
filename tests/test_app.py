@@ -255,10 +255,14 @@ def test_classroom_screen(client):
     assert client.get(f"/teacher/classes/{cid}/screen").status_code == 200
     d = client.get(f"/teacher/classes/{cid}/screen/data").json
     assert d["students"][0]["name"] == "Sam" and "Sensor Lab" in d["students"][0]["where"]
+    assert d["lesson"]["id"] == "sprint-sensor-lab" and d["auto_lesson"]       # the lesson students are on
+    assert d["question"] == L.get_lesson("sprint-sensor-lab")["essential_question"]
+    assert d["students"][0]["done"] == 1 and d["standards"][0]["students"] == 1
     assert "username" not in d["students"][0] and d["question"] and "xp" in d["students"][0]
     d = client.post(f"/teacher/classes/{cid}/screen/settings",
                     json={"lesson_id": "traffic-light", "question": "Why is yellow short?", "xp": "hide"}).json
     assert d["lesson"]["id"] == "traffic-light" and d["question"] == "Why is yellow short?"
+    assert d["track"][0]["key"] == "warmup" and d["standards"] and d["big_idea"]
     assert d["total_xp"] == 0 and "xp" not in d["students"][0]
     assert d["wins"] and d["wins"][0]["text"].startswith("Sam earned the ")          # first section = First Spark badge
     d = client.post(f"/teacher/classes/{cid}/screen/settings", json={"bell": "10:42"}).json

@@ -9,6 +9,7 @@ level: Robot Sprint
 big_idea: >-
   A robot mission is one loop: sense the world, decide what it means, and act
   with the wheels.
+essential_question: "How do we break a big mission into steps a robot can follow?"
 objectives:
   - Pick one robot mission and plan it
   - Plug a sensor into the right shield pin

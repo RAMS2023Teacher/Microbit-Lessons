@@ -9,6 +9,7 @@ big_idea: >-
   A robot can steer itself by reading sensors over and over and using
   if/elif/else to choose a move - and remembering where it last saw the line
   helps it find its way back.
+essential_question: "How can a robot make its own decisions about where to go?"
 objectives:
   - Wire two line sensors to P1 and P2
   - Test what each sensor reads over black tape

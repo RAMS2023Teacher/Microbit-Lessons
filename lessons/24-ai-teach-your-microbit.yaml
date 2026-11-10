@@ -9,6 +9,7 @@ level: AI Lab
 big_idea: >-
   A machine learning model learns from data, so the examples you record
   decide what it can and can't recognize.
+essential_question: "How do the examples we choose shape what a machine learns?"
 objectives:
   - Record data samples for different actions
   - Remove a bad sample from your data

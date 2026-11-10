@@ -8,6 +8,7 @@ level: Intermediate
 big_idea: >-
   A servo turns to an exact angle based on how long each electrical pulse is,
   so code can point it anywhere from 0° to 180°.
+essential_question: "How can a pulse of electricity tell a motor exactly where to point?"
 objectives:
   - Explain how pulse length sets a servo's angle
   - Power a servo from batteries with a shared ground

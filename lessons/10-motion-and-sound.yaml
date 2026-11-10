@@ -8,6 +8,7 @@ level: Intermediate
 big_idea: >-
   The accelerometer senses how the micro:bit moves and tilts, and the music
   module turns numbers into sound - so motion can control music.
+essential_question: "How can a device sense how it's moving and respond to it?"
 objectives:
   - Read tilt and shakes with the accelerometer
   - Wire a piezo buzzer to pin 0

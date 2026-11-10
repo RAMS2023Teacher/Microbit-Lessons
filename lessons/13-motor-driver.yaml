@@ -8,6 +8,7 @@ level: Intermediate
 big_idea: >-
   An H-bridge flips which way current flows through a motor, so two pins can
   choose forward, backward or stop - and PWM on one of them sets the speed.
+essential_question: "How does a machine choose which way to go and how fast?"
 objectives:
   - Explain how an H-bridge reverses a motor
   - Wire a motor driver with its own battery pack

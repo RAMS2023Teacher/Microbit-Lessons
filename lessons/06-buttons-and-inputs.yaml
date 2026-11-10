@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   A pin can listen as well as talk: your code reads a button as 1 or 0 and
   uses if/else to decide what to do.
+essential_question: "How does a computer notice what a person does, and decide what to do about it?"
 objectives:
   - Read button A with is_pressed and was_pressed
   - Wire a pushbutton from pin 1 to GND

@@ -8,6 +8,7 @@ level: Beginner
 big_idea: >-
   A pin can only be on or off, but by flicking it on and off super fast we can
   make an LED look any brightness we want.
+essential_question: "How can something that is only on or off look like it's in between?"
 objectives:
   - Explain PWM as switching a pin on and off fast
   - Set LED brightness with write_analog (0 to 1023)
