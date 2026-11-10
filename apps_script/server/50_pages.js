@@ -263,6 +263,10 @@ var LOADER_SCRIPT_ = '<script>(function(){var t=document.getElementById("ml-code
 
 function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
+// The game-style fonts (the theme falls back to system fonts if Google Fonts is blocked). A <link>, not a
+// CSS @import, because Apps Script strips "//" inside <style> blocks.
+var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Titan+One&display=swap">';
+
 function render_(me, page) {
   var nav = me.teacher
     ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/setup', 'micro:bit setup']]
@@ -272,7 +276,7 @@ function render_(me, page) {
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
   var code = [safe64_(setup), safe64_(asset_('app'))];
   if (page.editor) code.push(safe64_(asset_('editor')));
-  var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">',
+  var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">', FONTS_HTML_,
     '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="apps-script">',
     '<style>', asset_('styles'), '</style></head><body class="apps-script ' + (page.bodyClass || '') + '">', CRASH_SCRIPT_,
     '<header class="topbar" id="topbar"></header>',

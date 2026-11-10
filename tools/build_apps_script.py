@@ -192,7 +192,7 @@ def read(p):
 
 
 def build_assets():
-    css = "\n".join(read(p) for p in ("app/static/vendor/codemirror/codemirror.css", "app/static/css/style.css", "app/static/css/aero.css"))
+    css = "\n".join(read(p) for p in ("app/static/vendor/codemirror/codemirror.css", "app/static/css/style.css", "app/static/css/arcade.css"))
     app_js = "\n".join([
         read("apps_script/client/shim.js"), read("app/static/js/avatar.js"), read("app/static/js/rewards.js"),
         read("app/static/js/breadboard.js"), read("app/static/js/visuals.js"), read("app/static/js/screen.js"),

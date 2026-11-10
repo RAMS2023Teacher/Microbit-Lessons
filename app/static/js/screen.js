@@ -242,7 +242,8 @@
       } else {
         $('clock-label').textContent = 'Time now';
         $('timer-big').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        $('timer-big').classList.remove('over', 'soon', 'long');
+        $('timer-big').classList.remove('over', 'soon');
+        $('timer-big').classList.add('long');
         $('clock-note').textContent = data ? 'Set "Class ends at" in ⚙ Set up to count down to the bell.' : '';
       }
       $('act-clock').textContent = fmt(a);

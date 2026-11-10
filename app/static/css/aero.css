@@ -1,4 +1,4 @@
-/* Frutiger Aero theme: sky, water, glass and gloss. Loaded after style.css.
+/* Frutiger Aero theme: sky, water, glass and gloss. Loaded after style.css. Not in use: the site uses arcade.css (swap the <link> in base.html and the list in tools/build_apps_script.py to switch back).
    Remove the <link> in base.html to go back to the plain look.
    Screen only, so printed pages stay on plain white. No blur on cards, to keep Chromebooks smooth. */
 @media screen {
