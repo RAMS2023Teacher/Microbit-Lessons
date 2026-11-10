@@ -112,6 +112,7 @@
         post({ kind: 'flash', filesystem: { 'main.py': new TextEncoder().encode(ed.getCode()) } });
         ed.sim.running = true;
         setStatus(ed, 'Running in the simulator ✓', 'ok');
+        if (ed.opts && ed.opts.onSim) ed.opts.onSim();
       } else if (data.kind === 'serial_output') {
         appendConsole(ed, data.data);
       } else if (data.kind === 'internal_error') {

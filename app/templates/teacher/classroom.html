@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-head">
   <div><a class="muted small" href="{{ url_for('teacher.home') }}">← My classes</a><h1>{{ c.name }}</h1></div>
-  <div class="row"><a class="btn" href="{{ url_for('teacher.screen', cid=c.id) }}">📺 Classroom screen</a>
+  <div class="row"><a class="btn" href="{{ url_for('teacher.screen', cid=c.id) }}">📺 Class display</a>
     <a class="btn ghost" href="{{ url_for('teacher.google', cid=c.id) }}">Google Classroom</a></div>
   <div class="join-code">Join code <b>{{ c.join_code }}</b>
     <small>{{ url_for('auth.register', code=c.join_code, _external=True) }}</small></div>

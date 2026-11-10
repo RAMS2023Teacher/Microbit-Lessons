@@ -142,5 +142,20 @@ function studentSummary_(rec) {
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
-           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at };
+           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec) };
+}
+
+/** A student's last few wins for the class display: badges, finished lessons, perfect quizzes, teacher bonuses. */
+function winKind_(e) {
+  var key = e.key || '', r = e.reason || '';
+  if (key.indexOf('badge:') === 0 || (!key && r.indexOf('Badge: ') === 0)) return 'badge';
+  if (key.indexOf('complete:') === 0 || (!key && r.indexOf(DATA.section_labels.complete + ' · ') === 0)) return 'complete';
+  if (key.indexOf('quiz_perfect:') === 0 || (!key && r.indexOf(DATA.section_labels.quiz_perfect + ' · ') === 0)) return 'quiz_perfect';
+  if (key.indexOf('bonus:') === 0 || (!key && r.indexOf('Bonus from your teacher') === 0)) return 'bonus';
+  return null;
+}
+function recentWins_(rec) {
+  return (rec.xp_log || []).filter(winKind_).slice(0, 5).map(function (e) {
+    return { kind: winKind_(e), reason: e.reason, at: e.at };
+  });
 }

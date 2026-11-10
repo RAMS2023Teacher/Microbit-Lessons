@@ -140,6 +140,20 @@ assert.ok(w.call(T, 'studentDetail', [cls.id, S]).items.find((i) => i.id === 'bl
 w.call(T, 'setSkipLearn', [cls.id, false]);
 assert.match(pageView(S, '/lessons/radio-remote'), /"skip_learn":false/);
 
+// the class display: where everyone is, recent wins, time left until the bell
+w.advance(120000);
+let scr = w.call(T, 'screenData', [cls.id]);
+assert.ok(scr.students.some((s) => s.name === 'Sam' && s.status && s.where) && scr.question && scr.lesson);
+assert.ok(scr.wins.some((x) => /^Sam earned the .+ badge$/.test(x.text)), JSON.stringify(scr.wins));
+assert.ok(scr.wins.some((x) => /^Sam got a bonus/.test(x.text)));
+scr = w.call(T, 'screenSave', [cls.id, { lesson_id: 'traffic-light', question: 'Why is yellow short?', xp: 'hide', bell: '10:42', names: 'robot' }]);
+assert.ok(scr.lesson.id === 'traffic-light' && scr.question === 'Why is yellow short?' && scr.settings.bell === '10:42');
+assert.ok(scr.total_xp === 0 && !('xp' in scr.students[0]));
+assert.ok(scr.students.some((s) => s.name === 'Sparky'));                  // Sam's robot name
+assert.strictEqual(w.call(T, 'screenSave', [cls.id, { bell: 'later' }]).settings.bell, '');
+assert.throws(() => w.call(S, 'screenData', [cls.id]), /Only the teacher/);
+assert.match(pageView(T, `/teacher/classes/${cls.id}/screen`), /"page":"screen"/);
+
 // removing a student hides them and sends them back to the join page
 w.call(T, 'removeStudent', [cls.id, S2]);
 w.advance(120000);

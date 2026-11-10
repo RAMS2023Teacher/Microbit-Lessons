@@ -1,142 +1,207 @@
-/* Classroom Screen: student progress, question and standard of the day, and a class timer. */
+/* Class display for the projector: time left in class, an activity timer, question and standard of the day,
+ * where everyone is (with their robot), and recent wins. Shared by the Flask site and the Apps Script version:
+ *   ClassScreen.start({ classId, className, backHref, units, load: () => Promise<data>, save: (settings) => Promise<data> })
+ * Everything a student typed is put on the page with textContent, never as HTML. */
 (function () {
   'use strict';
-  const C = window.SCREEN;
-  const $ = (id) => document.getElementById(id);
-  let data = null;
 
-  // ----- progress and the day's prompts -----
-  function tile(s, showXp) {
-    const el = document.createElement('div');
-    el.className = `screen-tile ${s.status}`;
-    const av = el.appendChild(document.createElement('div'));
-    av.className = 'screen-avatar';
-    av.innerHTML = window.RobotAvatar.svg(s.avatar, 46);   // drawn from known parts, not typed text
-    const info = el.appendChild(document.createElement('div'));
-    info.className = 'screen-who';
-    info.appendChild(document.createElement('b')).textContent = s.name;
-    const where = info.appendChild(document.createElement('span'));
-    where.textContent = s.where;
-    const meter = info.appendChild(document.createElement('span'));
-    meter.className = 'meter';
-    meter.appendChild(document.createElement('i')).style.width = s.pct + '%';
-    if (showXp) {
-      const xp = info.appendChild(document.createElement('small'));
-      xp.textContent = `⚡ ${s.xp} XP`;
-    }
-    return el;
-  }
+  function start(C) {
+    const root = document.getElementById('screen-root');
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    let data = null;
 
-  function render() {
-    const box = $('screen-students');
-    box.textContent = '';
-    if (!data.students.length) {
-      box.textContent = 'No students have joined this class yet.';
-    }
-    data.students.forEach((s) => box.appendChild(tile(s, data.settings.xp === 'each')));
-    $('screen-total').hidden = data.settings.xp === 'hide';
-    $('screen-total').textContent = `⚡ ${data.total_xp} class XP`;
-    $('screen-lesson').textContent = data.lesson ? `${data.lesson.number}. ${data.lesson.title}` : '';
-    $('screen-question').textContent = data.question;
-    $('screen-standard-code').textContent = data.standard ? data.standard.code : '';
-    $('screen-standard').textContent = data.standard ? data.standard.text : 'This lesson has no standard listed.';
-    fillSetup();
-  }
-
-  async function refresh() {
-    if (document.hidden) return;
-    try {
-      const r = await fetch(C.dataUrl, { credentials: 'same-origin' });
-      if (!r.ok) throw new Error(r.status);
-      data = await r.json();
-      $('screen-offline').hidden = true;
-      render();
-    } catch (e) {
-      $('screen-offline').hidden = false;
-    }
-  }
-
-  // ----- setup panel: only the teacher needs this, so it stays closed -----
-  let filled = false;
-  function fillSetup() {
-    const std = $('set-standard');
-    const keep = data.settings.standard || (data.standard && data.standard.code) || '';
-    std.textContent = '';
-    data.standards.forEach((s) => {
-      const o = std.appendChild(document.createElement('option'));
-      o.value = s.code;
-      o.textContent = `${s.code}: ${s.text.slice(0, 70)}`;
+    // ----- page skeleton (static markup only) -----
+    root.innerHTML =
+      '<header class="screen-head"><div><h1 id="screen-class"></h1><p id="screen-lesson"></p></div>' +
+      '<b id="screen-total" class="screen-total"></b><div class="screen-tools">' +
+      '<button type="button" class="btn small ghost" id="set-open">⚙ Set up</button>' +
+      '<button type="button" class="btn small ghost" id="set-full">⛶ Full screen</button>' +
+      '<a class="btn small ghost" id="screen-exit">Exit</a></div></header>' +
+      '<p class="screen-offline" id="screen-offline" hidden>Can\'t reach Maker Lab. Retrying…</p>' +
+      '<p class="screen-offline" id="screen-fullhint" hidden>Press your keyboard\'s full-screen key (or F11) to fill the screen.</p>' +
+      '<section class="card screen-setup" id="screen-setup" hidden>' +
+      '<label class="field"><span>Today\'s lesson</span><select id="set-lesson"></select></label>' +
+      '<label class="field"><span>Question of the day</span><textarea id="set-question" rows="2" maxlength="300" ' +
+      'placeholder="Leave blank to use this lesson\'s warm-up question."></textarea></label>' +
+      '<label class="field"><span>Standard of the day</span><select id="set-standard"></select></label>' +
+      '<div class="grid-3"><label class="field"><span>Class ends at (for "time left")</span><input type="time" id="set-bell"></label>' +
+      '<label class="field"><span>Show students as</span><select id="set-names"><option value="first">First names</option>' +
+      '<option value="robot">Robot names</option></select></label>' +
+      '<label class="field"><span>XP</span><select id="set-xp"><option value="each">Each student and class total</option>' +
+      '<option value="total">Class total only</option><option value="hide">Hide XP</option></select></label></div>' +
+      '<div class="row"><button type="button" class="btn" id="set-save">Save</button><span class="muted small" id="set-status"></span></div></section>' +
+      '<div class="screen-grid"><section class="card screen-roster" aria-label="Where everyone is">' +
+      '<div class="screen-roster-head"><h2>Where everyone is</h2><span class="muted" id="screen-counts"></span></div>' +
+      '<div class="screen-students" id="screen-students"></div></section>' +
+      '<aside class="screen-side">' +
+      '<section class="card screen-timer" aria-label="Time"><div class="screen-clock-label" id="clock-label">Time left in class</div>' +
+      '<div id="timer-big" class="timer-big" role="timer">--:--</div><div class="muted small" id="clock-note"></div>' +
+      '<div class="screen-activity"><b>Activity timer</b> <span id="act-clock" class="act-clock">5:00</span>' +
+      '<button type="button" class="btn small" id="act-go">Start</button><button type="button" class="btn small ghost" id="act-reset">Reset</button>' +
+      '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div></section>' +
+      '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p></section>' +
+      '<section class="card"><h2>🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
+      '<section class="card"><h2>🎯 Standard of the day</h2><p class="eyebrow" id="screen-standard-code"></p><p class="screen-std" id="screen-standard"></p></section>' +
+      '</aside></div>';
+    const $ = (id) => document.getElementById(id);
+    $('screen-class').textContent = C.className || 'Class';
+    $('screen-exit').setAttribute('href', C.backHref || '/');
+    (C.units || []).forEach((u) => {
+      const g = $('set-lesson').appendChild(el('optgroup'));
+      g.label = u.title;
+      u.lessons.forEach((l) => { const o = g.appendChild(el('option', '', `${l.number}. ${l.title}`)); o.value = l.id; });
     });
-    std.value = keep;
-    if (filled) return;
-    filled = true;
-    $('set-lesson').value = data.lesson ? data.lesson.id : '';
-    $('set-question').value = data.settings.question || '';
-    $('set-names').value = data.settings.names;
-    $('set-xp').value = data.settings.xp;
-  }
 
-  async function save(extra) {
-    $('set-status').textContent = 'Saving…';
-    const body = {
-      lesson_id: $('set-lesson').value, question: $('set-question').value, standard: $('set-standard').value,
-      names: $('set-names').value, xp: $('set-xp').value, ...extra,
+    // ----- where everyone is -----
+    function tile(s, showXp) {
+      const t = el('div', `screen-tile ${s.status}`);
+      const av = t.appendChild(el('div', 'screen-avatar'));
+      av.innerHTML = window.RobotAvatar.svg(s.avatar, 52);   // drawn from known parts, not typed text
+      const info = t.appendChild(el('div', 'screen-who'));
+      info.appendChild(el('b', '', s.name));
+      info.appendChild(el('span', '', s.where));
+      const meter = info.appendChild(el('span', 'meter'));
+      meter.appendChild(el('i')).style.width = s.pct + '%';
+      if (showXp) info.appendChild(el('small', '', `⚡ ${s.xp} XP · Lv ${s.level || 1}`));
+      return t;
+    }
+    const ago = (iso) => {
+      const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+      return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`;
     };
-    const r = await fetch(C.settingsUrl, {
-      method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': C.csrf },
-      body: JSON.stringify(body),
-    });
-    $('set-status').textContent = r.ok ? 'Saved ✓' : 'Could not save.';
-    if (r.ok) { data = await r.json(); render(); }
-  }
-
-  $('set-open').addEventListener('click', () => { $('screen-setup').hidden = !$('screen-setup').hidden; });
-  $('set-save').addEventListener('click', () => save());
-  // A new lesson brings its own standards, so don't send the old lesson's standard.
-  $('set-lesson').addEventListener('change', () => save({ standard: '' }));
-  $('set-full').addEventListener('click', () => {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-  });
-
-  // ----- timer: it lives on this screen, so it keeps counting between refreshes -----
-  const KEY = 'screen-timer-' + C.classId;
-  const clock = $('timer-big');
-  let t = { seconds: 35 * 60, left: 35 * 60, endAt: null };
-  try { t = Object.assign(t, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { /* ignore */ }
-
-  const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(t)); } catch (e) { /* ignore */ } };
-  const remaining = () => (t.endAt ? Math.max(0, Math.ceil((t.endAt - Date.now()) / 1000)) : t.left);
-  function drawTimer() {
-    const s = remaining();
-    clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-    clock.classList.toggle('over', s === 0);
-    $('timer-go').textContent = t.endAt ? 'Pause' : 'Start';
-    if (t.endAt && s === 0) { t.endAt = null; t.left = 0; keep(); }
-  }
-  $('timer-go').addEventListener('click', () => {
-    if (t.endAt) { t.left = remaining(); t.endAt = null; }
-    else {
-      if (t.left === 0) t.left = t.seconds;
-      t.endAt = Date.now() + t.left * 1000;
+    function render() {
+      const box = $('screen-students');
+      box.textContent = '';
+      if (!data.students.length) box.textContent = 'No students in this class yet.';
+      data.students.forEach((s) => box.appendChild(tile(s, data.settings.xp === 'each')));
+      const n = (st) => data.students.filter((s) => s.status === st).length;
+      $('screen-counts').textContent = data.students.length ? `${n('working')} working · ${n('done')} done · ${n('waiting')} not started` : '';
+      $('screen-total').hidden = data.settings.xp === 'hide';
+      $('screen-total').textContent = `⚡ ${data.total_xp} class XP`;
+      $('screen-lesson').textContent = data.lesson ? `Today: ${data.lesson.number}. ${data.lesson.title}` : '';
+      $('screen-question').textContent = data.question || 'Add a question in ⚙ Set up.';
+      $('screen-standard-code').textContent = data.standard ? data.standard.code : '';
+      $('screen-standard').textContent = data.standard ? data.standard.text : 'This lesson has no standard listed.';
+      const wins = $('screen-wins');
+      wins.textContent = '';
+      if (!(data.wins || []).length) wins.appendChild(el('li', 'muted', 'Badges, finished lessons and perfect quizzes show up here.'));
+      (data.wins || []).forEach((w) => {
+        const li = wins.appendChild(el('li'));
+        li.appendChild(el('span', 'win-icon', w.icon));
+        li.appendChild(el('span', 'win-text', w.text));
+        li.appendChild(el('small', 'muted', ago(w.at)));
+      });
+      fillSetup();
+      drawClock();
     }
-    keep();
-    drawTimer();
-  });
-  $('timer-reset').addEventListener('click', () => { t.endAt = null; t.left = t.seconds; keep(); drawTimer(); });
-  $('timer-mins').value = Math.round(t.seconds / 60);
-  $('timer-mins').addEventListener('change', () => {
-    const m = Math.max(1, Math.min(180, parseInt($('timer-mins').value, 10) || 35));
-    $('timer-mins').value = m;
-    t = { seconds: m * 60, left: m * 60, endAt: null };
-    keep();
-    drawTimer();
-  });
-  setInterval(drawTimer, 250);
-  drawTimer();
 
-  refresh();
-  setInterval(refresh, C.refreshMs);
-  document.addEventListener('visibilitychange', refresh);
+    async function refresh() {
+      if (document.hidden) return;
+      try {
+        data = await C.load();
+        $('screen-offline').hidden = true;
+        render();
+      } catch (e) {
+        $('screen-offline').hidden = false;
+      }
+    }
+
+    // ----- setup panel: only the teacher needs this, so it stays closed -----
+    let filled = false;
+    function fillSetup() {
+      const std = $('set-standard');
+      const keep = data.settings.standard || (data.standard && data.standard.code) || '';
+      std.textContent = '';
+      (data.standards || []).forEach((s) => { const o = std.appendChild(el('option', '', `${s.code}: ${s.text.slice(0, 70)}`)); o.value = s.code; });
+      std.value = keep;
+      if (filled) return;
+      filled = true;
+      $('set-lesson').value = data.lesson ? data.lesson.id : '';
+      $('set-question').value = data.settings.question || '';
+      $('set-names').value = data.settings.names;
+      $('set-xp').value = data.settings.xp;
+      $('set-bell').value = data.settings.bell || '';
+    }
+    async function save(extra) {
+      $('set-status').textContent = 'Saving…';
+      try {
+        data = await C.save(Object.assign({
+          lesson_id: $('set-lesson').value, question: $('set-question').value, standard: $('set-standard').value,
+          names: $('set-names').value, xp: $('set-xp').value, bell: $('set-bell').value,
+        }, extra || {}));
+        $('set-status').textContent = 'Saved ✓';
+        render();
+      } catch (e) {
+        $('set-status').textContent = 'Could not save: ' + ((e && e.message) || 'try again');
+      }
+    }
+    $('set-open').addEventListener('click', () => { $('screen-setup').hidden = !$('screen-setup').hidden; });
+    $('set-save').addEventListener('click', () => save());
+    $('set-lesson').addEventListener('change', () => save({ standard: '' }));   // a new lesson brings its own standards
+    $('set-full').addEventListener('click', () => {
+      const d = document;
+      if (d.fullscreenElement) { d.exitFullscreen(); return; }
+      const go = d.documentElement.requestFullscreen && d.fullscreenEnabled !== false ? d.documentElement.requestFullscreen() : Promise.reject();
+      Promise.resolve(go).catch(() => {      // Apps Script's frame doesn't allow it: say how instead
+        $('screen-fullhint').hidden = false;
+        setTimeout(() => { $('screen-fullhint').hidden = true; }, 6000);
+      });
+    });
+
+    // ----- clocks: time left until the bell, and an activity timer kept in this browser -----
+    const fmt = (s) => `${Math.floor(s / 3600) ? Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') : Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    function bellSeconds() {
+      const b = data && data.settings.bell;
+      if (!b || !/^\d{1,2}:\d{2}$/.test(b)) return null;
+      const [h, m] = b.split(':').map(Number), end = new Date();
+      end.setHours(h, m, 0, 0);
+      return Math.max(0, Math.ceil((end - Date.now()) / 1000));
+    }
+    const KEY = 'screen-activity-' + C.classId;
+    let act = { seconds: 300, left: 300, endAt: null };
+    try { act = Object.assign(act, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { /* no storage */ }
+    const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(act)); } catch (e) { /* no storage */ } };
+    const actLeft = () => (act.endAt ? Math.max(0, Math.ceil((act.endAt - Date.now()) / 1000)) : act.left);
+    function drawClock() {
+      const bell = bellSeconds(), a = actLeft();
+      if (bell !== null) {
+        $('clock-label').textContent = bell > 0 ? 'Time left in class' : 'Class is over';
+        $('timer-big').textContent = fmt(bell);
+        $('timer-big').classList.toggle('long', bell >= 3600);
+        $('timer-big').classList.toggle('over', bell === 0);
+        $('timer-big').classList.toggle('soon', bell > 0 && bell <= 300);
+        $('clock-note').textContent = `Class ends at ${new Date(new Date().setHours(...data.settings.bell.split(':').map(Number), 0, 0)).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      } else {
+        $('clock-label').textContent = 'Time now';
+        $('timer-big').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        $('timer-big').classList.remove('over', 'soon', 'long');
+        $('clock-note').textContent = data ? 'Set "Class ends at" in ⚙ Set up to count down to the bell.' : '';
+      }
+      $('act-clock').textContent = fmt(a);
+      $('act-clock').classList.toggle('over', a === 0 && !!act.ran);
+      $('act-go').textContent = act.endAt ? 'Pause' : 'Start';
+      if (act.endAt && a === 0) { act.endAt = null; act.left = 0; act.ran = true; keep(); }
+    }
+    $('act-go').addEventListener('click', () => {
+      if (act.endAt) { act.left = actLeft(); act.endAt = null; }
+      else { if (act.left === 0) act.left = act.seconds; act.endAt = Date.now() + act.left * 1000; act.ran = false; }
+      keep(); drawClock();
+    });
+    $('act-reset').addEventListener('click', () => { act.endAt = null; act.left = act.seconds; act.ran = false; keep(); drawClock(); });
+    $('act-mins').value = Math.round(act.seconds / 60);
+    $('act-mins').addEventListener('change', () => {
+      const m = Math.max(1, Math.min(120, parseInt($('act-mins').value, 10) || 5));
+      $('act-mins').value = m;
+      act = { seconds: m * 60, left: m * 60, endAt: null };
+      keep(); drawClock();
+    });
+    setInterval(drawClock, 250);
+    drawClock();
+
+    refresh();
+    setInterval(refresh, C.refreshMs || 20000);
+    document.addEventListener('visibilitychange', refresh);
+  }
+
+  window.ClassScreen = { start };
 })();

@@ -13,7 +13,9 @@
 <aside class="lesson-nav">
   <div class="lesson-nav-inner">
     <a class="muted small" href="{{ url_for('student.catalog') }}">← All lessons</a>
-    <div class="timer card" id="timer">
+    {# The class timer is the teacher's (students see time on the Class display). Apps Script pages are built
+       as a student, so it stays in the page, hidden, and shows for the teacher. #}
+    <div class="timer card" id="timer"{% if not is_teacher %} hidden{% endif %}>
       <div class="timer-face"><span id="timer-clock">35:00</span><small id="timer-label">35-minute lesson</small></div>
       <div class="timer-bar"><i id="timer-fill"></i></div>
       <button type="button" class="btn small wide" id="timer-btn">Start class timer</button>
@@ -26,7 +28,8 @@
       </li>
       {% endfor %}
     </ol>
-    <div class="progress-wrap"><span class="meter"><i id="lesson-meter"></i></span> <b id="lesson-pct">0%</b></div>
+    <div class="progress-wrap lesson-progress"><span class="meter parts" role="img"><i id="lesson-meter"></i></span> <b id="lesson-pct">0%</b>
+      <small class="muted" id="lesson-parts"></small></div>
     <div class="lesson-pager">
       {% if prev %}<a href="{{ url_for('student.lesson', lesson_id=prev.id) }}">← {{ prev.title }}</a>{% endif %}
       {% if nxt %}<a href="{{ url_for('student.lesson', lesson_id=nxt.id) }}">{{ nxt.title }} →</a>{% endif %}

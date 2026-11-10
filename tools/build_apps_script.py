@@ -98,6 +98,8 @@ def build_data():
             "has_debug": bool(dbg), "possible_xp": gamify.possible_xp(lesson),
             "quiz": [{"answer": q["answer"], "explain": q["explain"]} for q in lesson["quiz"]],
             "learn_titles": [L.card_title(c) for c in lesson.get("learn") or []],
+            "warmup": (lesson.get("warmup") or {}).get("prompt", ""),
+            "standards": [{"code": s["code"], "text": s["text"]} for s in STD.for_lesson(lesson)],
             "learn_checks": [{k: c["check"][k] for k in ("answer", "why", "hint")} if c.get("check") else None
                              for c in lesson.get("learn") or []],
             "debug": {"buggy_code": dbg["buggy_code"], "checks": dbg["checks"]} if dbg else None,
@@ -191,7 +193,7 @@ def build_assets():
     css = "\n".join(read(p) for p in ("app/static/vendor/codemirror/codemirror.css", "app/static/css/style.css", "app/static/css/aero.css"))
     app_js = "\n".join([
         read("apps_script/client/shim.js"), read("app/static/js/avatar.js"), read("app/static/js/rewards.js"),
-        read("app/static/js/breadboard.js"), read("app/static/js/visuals.js"),
+        read("app/static/js/breadboard.js"), read("app/static/js/visuals.js"), read("app/static/js/screen.js"),
         "window.__runMap = function () {\n" + read("app/static/js/map.js") + "\n};",
         "window.__runProfile = function () {\n" + read("app/static/js/profile.js") + "\n};",
         read("apps_script/client/pages.js"),

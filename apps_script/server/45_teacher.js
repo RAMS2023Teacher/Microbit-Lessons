@@ -244,3 +244,94 @@ function classroomPackage(cid, how, lessonIds) {
   return { source: 'microbit-maker-lab', version: 1, 'class': gb.cls.name, students: students,
            assignments: cols.map(function (a) { return { key: a.lesson_id, title: a.number + '. ' + a.title, due: a.due || '' }; }) };
 }
+
+// ---------------------------------------------------------------- class display (projector)
+// Same data as the Flask site's /teacher/classes/<id>/screen/data, read by app/static/js/screen.js.
+var WIN_ICONS_ = { badge: '🏅', complete: '🏁', quiz_perfect: '🧠', bonus: '🍎' };
+
+function winText_(name, w) {
+  var r = w.reason || '', detail = r.indexOf(' · ') >= 0 ? r.slice(r.indexOf(' · ') + 3) : r;
+  if (w.kind === 'badge') return name + ' earned the ' + r.replace('Badge: ', '') + ' badge';
+  if (w.kind === 'complete') return name + ' finished ' + detail;
+  if (w.kind === 'quiz_perfect') return name + ' got a perfect quiz in ' + detail;
+  return name + ' got a bonus from the teacher';
+}
+
+/** First names for the projector, with a last initial when two students share one (or robot names). */
+function shownNames_(students, mode) {
+  var first = function (s) { return (String(s.name || '').trim().split(/\s+/)[0]) || 'Student'; }, count = {}, out = {};
+  students.forEach(function (s) { count[first(s)] = (count[first(s)] || 0) + 1; });
+  students.forEach(function (s) {
+    var parts = String(s.name || '').trim().split(/\s+/), n = first(s);
+    if (count[n] > 1 && parts.length > 1) n += ' ' + parts[1].charAt(0) + '.';
+    if (mode === 'robot' && s.avatar && s.avatar.name) n = s.avatar.name;
+    out[s.email] = n;
+  });
+  return out;
+}
+
+function whereIs_(s) {
+  var ids = Object.keys(s.lessons || {}).filter(function (l) { return DATA.lessons[l]; })
+    .sort(function (a, b) { return String(s.lessons[b].updated_at || '').localeCompare(String(s.lessons[a].updated_at || '')); });
+  for (var i = 0; i < ids.length; i++) {
+    var x = s.lessons[ids[i]], L = DATA.lessons[ids[i]];
+    if (x.pct < 100) return { where: L.number + '. ' + L.title, pct: x.pct, status: 'working' };
+  }
+  if (ids.length) { var D = DATA.lessons[ids[0]]; return { where: '✓ ' + D.number + '. ' + D.title, pct: 100, status: 'done' }; }
+  return { where: 'Not started', pct: 0, status: 'waiting' };
+}
+
+function screenPayload_(cfg, cid) {
+  var c = cfg.classes[cid], saved = c.screen || {};
+  var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', standard: saved.standard || '',
+                   names: saved.names || 'first', xp: saved.xp || 'each', bell: saved.bell || '' };
+  var L = DATA.lessons[settings.lesson_id];
+  if (!L) {                                 // default: the next assignment due
+    var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    var mine = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; })
+      .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
+    var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
+    L = next ? DATA.lessons[next.lesson_id] : DATA.lessons[DATA.order[0]];
+  }
+  var standards = L.standards || [];
+  var standard = standards.filter(function (x) { return x.code === settings.standard; })[0] || standards[0] || null;
+  var sum = summary_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, settings.names), wins = [];
+  var rows = students.map(function (s) {
+    var w = whereIs_(s), row = { name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status };
+    if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
+    ((sum.students[s.email] || {}).wins || []).forEach(function (x) {
+      wins.push({ icon: WIN_ICONS_[x.kind] || '⭐', text: winText_(names[s.email], x), at: x.at });
+    });
+    return row;
+  }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+  var since = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+  wins = wins.filter(function (w) { return w.at >= since; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }).slice(0, 8);
+  return { settings: settings, students: rows, wins: wins,
+           total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
+           lesson: { id: L.id, number: L.number, title: L.title }, question: settings.question || L.warmup || '',
+           standard: standard, standards: standards };
+}
+
+function screenData(cid) {
+  var cfg = teacher_();
+  if (!cfg.classes[cid]) throw new Error('No such class.');
+  return screenPayload_(cfg, cid);
+}
+
+function screenSave(cid, d) {
+  var cfg = teacher_(), c = cfg.classes[cid];
+  if (!c) throw new Error('No such class.');
+  d = d || {};
+  c.screen = { lesson_id: DATA.lessons[d.lesson_id] ? d.lesson_id : '', question: String(d.question || '').trim().slice(0, 300),
+               standard: String(d.standard || '').slice(0, 20), names: d.names === 'robot' ? 'robot' : 'first',
+               xp: ['each', 'total', 'hide'].indexOf(d.xp) >= 0 ? d.xp : 'each',
+               bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '' };
+  saveConfig_(cfg);
+  return screenPayload_(cfg, cid);
+}
+
+function screenUnits_() {
+  return catalogUnits_().map(function (u) {
+    return { title: 'Unit ' + u.number + ': ' + u.title, lessons: u.lessons.map(function (l) { return { id: l.id, number: l.number, title: l.title }; }) };
+  });
+}

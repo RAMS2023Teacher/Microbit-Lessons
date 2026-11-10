@@ -664,3 +664,28 @@ figure.vz { margin: 10px 0; text-align: center; }
 .try-code { font-family: var(--mono); font-size: .9rem; background: #0f1730; color: #e8ecff; padding: 6px 10px; border-radius: 8px; white-space: pre; max-width: 100%; overflow-x: auto; }
 .try-out { font-weight: 700; text-align: center; min-height: 1.4em; }
 .try-hint { font-size: .82rem; color: var(--muted); text-align: center; }
+
+/* ---- lesson progress: a green bar that fills one section at a time ---- */
+.lesson-progress { flex-wrap: wrap; }
+.lesson-progress #lesson-parts { flex-basis: 100%; }
+.meter.parts { height: 14px; background-color: #e6e9f2; position: relative; }
+.meter.parts i { background: linear-gradient(90deg, #2fa84f, #6fd14a); border-radius: 99px 0 0 99px; }
+.meter.parts::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--parts, 8) - 2px), #fff calc(100% / var(--parts, 8) - 2px) calc(100% / var(--parts, 8))); }
+
+/* ---- class display additions: time left, activity timer, recent wins ---- */
+.screen-roster-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.screen-roster-head h2 { margin: 0 0 8px; }
+.screen-timer { text-align: center; }
+.screen-clock-label { font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: .85rem; }
+.timer-big.soon { color: #b45309; }
+.screen-activity { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+.screen-activity input { width: 60px; }
+.act-clock { font: 800 1.6rem var(--mono); min-width: 4.5ch; }
+.act-clock.over { color: var(--bad); }
+.screen-wins { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.screen-wins li { display: grid; grid-template-columns: 1.6em 1fr auto; gap: 8px; align-items: baseline; font-size: 1.05rem; }
+.screen-wins .win-icon { font-size: 1.25rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.screen-timer .timer-big { font-size: clamp(3rem, 6.5vw, 7rem); white-space: nowrap; }
+.screen-timer .timer-big.long { font-size: clamp(2.4rem, 4.6vw, 5rem); }

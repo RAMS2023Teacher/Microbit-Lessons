@@ -145,6 +145,7 @@
       fb.lastChild.textContent = S.feedback;
       head.insertAdjacentElement('afterend', fb);
     }
+    if ($('timer')) $('timer').hidden = !ML.teacher;      // the lesson timer is only for the teacher
     if (ML.teacher) {
       var rewards = document.querySelector('.lesson-rewards');
       if (rewards) rewards.remove();

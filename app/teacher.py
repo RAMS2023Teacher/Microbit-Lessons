@@ -1,7 +1,8 @@
 import csv
 import io
+import re
 import secrets
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 
 from flask import (Blueprint, Response, abort, flash, jsonify, redirect, render_template, request,
                    url_for)
@@ -12,7 +13,7 @@ from . import lessons as L
 from . import partners
 from . import standards as STD
 from .auth import teacher_required
-from .models import Assignment, Classroom, LessonVideo, Progress, User, db, new_join_code
+from .models import Assignment, Classroom, LessonVideo, Progress, User, XPEvent, db, new_join_code, utcnow
 from .videos import all_video_urls, embed_info
 
 bp = Blueprint("teacher", __name__, url_prefix="/teacher")
@@ -210,11 +211,42 @@ def _where(student, progress):
     return {"where": "Not started", "pct": 0, "status": "waiting"}
 
 
+WIN_KINDS = (("badge:", "🏅"), ("complete:", "🏁"), ("quiz_perfect:", "🧠"), ("bonus:", "🍎"))
+
+
+def win_text(name: str, key: str, reason: str) -> str:
+    """'Sam earned the Bug Squasher badge' from an XP award. Shared wording with the Apps Script version."""
+    detail = reason.split(" · ", 1)[1] if " · " in reason else reason
+    if key.startswith("badge:"):
+        return f"{name} earned the {reason.replace('Badge: ', '', 1)} badge"
+    if key.startswith("complete:"):
+        return f"{name} finished {detail}"
+    if key.startswith("quiz_perfect:"):
+        return f"{name} got a perfect quiz in {detail}"
+    return f"{name} got a bonus from the teacher"
+
+
+def _recent_wins(c, names, hours=12, limit=8):
+    """Badges, finished lessons, perfect quizzes and teacher bonuses from the last few hours, newest first."""
+    if not c.students:
+        return []
+    since = utcnow() - timedelta(hours=hours)
+    rows = (XPEvent.query.filter(XPEvent.user_id.in_([s.id for s in c.students]), XPEvent.created_at >= since)
+            .order_by(XPEvent.created_at.desc()).limit(200).all())
+    out = []
+    for r in rows:
+        icon = next((i for prefix, i in WIN_KINDS if r.key.startswith(prefix)), None)
+        if icon and len(out) < limit:
+            out.append({"icon": icon, "text": win_text(names[r.user_id], r.key, r.reason or ""),
+                        "at": r.created_at.replace(tzinfo=timezone.utc).isoformat()})
+    return out
+
+
 def _screen_payload(c):
     saved = dict(c.screen or {})
     settings = {"lesson_id": saved.get("lesson_id", ""), "question": saved.get("question", ""),
                 "standard": saved.get("standard", ""), "names": saved.get("names", "first"),
-                "xp": saved.get("xp", "each")}
+                "xp": saved.get("xp", "each"), "bell": saved.get("bell", "")}
     lesson = L.get_lesson(settings["lesson_id"])
     if not lesson:                          # default: the next assignment due
         dated = sorted(c.assignments, key=lambda a: (a.due_date is None, a.due_date or date.max, a.created_at))
@@ -230,11 +262,12 @@ def _screen_payload(c):
     names = _shown_names(c.students, settings["names"])
     students = []
     for s in sorted(c.students, key=lambda st: names[st.id].lower()):
-        row = {"name": names[s.id], "avatar": gamify.avatar_of(s), **_where(s, by_student.get(s.id, []))}
+        row = {"name": names[s.id], "avatar": gamify.avatar_of(s), "level": gamify.level_info(s.xp or 0)["level"],
+               **_where(s, by_student.get(s.id, []))}
         if settings["xp"] == "each":        # hidden XP never reaches the browser
             row["xp"] = s.xp or 0
         students.append(row)
-    return {"settings": settings, "students": students,
+    return {"settings": settings, "students": students, "wins": _recent_wins(c, names),
             "total_xp": 0 if settings["xp"] == "hide" else sum(s.xp or 0 for s in c.students),
             "lesson": {"id": lesson["id"], "number": lesson["number"], "title": lesson["title"]},
             "question": settings["question"] or (lesson.get("warmup") or {}).get("prompt", ""),
@@ -290,7 +323,9 @@ def google_package(cid):
 @bp.route("/classes/<int:cid>/screen")
 @teacher_required
 def screen(cid):
-    return render_template("teacher/screen.html", c=_own_class(cid), units=L.lessons_by_unit())
+    units = [{"title": u["title"], "lessons": [{"id": l["id"], "number": l["number"], "title": l["title"]} for l in u["lessons"]]}
+             for u in L.lessons_by_unit()]
+    return render_template("teacher/screen.html", c=_own_class(cid), units=units)
 
 
 @bp.route("/classes/<int:cid>/screen/data")
@@ -309,7 +344,8 @@ def screen_settings(cid):
                 "question": str(data.get("question", "")).strip()[:300],
                 "standard": str(data.get("standard", ""))[:20],
                 "names": "robot" if data.get("names") == "robot" else "first",
-                "xp": data.get("xp") if data.get("xp") in ("each", "total", "hide") else "each"}
+                "xp": data.get("xp") if data.get("xp") in ("each", "total", "hide") else "each",
+                "bell": data["bell"] if re.fullmatch(r"\d{1,2}:\d{2}", str(data.get("bell", ""))) else ""}
     db.session.commit()
     return jsonify(_screen_payload(c))
 

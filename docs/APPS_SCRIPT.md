@@ -23,13 +23,16 @@ You paste 4 Script files and the `appsscript.json` manifest into a project, run 
 * **Google Classroom classes and students:** **My classes → Import classes** copies your active Classroom classes
   and their rosters (read-only). Students on a roster are in the class the first time they open Maker Lab, with
   their Classroom name and no join code. **Update roster** picks up students who joined or left.
+* **Class display:** a class's **📺 Class display** button opens a projector page: time left until the bell
+  (set "Class ends at" in ⚙ Set up), an activity timer, the question and standard of the day, where every
+  student is with their robot, and recent wins (badges, finished lessons, perfect quizzes). It catches up with
+  new work within about a minute.
 * **Google Classroom grades:** a class's **Google Classroom** page copies the same grades package as the
   Flask site, for the existing sender (`app/static/apps-script/maker-lab-classroom.gs`).
 
 ## What the Flask site has that this version doesn't (yet)
 
 * Partners on challenges
-* The Classroom Screen
 * The per-assignment "everyone's answers" page and CSV export (use the Google Classroom package instead)
 * Re-opening a student's debug challenge
 * Passwords and password resets (not needed: Google handles sign-in)

@@ -237,7 +237,8 @@
     main.className = 'container wide';
     var c = d.cls, h = [];
     h.push('<div class="page-head"><div><a class="muted small" href="/">← My classes</a><h1>' + E(c.name) + '</h1></div>' +
-      '<div class="row"><a class="btn ghost" href="/teacher/classes/' + E(c.id) + '/google-classroom">Google Classroom grades</a></div>' +
+      '<div class="row"><a class="btn" href="/teacher/classes/' + E(c.id) + '/screen">📺 Class display</a>' +
+      '<a class="btn ghost" href="/teacher/classes/' + E(c.id) + '/google-classroom">Google Classroom grades</a></div>' +
       '<div class="join-code">Join code <b>' + E(c.code) + '</b><small>' + E(d.url) + '</small></div></div>');
     if (c.classroom) {
       h.push('<section class="card tip gc-link"><b>🔗 Linked to Google Classroom:</b> ' + E(c.classroom.name) + (c.classroom.section ? ' (' + E(c.classroom.section) + ')' : '') +
@@ -494,6 +495,17 @@
     });
     if ($('su-ok')) $('su-ok').addEventListener('click', function () { act(this, 'markSetupDone', [true], function () { ML.go('/'); }); });
     if ($('su-later')) $('su-later').addEventListener('click', function () { act(this, 'markSetupDone', [true], function () { ML.go('/'); }); });
+  };
+
+  // ---------------------------------------------------------------- class display (projector)
+  pages.screen = function () {
+    main.innerHTML = '<div id="screen-root"></div>';
+    var id = d.cls.id;
+    window.ClassScreen.start({
+      classId: id, className: d.cls.name, backHref: '/teacher/classes/' + id, units: d.units, refreshMs: 20000,
+      load: function () { return ML.run('screenData', id); },
+      save: function (body) { return ML.run('screenSave', id, body); },
+    });
   };
 
   window.MLStart = function () {

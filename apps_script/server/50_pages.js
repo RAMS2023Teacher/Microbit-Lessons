@@ -59,6 +59,11 @@ function teacherPage_(path) {
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
+  if ((m = /^\/teacher\/classes\/(\w+)\/screen$/.exec(path))) {
+    if (!cfg.classes[m[1]]) throw new Error('No such class.');
+    return { name: 'screen', title: 'Class display', bodyClass: 'screen-page', mainClass: 'screen-main',
+             data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_() }) };
+  }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/setup') return { name: 'setup', title: 'micro:bit setup', editor: true, data: merge_(base, { done: true }) };
   if (path === '/teacher/standards') return { name: 'static', title: 'Standards', html: page_('_standards').html, data: base };
@@ -269,7 +274,7 @@ function render_(me, page) {
   if (page.editor) code.push(safe64_(asset_('editor')));
   var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="apps-script">',
-    '<style>', asset_('styles'), '</style></head><body class="apps-script">', CRASH_SCRIPT_,
+    '<style>', asset_('styles'), '</style></head><body class="apps-script ' + (page.bodyClass || '') + '">', CRASH_SCRIPT_,
     '<header class="topbar" id="topbar"></header>',
     '<main class="', page.mainClass || 'container', '" id="main">',
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',

@@ -260,6 +260,19 @@ def test_classroom_screen(client):
                     json={"lesson_id": "traffic-light", "question": "Why is yellow short?", "xp": "hide"}).json
     assert d["lesson"]["id"] == "traffic-light" and d["question"] == "Why is yellow short?"
     assert d["total_xp"] == 0 and "xp" not in d["students"][0]
+    assert d["wins"] and d["wins"][0]["text"].startswith("Sam earned the ")          # first section = First Spark badge
+    d = client.post(f"/teacher/classes/{cid}/screen/settings", json={"bell": "10:42"}).json
+    assert d["settings"]["bell"] == "10:42"
+    assert client.post(f"/teacher/classes/{cid}/screen/settings", json={"bell": "soon"}).json["settings"]["bell"] == ""
+
+
+def test_lesson_timer_is_only_for_the_teacher(client):
+    register_teacher(client)
+    assert b'id="timer">' in client.get(f"/lessons/{LID}").data
+    code = make_class(client).join_code
+    logout(client)
+    register_student(client, code)
+    assert b'id="timer" hidden>' in client.get(f"/lessons/{LID}").data
 
 
 def _login(client, name):

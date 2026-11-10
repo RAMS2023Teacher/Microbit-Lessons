@@ -65,7 +65,7 @@ function award_(rec, key, amount, reason, gained) {
   if (rec.xp_keys[key] !== undefined) return;
   rec.xp_keys[key] = amount;
   rec.xp = (rec.xp || 0) + amount;
-  rec.xp_log.unshift({ amount: amount, reason: reason, at: now_() });
+  rec.xp_log.unshift({ amount: amount, reason: reason, at: now_(), key: key });
   if (rec.xp_log.length > 40) rec.xp_log.length = 40;
   gained.push({ amount: amount, reason: reason });
 }

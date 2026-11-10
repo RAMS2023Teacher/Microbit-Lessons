@@ -165,7 +165,22 @@ function studentSummary_(rec) {
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
-           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at };
+           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec) };
+}
+
+/** A student's last few wins for the class display: badges, finished lessons, perfect quizzes, teacher bonuses. */
+function winKind_(e) {
+  var key = e.key || '', r = e.reason || '';
+  if (key.indexOf('badge:') === 0 || (!key && r.indexOf('Badge: ') === 0)) return 'badge';
+  if (key.indexOf('complete:') === 0 || (!key && r.indexOf(DATA.section_labels.complete + ' · ') === 0)) return 'complete';
+  if (key.indexOf('quiz_perfect:') === 0 || (!key && r.indexOf(DATA.section_labels.quiz_perfect + ' · ') === 0)) return 'quiz_perfect';
+  if (key.indexOf('bonus:') === 0 || (!key && r.indexOf('Bonus from your teacher') === 0)) return 'bonus';
+  return null;
+}
+function recentWins_(rec) {
+  return (rec.xp_log || []).filter(winKind_).slice(0, 5).map(function (e) {
+    return { kind: winKind_(e), reason: e.reason, at: e.at };
+  });
 }
 
 // ---------------------------------------------------------------- lesson sections
@@ -399,7 +414,7 @@ function award_(rec, key, amount, reason, gained) {
   if (rec.xp_keys[key] !== undefined) return;
   rec.xp_keys[key] = amount;
   rec.xp = (rec.xp || 0) + amount;
-  rec.xp_log.unshift({ amount: amount, reason: reason, at: now_() });
+  rec.xp_log.unshift({ amount: amount, reason: reason, at: now_(), key: key });
   if (rec.xp_log.length > 40) rec.xp_log.length = 40;
   gained.push({ amount: amount, reason: reason });
 }
@@ -1021,6 +1036,97 @@ function classroomPackage(cid, how, lessonIds) {
            assignments: cols.map(function (a) { return { key: a.lesson_id, title: a.number + '. ' + a.title, due: a.due || '' }; }) };
 }
 
+// ---------------------------------------------------------------- class display (projector)
+// Same data as the Flask site's /teacher/classes/<id>/screen/data, read by app/static/js/screen.js.
+var WIN_ICONS_ = { badge: '🏅', complete: '🏁', quiz_perfect: '🧠', bonus: '🍎' };
+
+function winText_(name, w) {
+  var r = w.reason || '', detail = r.indexOf(' · ') >= 0 ? r.slice(r.indexOf(' · ') + 3) : r;
+  if (w.kind === 'badge') return name + ' earned the ' + r.replace('Badge: ', '') + ' badge';
+  if (w.kind === 'complete') return name + ' finished ' + detail;
+  if (w.kind === 'quiz_perfect') return name + ' got a perfect quiz in ' + detail;
+  return name + ' got a bonus from the teacher';
+}
+
+/** First names for the projector, with a last initial when two students share one (or robot names). */
+function shownNames_(students, mode) {
+  var first = function (s) { return (String(s.name || '').trim().split(/\s+/)[0]) || 'Student'; }, count = {}, out = {};
+  students.forEach(function (s) { count[first(s)] = (count[first(s)] || 0) + 1; });
+  students.forEach(function (s) {
+    var parts = String(s.name || '').trim().split(/\s+/), n = first(s);
+    if (count[n] > 1 && parts.length > 1) n += ' ' + parts[1].charAt(0) + '.';
+    if (mode === 'robot' && s.avatar && s.avatar.name) n = s.avatar.name;
+    out[s.email] = n;
+  });
+  return out;
+}
+
+function whereIs_(s) {
+  var ids = Object.keys(s.lessons || {}).filter(function (l) { return DATA.lessons[l]; })
+    .sort(function (a, b) { return String(s.lessons[b].updated_at || '').localeCompare(String(s.lessons[a].updated_at || '')); });
+  for (var i = 0; i < ids.length; i++) {
+    var x = s.lessons[ids[i]], L = DATA.lessons[ids[i]];
+    if (x.pct < 100) return { where: L.number + '. ' + L.title, pct: x.pct, status: 'working' };
+  }
+  if (ids.length) { var D = DATA.lessons[ids[0]]; return { where: '✓ ' + D.number + '. ' + D.title, pct: 100, status: 'done' }; }
+  return { where: 'Not started', pct: 0, status: 'waiting' };
+}
+
+function screenPayload_(cfg, cid) {
+  var c = cfg.classes[cid], saved = c.screen || {};
+  var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', standard: saved.standard || '',
+                   names: saved.names || 'first', xp: saved.xp || 'each', bell: saved.bell || '' };
+  var L = DATA.lessons[settings.lesson_id];
+  if (!L) {                                 // default: the next assignment due
+    var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    var mine = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; })
+      .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
+    var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
+    L = next ? DATA.lessons[next.lesson_id] : DATA.lessons[DATA.order[0]];
+  }
+  var standards = L.standards || [];
+  var standard = standards.filter(function (x) { return x.code === settings.standard; })[0] || standards[0] || null;
+  var sum = summary_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, settings.names), wins = [];
+  var rows = students.map(function (s) {
+    var w = whereIs_(s), row = { name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status };
+    if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
+    ((sum.students[s.email] || {}).wins || []).forEach(function (x) {
+      wins.push({ icon: WIN_ICONS_[x.kind] || '⭐', text: winText_(names[s.email], x), at: x.at });
+    });
+    return row;
+  }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+  var since = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+  wins = wins.filter(function (w) { return w.at >= since; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }).slice(0, 8);
+  return { settings: settings, students: rows, wins: wins,
+           total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
+           lesson: { id: L.id, number: L.number, title: L.title }, question: settings.question || L.warmup || '',
+           standard: standard, standards: standards };
+}
+
+function screenData(cid) {
+  var cfg = teacher_();
+  if (!cfg.classes[cid]) throw new Error('No such class.');
+  return screenPayload_(cfg, cid);
+}
+
+function screenSave(cid, d) {
+  var cfg = teacher_(), c = cfg.classes[cid];
+  if (!c) throw new Error('No such class.');
+  d = d || {};
+  c.screen = { lesson_id: DATA.lessons[d.lesson_id] ? d.lesson_id : '', question: String(d.question || '').trim().slice(0, 300),
+               standard: String(d.standard || '').slice(0, 20), names: d.names === 'robot' ? 'robot' : 'first',
+               xp: ['each', 'total', 'hide'].indexOf(d.xp) >= 0 ? d.xp : 'each',
+               bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '' };
+  saveConfig_(cfg);
+  return screenPayload_(cfg, cid);
+}
+
+function screenUnits_() {
+  return catalogUnits_().map(function (u) {
+    return { title: 'Unit ' + u.number + ': ' + u.title, lessons: u.lessons.map(function (l) { return { id: l.id, number: l.number, title: l.title }; }) };
+  });
+}
+
 // ---------------------------------------------------------------- Google Classroom: import classes and rosters
 // Uses the Google Classroom advanced service (appsscript.json "dependencies"), read-only, as the teacher.
 // A linked class keeps its roster in config.json (cfg.rosters[cid] = { email: name }), so students on it
@@ -1209,6 +1315,11 @@ function teacherPage_(path) {
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
+  if ((m = /^\/teacher\/classes\/(\w+)\/screen$/.exec(path))) {
+    if (!cfg.classes[m[1]]) throw new Error('No such class.');
+    return { name: 'screen', title: 'Class display', bodyClass: 'screen-page', mainClass: 'screen-main',
+             data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_() }) };
+  }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/setup') return { name: 'setup', title: 'micro:bit setup', editor: true, data: merge_(base, { done: true }) };
   if (path === '/teacher/standards') return { name: 'static', title: 'Standards', html: page_('_standards').html, data: base };
@@ -1419,7 +1530,7 @@ function render_(me, page) {
   if (page.editor) code.push(safe64_(asset_('editor')));
   var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="apps-script">',
-    '<style>', asset_('styles'), '</style></head><body class="apps-script">', CRASH_SCRIPT_,
+    '<style>', asset_('styles'), '</style></head><body class="apps-script ' + (page.bodyClass || '') + '">', CRASH_SCRIPT_,
     '<header class="topbar" id="topbar"></header>',
     '<main class="', page.mainClass || 'container', '" id="main">',
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
@@ -1429,6 +1540,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "5097188f3f";
-var BUILD_EXPECT = {"Assets": "70842bc289", "Data": "37e56916b7", "Pages1": "5f62d7fb8d"};
+var BUILD_ID = "60d3bf40af";
+var BUILD_EXPECT = {"Assets": "4a16cb4664", "Data": "8f93b253e7", "Pages1": "48b0e2dc19"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];

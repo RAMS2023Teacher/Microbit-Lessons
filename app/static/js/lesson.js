@@ -35,6 +35,10 @@
     const pct = Math.round((100 * done) / KEYS.length);
     $('lesson-meter').style.width = pct + '%';
     $('lesson-pct').textContent = pct + '%';
+    const bar = $('lesson-meter').parentElement;
+    bar.style.setProperty('--parts', KEYS.length);
+    bar.setAttribute('aria-label', `${done} of ${KEYS.length} parts done`);
+    if ($('lesson-parts')) $('lesson-parts').textContent = `${done} of ${KEYS.length} parts done`;
     lessonComplete = pct === 100;
     syncLessonDone();
   }
@@ -202,7 +206,9 @@
     ed.onChange(saveCode(field));
     return ed;
   };
-  const edCode = mount('ed-code', 'code', { onSend: () => api('/sent', { section: 'code' }) });
+  // Running the Code it program counts, on the micro:bit or in the simulator (simulator runs aren't "sends").
+  const edCode = mount('ed-code', 'code', { onSend: () => api('/sent', { section: 'code' }),
+                                            onSim: () => { if (!(S.sections || {}).code) api('/save', { mark: { code: true } }); } });
   const edPractice = mount('ed-practice', 'practice_code', { onSend: () => api('/sent', {}) });
   const edDebug = mount('ed-debug', 'debug_code', { onSend: () => api('/sent', {}) });
   const edChal = mount('ed-challenge', 'challenge_code', { onSend: () => api('/sent', {}) });
