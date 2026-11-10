@@ -729,3 +729,36 @@ figure.vz { margin: 10px 0; text-align: center; }
 .screen-left > .card { margin-bottom: 14px; }
 .track-col.busy .track-lane { background: rgba(15, 163, 163, .07); }
 .screen-stds { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+/* ---- class display: a fixed 1600×900 stage scaled to fit any screen (screen.js sets the scale) ---- */
+body.screen-page { overflow: hidden; }
+.screen-page .screen-main { padding: 0; }
+#screen-root { position: fixed; inset: 0; overflow: hidden; }
+.screen-stage { position: absolute; width: 1600px; height: 900px; transform-origin: 0 0; padding: 14px 20px;
+  display: flex; flex-direction: column; overflow: hidden; }
+.screen-stage .screen-head { margin-bottom: 10px; flex: none; }
+.screen-stage .screen-offline { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 6; box-shadow: var(--shadow); }
+.screen-stage .screen-setup { position: absolute; top: 70px; right: 20px; width: 760px; z-index: 5; box-shadow: 0 10px 40px rgba(16, 25, 53, .3); }
+.screen-stage .screen-grid { flex: 1; min-height: 0; grid-template-columns: minmax(0, 1fr) 440px; align-items: stretch; }
+.screen-stage .screen-left, .screen-stage .screen-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.screen-stage .screen-left > .card, .screen-stage .screen-side > .card { margin: 0; overflow: hidden; }
+.screen-stage .screen-roster { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.screen-stage .screen-left > .card:last-child { flex: 0 0 auto; max-height: 250px; }
+.screen-stage .screen-side > .card { flex: 0 1 auto; }
+.screen-stage .screen-side > .card:last-child { flex: 1 1 auto; }
+.screen-stage .track-wrap { overflow: hidden; flex: 1; min-height: 0; }
+.screen-stage .screen-students { overflow: hidden; }
+.screen-stage .timer-big, .screen-stage .screen-timer .timer-big { font-size: 6.2rem; }
+.screen-stage .screen-timer .timer-big.long { font-size: 4.6rem; }
+.screen-stage .screen-big { font-size: 1.6rem; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.screen-stage .screen-bigidea { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.screen-stage .screen-stds { grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+.screen-stage .std-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.screen-stage .screen-wins li { font-size: 1rem; }
+.screen-stage .win-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.screen-stage h2 { margin-bottom: 8px; }
+.track.crowded .racer { width: 44px; } .track.crowded .racer-bot svg { width: 30px; height: 30px; }
+.track.crowded .racer b { font-size: .72rem; max-width: 44px; } .track.crowded .racer small { display: none; }
+.track.packed .racer { width: 34px; } .track.packed .racer-bot svg { width: 24px; height: 24px; }
+.track.packed .racer b { font-size: .62rem; max-width: 34px; } .track.packed .racer small { display: none; }
+.track.crowded .track-lane, .track.packed .track-lane { gap: 3px; }

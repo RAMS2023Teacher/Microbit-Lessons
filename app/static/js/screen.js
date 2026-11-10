@@ -11,7 +11,7 @@
     let data = null;
 
     // ----- page skeleton (static markup only) -----
-    root.innerHTML =
+    root.innerHTML = '<div class="screen-stage" id="screen-stage">' +
       '<header class="screen-head"><div><h1 id="screen-class"></h1><p id="screen-lesson"></p></div>' +
       '<b id="screen-total" class="screen-total"></b><div class="screen-tools">' +
       '<button type="button" class="btn small ghost" id="set-open">⚙ Set up</button>' +
@@ -46,7 +46,7 @@
       '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p>' +
       '<p class="screen-bigidea" id="screen-bigidea"></p></section>' +
       '<section class="card"><h2>🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
-      '</aside></div>';
+      '</aside></div></div>';
     const $ = (id) => document.getElementById(id);
     $('screen-class').textContent = C.className || 'Class';
     $('screen-exit').setAttribute('href', C.backHref || '/');
@@ -107,7 +107,10 @@
         lastPos[st.name] = pos;
         lanes[pos].appendChild(racer(st, moved));
       });
-      lanes.forEach((lane, i) => { if (lane.children.length) lane.parentElement.classList.add('busy'); });
+      lanes.forEach((lane) => { if (lane.children.length) lane.parentElement.classList.add('busy'); });
+      const most = Math.max(...lanes.map((l) => l.children.length));
+      track.classList.toggle('crowded', most > 4 && most <= 14);     // robots get smaller so a busy stop still fits
+      track.classList.toggle('packed', most > 14);
       const box = $('screen-elsewhere');
       box.textContent = '';
       if (elsewhere.length) {
@@ -153,7 +156,7 @@
       const wins = $('screen-wins');
       wins.textContent = '';
       if (!(data.wins || []).length) wins.appendChild(el('li', 'muted', 'Badges, finished lessons and perfect quizzes show up here.'));
-      (data.wins || []).forEach((w) => {
+      (data.wins || []).slice(0, 5).forEach((w) => {
         const li = wins.appendChild(el('li'));
         li.appendChild(el('span', 'win-icon', w.icon));
         li.appendChild(el('span', 'win-text', w.text));
@@ -262,6 +265,19 @@
     });
     setInterval(drawClock, 250);
     drawClock();
+
+    // ----- always fit the screen: lay out at 1600×900 and scale, like a slide -----
+    const W = 1600, H = 900;
+    function fit() {
+      const k = Math.min(window.innerWidth / W, window.innerHeight / H);
+      const stage = $('screen-stage');
+      stage.style.transform = `scale(${k})`;
+      stage.style.left = `${Math.max(0, (window.innerWidth - W * k) / 2)}px`;
+      stage.style.top = `${Math.max(0, (window.innerHeight - H * k) / 2)}px`;
+    }
+    window.addEventListener('resize', fit);
+    document.addEventListener('fullscreenchange', fit);
+    fit();
 
     refresh();
     setInterval(refresh, C.refreshMs || 20000);

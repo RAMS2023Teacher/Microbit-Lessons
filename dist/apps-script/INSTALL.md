@@ -16,7 +16,7 @@ change the lessons or the code in the repository and build again.
 
 | File | Add it as | Size |
 |---|---|---|
-| `Assets.gs` | Script (+ → Script), name it `Assets` | 264 KB |
+| `Assets.gs` | Script (+ → Script), name it `Assets` | 265 KB |
 | `Code.gs` | Script (+ → Script), name it `Code` | 82 KB |
 | `Data.gs` | Script (+ → Script), name it `Data` | 165 KB |
 | `Pages1.gs` | Script (+ → Script), name it `Pages1` | 677 KB |
