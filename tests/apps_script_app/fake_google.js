@@ -24,6 +24,10 @@ function makeWorld(dist, opts) {
       setContent: (t) => { f.content = String(t); f.modified = tick(); return fileObj(id); },
       getBlob: () => ({ getDataAsString: () => f.content }),
       getLastUpdated: () => new Date(f.modified),
+      setSharing: (access, perm) => {
+        if (access === 'ANYONE_WITH_LINK' && opts.noPublicSharing) throw new Error('Sharing outside your organization is not allowed.');
+        f.sharing = access + '/' + perm; return fileObj(id);
+      },
     };
   }
   function folderObj(id) {
@@ -33,7 +37,11 @@ function makeWorld(dist, opts) {
       createFolder: (name) => { const nid = newId('fo'); state.folders[nid] = { name, parent: id }; return folderObj(nid); },
       createFile: (name, content, mime) => {
         const nid = newId('fi');
-        state.files[nid] = { name, content: String(content), mime, parent: id, modified: tick() };
+        if (typeof name === 'object') {          // createFile(blob)
+          state.files[nid] = { name: name.name, content: name.bytes.toString('base64'), mime: name.type, binary: true, parent: id, modified: tick() };
+        } else {
+          state.files[nid] = { name, content: String(content), mime, parent: id, modified: tick() };
+        }
         return fileObj(nid);
       },
       getFilesByName: (name) => {
@@ -87,6 +95,7 @@ function makeWorld(dist, opts) {
     DriveApp: {
       createFolder: (name) => { const id = newId('fo'); state.folders[id] = { name, parent: 'root' }; return folderObj(id); },
       getFolderById: folderObj, getFileById: fileObj,
+      Access: { ANYONE_WITH_LINK: 'ANYONE_WITH_LINK', DOMAIN_WITH_LINK: 'DOMAIN_WITH_LINK' }, Permission: { VIEW: 'VIEW' },
     },
     Utilities: {
       formatDate: (d, tz, fmt) => {
@@ -96,7 +105,7 @@ function makeWorld(dist, opts) {
       },
       base64Decode: (s) => Array.from(Buffer.from(s, 'base64')),
       base64EncodeWebSafe: (b) => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
-      newBlob: (bytes, type) => blob(bytes, type),
+      newBlob: (bytes, type, name) => Object.assign(blob(bytes, type), { name }),
       ungzip: (b) => blob(zlib.gunzipSync(b.bytes)),
     },
     UrlFetchApp: { fetch: (url) => {

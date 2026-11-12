@@ -258,8 +258,17 @@ for (const p of ['/', '/lessons', '/map', '/me', '/editor', '/lessons/ai-teach-y
 }
 assert.match(pageView(S, '/teacher/standards'), /"page":"error"/);       // students can't see teacher pages
 assert.match(pageView('', '/'), /school Google account/);
-// the tab icon: a robot by default, the teacher can pick another or paste a .png address
-assert.match(w.page(S, '/').favicon, /notoemoji\/latest\/1f916\/512\.png$/);
+// the tab icon: the Maker Lab logo by default (a PNG saved to Drive and shared), or an emoji, or your own .png
+const logoUrl = w.page(S, '/').favicon;
+assert.match(logoUrl, /^https:\/\/lh3\.googleusercontent\.com\/d\/fi\w+$/);
+const logoFile = Object.values(w.state.files).find((f) => f.name === 'maker-lab-tab-icon.png');
+assert.ok(logoFile && logoFile.mime === 'image/png' && logoFile.sharing === 'ANYONE_WITH_LINK/VIEW');
+assert.ok(Buffer.from(logoFile.content, 'base64').slice(1, 4).toString() === 'PNG');
+assert.strictEqual(w.page(T, '/').favicon, logoUrl);                                    // made once, then reused
+assert.strictEqual(Object.values(w.state.files).filter((f) => f.name === 'maker-lab-tab-icon.png').length, 1);
+const district = makeWorld(dist, { noPublicSharing: true });                          // district-only sharing
+district.call(district.owner, 'setup');
+assert.match(district.page(district.owner, '/').favicon, /^https:\/\/drive\.google\.com\/uc\?export=view&id=/);
 assert.match(w.call(T, 'setTabIcon', ['rocket']).url, /1f680/);
 assert.match(w.page(S, '/').favicon, /1f680/);
 assert.throws(() => w.call(T, 'setTabIcon', ['http://bad.example/x.gif']), /\.png or \.ico/);

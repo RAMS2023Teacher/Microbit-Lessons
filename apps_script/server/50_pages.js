@@ -57,7 +57,7 @@ function studentPage_(me, path) {
 function teacherPage_(path) {
   var cfg = config_(), m, base = { teacher: true };
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
-    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'robot', tab_icon_url: faviconUrl_() })) };
+    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
@@ -246,6 +246,7 @@ function checkInstall() {
   ['v1', 'v2'].forEach(function (v) {
     try { ok(firmwareInfo(v).parts > 0, 'micro:bit firmware ' + v + ' is saved'); } catch (e) { ok(false, 'firmware ' + v + ': ' + e.message); }
   });
+  try { var icon = faviconUrl_(); ok(true, 'Tab icon: ' + icon); } catch (e) { ok(false, 'Tab icon: ' + e.message); }
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
   try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
   catch (e) { ok(false, 'Google Classroom: ' + e.message); }

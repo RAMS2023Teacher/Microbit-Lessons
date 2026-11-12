@@ -21,6 +21,10 @@ var FIRMWARE_PART = 400000;          // characters per google.script.run reply
 var MAX_TEXT = 20000;                // longest text a student can save in one field
 var SUMMARY_MAX_AGE_MS = 60 * 1000;  // the gradebook refreshes changed students at most once a minute
 
+// The Maker Lab logo (five yellow dots on a blue square), a 64x64 PNG. Saved to the Drive data folder
+// the first time it's needed, so the browser tab can show it (Apps Script needs the icon at a web address).
+var LOGO_PNG_ = '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';
+
 // ---------------------------------------------------------------- who is here
 function whoIs_() {
   var email = '';
@@ -1265,7 +1269,7 @@ function screenUnits_() {
 // ---------------------------------------------------------------- the icon in the browser tab
 // Apps Script needs a picture at a web address. These are Google's own emoji pictures (fonts.gstatic.com,
 // the same place the fonts load from), so school filters that block other sites still show them.
-var TAB_ICONS_ = [['robot', '1f916', '🤖 Robot'], ['rocket', '1f680', '🚀 Rocket'], ['bulb', '1f4a1', '💡 Light bulb'],
+var TAB_ICONS_ = [['logo', null, 'Maker Lab logo (five dots)'], ['robot', '1f916', '🤖 Robot'], ['rocket', '1f680', '🚀 Rocket'], ['bulb', '1f4a1', '💡 Light bulb'],
                   ['bolt', '26a1', '⚡ Lightning'], ['wrench', '1f527', '🔧 Wrench'], ['puzzle', '1f9e9', '🧩 Puzzle']];
 
 function faviconUrl_() {
@@ -1273,7 +1277,30 @@ function faviconUrl_() {
   try { pick = config_().tab_icon || ''; } catch (e) { pick = ''; }
   if (/^https:\/\/\S+$/.test(pick)) return pick;
   var icon = TAB_ICONS_.filter(function (t) { return t[0] === pick; })[0] || TAB_ICONS_[0];
-  return 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + icon[1] + '/512.png';
+  if (icon[0] === 'logo') return logoUrl_() || emojiUrl_('1f916');
+  return emojiUrl_(icon[1]);
+}
+
+function emojiUrl_(code) { return 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + code + '/512.png'; }
+
+/** The logo as a picture in the Drive data folder, shared so browsers can load it. '' if Drive won't allow that. */
+function logoUrl_() {
+  var props = PropertiesService.getScriptProperties(), url = props.getProperty('logo:url');
+  if (url) return url;
+  try {
+    var file = dataFolder_().createFile(Utilities.newBlob(Utilities.base64Decode(LOGO_PNG_), 'image/png', 'maker-lab-tab-icon.png'));
+    try {           // anyone with the link: works on every account and loads fastest
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      url = 'https://lh3.googleusercontent.com/d/' + file.getId();
+    } catch (e) {   // schools often only allow sharing inside the district
+      file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+      url = 'https://drive.google.com/uc?export=view&id=' + file.getId();
+    }
+    props.setProperty('logo:url', url);
+    return url;
+  } catch (e) {
+    return '';
+  }
 }
 
 /** choice: one of the TAB_ICONS_ ids, or the https address of a .png or .ico picture. */
@@ -1475,7 +1502,7 @@ function studentPage_(me, path) {
 function teacherPage_(path) {
   var cfg = config_(), m, base = { teacher: true };
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
-    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'robot', tab_icon_url: faviconUrl_() })) };
+    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
@@ -1664,6 +1691,7 @@ function checkInstall() {
   ['v1', 'v2'].forEach(function (v) {
     try { ok(firmwareInfo(v).parts > 0, 'micro:bit firmware ' + v + ' is saved'); } catch (e) { ok(false, 'firmware ' + v + ': ' + e.message); }
   });
+  try { var icon = faviconUrl_(); ok(true, 'Tab icon: ' + icon); } catch (e) { ok(false, 'Tab icon: ' + e.message); }
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
   try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
   catch (e) { ok(false, 'Google Classroom: ' + e.message); }
@@ -1737,6 +1765,6 @@ function render_(me, page) {
     .setFaviconUrl(faviconUrl_())
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "47bb2c9149";
+var BUILD_ID = "ca53f5350c";
 var BUILD_EXPECT = {"Assets": "c9e72dcc3b", "Data": "e83ed999b0", "Pages1": "3d446c557a"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];

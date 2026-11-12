@@ -375,7 +375,7 @@ function screenUnits_() {
 // ---------------------------------------------------------------- the icon in the browser tab
 // Apps Script needs a picture at a web address. These are Google's own emoji pictures (fonts.gstatic.com,
 // the same place the fonts load from), so school filters that block other sites still show them.
-var TAB_ICONS_ = [['robot', '1f916', '🤖 Robot'], ['rocket', '1f680', '🚀 Rocket'], ['bulb', '1f4a1', '💡 Light bulb'],
+var TAB_ICONS_ = [['logo', null, 'Maker Lab logo (five dots)'], ['robot', '1f916', '🤖 Robot'], ['rocket', '1f680', '🚀 Rocket'], ['bulb', '1f4a1', '💡 Light bulb'],
                   ['bolt', '26a1', '⚡ Lightning'], ['wrench', '1f527', '🔧 Wrench'], ['puzzle', '1f9e9', '🧩 Puzzle']];
 
 function faviconUrl_() {
@@ -383,7 +383,30 @@ function faviconUrl_() {
   try { pick = config_().tab_icon || ''; } catch (e) { pick = ''; }
   if (/^https:\/\/\S+$/.test(pick)) return pick;
   var icon = TAB_ICONS_.filter(function (t) { return t[0] === pick; })[0] || TAB_ICONS_[0];
-  return 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + icon[1] + '/512.png';
+  if (icon[0] === 'logo') return logoUrl_() || emojiUrl_('1f916');
+  return emojiUrl_(icon[1]);
+}
+
+function emojiUrl_(code) { return 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + code + '/512.png'; }
+
+/** The logo as a picture in the Drive data folder, shared so browsers can load it. '' if Drive won't allow that. */
+function logoUrl_() {
+  var props = PropertiesService.getScriptProperties(), url = props.getProperty('logo:url');
+  if (url) return url;
+  try {
+    var file = dataFolder_().createFile(Utilities.newBlob(Utilities.base64Decode(LOGO_PNG_), 'image/png', 'maker-lab-tab-icon.png'));
+    try {           // anyone with the link: works on every account and loads fastest
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      url = 'https://lh3.googleusercontent.com/d/' + file.getId();
+    } catch (e) {   // schools often only allow sharing inside the district
+      file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+      url = 'https://drive.google.com/uc?export=view&id=' + file.getId();
+    }
+    props.setProperty('logo:url', url);
+    return url;
+  } catch (e) {
+    return '';
+  }
 }
 
 /** choice: one of the TAB_ICONS_ ids, or the https address of a .png or .ico picture. */
