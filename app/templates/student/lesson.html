@@ -226,6 +226,10 @@
   <section data-step class="card step-section" id="code">
     <h2><span class="sec-num">{{ n }}</span> Code it</h2>
     {{ do_now('code') }}
+    <div class="connect-box" role="note"><span class="connect-icon" aria-hidden="true">🔌</span>
+      <span><b>Connect your micro:bit</b> to the Chromebook with the USB cable before you put your code on it.
+        <span class="hex-help" hidden>When you download, save it to <b>MICROBIT</b>. Not saving there?
+          <a href="/setup">Fix your download settings →</a></span></span></div>
     {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
     {{ remember(lesson.code.remember) }}
     {% if lesson.code.predict %}{% set pq = lesson.code.predict %}

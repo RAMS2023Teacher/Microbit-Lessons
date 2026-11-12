@@ -765,3 +765,11 @@ body.screen-page { overflow: hidden; }
 
 .tab-icon-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .tab-icon-row select { width: auto; }
+
+.connect-box { display: flex; gap: 10px; align-items: flex-start; background: #eef4ff; border: 1.5px solid #bfd0f5; border-radius: 12px; padding: 10px 14px; margin: 0 0 14px; }
+.connect-icon { font-size: 1.4rem; line-height: 1.2; }
+.connect-box .hex-help { display: block; margin-top: 2px; }
+.connect-box .hex-help[hidden] { display: none; }
+.settings-shortcut { background: #eef4ff; border: 1.5px solid #bfd0f5; border-radius: 12px; padding: 10px 14px; margin: 10px 0; max-width: 560px; }
+.settings-shortcut .row { margin: 8px 0 4px; align-items: center; }
+.settings-shortcut input { font-family: var(--mono); width: 260px; }

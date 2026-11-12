@@ -19,7 +19,7 @@ change the lessons or the code in the repository and build again.
 | `Assets.gs` | Script (+ → Script), name it `Assets` | 270 KB |
 | `Code.gs` | Script (+ → Script), name it `Code` | 95 KB |
 | `Data.gs` | Script (+ → Script), name it `Data` | 165 KB |
-| `Pages1.gs` | Script (+ → Script), name it `Pages1` | 687 KB |
+| `Pages1.gs` | Script (+ → Script), name it `Pages1` | 692 KB |
 
 4. Press **Ctrl+S**.
 

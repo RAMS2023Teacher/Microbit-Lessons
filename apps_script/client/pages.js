@@ -492,6 +492,10 @@
       '<p class="small muted">No MICROBIT drive? Try another cable: some cables only charge.</p></div></li>' +
       '<li><div><h3>Tell Chrome to ask where to save</h3><p>In Chrome, click <b>⋮</b> (top right) → <b>Settings</b>. Type <span class="kbd">downloads</span> ' +
       'in the search box at the top. Turn on <b>Ask where to save each file before downloading</b>.</p>' +
+      '<div class="settings-shortcut"><b>Shortcut:</b> copy this, then paste it into Chrome\'s address bar and press Enter.' +
+      '<div class="row"><input id="su-addr" value="chrome://settings/downloads" readonly aria-label="Chrome download settings address">' +
+      '<button class="btn small" id="su-copy" type="button">📋 Copy</button><span class="muted small" id="su-copied"></span></div>' +
+      '<small class="muted">Chrome doesn\'t let websites open its settings with a link, so this is the quickest way.</small></div>' +
       '<div class="mock" aria-hidden="true"><div class="mock-bar">Settings › Downloads</div>' +
       '<div class="mock-row"><span>Location<br><small class="muted">My files › Downloads</small></span><span class="mock-btns"><span>Change</span></span></div>' +
       '<div class="mock-row hl"><span>Ask where to save each file before downloading</span><span class="toggle"></span></div></div>' +
@@ -518,6 +522,17 @@
       '<li><b>Want to test without a micro:bit?</b> Click <b>🖥 Simulate</b> under the code.</li></ul></section>');
     main.innerHTML = h.join('');
     var $ = function (id) { return document.getElementById(id); };
+    $('su-copy').addEventListener('click', function () {
+      var box = $('su-addr'), said = $('su-copied');
+      var done = function () { said.textContent = 'Copied! Now paste it in the address bar (Ctrl + V) and press Enter.'; };
+      box.focus(); box.select();
+      var fallback = function () {
+        try { if (document.execCommand('copy')) { done(); return; } } catch (e) { /* blocked */ }
+        said.textContent = 'Press Ctrl + C to copy it (it\'s selected).';
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(box.value).then(done, fallback);
+      else fallback();
+    });
     $('su-try').addEventListener('click', function () {
       var b = this, msg = $('su-msg');
       b.disabled = true; msg.textContent = 'Building…';

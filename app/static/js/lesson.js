@@ -56,6 +56,9 @@
     });
   }
 
+  // No USB (Apps Script): code goes on by .hex download, so point at the download settings help.
+  if (window.MAKERLAB_NO_USB) document.querySelectorAll('.hex-help').forEach((el) => { el.hidden = false; });
+
   // ----- read to me (the browser's built-in voice) -----
   const voice = window.speechSynthesis;
   let reading = null;
