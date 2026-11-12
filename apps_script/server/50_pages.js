@@ -27,6 +27,7 @@ function doGet(e) {
   } catch (err) {
     page = { name: 'error', title: 'Problem', data: { message: (err && err.message) || 'Something went wrong.' } };
   }
+  page.path = path;
   return render_(me, page);
 }
 
@@ -121,7 +122,35 @@ function dashboardData_(rec, cfg) {
   var badges = badgeList_(rec).filter(function (b) { return b.earned; })
     .sort(function (a, b) { return String(b.earned_at).localeCompare(String(a.earned_at)); });
   return { rows: rows, recent: recent, badges: badges.slice(0, 6), badge_total: DATA.badges.length, setup_done: !!rec.setup_done,
+           next_up: nextUp_(rec, rows),
            classes: classes.map(function (c) { return cfg.classes[c].name; }) };
+}
+
+/** The first part of a lesson the student hasn't finished. */
+function nextPart_(L, p) {
+  var done = (p && p.sections) || {};
+  for (var i = 0; i < L.section_keys.length; i++) {
+    var k = L.section_keys[i];
+    if (!done[k]) return (L.agenda_names || {})[k] || k;
+  }
+  return '';
+}
+
+/** One clear thing to do: the lesson they were last working on, else the next assignment, else the next lesson. */
+function nextUp_(rec, rows) {
+  var card = function (verb, L, p) { return { verb: verb, lesson: L.card, pct: p ? percent_(p, L) : 0, part: nextPart_(L, p) }; };
+  var started = Object.keys(rec.progress).filter(function (l) { return DATA.lessons[l]; })
+    .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); });
+  for (var i = 0; i < started.length; i++) {
+    var L = DATA.lessons[started[i]];
+    if (percent_(rec.progress[L.id], L) < 100) return card('Keep going', L, rec.progress[L.id]);
+  }
+  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return card('Start', DATA.lessons[rows[j].lesson.id], rec.progress[rows[j].lesson.id]);
+  for (var k = 0; k < DATA.order.length; k++) {
+    var M = DATA.lessons[DATA.order[k]], q = rec.progress[M.id];
+    if (M.kind !== 'check' && (!q || percent_(q, M) < 100)) return card('Start', M, q);
+  }
+  return null;
 }
 
 function profileData_(rec) {
@@ -265,13 +294,13 @@ function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
 // The game-style fonts (the theme falls back to system fonts if Google Fonts is blocked). A <link>, not a
 // CSS @import, because Apps Script strips "//" inside <style> blocks.
-var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Titan+One&display=swap">';
+var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">';
 
 function render_(me, page) {
   var nav = me.teacher
     ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/setup', 'micro:bit setup']]
-    : [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/setup', 'micro:bit setup'], ['/', 'Dashboard']];
-  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, teacher: me.teacher, nav: nav, data: page.data || {} };
+    : [['/', '🏠 Home'], ['/lessons', 'Lessons'], ['/map', 'Map']];      // few choices; the editor and setup are on Home
+  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
   var code = [safe64_(setup), safe64_(asset_('app'))];

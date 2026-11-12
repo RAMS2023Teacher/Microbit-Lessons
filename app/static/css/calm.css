@@ -1,0 +1,208 @@
+/* Calm theme: a clean learning-app look. Loaded after style.css (replaces arcade.css / aero.css).
+   One main color (blue) for "do this", green for "done", yellow only for "what to do now".
+   Everything else is white, light gray and dark text, so the next step is the thing that stands out.
+   Screen only, so printed pages stay plain. */
+@media screen {
+  :root {
+    --ink: #1f2937; --muted: #5b6474; --line: #e3e7ee; --bg: #f5f7fb; --card: #fff;
+    --navy: #1e3a8a; --accent: #facc15; --teal: #2563eb; --teal-d: #1d4ed8;
+    --ok: #16a34a; --ok-bg: #e8f7ee; --bad: #dc2626; --bad-bg: #fdecec; --warn-bg: #fff8db;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(17, 24, 39, .05), 0 4px 14px rgba(17, 24, 39, .05);
+    --blue: #2563eb; --blue-d: #1d4ed8; --green: #16a34a; --green-d: #15803d;
+    --a: #2563eb; --b: #e11d48; --c: #d97706; --d: #16a34a;
+  }
+  html { background: var(--bg); }
+  body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column;
+    font-family: "Nunito", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; font-weight: 600; color: var(--ink); }
+  body > main { flex: 1 0 auto; width: 100%; }
+  h1, h2, h3 { font-weight: 800; letter-spacing: -.01em; }
+  h1 { color: var(--ink); }
+  b, strong, legend { font-weight: 800; }
+  a { color: var(--teal-d); }
+
+  /* top bar: white and quiet */
+  .topbar { background: #fff; color: var(--ink); border-bottom: 1px solid var(--line); box-shadow: none; }
+  .brand { color: var(--navy); font-weight: 900; }
+  .brand-mark { background: var(--navy); }
+  .topbar nav > a { color: var(--ink); font-weight: 800; padding: 7px 12px; border-radius: 10px; }
+  .topbar nav > a:hover { background: #eef2ff; color: var(--blue-d); }
+  .usermenu summary, .usermenu-lite { background: #f1f5f9; color: var(--ink); border-radius: 12px; }
+  .usermenu-lite, .usermenu-lite b { color: var(--ink); }
+  .nav-xp-bar { background: #dbe3ef; } .nav-xp-bar i { background: var(--accent); }
+  #nav-level { color: #a16207; }
+
+  /* cards */
+  .card, .lesson-card, .class-card, .lesson-nav-inner, .helper-panel {
+    border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow);
+  }
+  .lesson-card:hover, .class-card:hover { border-color: #bfd0f5; box-shadow: 0 6px 18px rgba(37, 99, 235, .1); }
+  .lesson-nav-inner { padding: 12px; }
+  .learn-card { background: #fff; border: 1px solid var(--line); box-shadow: none; }
+
+  /* buttons: one solid main button, quiet secondary ones */
+  .btn { font-family: inherit; font-weight: 800; border: 0; border-radius: 12px; color: #fff;
+    background: var(--blue); box-shadow: 0 3px 0 var(--blue-d); text-shadow: none; transition: transform .08s, box-shadow .08s, background .12s; }
+  .btn:hover { background: var(--blue-d); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--blue-d); }
+  .btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+  .btn.primary { background: var(--green); box-shadow: 0 3px 0 var(--green-d); }
+  .btn.primary:hover { background: var(--green-d); }
+  .btn.ghost { background: #fff; color: var(--blue-d); box-shadow: inset 0 0 0 1.5px #c7d4ec; }
+  .btn.ghost:hover { background: #f1f5ff; }
+  .btn.ghost:active { box-shadow: inset 0 0 0 1.5px #a9bde4; }
+  .btn.danger { background: #fff; color: var(--bad); box-shadow: inset 0 0 0 1.5px #f3b4b4; }
+  .btn:disabled, .btn[disabled] { opacity: .55; transform: none; }
+  input[type=text], input:not([type]), input[type=password], input[type=url], input[type=date], input[type=time],
+  input[type=number], textarea, select { border: 1.5px solid #cfd8e6; border-radius: 10px; font-family: inherit; font-weight: 600; }
+  input:focus, textarea:focus, select:focus { outline: 3px solid #bfdbfe; border-color: var(--blue); }
+
+  /* "What to do" — the one bright thing on every step */
+  .do-now { display: flex; gap: 10px; align-items: baseline; background: #fff8db; border: 1.5px solid #f5d76e; border-radius: 12px;
+    padding: 10px 14px; margin: 4px 0 14px; font-size: 1.05rem; line-height: 1.4; }
+  .do-now-tag { flex: none; background: var(--accent); color: #422006; font-weight: 900; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .05em; border-radius: 99px; padding: 2px 9px; }
+
+  /* answer tiles: white tiles with a colored letter, like a quiz app */
+  .learn-check-choices, .predict-choices { counter-reset: tile; gap: 10px; }
+  .lc-choice, .predict-choice, .choice {
+    position: relative; background: #fff; color: var(--ink); border: 2px solid #d9e0ec; border-radius: 12px; box-shadow: 0 2px 0 #d9e0ec;
+    font-weight: 700; text-shadow: none; padding: 9px 14px 9px 46px; min-height: 44px; text-align: left; transition: border-color .12s, background .12s;
+  }
+  .lc-choice, .predict-choice { counter-increment: tile; }
+  .lc-choice::before, .predict-choice::before, .choice::before {
+    content: counter(tile, upper-alpha); position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: .9rem;
+    background: var(--a);
+  }
+  .lc-choice:nth-child(4n+2)::before, .predict-choice:nth-child(4n+2)::before, .choice:nth-of-type(4n+2)::before { background: var(--b); }
+  .lc-choice:nth-child(4n+3)::before, .predict-choice:nth-child(4n+3)::before, .choice:nth-of-type(4n+3)::before { background: var(--c); }
+  .lc-choice:nth-child(4n+4)::before, .predict-choice:nth-child(4n+4)::before, .choice:nth-of-type(4n+4)::before { background: var(--d); }
+  .lc-choice:hover:not(:disabled), .predict-choice:hover:not(:disabled), .choice:hover { border-color: #93b4ef; background: #f6f9ff; }
+  .lc-choice.right, .predict-choice.right { border-color: var(--green); background: var(--ok-bg); box-shadow: 0 2px 0 var(--green); color: #14532d; opacity: 1; }
+  .lc-choice.right::before, .predict-choice.right::before { content: "✓"; background: var(--green); }
+  .lc-choice.wrong, .predict-choice.wrong { opacity: .45; text-decoration: line-through; background: #f8fafc; }
+  .lc-choice:disabled:not(.right):not(.wrong), .predict-choice:disabled:not(.right):not(.wrong) { opacity: .6; }
+  .learn-check { border: 1.5px solid #dbe4f3; border-radius: 14px; background: #f8fbff; }
+  .learn-check.passed { border-color: #9fdcb5; background: #f2fbf5; }
+  .lc-feedback.good { color: var(--green-d); }
+
+  /* quiz: same tiles; the chosen one is outlined in blue */
+  .q { border: 1px solid var(--line); background: #fff; border-radius: 14px; padding: 14px 16px; counter-reset: tile; }
+  .choice { counter-increment: tile; display: flex; gap: 8px; align-items: center; margin: 8px 0; cursor: pointer; }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice:has(input:checked) { border-color: var(--blue); background: #eef4ff; box-shadow: 0 0 0 3px #bfdbfe; }
+  .choice:has(input:focus-visible) { outline: 3px solid #93c5fd; outline-offset: 2px; }
+  .q.right { border-color: var(--green); background: #f2fbf5; } .q.wrong { border-color: #f3b4b4; background: #fff7f7; }
+  .q-num { color: var(--blue-d); }
+
+  /* lesson page */
+  .sec-num { background: var(--blue); box-shadow: none; color: #fff; }
+  .step-section.done .sec-num { background: var(--green); }
+  .lesson-num { border-radius: 10px; background: #eef2ff; color: var(--navy); box-shadow: none; font-weight: 900; }
+  .eyebrow { color: var(--muted); }
+  .big-idea { background: #eef2ff; color: var(--ink); border: 0; border-left: 4px solid var(--blue); border-radius: 12px; box-shadow: none; }
+  .big-idea b { color: var(--blue-d); }
+  .big-idea.essential-q { background: #f5f3ff; border-left-color: #7c3aed; }
+  .big-idea.essential-q b { color: #6d28d9; }
+  .xp-chip { background: #fff8db; color: #713f12; border: 1px solid #f5d76e; box-shadow: none; }
+  .tag { background: #eef2ff; color: var(--navy); }
+  code { background: #eef2ff; color: #1e3a8a; }
+  pre.code-block, .ed-console, .try-code { background: #111827; }
+  .video-box { background: #1f2937; }
+  .remember-box { border-radius: 12px; border: 1px solid #f5d76e; border-left: 4px solid var(--accent); background: #fffdf2; }
+  .read-aloud { border: 1px solid #cfd8e6; background: #fff; }
+
+  /* once past the overview the header shrinks to one line, so the step is what you see */
+  .lesson.compact .lesson-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .lesson.compact .lesson-head h1 { font-size: 1.3rem; margin: 0; }
+  .lesson.compact .lesson-head .eyebrow, .lesson.compact .lesson-rewards, .lesson.compact .essential-q { display: none; }
+
+  /* partner bar */
+  .partner-box:empty { display: none; }
+  .partner-box { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #fff; border: 1px dashed #c7d4ec; border-radius: 12px;
+    padding: 6px 12px; margin: 8px 0; font-size: .95rem; }
+  .partner-box.paired { border-style: solid; border-color: #9fdcb5; background: #f2fbf5; }
+  .partner-box select { padding: 4px 8px; }
+  .lesson.compact .partner-box { margin: 0; }
+
+  /* the lesson sidebar */
+  .agenda a { border-radius: 10px; font-weight: 700; }
+  .agenda a:hover { background: #f1f5ff; }
+  .agenda li.current a { background: #e8efff; color: var(--blue-d); box-shadow: inset 3px 0 0 var(--blue); }
+  .agenda li.done .tick { background: var(--green); border-color: var(--green); }
+  .tour-again { display: block; margin: 6px 0 2px; }
+  .lesson-pager { opacity: .8; }
+
+  /* Back / Next stays at the bottom of the screen, so Next is never hidden below the fold */
+  .section-nav { position: sticky; bottom: 0; z-index: 15; background: rgba(245, 247, 251, .96); border-top: 1px solid var(--line);
+    margin: 12px -6px 0; padding: 10px 6px; }
+  #section-next { font-size: 1.05rem; padding: 11px 20px; }
+  #section-next.ready { background: var(--green); box-shadow: 0 3px 0 var(--green-d); animation: next-ready 1.6s ease-in-out 2; }
+  @keyframes next-ready { 50% { transform: translateY(-2px); box-shadow: 0 6px 0 var(--green-d), 0 0 0 6px rgba(22, 163, 74, .18); } }
+
+  /* progress */
+  .meter, .timer-bar, .xpbar { background: #e5eaf2; box-shadow: none; border-radius: 999px; }
+  .meter i, .meter.parts i { background: var(--green); border-radius: 999px; }
+  .xpbar i { background: var(--accent); border-radius: 999px; }
+  .timer-bar i { background: var(--accent); }
+
+  /* home: one big "keep going" button */
+  .next-up { display: flex; align-items: center; gap: 16px; padding: 16px 20px; margin-bottom: 16px; text-decoration: none; color: var(--ink);
+    border: 2px solid #bfd0f5; background: linear-gradient(90deg, #eef4ff, #fff 60%); }
+  .next-up:hover { border-color: var(--blue); }
+  .next-up-play { flex: none; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--blue); color: #fff; font-size: 1.4rem; }
+  .next-up-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .next-up-text small { color: var(--blue-d); font-weight: 900; text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; }
+  .next-up-text b { font-size: 1.3rem; }
+  .next-up-text span { color: var(--muted); }
+  .next-up-go { flex: none; background: var(--blue); color: #fff; font-weight: 900; border-radius: 12px; padding: 10px 18px; box-shadow: 0 3px 0 var(--blue-d); }
+
+  /* first-visit tour */
+  .tour-veil { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); z-index: 900; }
+  .tour-spot { position: relative; z-index: 950; background: #fff; border-radius: 12px; box-shadow: 0 0 0 4px var(--accent), 0 0 0 9px rgba(250, 204, 21, .35); }
+  .section-nav .tour-spot, #section-next.tour-spot { box-shadow: 0 0 0 4px var(--accent), 0 0 0 9px rgba(250, 204, 21, .35); }
+  .section-nav:has(.tour-spot) { z-index: 950; }
+  .tour-bubble { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 1000; width: min(460px, calc(100vw - 32px));
+    background: #fff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 20px 50px rgba(15, 23, 42, .3); font-size: 1.08rem; }
+  .tour-bubble p { margin: 0 0 12px; line-height: 1.45; }
+  .tour-row { display: flex; align-items: center; gap: 12px; }
+  .tour-count { color: var(--muted); font-size: .85rem; margin-right: auto; }
+
+  /* answer letters need room on the predict and quick-check buttons too (they also carry .btn.small) */
+  .learn-check-choices .lc-choice, .predict-choices .predict-choice { padding: 9px 14px 9px 46px; }
+
+  /* home: the badge row sits under the level, not squeezed into a column */
+  .hero-card .hero-badges { grid-column: 1 / -1; grid-template-columns: repeat(auto-fill, 40px); }
+  .hero-card .hero-badges .muted { grid-column: 1 / -1; }
+
+  /* rewards pop in at the top right, so they never cover the Next button */
+  #reward-stack { top: 84px; bottom: auto; }
+  /* rewards */
+  .reward-toast { border-radius: 14px; background: #1f2937; color: #fff; box-shadow: 0 12px 30px rgba(15, 23, 42, .3); }
+  .reward-toast.badge { background: #4c1d95; } .reward-toast.level { background: #9a3412; }
+  .xp-pop { color: var(--accent); }
+
+  .hero { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+  .hero p { color: #e0e7ff; }
+  .hero .btn.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px #fff; }
+  .footer { color: var(--muted); padding: 24px; }
+
+  /* class display: deep blue, calm, readable from the back of the room */
+  body.screen-page { background: #0f1e45; }
+  .screen-page .screen-head h1 { color: #fff; }
+  .screen-page .screen-head p { color: #fde68a; }
+  .screen-page .screen-total { color: #fff; background: rgba(255, 255, 255, .1); padding: 4px 14px; border-radius: 12px; }
+  .screen-page .card { border: 0; box-shadow: 0 8px 24px rgba(0, 0, 0, .25); }
+  .screen-page .track::before { background: repeating-linear-gradient(90deg, #facc15 0 18px, #fff 18px 30px) center / 100% 3px no-repeat, #334155; }
+  .screen-page .track-icon { border-color: #dbe3ef; }
+  .screen-page .track-col.busy .track-icon { border-color: var(--blue); }
+  .screen-page .track-col.busy .track-lane { background: #f1f5ff; }
+  .screen-page .timer-big { color: var(--navy); }
+  .screen-page .screen-wins li.muted { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .lc-choice, .predict-choice, .choice { transition: none; }
+  #section-next.ready { animation: none; }
+}

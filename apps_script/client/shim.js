@@ -74,6 +74,8 @@
     return ML.base + '?p=' + encodeURIComponent(path) + hash;
   };
   ML.go = function (path) { window.top.location.href = ML.href(path); };
+  // A sandboxed frame on another origin may set top.location.href but can't call top.location.reload().
+  ML.reload = function () { ML.go(ML.path || '/'); };
   function fixLinks(root) {
     var links = (root || document).querySelectorAll('a[href^="/"]:not([href^="//"])');
     for (var i = 0; i < links.length; i++) {
@@ -146,6 +148,8 @@
       head.insertAdjacentElement('afterend', fb);
     }
     if ($('timer')) $('timer').hidden = !ML.teacher;      // the lesson timer is only for the teacher
+    if (ML.teacher && $('partner-box')) $('partner-box').remove();      // partners are for students
+    if (ML.teacher && $('lesson')) $('lesson').dataset.teacher = '1';   // no first-visit tour for the teacher
     if (ML.teacher) {
       var rewards = document.querySelector('.lesson-rewards');
       if (rewards) rewards.remove();

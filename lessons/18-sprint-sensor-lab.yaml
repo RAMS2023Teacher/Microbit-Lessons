@@ -152,17 +152,6 @@ circuit:
     - Match G to G. A backwards sensor can be damaged.
     - The two small chips on the shield get hot. Don't touch them.
   steps:
-    - title: Set the jumpers
-      instruction: >-
-        Find jumpers **V1** and **V2** on the shield. Set **V1 to 3.3V**. That
-        is the sensor row, pins 0-10. The micro:bit's pins only like 3 volts.
-        Set **V2 to 5V**.
-      check: Is V1 on 3.3V?
-      visual:
-        type: board
-        board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
-        caption: "V1 is next to pins 0-10. V2 is next to pins 11-20."
     - title: Plug in the IR sensor
       instruction: >-
         Slide the micro:bit in, screen facing out. Plug the **IR obstacle
@@ -173,7 +162,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
     - title: Plug in the line sensor
@@ -184,7 +172,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
           - {pin: 8, device: "Line tracker", kind: sensor}
@@ -196,7 +183,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
           - {pin: 8, device: "Line tracker", kind: sensor}

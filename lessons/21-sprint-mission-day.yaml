@@ -148,7 +148,6 @@ circuit:
   safety:
     - Unplug the battery pack before you plug in a sensor.
     - Match G to G. A backwards sensor can be damaged.
-    - V1 must be on 3.3V. Sensors on pins 0-10 run at 3.3 volts.
   remember:
     - text: |
         **IR sensor range:** turn the small knob on the IR obstacle sensor to change how far
@@ -163,7 +162,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
@@ -178,7 +176,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 8, device: "Line sensor", kind: sensor}
@@ -192,7 +189,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 1, device: "Crash sensor", kind: sensor}
@@ -206,7 +202,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}

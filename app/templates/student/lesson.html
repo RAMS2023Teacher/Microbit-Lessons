@@ -5,6 +5,17 @@
 {% endblock %}
 {% block main_class %}lesson-layout{% endblock %}
 {% block content %}
+{% macro do_now(key) %}{% set say = {
+  "warmup": "Read the question. Type your idea in the box. Any idea is fine!",
+  "learn": "Read the card. Answer its quick question. Then press <b>Next</b>.",
+  "circuit": "Build one step at a time. Tick the box when each step is done.",
+  "lab": "Open the tool. Do one step at a time and tick each box.",
+  "code": "Guess what the code will do. Then press <b>▶ Simulate</b> or <b>Download</b> to try it.",
+  "practice": "Change the code so it does what the task says. Then press <b>Check my code</b>.",
+  "debug": "This code has a bug. Find it, fix it, then press <b>Check my fix</b>.",
+  "quiz": "Answer each question. Then press <b>Submit answers</b>.",
+  "challenge": "Pick a level. Build it. Then write what you made and press <b>Submit</b>.",
+} %}<div class="do-now" role="note"><span class="do-now-tag">What to do</span><span>{{ say[key]|safe }}</span></div>{% endmacro %}
 {% macro read_btn() %}<button type="button" class="read-aloud" data-read title="Read this to me" aria-label="Read this to me">🔊 Read to me</button>{% endmacro %}
 {% macro remember(boxes) %}{% if boxes %}
 <aside class="remember-box"><div class="remember-head"><b>💡 Remember</b>{{ read_btn() }}</div>
@@ -13,6 +24,7 @@
 <aside class="lesson-nav">
   <div class="lesson-nav-inner">
     <a class="muted small" href="{{ url_for('student.catalog') }}">← All lessons</a>
+    <a class="small tour-again" href="#" id="tour-again">❓ How does this work?</a>
     {# The class timer is the teacher's (students see time on the Class display). Apps Script pages are built
        as a student, so it stays in the page, hidden, and shows for the teacher. #}
     <div class="timer card" id="timer"{% if not is_teacher %} hidden{% endif %}>
@@ -37,11 +49,12 @@
   </div>
 </aside>
 
-<article class="lesson" id="lesson">
+<article class="lesson" id="lesson"{% if is_teacher %} data-teacher="1"{% endif %}>
   <header class="lesson-head">
     <div class="eyebrow">{% if lesson.kind != "check" %}Lesson {{ lesson.number }} · {% endif %} Unit {{ lesson.unit }} · {{ lesson.level }} · ⏱ {{ lesson.duration_minutes }} min</div>
     <h1>{{ lesson.title }}</h1>
     {% if lesson.subtitle %}<p class="subtitle">{{ lesson.subtitle }}</p>{% endif %}
+    {% if not is_teacher and lesson.kind != "check" %}<div class="partner-box" id="partner-box" aria-live="polite"></div>{% endif %}
     <div class="big-idea"><b>Big idea</b> {{ lesson.big_idea }}</div>
     {% if lesson.essential_question %}<div class="big-idea essential-q"><b>Think about</b> {{ lesson.essential_question }}</div>{% endif %}
     {% if not is_teacher %}
@@ -118,6 +131,7 @@
   {% if lesson.warmup %}
   <section data-step class="card step-section" id="warmup">
     <h2><span class="sec-num">1</span> Warm-up</h2>
+    {{ do_now('warmup') }}
     <p class="prompt">{{ lesson.warmup.prompt }}</p>
     <textarea id="warmup-answer" rows="3" placeholder="Type your idea… there are no wrong answers.">{{ state.warmup_answer }}</textarea>
     <div class="row"><span class="save-status muted small" id="warmup-status"></span></div>
@@ -128,6 +142,7 @@
   {% if lesson.learn %}
   <section data-step class="card step-section" id="learn">
     <h2><span class="sec-num">2</span> Learn</h2>
+    {{ do_now('learn') }}
     <div class="step-count" id="learn-count" aria-live="polite"></div>
     <div class="learn-cards" id="learn-cards">
       {% for card in lesson.learn %}<div class="learn-card{{ ' has-visual' if card.visual }}" tabindex="-1" data-card="{{ loop.index0 }}">
@@ -153,6 +168,7 @@
   {% if lesson.circuit %}
   <section data-step class="card step-section" id="circuit">
     <h2><span class="sec-num">3</span> Build the circuit</h2>
+    {{ do_now('circuit') }}
     <div class="circuit-ready" id="circuit-ready">
       {% if lesson.circuit.intro %}<p class="prompt">{{ lesson.circuit.intro }}</p>{% endif %}
       {% if lesson.circuit.safety %}
@@ -185,6 +201,7 @@
   {% if lesson.lab %}
   <section data-step class="card step-section" id="lab">
     <h2><span class="sec-num">3</span> {{ lesson.lab.title or "AI lab" }}</h2>
+    {{ do_now('lab') }}
     <p class="prompt">{{ lesson.lab.intro }}</p>
     {{ remember(lesson.lab.remember) }}
     <p><a class="btn" href="{{ lesson.lab.url }}" target="_blank" rel="noopener">Open {{ lesson.lab.tool }} ↗</a>
@@ -208,6 +225,7 @@
   {% if lesson.code %}
   <section data-step class="card step-section" id="code">
     <h2><span class="sec-num">{{ n }}</span> Code it</h2>
+    {{ do_now('code') }}
     {% if lesson.code.intro %}{{ lesson.code.intro|md }}{% endif %}
     {{ remember(lesson.code.remember) }}
     {% if lesson.code.predict %}{% set pq = lesson.code.predict %}
@@ -241,6 +259,7 @@
   {% if lesson.practice %}
   <section data-step class="card step-section" id="practice">
     <h2><span class="sec-num">{{ m }}</span> Your turn ✍️</h2>
+    {{ do_now('practice') }}
     <p class="prompt">{{ lesson.practice.prompt }}</p>
     {{ remember(lesson.practice.remember) }}
     <div class="workspace">
@@ -263,6 +282,7 @@
 
   <section data-step class="card step-section" id="debug">
     <h2><span class="sec-num">{{ m + 1 }}</span> Debug it 🐞</h2>
+    {{ do_now('debug') }}
     {{ lesson.debug.story|md }}
     {{ remember(lesson.debug.remember) }}
     <div class="workspace">
@@ -291,6 +311,7 @@
 
   <section data-step class="card step-section" id="quiz">
     <h2><span class="sec-num">{{ (m if lesson.code else n) + 2 if lesson.kind != "check" else 1 }}</span> Check for understanding</h2>
+    {{ do_now('quiz') }}
     <form id="quiz-form">
       {% for q in view.quiz %}{% set qi = loop.index0 %}
       <fieldset class="q" data-q="{{ qi }}">
@@ -315,6 +336,7 @@
   {% if lesson.challenge %}
   <section data-step class="card step-section challenge" id="challenge">
     <h2><span class="sec-num">{{ (m if lesson.code else n) + 3 }}</span> Challenge: {{ lesson.challenge.title }} 🚀</h2>
+    {{ do_now('challenge') }}
     {{ lesson.challenge.prompt|md }}
     {% if lesson.challenge.visual %}<figure class="vz" data-visual='{{ lesson.challenge.visual|tojson }}'></figure>{% endif %}
     <div class="level-picker" role="tablist" aria-label="Pick a level">
@@ -363,7 +385,6 @@
     </div>
     <label class="field"><span><b>{{ lesson.challenge.submit_prompt or "Describe what you made." }}</b></span>
       <textarea id="challenge-response" rows="4">{{ state.challenge_response }}</textarea></label>
-    {% if not is_teacher %}<div class="partner-box" id="partner-box" aria-live="polite"></div>{% endif %}
     <div class="row"><button type="button" class="btn" id="challenge-submit">📤 Submit my challenge</button><span class="save-status muted small" id="challenge-status">{% if state.challenge_submitted %}Submitted ✓ (you can resubmit){% endif %}</span></div>
   </section>
 

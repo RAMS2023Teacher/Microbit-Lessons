@@ -49,9 +49,36 @@ def dashboard():
     rewards = gamify.sync_rewards(current_user)  # catch up on anything earned earlier
     badges = [b for b in gamify.badge_list(current_user) if b["earned"]]
     badges.sort(key=lambda b: b["earned_at"], reverse=True)
-    return render_template("student/dashboard.html", rows=rows, recent=recent,
+    return render_template("student/dashboard.html", rows=rows, recent=recent, next_up=next_up(pm, rows),
                            level=gamify.level_info(current_user.xp or 0), badges=badges[:6],
                            badge_total=len(gamify.BADGES), rewards=rewards)
+
+
+def next_part(lesson, p) -> str:
+    """The name of the first part of a lesson the student hasn't finished."""
+    names = {a["key"]: a["name"] for a in lesson.get("agenda") or []}
+    for k in L.section_keys(lesson):
+        if not (p and (p.sections or {}).get(k)):
+            return names.get(k, k.title())
+    return ""
+
+
+def next_up(pm, rows):
+    """One clear thing to do: the lesson they were last working on, else the next assignment, else the next lesson."""
+    started = sorted((p for p in pm.values() if L.get_lesson(p.lesson_id)), key=lambda p: p.updated_at or p.started_at, reverse=True)
+    for p in started:
+        lesson = L.get_lesson(p.lesson_id)
+        pct = p.percent(L.section_keys(lesson))
+        if pct < 100:
+            return {"verb": "Keep going", "lesson": lesson, "pct": pct, "part": next_part(lesson, p)}
+    for r in rows:
+        if r["pct"] < 100:
+            return {"verb": "Start", "lesson": r["lesson"], "pct": r["pct"], "part": next_part(r["lesson"], pm.get(r["lesson"]["id"]))}
+    for lesson in L.all_lessons():
+        p = pm.get(lesson["id"])
+        if not p or p.percent(L.section_keys(lesson)) < 100:
+            return {"verb": "Start", "lesson": lesson, "pct": 0, "part": next_part(lesson, p)}
+    return None
 
 
 def _assigned_ids(user):

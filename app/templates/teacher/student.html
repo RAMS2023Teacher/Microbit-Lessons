@@ -34,7 +34,7 @@
   <summary><b>{{ l.number }}. {{ l.title }}</b> {% if not it.assigned %}<small class="muted">(not assigned)</small>{% endif %}
     <span class="meter"><i style="width:{{ it.pct }}%"></i></span> {{ it.pct }}%</summary>
   {% if not p %}<p class="muted">Not started.</p>{% else %}
-  <dl class="work">
+  <dl class="work">{% if it.partner %}<dt>Partner</dt><dd>👥 Worked with {{ it.partner }}</dd>{% endif %}
     <dt>Warm-up</dt><dd>{{ p.warmup_answer or '—' }}</dd>
     {% if l.circuit %}<dt>Circuit steps</dt><dd>{{ (p.circuit_steps or [])|length }} / {{ l.circuit.steps|length }} checked off</dd>{% endif %}
     {% if l.lab %}<dt>AI lab steps</dt><dd>{{ (p.circuit_steps or [])|length }} / {{ l.lab.steps|length }} checked off</dd>{% endif %}

@@ -7,8 +7,8 @@
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101935'/><g fill='%23ffd23f'><circle cx='9' cy='9' r='3'/><circle cx='23' cy='9' r='3'/><circle cx='9' cy='23' r='3'/><circle cx='16' cy='16' r='3'/><circle cx='23' cy='23' r='3'/></g></svg>">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Titan+One&display=swap">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/arcade.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/calm.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -18,16 +18,17 @@
     {{ site_name }}
   </a>
   <nav>
+    {% if current_user.is_authenticated and not current_user.is_teacher %}
+      <a href="{{ url_for('student.dashboard') }}">🏠 Home</a>
+    {% endif %}
     <a href="{{ url_for('student.catalog') }}">Lessons</a>
     {% if current_user.is_authenticated %}
       <a href="{{ url_for('student.lesson_map') }}">Map</a>
-      <a href="{{ url_for('student.playground') }}">Editor</a>
       {% if current_user.is_teacher %}
+        <a href="{{ url_for('student.playground') }}">Editor</a>
         <a href="{{ url_for('teacher.home') }}">My classes</a>
         <a href="{{ url_for('teacher.standards') }}">Standards</a>
         <a href="{{ url_for('teacher.videos') }}">Videos</a>
-      {% else %}
-        <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
       {% endif %}
       <details class="usermenu">
         <summary>

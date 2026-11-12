@@ -157,6 +157,31 @@ assert.strictEqual(w.call(T, 'screenSave', [cls.id, { bell: 'later' }]).settings
 assert.throws(() => w.call(S, 'screenData', [cls.id]), /Only the teacher/);
 assert.match(pageView(T, `/teacher/classes/${cls.id}/screen`), /"page":"screen"/);
 
+// partners on one Chromebook: Ava picks Sam, their work is combined, then every save goes to both files
+const P = (who, body) => w.call(who, 'api', ['/api/lessons/traffic-light/partner', JSON.stringify(body || {})]).body;
+api(S, 'traffic-light', 'save', { warmup_answer: "Sam's own idea" });
+w.advance(120000);
+api(S2, 'traffic-light', 'save', { mark: { learn: true } });
+assert.ok(P(S2).classmates.some((m) => m.id === S && m.name === 'Sam K.'));
+assert.strictEqual(P(S2, { action: 'pair', partner_id: 'stranger@other.org' }).status, undefined);   // not a classmate: refused
+assert.deepStrictEqual(P(S2, { action: 'pair', partner_id: S }), { status: 'paired', name: 'Sam K.' });
+const prog = (who) => JSON.parse(JSON.stringify(w.g.loadStudent_(who).progress['traffic-light']));
+for (const who of [S, S2]) {
+  const pp = prog(who);
+  assert.ok(pp.sections.warmup && pp.sections.learn && pp.warmup_answer === "Sam's own idea", who);
+}
+assert.strictEqual(prog(S).partner, S2);
+r = api(S2, 'traffic-light', 'challenge', { code: 'x', response: 'Our traffic light has a walk button.' });
+assert.strictEqual(r.body.partner, 'Sam K.');
+assert.ok(prog(S).sections.challenge && prog(S).challenge_response === 'Our traffic light has a walk button.');
+assert.ok(Object.keys(w.g.loadStudent_(S).xp_keys).some((k) => k === 'challenge:traffic-light'));     // Sam got the XP
+assert.deepStrictEqual(P(S), { status: 'paired', name: 'Ava R.' });
+assert.ok(w.call(T, 'studentDetail', [cls.id, S]).items.find((i) => i.id === 'traffic-light').partner === 'Ava R.');
+assert.strictEqual(P(S, { action: 'leave' }).status, 'none');
+api(S, 'traffic-light', 'save', { code: 'solo' });
+assert.notStrictEqual(prog(S2).code, 'solo');
+assert.ok(!prog(S2).partner);
+
 // removing a student hides them and sends them back to the join page
 w.call(T, 'removeStudent', [cls.id, S2]);
 w.advance(120000);

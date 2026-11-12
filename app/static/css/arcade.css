@@ -1,4 +1,4 @@
-/* Arcade theme: a bright, chunky game-show look. Loaded after style.css (replaces aero.css).
+/* Arcade theme (not in use: the site uses calm.css). A bright, chunky game-show look. Swap the <link> in base.html and the list in tools/build_apps_script.py to use it.
    Light background so all text stays easy to read; the color lives on the bar, buttons, answer tiles and meters.
    Buttons and cards have a solid "3D" bottom edge and press down when clicked.
    Screen only, so printed pages stay plain. */

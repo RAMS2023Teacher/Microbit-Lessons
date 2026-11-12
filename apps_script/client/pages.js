@@ -22,7 +22,7 @@
   var act = function (btn, name, args, then) {
     if (btn) btn.disabled = true;
     return ML.run.apply(null, [name].concat(args)).then(function (r) {
-      if (then) then(r); else window.top.location.reload();
+      if (then) then(r); else ML.reload();
     }).catch(function (e) { if (btn) btn.disabled = false; flash((e && e.message) || 'Something went wrong.', 'error'); });
   };
   var levelLine = function (lv) {
@@ -53,12 +53,17 @@
   };
 
   pages.dashboard = function () {
-    var lv = d.level, h = [];
+    var lv = d.level, h = [], nu = d.next_up;
+    if (nu) h.push('<a class="next-up card" href="/lessons/' + E(nu.lesson.id) + '"><span class="next-up-play" aria-hidden="true">▶</span>' +
+      '<span class="next-up-text"><small>' + E(nu.verb) + '</small><b>' + E(nu.lesson.number) + '. ' + E(nu.lesson.title) + '</b>' +
+      (nu.part ? '<span>Next part: ' + E(nu.part) + (nu.pct ? ' · ' + nu.pct + '% done' : '') + '</span>' : '') + '</span>' +
+      '<span class="next-up-go">' + E(nu.verb) + ' →</span></a>');
     h.push('<section class="card hero-card"><a class="hero-avatar" href="/me" title="Customize your robot"><span data-avatar="' + A(d.avatar) +
       '" data-size="110"></span><small>✏️ Customize</small></a><div class="hero-card-main"><h1>Hi ' + E(d.name) + ' 👋</h1>');
     if (d.avatar && d.avatar.name) h.push('<p class="muted">…and your robot <b>' + E(d.avatar.name) + '</b></p>');
     h.push('<div class="level-line"><b>Level ' + lv.level + ' · ' + E(lv.title) + '</b> <span class="muted small">' + levelLine(lv) + '</span></div>' +
-      '<div class="xpbar big"><i style="width:' + lv.pct + '%"></i></div><div class="row"><a class="btn" href="/map">🗺️ Open the Maker Map</a>' +
+      '<div class="xpbar big"><i style="width:' + lv.pct + '%"></i></div><div class="row"><a class="btn ghost" href="/map">🗺️ Maker Map</a>' +
+      '<a class="btn ghost" href="/editor">🧪 Free-play editor</a><a class="btn ghost" href="/setup">🔌 micro:bit setup</a>' +
       '<a class="btn ghost" href="/me">🏅 Badges (' + d.badges.length + (d.badges.length >= 6 ? '+' : '') + ' / ' + d.badge_total + ')</a></div></div><div class="hero-badges">');
     if (d.badges.length) d.badges.forEach(function (b) { h.push('<span class="mini-badge" title="' + E(b.name + ': ' + b.desc) + '">' + E(b.icon) + '</span>'); });
     else h.push('<span class="muted small">Earn badges by finishing lessons!</span>');
@@ -190,7 +195,7 @@
     });
     var all = document.getElementById('gc-sync-all');
     if (all) all.addEventListener('click', function () {
-      act(this, 'syncAllClassroom', [], function (r) { alert(syncReport(r.classes)); window.top.location.reload(); });
+      act(this, 'syncAllClassroom', [], function (r) { alert(syncReport(r.classes)); ML.reload(); });
     });
   };
 
@@ -254,6 +259,8 @@
       h.push('<div class="table-scroll"><table class="gradebook"><thead><tr><th>Student</th>');
       d.cols.forEach(function (a) { h.push('<th title="' + E(a.title) + '">' + E(a.number) + '. ' + E(a.title) + (a.due ? '<small>due ' + E(due(a.due)) + '</small>' : '') + '</th>'); });
       h.push('</tr></thead><tbody>');
+      var names = {};
+      d.students.forEach(function (s) { names[s.email] = s.name; });
       d.students.forEach(function (s) {
         var link = '/teacher/classes/' + E(c.id) + '/students/' + encodeURIComponent(s.email);
         h.push('<tr' + (s.not_yet ? ' class="muted"' : '') + '><th class="who"><span data-avatar="' + A(s.avatar || {}) + '" data-size="34"></span><span><a href="' + link + '">' + E(s.name) + '</a><small>' +
@@ -263,7 +270,7 @@
           if (cell.status === 'other-branch') { h.push('<td class="cell other-branch" title="This student didn\'t pick this branch">—</td>'); return; }
           h.push('<td class="cell ' + cell.status + (cell.late ? ' late' : '') + '"><a href="' + link + '#' + E(a.lesson_id) + '">' + meter(cell.pct) + '<span class="cell-detail">' + cell.pct + '%' +
             (cell.quiz_total ? ' · Q ' + cell.quiz_best + '/' + cell.quiz_total : '') + (cell.debug_solved ? ' · 🐞✓' : '') + (cell.challenge ? ' · 🚀' : '') +
-            (cell.late ? ' <b class="bad">late</b>' : '') + '</span></a></td>');
+            (cell.late ? ' <b class="bad">late</b>' : '') + (cell.partner ? ' · 👥 ' + E(names[cell.partner] || 'partner') : '') + '</span></a></td>');
         });
         h.push('</tr>');
       });
@@ -317,7 +324,7 @@
     document.querySelectorAll('.un-assign').forEach(function (b) {
       b.addEventListener('click', function () { if (confirm('Remove this assignment? Student work is kept.')) act(b, 'updateAssignment', [b.dataset.id, '', '', true]); });
     });
-    if ($('gc-sync')) $('gc-sync').addEventListener('click', function () { act(this, 'syncClassroom', [c.id], function (r) { alert(syncReport([r])); window.top.location.reload(); }); });
+    if ($('gc-sync')) $('gc-sync').addEventListener('click', function () { act(this, 'syncClassroom', [c.id], function (r) { alert(syncReport([r])); ML.reload(); }); });
     if ($('gc-unlink')) $('gc-unlink').addEventListener('click', function () {
       if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
@@ -343,7 +350,8 @@
         (it.assigned ? '' : '<small class="muted">(not assigned)</small>') + ' ' + meter(it.pct) + ' ' + it.pct + '%</summary>');
       if (!p) { h.push('<p class="muted">Not started.</p></details>'); return; }
       var pre = function (label, code) { return code ? '<details><summary>' + label + '</summary><pre class="code-block">' + E(code) + '</pre></details>' : ''; };
-      h.push('<dl class="work"><dt>Warm-up</dt><dd>' + E(p.warmup_answer || '—') + '</dd>');
+      h.push('<dl class="work">' + (it.partner ? '<dt>Partner</dt><dd>👥 Worked with ' + E(it.partner) + '</dd>' : '') +
+        '<dt>Warm-up</dt><dd>' + E(p.warmup_answer || '—') + '</dd>');
       if (it.stepped_count) h.push('<dt>Steps</dt><dd>' + (p.circuit_steps || []).length + ' / ' + it.stepped_count + ' checked off</dd>');
       if (p.practice_code !== undefined) h.push('<dt>Your turn</dt><dd>' + (p.practice_solved ? '✅ solved' : '❌ not yet') + pre('view their code', p.practice_code) + '</dd>');
       if (it.has_debug) {

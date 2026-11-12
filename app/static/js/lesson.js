@@ -41,6 +41,7 @@
     if ($('lesson-parts')) $('lesson-parts').textContent = `${done} of ${KEYS.length} parts done`;
     lessonComplete = pct === 100;
     syncLessonDone();
+    try { syncNextButton(); } catch (e) { /* the section stepper isn't set up yet */ }
   }
 
   function autosave(el, field, statusEl) {
@@ -555,60 +556,62 @@
       : (d.error || 'Could not submit.');
   });
 
-  // ----- partner: invite a classmate, then one submission counts for both -----
+  // ----- partner: two classmates on one Chromebook. Pick your partner; everything then saves for both. -----
+  const reloadLesson = () => { if (window.ML && ML.go && ML.path) ML.go(ML.path); else window.location.reload(); };
   if ($('partner-box')) {
     const box = $('partner-box');
-    let last = '';
     const partnerApi = async (body) => {
       const r = await fetch(base + '/partner', {
         method: body ? 'POST' : 'GET', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
         body: body ? JSON.stringify(body) : undefined,
       });
-      return r.json().catch(() => ({ status: 'none', classmates: [], error: 'Could not reach the site.' }));
+      return r.json().catch(() => ({ status: 'none', classmates: [], error: 'Could not reach Maker Lab.' }));
     };
-    const add = (tag, text, cls) => {
-      const el = box.appendChild(document.createElement(tag));
+    const add = (parent, tag, text, cls) => {
+      const el = parent.appendChild(document.createElement(tag));
       if (text) el.textContent = text;
       if (cls) el.className = cls;
       return el;
     };
-    const act = (label, body, cls) => {
-      const b = add('button', label, cls || 'btn small');
-      b.type = 'button';
-      b.addEventListener('click', async () => draw(await partnerApi(typeof body === 'function' ? body() : body)));
-      return b;
-    };
     function draw(p) {
-      const key = JSON.stringify(p);
-      if (key === last) return;            // don't rebuild while a student is using the menu
-      last = key;
       box.textContent = '';
-      $('challenge-submit').textContent = p.status === 'paired' ? '📤 Submit for both of us' : '📤 Submit my challenge';
+      box.classList.toggle('paired', p.status === 'paired');
+      if ($('challenge-submit')) $('challenge-submit').textContent = p.status === 'paired' ? '📤 Submit for both of us' : '📤 Submit my challenge';
       if (p.status === 'paired') {
-        add('span', `👥 You're partners with ${p.name}. One submission counts for both of you.`);
-        act('Leave', { action: 'leave' }, 'btn small ghost');
-      } else if (p.status === 'sent') {
-        add('span', `⏳ Waiting for ${p.name} to accept.`);
-        act('Cancel', { action: 'leave' }, 'btn small ghost');
-      } else if (p.status === 'incoming') {
-        add('span', `👥 ${p.name} wants to be your partner.`);
-        act('Accept', { action: 'accept' });
-        act('No thanks', { action: 'leave' }, 'btn small ghost');
-      } else if (p.classmates.length) {
-        add('label', 'Working with a partner?', 'partner-label').htmlFor = 'partner-pick';
-        const pick = add('select');
+        add(box, 'span', '👥');
+        const t = add(box, 'span', '', 'partner-text');
+        t.append('You and ');
+        add(t, 'b', p.name);
+        t.append(' are partners. Everything you do saves for both of you.');
+        const stop = add(box, 'button', 'Stop working together', 'linklike small');
+        stop.type = 'button';
+        stop.addEventListener('click', async () => {
+          if (!confirm(`Stop working with ${p.name}? The work you already did stays with both of you.`)) return;
+          draw(await partnerApi({ action: 'leave' }));
+        });
+      } else if ((p.classmates || []).length) {
+        add(box, 'span', '👥');
+        add(box, 'label', 'Sharing this Chromebook with a partner?', 'partner-label').htmlFor = 'partner-pick';
+        const pick = add(box, 'select');
         pick.id = 'partner-pick';
-        p.classmates.forEach((m) => { const o = pick.appendChild(document.createElement('option')); o.value = m.id; o.textContent = m.name; });
-        act('Invite', () => ({ action: 'invite', partner_id: parseInt(pick.value, 10) }), 'btn small ghost');
+        add(pick, 'option', 'Pick your partner…').value = '';
+        p.classmates.forEach((m) => { add(pick, 'option', m.name).value = m.id; });
+        const go = add(box, 'button', 'Add partner', 'btn small');
+        go.type = 'button';
+        go.addEventListener('click', async () => {
+          if (!pick.value) { pick.focus(); return; }
+          const name = pick.options[pick.selectedIndex].textContent;
+          if (!confirm(`Work with ${name}? Your work on this lesson will save for both of you.`)) return;
+          go.disabled = true;
+          const r = await partnerApi({ action: 'pair', partner_id: /^\d+$/.test(pick.value) ? +pick.value : pick.value });
+          if (r.status === 'paired') reloadLesson();      // show the combined work
+          else { go.disabled = false; draw(r); }
+        });
       }
-      if (p.error) add('span', p.error, 'bad small');
+      if (p.error) add(box, 'span', p.error, 'bad small');
     }
-    const check = async () => {
-      if (!document.hidden && !$('challenge').hidden && document.activeElement.id !== 'partner-pick') draw(await partnerApi());
-    };
     partnerApi().then(draw);
-    setInterval(check, 8000);
   }
 
   // ----- 35-minute class timer -----
@@ -680,7 +683,7 @@
     $('section-prev').hidden = !prev;
     if (prev) $('section-prev').textContent = `← Back to ${stepName(prev)}`;
     $('section-next').hidden = !next || HAS_OWN_NEXT.has(el.id);
-    if (next) $('section-next').textContent = `Next: ${stepName(next)} →`;
+    syncNextButton();
     syncLessonDone();
     MakerEditor.all.forEach((ed) => { if (!el.contains(ed.root)) MakerEditor.closeSim(ed); });   // no sound from hidden parts
     // CodeMirror can't measure itself while hidden.
@@ -690,6 +693,14 @@
       const top = lessonEl.getBoundingClientRect().top + window.scrollY - document.querySelector('.topbar').offsetHeight - 12;
       window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
     }
+  }
+  // The Next button says what's next, and turns green once this part is done.
+  function syncNextButton() {
+    const el = stepEls[curStep], next = stepEls[curStep + 1], btn = $('section-next');
+    if (!next || !el) return;
+    const done = !!(S.sections || {})[el.id];
+    btn.classList.toggle('ready', done);
+    btn.textContent = el.id === 'overview' ? '▶ Start the lesson' : `${done ? '✓ Done! ' : ''}Next: ${stepName(next)} →`;
   }
   function goToNextSection() {
     const next = stepEls[curStep + 1];
@@ -717,4 +728,46 @@
   })();
 
   updateProgress(S.sections || {});
+
+  // ----- first visit: a short tour of how a lesson works (replay it from "How does this work?") -----
+  const TOUR_KEY = 'ml-lesson-tour-1';
+  function tour() {
+    const stops = [
+      { el: $('agenda'), text: '👋 A lesson is a few short parts. This list shows them. A part turns <b>green</b> when you finish it.' },
+      { el: $('partner-box') && $('partner-box').children.length ? $('partner-box') : null,
+        text: '👥 Sharing this Chromebook? Pick your partner here, so you <b>both</b> get the work and the XP.' },
+      { el: null, text: '👉 Every part starts with a yellow <b>What to do</b> box. Just do what it says.', demo: true },
+      { el: $('section-next'), text: '➡️ When you finish a part, press <b>Next</b>. It turns green when that part is done.' },
+    ].filter((t) => t.el || t.demo);
+    let i = 0;
+    const veil = document.body.appendChild(document.createElement('div'));
+    veil.className = 'tour-veil';
+    const bubble = document.body.appendChild(document.createElement('div'));
+    bubble.className = 'tour-bubble';
+    bubble.setAttribute('role', 'dialog');
+    bubble.setAttribute('aria-label', 'How lessons work');
+    const done = () => {
+      document.querySelectorAll('.tour-spot').forEach((e) => e.classList.remove('tour-spot'));
+      veil.remove(); bubble.remove();
+      try { localStorage.setItem(TOUR_KEY, '1'); } catch (e) { /* no storage */ }
+    };
+    function show() {
+      document.querySelectorAll('.tour-spot').forEach((e) => e.classList.remove('tour-spot'));
+      const t = stops[i], last = i === stops.length - 1;
+      if (t.el) { t.el.classList.add('tour-spot'); t.el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+      bubble.innerHTML = `<p>${t.text}</p>` +
+        (t.demo ? '<div class="do-now"><span class="do-now-tag">What to do</span><span>Read the question. Type your idea in the box.</span></div>' : '') +
+        `<div class="tour-row"><span class="tour-count">${i + 1} of ${stops.length}</span>` +
+        `<button type="button" class="linklike small" data-skip>Skip</button>` +
+        `<button type="button" class="btn" data-go>${last ? "Got it! Let's go" : 'Next →'}</button></div>`;
+      bubble.querySelector('[data-go]').addEventListener('click', () => { if (last) done(); else { i++; show(); } });
+      bubble.querySelector('[data-skip]').addEventListener('click', done);
+      bubble.querySelector('[data-go]').focus();
+    }
+    show();
+  }
+  if ($('tour-again')) $('tour-again').addEventListener('click', (e) => { e.preventDefault(); tour(); });
+  let toured = false;
+  try { toured = !!localStorage.getItem(TOUR_KEY); } catch (e) { toured = true; }
+  if (!toured && !lessonEl.dataset.teacher) setTimeout(tour, 600);
 })();

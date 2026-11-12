@@ -162,7 +162,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 13, device: "Left wheel", kind: servo}
           - {pin: 14, device: "Right wheel", kind: servo}
@@ -177,7 +176,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 1, device: "Echo via divider", kind: ultrasonic}

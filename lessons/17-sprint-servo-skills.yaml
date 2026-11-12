@@ -125,27 +125,15 @@ circuit:
         **Sensor shield headers:** every pin has 3 rows: **G** (ground), **V** (power), **S** (signal).
         Servo wires go **brown → G**, **red → V**, **orange → S**.
     - text: |
-        **Servo power:** set jumper **V2 to 5V**, and plug the **battery pack** into the DC jack.
+        **Servo power:** plug the **battery pack** into the DC jack.
         USB alone is too weak to move a servo.
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 13, device: "Servo", kind: servo}
   steps:
-    - title: Set the jumpers
-      instruction: >-
-        Find jumpers **V1** and **V2** on the shield. Set **V2 to 5V** (servo
-        row). Set **V1 to 3.3V** (sensor row). Ask your teacher if you can't
-        find them.
-      check: Is V2 on 5V and V1 on 3.3V?
-      visual:
-        type: board
-        board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
-        caption: "V1 is next to pins 0-10. V2 is next to pins 11-20."
     - title: Plug in the micro:bit
       instruction: >-
         Slide the micro:bit into the shield's slot, **LED screen facing out**.
@@ -154,7 +142,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
     - title: Plug in the servo
       instruction: >-
         Start with your **180° servo**. Plug it into header **13**: **brown on
@@ -164,7 +151,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 13, device: "Servo", kind: servo}
     - title: Power it up
@@ -175,7 +161,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 13, device: "Servo", kind: servo}

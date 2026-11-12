@@ -168,6 +168,7 @@ function gradebookCell_(a, s) {
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var status = !x ? 'not-started' : x.pct === 100 ? 'complete' : 'in-progress';
   return { status: status, pct: x ? x.pct : 0, quiz_best: x ? x.quiz_best : null, quiz_total: x ? x.quiz_total : 0,
+           partner: (x && x.partner) || null,
            debug_solved: !!(x && x.debug_solved), challenge: !!(x && x.challenge), stars: x ? x.stars : 0,
            late: !!(a.due && a.due < today && status !== 'complete') };
 }
@@ -209,6 +210,7 @@ function studentDetail(cid, email) {
     var p = rec.progress[L.id] || null;
     return { id: L.id, number: L.number, title: L.title, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0, p: p,
              feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug,
+             partner: p && p.partner ? partnerName_(cfg, p.partner) : null,
              learn_titles: (L.learn_checks || []).some(function (c) { return c; }) ? L.learn_titles : [] };
   });
   return { cls: cfg.classes[cid], student: { email: email, name: rec.name, xp: rec.xp || 0, level: levelInfo_(rec.xp || 0),

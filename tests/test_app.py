@@ -4,7 +4,7 @@ import re
 
 from app import lessons as L
 from app.circuits import check_circuit
-from app.models import Assignment, Progress, User
+from app.models import Assignment, Progress, User, db
 
 from .conftest import logout, make_class, register_student, register_teacher
 
@@ -284,7 +284,8 @@ def _login(client, name):
     client.post("/login", data={"username": name, "password": "pass1234"})
 
 
-def test_partners_share_a_submission(client):
+def test_partners_on_one_chromebook(client):
+    """Sam picks Ana as a partner: their work is combined, then every save goes to both of them."""
     register_teacher(client)
     c = make_class(client)
     cid, code = c.id, c.join_code
@@ -292,31 +293,36 @@ def test_partners_share_a_submission(client):
     register_student(client, code, "sam")
     logout(client)
     register_student(client, code, "ana")
+    client.post(f"/api/lessons/{LID}/save", json={"warmup_answer": "Ana's own idea"})     # Ana started on her own
     ana_id = User.query.filter_by(username="ana").one().id
     sam_id = User.query.filter_by(username="sam").one().id
     url = f"/api/lessons/{LID}/partner"
 
     _login(client, "sam")
+    client.post(f"/api/lessons/{LID}/save", json={"mark": {"learn": True}})
     assert [m["id"] for m in client.get(url).json["classmates"]] == [ana_id]
-    assert client.post(url, json={"action": "invite", "partner_id": ana_id}).json["status"] == "sent"
+    assert client.post(url, json={"action": "pair", "partner_id": ana_id}).json["status"] == "paired"   # no accept step
+    for uid in (sam_id, ana_id):                                     # combined: both have both sections
+        p = Progress.query.filter_by(user_id=uid, lesson_id=LID).one()
+        assert p.sections.get("warmup") and p.sections.get("learn") and p.warmup_answer == "Ana's own idea"
 
-    # not partners until accepted
-    client.post(f"/api/lessons/{LID}/challenge", json={"code": "x", "response": "Our secret signal blinks SOS."})
-    assert not Progress.query.filter_by(user_id=ana_id, lesson_id=LID).first()
-
-    _login(client, "ana")
-    assert client.get(url).json["status"] == "incoming"
-    assert client.post(url, json={"action": "accept"}).json["status"] == "paired"
     done = client.post(f"/api/lessons/{LID}/challenge", json={"code": "print(1)", "response": "Our secret signal blinks SOS."}).json
     assert done["partner"] == "Sam K."
-    theirs = Progress.query.filter_by(user_id=sam_id, lesson_id=LID).one()
+    theirs = Progress.query.filter_by(user_id=ana_id, lesson_id=LID).one()
     assert theirs.challenge_submitted_at and theirs.challenge_code == "print(1)" and theirs.sections["challenge"]
+    assert db.session.get(User, ana_id).xp > 0                             # Ana gets the XP too
 
-    client.post(f"/teacher/classes/{cid}/assign", data={"lesson_id": [LID]})   # students can't assign
+    _login(client, "ana")
+    assert client.get(url).json == {"status": "paired", "name": "Sam K."}
+    assert client.post(url, json={"action": "leave"}).json["status"] == "none"
+    client.post(f"/api/lessons/{LID}/save", json={"code": "after"})   # no longer copied
+    assert Progress.query.filter_by(user_id=sam_id, lesson_id=LID).one().code != "after"
+    assert client.post(url, json={"action": "pair", "partner_id": sam_id}).json["status"] == "paired"
+
     _login(client, "teach")
     client.post(f"/teacher/classes/{cid}/assign", data={"lesson_id": [LID]})
     assert "👥 Sam K.".encode() in client.get(f"/teacher/classes/{cid}").data
-    assert client.get(f"/teacher/classes/{cid}/students/{ana_id}").status_code == 200
+    assert "Worked with Sam K.".encode() in client.get(f"/teacher/classes/{cid}/students/{ana_id}").data
 
 
 def test_partners_must_share_a_class(client):
@@ -330,7 +336,7 @@ def test_partners_must_share_a_class(client):
     register_student(client, code_two, "ana")
     ana_id = User.query.filter_by(username="ana").one().id
     _login(client, "sam")
-    r = client.post(f"/api/lessons/{LID}/partner", json={"action": "invite", "partner_id": ana_id})
+    r = client.post(f"/api/lessons/{LID}/partner", json={"action": "pair", "partner_id": ana_id})
     assert r.status_code == 400 and client.get(f"/api/lessons/{LID}/partner").json["classmates"] == []
 
 

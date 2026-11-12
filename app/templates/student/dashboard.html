@@ -1,6 +1,15 @@
 {% extends "base.html" %}{% from "_forms.html" import csrf %}
 {% block title %}Dashboard · {{ site_name }}{% endblock %}
 {% block content %}
+{% if next_up %}
+<a class="next-up card" href="{{ url_for('student.lesson', lesson_id=next_up.lesson.id) }}">
+  <span class="next-up-play" aria-hidden="true">▶</span>
+  <span class="next-up-text"><small>{{ next_up.verb }}</small>
+    <b>{{ next_up.lesson.number }}. {{ next_up.lesson.title }}</b>
+    {% if next_up.part %}<span>Next part: {{ next_up.part }}{% if next_up.pct %} · {{ next_up.pct }}% done{% endif %}</span>{% endif %}</span>
+  <span class="next-up-go">{{ next_up.verb }} →</span>
+</a>
+{% endif %}
 <section class="card hero-card">
   <a class="hero-avatar" href="{{ url_for('student.profile') }}" title="Customize your robot">
     <span data-avatar='{{ avatar_of(current_user)|tojson }}' data-size="110"></span>
@@ -13,7 +22,8 @@
       <span class="muted small">{{ level.xp }} XP{% if not level.max %} · {{ level.next - level.xp }} to level {{ level.level + 1 }}{% endif %}</span></div>
     <div class="xpbar big"><i style="width:{{ level.pct }}%"></i></div>
     <div class="row">
-      <a class="btn" href="{{ url_for('student.lesson_map') }}">🗺️ Open the Maker Map</a>
+      <a class="btn ghost" href="{{ url_for('student.lesson_map') }}">🗺️ Maker Map</a>
+      <a class="btn ghost" href="{{ url_for('student.playground') }}">🧪 Free-play editor</a>
       <a class="btn ghost" href="{{ url_for('student.profile') }}">🏅 Badges ({{ badges|length }}{% if badges|length >= 6 %}+{% endif %} / {{ badge_total }})</a>
     </div>
   </div>

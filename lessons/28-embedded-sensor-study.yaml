@@ -120,14 +120,12 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
     - title: Plug in the IR sensor
       instruction: Plug the **IR obstacle sensor** into header **0**. Match **G to G**, V to V and S to S.
       check: Is G on the sensor lined up with G on the shield?
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
     - title: Power and test

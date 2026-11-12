@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from . import gamify
 from . import lessons as L
 from . import partners
-from .models import Progress, db, utcnow
+from .models import Progress, User, db, utcnow
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -33,7 +33,11 @@ def _finish(lesson, p, **extra):
     pct = p.percent(keys)
     if pct == 100 and not p.completed_at:
         p.completed_at = utcnow()
+    mate = partners.mirror(current_user.id, lesson["id"], p)     # working together: the partner gets the same work
     db.session.commit()
+    if mate:
+        gamify.sync_rewards(mate)
+        extra.setdefault("partner", mate.display_name)
     rewards = gamify.sync_rewards(current_user)
     return jsonify({"ok": True, "sections": p.sections, "percent": pct, "rewards": rewards,
                     "lesson_xp": gamify.lesson_xp(current_user, lesson["id"]),
@@ -168,7 +172,7 @@ def challenge(lesson_id):
     p.challenge_response = response
     p.challenge_submitted_at = utcnow()
     p.mark("challenge")
-    return _finish(lesson, p, partner=partners.share_challenge(current_user.id, lesson, p))
+    return _finish(lesson, p)
 
 
 @bp.route("/lessons/<lesson_id>/partner", methods=["GET", "POST"])
@@ -182,15 +186,11 @@ def partner(lesson_id):
     action = data.get("action")
     row = partners.current(current_user.id, lesson_id)
     error = None
-    if action == "invite":
+    if action in ("pair", "invite"):
         if not isinstance(data.get("partner_id"), int):
             abort(400)
-        error = partners.invite(current_user, lesson_id, data["partner_id"])
-    elif action == "accept":
-        if not row or row.partner_id != current_user.id:
-            abort(400)
-        row.accepted = True
-    elif action == "leave":                 # also declines or cancels an invite
+        error = partners.pair(current_user, lesson_id, data["partner_id"])
+    elif action == "leave":                 # the work so far stays with both of them
         if row:
             db.session.delete(row)
     else:
@@ -199,6 +199,9 @@ def partner(lesson_id):
         db.session.rollback()
         return jsonify({"error": error, **partners.state(current_user, lesson_id)}), 400
     db.session.commit()
+    if action in ("pair", "invite"):        # combined work can earn XP for both of them
+        gamify.sync_rewards(db.session.get(User, data["partner_id"]))
+        gamify.sync_rewards(current_user)
     return jsonify(partners.state(current_user, lesson_id))
 
 

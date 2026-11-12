@@ -139,7 +139,7 @@ function studentSummary_(rec) {
     var p = rec.progress[lid];
     lessons[lid] = { pct: percent_(p, L), quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: p.quiz_total || 0,
                      debug_solved: !!p.debug_solved, challenge: !!p.challenge_submitted_at, stars: lessonStars_(L, p),
-                     completed_at: p.completed_at || null, updated_at: p.updated_at || null };
+                     completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec) };

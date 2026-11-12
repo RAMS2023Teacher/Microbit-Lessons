@@ -166,13 +166,12 @@ circuit:
       tip: Use the servos you labeled as continuous in Sprint 1.
     - title: Set up the shield
       instruction: >-
-        Check the jumpers: **V2 on 5V** and **V1 on 3.3V**. Slide the micro:bit
-        in, **LED screen facing out**. Fix the shield to the chassis.
-      check: Is V2 on 5V and the micro:bit pushed all the way in?
+        Slide the micro:bit in, **LED screen facing out**. Fix the shield to
+        the chassis.
+      check: Is the micro:bit pushed all the way in?
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
     - title: Plug in the left wheel
       instruction: >-
         Plug the **left** wheel servo into header **13**: **brown on G**, red on
@@ -181,7 +180,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 13, device: "Left wheel", kind: servo}
     - title: Plug in the right wheel
@@ -192,7 +190,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 13, device: "Left wheel", kind: servo}
           - {pin: 14, device: "Right wheel", kind: servo}
@@ -204,7 +201,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 13, device: "Left wheel", kind: servo}

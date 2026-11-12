@@ -23,6 +23,11 @@ You paste 4 Script files and the `appsscript.json` manifest into a project, run 
 * **Google Classroom classes and students:** **My classes → Import classes** copies your active Classroom classes
   and their rosters (read-only). Students on a roster are in the class the first time they open Maker Lab, with
   their Classroom name and no join code. **Update roster** picks up students who joined or left.
+* **Partners on one Chromebook:** at the top of any lesson a student picks a classmate. Their work so far is
+  combined, then everything they do saves to both students' files (and both get the XP). The gradebook shows 👥.
+* **Finding their way:** every step starts with a yellow **What to do** box, Next stays at the bottom of the
+  screen and turns green when a step is done, Home has one big **Keep going** button, and the first lesson visit
+  shows a 4-step tour (replay it with **❓ How does this work?**).
 * **Class display:** a class's **📺 Class display** button opens a projector page: time left until the bell
   (set "Class ends at" in ⚙ Set up), an activity timer, the question and standard of the day, where every
   student is with their robot, and recent wins (badges, finished lessons, perfect quizzes). It catches up with
@@ -32,7 +37,6 @@ You paste 4 Script files and the `appsscript.json` manifest into a project, run 
 
 ## What the Flask site has that this version doesn't (yet)
 
-* Partners on challenges
 * The per-assignment "everyone's answers" page and CSV export (use the Google Classroom package instead)
 * Re-opening a student's debug challenge
 * Passwords and password resets (not needed: Google handles sign-in)

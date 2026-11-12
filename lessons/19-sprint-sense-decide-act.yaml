@@ -144,17 +144,14 @@ circuit:
         and 1 when the path is clear. The **180° servo** on pin 13 points to an angle and **holds** it,
         so it makes a great gate arm.
   steps:
-    - title: Set the jumpers
+    - title: Plug in the micro:bit
       instruction: >-
-        Set **V1 to 3.3V**. That's the sensor row, pins 0-10. Set **V2 to 5V**.
-        That's the servo row, pins 11-20. Slide in the micro:bit, screen facing
-        out.
-      check: Is V1 on 3.3V and V2 on 5V?
+        Slide the micro:bit into the shield, **screen facing out**. Push it all
+        the way in.
+      check: Is the micro:bit pushed in straight and all the way?
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
-        caption: "V1 is next to pins 0-10. V2 is next to pins 11-20."
     - title: Plug in the IR sensor
       instruction: >-
         Plug the **IR obstacle sensor** into header **0**: **G to G**, V to V,
@@ -163,7 +160,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
     - title: Plug in the servo
@@ -175,7 +171,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}
           - {pin: 13, device: "Gate servo", kind: servo}
@@ -187,7 +182,6 @@ circuit:
       visual:
         type: board
         board: shield
-        jumpers: {V1: "3.3V", V2: "5V"}
         power: "6×AA"
         plugs:
           - {pin: 0, device: "IR obstacle", kind: sensor}

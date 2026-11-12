@@ -162,7 +162,7 @@ function studentSummary_(rec) {
     var p = rec.progress[lid];
     lessons[lid] = { pct: percent_(p, L), quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: p.quiz_total || 0,
                      debug_solved: !!p.debug_solved, challenge: !!p.challenge_submitted_at, stars: lessonStars_(L, p),
-                     completed_at: p.completed_at || null, updated_at: p.updated_at || null };
+                     completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec) };
@@ -574,8 +574,10 @@ function finish_(ctx, L, p, extra) {
   var pct = percent_(p, L);
   if (pct === 100 && !p.completed_at) p.completed_at = now_();
   p.updated_at = now_();
+  var mate = mirrorToPartner_(ctx, L, p);       // working together: the partner gets the same work
   var rewards = syncRewards_(ctx.rec, ctx.cfg);
   saveStudent_(ctx.rec);
+  if (mate) extra = merge_({ partner: mate }, extra || {});
   var out = { ok: true, sections: p.sections, percent: pct, rewards: rewards,
               lesson_xp: lessonXp_(ctx.rec, L.id), stars: lessonStars_(L, p) };
   Object.keys(extra || {}).forEach(function (k) { out[k] = extra[k]; });
@@ -595,7 +597,6 @@ function api(path, bodyJson) {
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];
     if (!L) return { status: 404, body: { error: 'No such lesson' } };
-    if (m[2] === 'partner') return { status: 200, body: { status: 'none', classmates: [] } };   // partners come later
     if (m[2] === 'learn-check' && whoIs_().teacher) {      // the teacher can try the checks; nothing is saved
       var g = gradeLearnCheck_(L, body.card, body.choice);
       return g ? { status: 200, body: { ok: true, check: g } } : { status: 400, body: { ok: false, error: 'No such check' } };
@@ -619,7 +620,105 @@ function gradeLearnCheck_(L, card, choice) {
   return { correct: correct, why: correct ? ck.why : '', hint: correct ? '' : ck.hint };
 }
 
+// ---------------------------------------------------------------- partners (two classmates, one Chromebook)
+// The signed-in student picks a classmate. There's no accept step: the partner is sitting right there.
+// Both students' progress for the lesson is combined, then every save is copied to the partner's file.
+function classmates_(ctx) {
+  var sum = summary_(), seen = {}, out = [];
+  studentClassIds_(ctx.rec, ctx.cfg).forEach(function (cid) {
+    classStudents_(ctx.cfg, sum, cid).forEach(function (s) {
+      if (s.email === ctx.rec.email || seen[s.email]) return;
+      seen[s.email] = 1;
+      out.push({ id: s.email, name: s.name });
+    });
+  });
+  return out.sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+}
+
+function partnerName_(cfg, email) {
+  var rec = loadStudent_(email);
+  return (rec && rec.name) || rosterName_(cfg, email) || email;
+}
+
+function partnerRecord_(cfg, email) {
+  var rec = loadStudent_(email);
+  if (!rec) { rec = newStudent_(email); rec.name = rosterName_(cfg, email) || email.split('@')[0]; }
+  return rec;
+}
+
+function copyWork_(p, mateEmail) {
+  var c = JSON.parse(JSON.stringify(p));
+  c.partner = mateEmail;
+  return c;
+}
+
+/** Combine two students' work on one lesson into a: whatever either of them finished counts. */
+function mergeProgress_(a, b) {
+  if (!b) return a;
+  a.sections = a.sections || {};
+  Object.keys(b.sections || {}).forEach(function (k) { if (b.sections[k]) a.sections[k] = true; });
+  var steps = {};
+  (a.circuit_steps || []).concat(b.circuit_steps || []).forEach(function (i) { steps[i] = 1; });
+  a.circuit_steps = Object.keys(steps).map(Number).sort(function (x, y) { return x - y; });
+  ['warmup_answer', 'code', 'practice_code', 'debug_code', 'debug_reflection', 'challenge_code', 'challenge_response'].forEach(function (f) {
+    if (!a[f] && b[f]) a[f] = b[f];
+  });
+  ['practice_solved', 'debug_solved'].forEach(function (f) { a[f] = !!(a[f] || b[f]); });
+  ['sends', 'debug_attempts', 'debug_hints_used', 'quiz_attempts'].forEach(function (f) { a[f] = Math.max(a[f] || 0, b[f] || 0); });
+  if ((b.quiz_best || 0) > (a.quiz_best || 0)) {
+    a.quiz_best = b.quiz_best; a.quiz_total = b.quiz_total; a.quiz_answers = b.quiz_answers; a.quiz_score = b.quiz_score;
+  }
+  ['challenge_submitted_at', 'completed_at', 'started_at'].forEach(function (f) {
+    if (b[f] && (!a[f] || b[f] < a[f])) a[f] = b[f];
+  });
+  var checks = JSON.parse(JSON.stringify(b.learn_checks || {}));
+  Object.keys(a.learn_checks || {}).forEach(function (k) {
+    var mine = a.learn_checks[k], theirs = checks[k];
+    if (!theirs || (mine.ok && (!theirs.ok || (mine.tries || 9) <= (theirs.tries || 9)))) checks[k] = mine;
+  });
+  a.learn_checks = checks;
+  return a;
+}
+
+/** After any save: copy this lesson's work to the partner's file. Returns the partner's name, or null. */
+function mirrorToPartner_(ctx, L, p) {
+  if (!p.partner) return null;
+  var mate = partnerRecord_(ctx.cfg, p.partner), theirs = mate.progress[L.id];
+  if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; return null; }   // they paired with someone else
+  mate.progress[L.id] = copyWork_(p, ctx.rec.email);
+  syncRewards_(mate, ctx.cfg);
+  saveStudent_(mate);
+  return mate.name;
+}
+
+function partnerState_(ctx, L, p) {
+  if (p.partner) return { status: 'paired', name: partnerName_(ctx.cfg, p.partner) };
+  return { status: 'none', classmates: classmates_(ctx) };
+}
+
 var API_ = {
+  partner: function (ctx, L, p, d) {
+    if (d.action === 'pair') {
+      var email = String(d.partner_id || '').toLowerCase();
+      if (p.partner) throw badRequest_('You already have a partner for this lesson.');
+      if (!classmates_(ctx).some(function (m) { return m.id === email; })) throw badRequest_('You can only partner with someone in your class.');
+      var mate = partnerRecord_(ctx.cfg, email), theirs = mate.progress[L.id];
+      if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) throw badRequest_('That classmate already has a partner for this lesson.');
+      mergeProgress_(p, theirs);
+      p.partner = email;
+      finish_(ctx, L, p);                          // saves both files (mirrorToPartner_) and gives XP to both
+    } else if (d.action === 'leave' && p.partner) {
+      var other = loadStudent_(p.partner);
+      if (other && other.progress[L.id] && other.progress[L.id].partner === ctx.rec.email) {
+        delete other.progress[L.id].partner;
+        saveStudent_(other);
+      }
+      delete p.partner;
+      saveStudent_(ctx.rec);
+    }
+    return partnerState_(ctx, L, p);
+  },
+
   learn_check: function (ctx, L, p, d) {
     var g = gradeLearnCheck_(L, d.card, d.choice);
     if (!g) throw badRequest_('No such check');
@@ -699,7 +798,7 @@ var API_ = {
     p.challenge_response = response;
     p.challenge_submitted_at = now_();
     mark_(p, 'challenge');
-    return finish_(ctx, L, p, { partner: null });
+    return finish_(ctx, L, p);
   },
 };
 
@@ -959,6 +1058,7 @@ function gradebookCell_(a, s) {
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var status = !x ? 'not-started' : x.pct === 100 ? 'complete' : 'in-progress';
   return { status: status, pct: x ? x.pct : 0, quiz_best: x ? x.quiz_best : null, quiz_total: x ? x.quiz_total : 0,
+           partner: (x && x.partner) || null,
            debug_solved: !!(x && x.debug_solved), challenge: !!(x && x.challenge), stars: x ? x.stars : 0,
            late: !!(a.due && a.due < today && status !== 'complete') };
 }
@@ -1000,6 +1100,7 @@ function studentDetail(cid, email) {
     var p = rec.progress[L.id] || null;
     return { id: L.id, number: L.number, title: L.title, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0, p: p,
              feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug,
+             partner: p && p.partner ? partnerName_(cfg, p.partner) : null,
              learn_titles: (L.learn_checks || []).some(function (c) { return c; }) ? L.learn_titles : [] };
   });
   return { cls: cfg.classes[cid], student: { email: email, name: rec.name, xp: rec.xp || 0, level: levelInfo_(rec.xp || 0),
@@ -1317,6 +1418,7 @@ function doGet(e) {
   } catch (err) {
     page = { name: 'error', title: 'Problem', data: { message: (err && err.message) || 'Something went wrong.' } };
   }
+  page.path = path;
   return render_(me, page);
 }
 
@@ -1411,7 +1513,35 @@ function dashboardData_(rec, cfg) {
   var badges = badgeList_(rec).filter(function (b) { return b.earned; })
     .sort(function (a, b) { return String(b.earned_at).localeCompare(String(a.earned_at)); });
   return { rows: rows, recent: recent, badges: badges.slice(0, 6), badge_total: DATA.badges.length, setup_done: !!rec.setup_done,
+           next_up: nextUp_(rec, rows),
            classes: classes.map(function (c) { return cfg.classes[c].name; }) };
+}
+
+/** The first part of a lesson the student hasn't finished. */
+function nextPart_(L, p) {
+  var done = (p && p.sections) || {};
+  for (var i = 0; i < L.section_keys.length; i++) {
+    var k = L.section_keys[i];
+    if (!done[k]) return (L.agenda_names || {})[k] || k;
+  }
+  return '';
+}
+
+/** One clear thing to do: the lesson they were last working on, else the next assignment, else the next lesson. */
+function nextUp_(rec, rows) {
+  var card = function (verb, L, p) { return { verb: verb, lesson: L.card, pct: p ? percent_(p, L) : 0, part: nextPart_(L, p) }; };
+  var started = Object.keys(rec.progress).filter(function (l) { return DATA.lessons[l]; })
+    .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); });
+  for (var i = 0; i < started.length; i++) {
+    var L = DATA.lessons[started[i]];
+    if (percent_(rec.progress[L.id], L) < 100) return card('Keep going', L, rec.progress[L.id]);
+  }
+  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return card('Start', DATA.lessons[rows[j].lesson.id], rec.progress[rows[j].lesson.id]);
+  for (var k = 0; k < DATA.order.length; k++) {
+    var M = DATA.lessons[DATA.order[k]], q = rec.progress[M.id];
+    if (M.kind !== 'check' && (!q || percent_(q, M) < 100)) return card('Start', M, q);
+  }
+  return null;
 }
 
 function profileData_(rec) {
@@ -1555,13 +1685,13 @@ function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
 // The game-style fonts (the theme falls back to system fonts if Google Fonts is blocked). A <link>, not a
 // CSS @import, because Apps Script strips "//" inside <style> blocks.
-var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Titan+One&display=swap">';
+var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">';
 
 function render_(me, page) {
   var nav = me.teacher
     ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/setup', 'micro:bit setup']]
-    : [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/setup', 'micro:bit setup'], ['/', 'Dashboard']];
-  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, teacher: me.teacher, nav: nav, data: page.data || {} };
+    : [['/', '🏠 Home'], ['/lessons', 'Lessons'], ['/map', 'Map']];      // few choices; the editor and setup are on Home
+  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
   var code = [safe64_(setup), safe64_(asset_('app'))];
@@ -1578,6 +1708,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "757c59470d";
-var BUILD_EXPECT = {"Assets": "cac9d9fadb", "Data": "581dce1e74", "Pages1": "f7156550e7"};
+var BUILD_ID = "7b22faa7be";
+var BUILD_EXPECT = {"Assets": "5ddf723a62", "Data": "e83ed999b0", "Pages1": "3d446c557a"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];
