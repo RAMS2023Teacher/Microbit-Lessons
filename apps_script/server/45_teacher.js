@@ -383,7 +383,7 @@ function faviconUrl_() {
   try { pick = config_().tab_icon || ''; } catch (e) { pick = ''; }
   if (/^https:\/\/\S+$/.test(pick)) return pick;
   var icon = TAB_ICONS_.filter(function (t) { return t[0] === pick; })[0] || TAB_ICONS_[0];
-  if (icon[0] === 'logo') return logoUrl_() || emojiUrl_('1f916');
+  if (icon[0] === 'logo') return logoUrl_() || emojiUrl_('1f916');     // '' once Apps Script has refused the logo
   return emojiUrl_(icon[1]);
 }
 
@@ -392,21 +392,38 @@ function emojiUrl_(code) { return 'https://fonts.gstatic.com/s/e/notoemoji/lates
 /** The logo as a picture in the Drive data folder, shared so browsers can load it. '' if Drive won't allow that. */
 function logoUrl_() {
   var props = PropertiesService.getScriptProperties(), url = props.getProperty('logo:url');
+  if (props.getProperty('logo:refused')) return '';
+  if (url && !/\.png$/.test(url)) url += '#.png';     // Apps Script wants icon addresses to end in .png or .ico
   if (url) return url;
   try {
     var file = dataFolder_().createFile(Utilities.newBlob(Utilities.base64Decode(LOGO_PNG_), 'image/png', 'maker-lab-tab-icon.png'));
     try {           // anyone with the link: works on every account and loads fastest
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      url = 'https://lh3.googleusercontent.com/d/' + file.getId();
+      url = 'https://lh3.googleusercontent.com/d/' + file.getId() + '#.png';
     } catch (e) {   // schools often only allow sharing inside the district
       file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
-      url = 'https://drive.google.com/uc?export=view&id=' + file.getId();
+      url = 'https://drive.google.com/uc?export=view&id=' + file.getId() + '#.png';
     }
     props.setProperty('logo:url', url);
     return url;
   } catch (e) {
     return '';
   }
+}
+
+/** Sets the tab icon on a page. If Apps Script refuses it, the page still loads (with the robot). A refused
+ *  logo is remembered and not tried again, so a bad icon can never stop Maker Lab from opening. */
+function withIcon_(out) {
+  var url = '';
+  try {
+    url = faviconUrl_();
+    out.setFaviconUrl(url);
+    return out;
+  } catch (e) {
+    if (url && url === logoUrl_()) PropertiesService.getScriptProperties().setProperty('logo:refused', String((e && e.message) || 'refused'));
+  }
+  try { out.setFaviconUrl(emojiUrl_('1f916')); } catch (e2) { /* no icon at all is fine */ }
+  return out;
 }
 
 /** choice: one of the TAB_ICONS_ ids, or the https address of a .png or .ico picture. */

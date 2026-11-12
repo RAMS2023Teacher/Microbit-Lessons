@@ -260,7 +260,7 @@ assert.match(pageView(S, '/teacher/standards'), /"page":"error"/);       // stud
 assert.match(pageView('', '/'), /school Google account/);
 // the tab icon: the Maker Lab logo by default (a PNG saved to Drive and shared), or an emoji, or your own .png
 const logoUrl = w.page(S, '/').favicon;
-assert.match(logoUrl, /^https:\/\/lh3\.googleusercontent\.com\/d\/fi\w+$/);
+assert.match(logoUrl, /^https:\/\/lh3\.googleusercontent\.com\/d\/fi\w+#\.png$/);
 const logoFile = Object.values(w.state.files).find((f) => f.name === 'maker-lab-tab-icon.png');
 assert.ok(logoFile && logoFile.mime === 'image/png' && logoFile.sharing === 'ANYONE_WITH_LINK/VIEW');
 assert.ok(Buffer.from(logoFile.content, 'base64').slice(1, 4).toString() === 'PNG');
@@ -269,6 +269,14 @@ assert.strictEqual(Object.values(w.state.files).filter((f) => f.name === 'maker-
 const district = makeWorld(dist, { noPublicSharing: true });                          // district-only sharing
 district.call(district.owner, 'setup');
 assert.match(district.page(district.owner, '/').favicon, /^https:\/\/drive\.google\.com\/uc\?export=view&id=/);
+// if Apps Script refuses the logo, pages still open (with the robot) and the logo isn't tried again
+const picky = makeWorld(dist, { rejectDriveIcons: true });
+picky.call(picky.owner, 'setup');
+const first = picky.page(picky.owner, '/');
+assert.match(first.favicon, /1f916/);
+assert.match(first.getContent(), /Loading Maker Lab/);
+assert.match(pageView(picky.owner, '/', picky), /"logo_refused":true/);
+assert.match(picky.page(picky.owner, '/lessons').favicon, /1f916/);
 assert.match(w.call(T, 'setTabIcon', ['rocket']).url, /1f680/);
 assert.match(w.page(S, '/').favicon, /1f680/);
 assert.throws(() => w.call(T, 'setTabIcon', ['http://bad.example/x.gif']), /\.png or \.ico/);

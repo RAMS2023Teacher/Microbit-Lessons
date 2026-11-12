@@ -144,7 +144,12 @@ function makeWorld(dist, opts) {
       },
       createHtmlOutput: (html) => {
         const out = { html, title: '', favicon: '', setTitle(t) { out.title = t; return out; }, addMetaTag() { return out; },
-                      setFaviconUrl(u) { if (!/^https:\/\//.test(u)) throw new Error('Invalid favicon URL'); out.favicon = u; return out; },
+                      setFaviconUrl(u) {      // like Apps Script: only .png / .ico pictures (rejectDriveIcons: as at some schools)
+                        if (!/^https:\/\/\S+\.(png|ico)$/i.test(u) || (opts.rejectDriveIcons && /googleusercontent|drive\.google/.test(u))) {
+                          throw new Error('Exception: The favicon icon image type is not supported.');
+                        }
+                        out.favicon = u; return out;
+                      },
                       getContent: () => stripLikeAppsScript(out.html) };
         return out;
       },

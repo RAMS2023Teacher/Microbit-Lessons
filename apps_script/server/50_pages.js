@@ -57,7 +57,8 @@ function studentPage_(me, path) {
 function teacherPage_(path) {
   var cfg = config_(), m, base = { teacher: true };
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
-    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_() })) };
+    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_(),
+    logo_refused: !!PropertiesService.getScriptProperties().getProperty('logo:refused') })) };
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
@@ -257,9 +258,9 @@ function checkInstall() {
 }
 
 function plainPage_(title, body) {
-  return HtmlService.createHtmlOutput('<!doctype html><html><head><base target="_top"><meta charset="utf-8"></head>' +
+  return withIcon_(HtmlService.createHtmlOutput('<!doctype html><html><head><base target="_top"><meta charset="utf-8"></head>' +
     '<body style="font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#12283f">' + body + '</body></html>')
-    .setTitle(title).setFaviconUrl(faviconUrl_());
+    .setTitle(title));
 }
 
 // ---------------------------------------------------------------- the HTML around every page
@@ -315,8 +316,7 @@ function render_(me, page) {
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
     '<footer class="footer">Built for young makers · Python + micro:bit + circuits</footer>',
     '<div id="ml-code" hidden>', code.join('.'), '</div>', LOADER_SCRIPT_, '</body></html>'];
-  return HtmlService.createHtmlOutput(out.join(''))
+  return withIcon_(HtmlService.createHtmlOutput(out.join(''))
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
-    .setFaviconUrl(faviconUrl_())
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }

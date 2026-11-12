@@ -190,7 +190,9 @@
       '<div class="tab-icon-row"><img id="tab-icon-now" alt="" width="32" height="32"><select id="tab-icon-pick"></select>' +
       '<input id="tab-icon-url" placeholder="…or paste a picture address (https://…png)" hidden style="flex:1;min-width:240px">' +
       '<button class="btn small" id="tab-icon-go" type="button">Save</button></div>' +
-      '<p class="muted small">After saving, reload the page to see it in the tab.</p></section>' +
+      '<p class="muted small">After saving, reload the page to see it in the tab.</p>' +
+      (d.logo_refused ? '<p class="small bad">Google wouldn\'t accept the logo from your Drive, so the tab shows 🤖. Pick one of the emoji instead.</p>' : '') +
+      '</section>' +
       '<section class="card tip"><h2>Getting started</h2><ol><li><b>Import classes</b> from Google Classroom, or create a class. Each class also gets a 6-letter <b>join code</b>.</li>' +
       '<li>Share this page\'s web address with students. Students on an imported roster are already in. Anyone else types the code and their name once. No passwords.</li>' +
       '<li>Assign lessons with due dates. The gradebook shows who\'s done what.</li><li>Open any lesson to see the <b>teacher answer key</b>. Add videos on the <a href="/teacher/videos">Videos</a> page.</li></ol></section>');
