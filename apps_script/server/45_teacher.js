@@ -371,3 +371,30 @@ function screenUnits_() {
     return { title: 'Unit ' + u.number + ': ' + u.title, lessons: u.lessons.map(function (l) { return { id: l.id, number: l.number, title: l.title }; }) };
   });
 }
+
+// ---------------------------------------------------------------- the icon in the browser tab
+// Apps Script needs a picture at a web address. These are Google's own emoji pictures (fonts.gstatic.com,
+// the same place the fonts load from), so school filters that block other sites still show them.
+var TAB_ICONS_ = [['robot', '1f916', '🤖 Robot'], ['rocket', '1f680', '🚀 Rocket'], ['bulb', '1f4a1', '💡 Light bulb'],
+                  ['bolt', '26a1', '⚡ Lightning'], ['wrench', '1f527', '🔧 Wrench'], ['puzzle', '1f9e9', '🧩 Puzzle']];
+
+function faviconUrl_() {
+  var pick = '';
+  try { pick = config_().tab_icon || ''; } catch (e) { pick = ''; }
+  if (/^https:\/\/\S+$/.test(pick)) return pick;
+  var icon = TAB_ICONS_.filter(function (t) { return t[0] === pick; })[0] || TAB_ICONS_[0];
+  return 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + icon[1] + '/512.png';
+}
+
+/** choice: one of the TAB_ICONS_ ids, or the https address of a .png or .ico picture. */
+function setTabIcon(choice) {
+  var cfg = teacher_();
+  choice = String(choice || '').trim();
+  var known = TAB_ICONS_.some(function (t) { return t[0] === choice; });
+  if (!known && !/^https:\/\/\S+\.(png|ico)(\?\S*)?$/i.test(choice)) {
+    throw new Error('Pick one of the icons, or paste a web address that starts with https:// and ends in .png or .ico.');
+  }
+  cfg.tab_icon = choice;
+  saveConfig_(cfg);
+  return { ok: true, url: faviconUrl_() };
+}

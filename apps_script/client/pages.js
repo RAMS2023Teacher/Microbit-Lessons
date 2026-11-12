@@ -186,12 +186,35 @@
     h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><button class="btn" id="new-go" type="button">Create</button></div>' +
       '<div class="card class-card new"><h2>🔗 Google Classroom</h2><p class="muted small">Bring in your Classroom classes and their students. No join codes needed.</p>' +
       '<a class="btn" href="/teacher/google-import">Import classes</a>' + (linked ? ' <button class="btn ghost small" id="gc-sync-all" type="button">Update all rosters</button>' : '') + '</div></div>' +
+      '<section class="card tab-icon-card"><h2>Tab icon</h2><p class="muted small">The little picture in the browser tab, for you and your students.</p>' +
+      '<div class="tab-icon-row"><img id="tab-icon-now" alt="" width="32" height="32"><select id="tab-icon-pick"></select>' +
+      '<input id="tab-icon-url" placeholder="…or paste a picture address (https://…png)" hidden style="flex:1;min-width:240px">' +
+      '<button class="btn small" id="tab-icon-go" type="button">Save</button></div>' +
+      '<p class="muted small">After saving, reload the page to see it in the tab.</p></section>' +
       '<section class="card tip"><h2>Getting started</h2><ol><li><b>Import classes</b> from Google Classroom, or create a class. Each class also gets a 6-letter <b>join code</b>.</li>' +
       '<li>Share this page\'s web address with students. Students on an imported roster are already in. Anyone else types the code and their name once. No passwords.</li>' +
       '<li>Assign lessons with due dates. The gradebook shows who\'s done what.</li><li>Open any lesson to see the <b>teacher answer key</b>. Add videos on the <a href="/teacher/videos">Videos</a> page.</li></ol></section>');
     main.innerHTML = h.join('');
     document.getElementById('new-go').addEventListener('click', function () {
       act(this, 'createClass', [document.getElementById('new-class').value], function (c) { ML.go('/teacher/classes/' + c.id); });
+    });
+    var pick = document.getElementById('tab-icon-pick'), url = document.getElementById('tab-icon-url');
+    document.getElementById('tab-icon-now').src = d.tab_icon_url;
+    (d.tab_icons || []).forEach(function (t) { var o = pick.appendChild(document.createElement('option')); o.value = t.id; o.textContent = t.label; });
+    pick.appendChild(document.createElement('option')).value = 'custom';
+    pick.lastChild.textContent = 'My own picture…';
+    var custom = /^https:/.test(d.tab_icon);
+    pick.value = custom ? 'custom' : d.tab_icon;
+    url.hidden = !custom;
+    if (custom) url.value = d.tab_icon;
+    pick.addEventListener('change', function () { url.hidden = pick.value !== 'custom'; });
+    document.getElementById('tab-icon-go').addEventListener('click', function () {
+      var btn = this;
+      act(btn, 'setTabIcon', [pick.value === 'custom' ? url.value : pick.value], function (r) {
+        btn.disabled = false;
+        document.getElementById('tab-icon-now').src = r.url;
+        flash('Saved. Reload the page to see the new tab icon.', 'success');
+      });
     });
     var all = document.getElementById('gc-sync-all');
     if (all) all.addEventListener('click', function () {

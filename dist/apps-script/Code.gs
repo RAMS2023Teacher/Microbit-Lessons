@@ -1262,6 +1262,33 @@ function screenUnits_() {
   });
 }
 
+// ---------------------------------------------------------------- the icon in the browser tab
+// Apps Script needs a picture at a web address. These are Google's own emoji pictures (fonts.gstatic.com,
+// the same place the fonts load from), so school filters that block other sites still show them.
+var TAB_ICONS_ = [['robot', '1f916', '🤖 Robot'], ['rocket', '1f680', '🚀 Rocket'], ['bulb', '1f4a1', '💡 Light bulb'],
+                  ['bolt', '26a1', '⚡ Lightning'], ['wrench', '1f527', '🔧 Wrench'], ['puzzle', '1f9e9', '🧩 Puzzle']];
+
+function faviconUrl_() {
+  var pick = '';
+  try { pick = config_().tab_icon || ''; } catch (e) { pick = ''; }
+  if (/^https:\/\/\S+$/.test(pick)) return pick;
+  var icon = TAB_ICONS_.filter(function (t) { return t[0] === pick; })[0] || TAB_ICONS_[0];
+  return 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + icon[1] + '/512.png';
+}
+
+/** choice: one of the TAB_ICONS_ ids, or the https address of a .png or .ico picture. */
+function setTabIcon(choice) {
+  var cfg = teacher_();
+  choice = String(choice || '').trim();
+  var known = TAB_ICONS_.some(function (t) { return t[0] === choice; });
+  if (!known && !/^https:\/\/\S+\.(png|ico)(\?\S*)?$/i.test(choice)) {
+    throw new Error('Pick one of the icons, or paste a web address that starts with https:// and ends in .png or .ico.');
+  }
+  cfg.tab_icon = choice;
+  saveConfig_(cfg);
+  return { ok: true, url: faviconUrl_() };
+}
+
 // ---------------------------------------------------------------- Google Classroom: import classes and rosters
 // Uses the Google Classroom advanced service (appsscript.json "dependencies"), read-only, as the teacher.
 // A linked class keeps its roster in config.json (cfg.rosters[cid] = { email: name }), so students on it
@@ -1447,7 +1474,8 @@ function studentPage_(me, path) {
 
 function teacherPage_(path) {
   var cfg = config_(), m, base = { teacher: true };
-  if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, teacherHome()) };
+  if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
+    tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'robot', tab_icon_url: faviconUrl_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
@@ -1648,7 +1676,7 @@ function checkInstall() {
 function plainPage_(title, body) {
   return HtmlService.createHtmlOutput('<!doctype html><html><head><base target="_top"><meta charset="utf-8"></head>' +
     '<body style="font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#12283f">' + body + '</body></html>')
-    .setTitle(title);
+    .setTitle(title).setFaviconUrl(faviconUrl_());
 }
 
 // ---------------------------------------------------------------- the HTML around every page
@@ -1706,8 +1734,9 @@ function render_(me, page) {
     '<div id="ml-code" hidden>', code.join('.'), '</div>', LOADER_SCRIPT_, '</body></html>'];
   return HtmlService.createHtmlOutput(out.join(''))
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
+    .setFaviconUrl(faviconUrl_())
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
-var BUILD_ID = "7b22faa7be";
-var BUILD_EXPECT = {"Assets": "5ddf723a62", "Data": "e83ed999b0", "Pages1": "3d446c557a"};
+var BUILD_ID = "47bb2c9149";
+var BUILD_EXPECT = {"Assets": "c9e72dcc3b", "Data": "e83ed999b0", "Pages1": "3d446c557a"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs", "Pages1.gs"];

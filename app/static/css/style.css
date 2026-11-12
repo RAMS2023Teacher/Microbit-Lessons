@@ -762,3 +762,6 @@ body.screen-page { overflow: hidden; }
 .track.packed .racer { width: 34px; } .track.packed .racer-bot svg { width: 24px; height: 24px; }
 .track.packed .racer b { font-size: .62rem; max-width: 34px; } .track.packed .racer small { display: none; }
 .track.crowded .track-lane, .track.packed .track-lane { gap: 3px; }
+
+.tab-icon-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tab-icon-row select { width: auto; }

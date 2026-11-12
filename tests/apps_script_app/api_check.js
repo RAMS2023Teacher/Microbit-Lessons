@@ -258,6 +258,14 @@ for (const p of ['/', '/lessons', '/map', '/me', '/editor', '/lessons/ai-teach-y
 }
 assert.match(pageView(S, '/teacher/standards'), /"page":"error"/);       // students can't see teacher pages
 assert.match(pageView('', '/'), /school Google account/);
+// the tab icon: a robot by default, the teacher can pick another or paste a .png address
+assert.match(w.page(S, '/').favicon, /notoemoji\/latest\/1f916\/512\.png$/);
+assert.match(w.call(T, 'setTabIcon', ['rocket']).url, /1f680/);
+assert.match(w.page(S, '/').favicon, /1f680/);
+assert.throws(() => w.call(T, 'setTabIcon', ['http://bad.example/x.gif']), /\.png or \.ico/);
+assert.throws(() => w.call(S, 'setTabIcon', ['robot']), /Only the teacher/);
+assert.strictEqual(w.call(T, 'setTabIcon', ['https://example.org/logo.png']).url, 'https://example.org/logo.png');
+
 // the install check: everything pasted correctly
 const report = w.call(T, 'checkInstall');
 assert.ok(!report.includes('❌'), report);

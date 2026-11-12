@@ -134,7 +134,8 @@ function makeWorld(dist, opts) {
         return { getContent: () => fs.readFileSync(file, 'utf8') };
       },
       createHtmlOutput: (html) => {
-        const out = { html, title: '', setTitle(t) { out.title = t; return out; }, addMetaTag() { return out; },
+        const out = { html, title: '', favicon: '', setTitle(t) { out.title = t; return out; }, addMetaTag() { return out; },
+                      setFaviconUrl(u) { if (!/^https:\/\//.test(u)) throw new Error('Invalid favicon URL'); out.favicon = u; return out; },
                       getContent: () => stripLikeAppsScript(out.html) };
         return out;
       },
