@@ -1,0 +1,204 @@
+# Grade 6-8 standards, extracted verbatim from the MA DESE DLCS framework (2016).
+framework: Massachusetts Digital Literacy and Computer Science (DLCS) Curriculum Framework (2016)
+source: https://www.doe.mass.edu/frameworks/dlcs.pdf
+grade_span: 6-8
+strands:
+  CAS: Computing and Society
+  DTC: Digital Tools and Collaboration
+  CS: Computing Systems
+  CT: Computational Thinking
+topics:
+- code: 6-8.CAS.a
+  strand: CAS
+  topic: Safety and Security
+  standards:
+  - code: 6-8.CAS.a.1
+    text: Identify threats and actively protect devices and networks from viruses, intrusion, vandalism, and other malicious activities.
+  - code: 6-8.CAS.a.2
+    text: Describe how cyberbullying can be prevented and managed.
+  - code: 6-8.CAS.a.3
+    text: Explain the connection between the persistence of data on the Internet, personal online identity, and personal privacy.
+  - code: 6-8.CAS.a.4
+    text: Describe and use safe, appropriate, and responsible practices (netiquette) when participating in online communities (e.g., discussion groups, blogs, social networking sites).
+  - code: 6-8.CAS.a.5
+    text: Differentiate between appropriate and inappropriate content on the Internet.
+- code: 6-8.CAS.b
+  strand: CAS
+  topic: Ethics and Laws
+  standards:
+  - code: 6-8.CAS.b.1
+    text: Explain how copyright law and licensing protect the owner of intellectual property.
+  - code: 6-8.CAS.b.2
+    text: Explain possible consequences of violating intellectual property law and plagiarism.
+  - code: 6-8.CAS.b.3
+    text: Apply fair use for using copyrighted materials (e.g., images, music, video, text).
+  - code: 6-8.CAS.b.4
+    text: Identify the legal consequences of sending or receiving inappropriate content (e.g., cyberbullying, harassment, sexting).
+  - code: 6-8.CAS.b.5
+    text: Differentiate among open source and proprietary software licenses and their applicability to different types of software and media.
+  - code: 6-8.CAS.b.6
+    text: Demonstrate compliance with the school’s Acceptable Use Policy (AUP).
+  - code: 6-8.CAS.b.7
+    text: Identify software license agreements and application permissions.
+  - code: 6-8.CAS.b.8
+    text: Explain positive and malicious purposes of hacking.
+  - code: 6-8.CAS.b.9
+    text: License original content and extend license for sharing in the public domain (e.g., creative commons).
+- code: 6-8.CAS.c
+  strand: CAS
+  topic: Interpersonal and Societal Impact
+  standards:
+  - code: 6-8.CAS.c.1
+    text: Describe current events and emerging technologies in computing and the effects they may have on education, the workplace, individuals, communities, and global society.
+  - code: 6-8.CAS.c.2
+    text: Identify and discuss the technology proficiencies needed in the classroom and the workplace, and how to meet the needs.
+  - code: 6-8.CAS.c.3
+    text: Relate the distribution of computing resources in a global society to issues of equity, access, and power.
+  - code: 6-8.CAS.c.4
+    text: Evaluate how media and technology can be used to distort, exaggerate, and misrepresent information.
+  - code: 6-8.CAS.c.5
+    text: Evaluate the bias of digital information sources, including websites.
+- code: 6-8.DTC.a
+  strand: DTC
+  topic: Digital Tools
+  standards:
+  - code: 6-8.DTC.a.1
+    text: Identify and explain the strengths, weaknesses, and capabilities of a variety of digital tools.
+  - code: 6-8.DTC.a.2
+    text: Identify the kinds of content associated with different file types and why different file types exist (e.g., formats for word processing, images, music, three-dimensional drawings.).
+  - code: 6-8.DTC.a.3
+    text: Integrate information from multiple file formats into a single artifact.
+  - code: 6-8.DTC.a.4
+    text: Individually and collaboratively, use advanced tools to design and create online content (e.g., digital portfolio, multimedia, blog, webpage).
+  - code: 6-8.DTC.a.5
+    text: Individually and collaboratively, develop and conduct an online survey.
+- code: 6-8.DTC.b
+  strand: DTC
+  topic: Collaboration and Communication
+  standards:
+  - code: 6-8.DTC.b.1
+    text: Communicate and publish key ideas and details individually or collaboratively in a way that informs, persuades, and/or entertains using a variety of digital tools and media-rich resources.
+  - code: 6-8.DTC.b.2
+    text: Collaborate synchronously and asynchronously through online digital tools.
+  - code: 6-8.DTC.b.3
+    text: Demonstrate ability to communicate appropriately through various online tools (e.g., e-mail, social media, texting, blog comments).
+- code: 6-8.DTC.c
+  strand: DTC
+  topic: Research
+  standards:
+  - code: 6-8.DTC.c.1
+    text: Perform advanced searches to locate information using a variety of digital sources (e.g., Boolean Operators, limiters like reading level, subject, media type).
+  - code: 6-8.DTC.c.2
+    text: Evaluate quality of digital sources for reliability, including currency, relevancy, authority, accuracy, and purpose of digital information.
+  - code: 6-8.DTC.c.3
+    text: Gather, organize, and analyze information from digital sources by quoting, paraphrasing, and/or summarizing.
+  - code: 6-8.DTC.c.4
+    text: Create an artifact, individually and collaboratively, that answers a research question and communicates results and conclusions.
+  - code: 6-8.DTC.c.5
+    text: Use digital citation tools to cite sources using a school- or district-adopted format [e.g., Modern Language Association (MLA)], including proper citation for all text and non-text sources (e.g., images, audio, video).
+- code: 6-8.CS.a
+  strand: CS
+  topic: Computing Devices
+  standards:
+  - code: 6-8.CS.a.1
+    text: Describe the main functions of an operating system.
+  - code: 6-8.CS.a.2
+    text: Recognize that there is a wide range of application software.
+  - code: 6-8.CS.a.3
+    text: Identify and describe the function of the main internal parts of a basic computing device [e.g., motherboard, hard drive, Central Processing Unit (CPU)].
+  - code: 6-8.CS.a.4
+    text: Identify and describe the use of sensors, actuators, and control systems in an embedded system (e.g., a robot, an e-textile, installation art, smart room).
+  - code: 6-8.CS.a.5
+    text: Individually and collaboratively design and demonstrate the use of a device (e.g., robot, e-textile) to accomplish a task.
+  - code: 6-8.CS.a.6
+    text: Use a variety of computing devices [e.g., probes, sensors, handheld devices, Global Positioning System (GPS)] to individually and collaboratively collect, analyze, and present information for content-related problems.
+  - code: 6-8.CS.a.7
+    text: Identify steps involved in diagnosing and solving routine hardware and software problems (e.g., power, connections, application window or toolbar, cables, ports, network resources, video, sound) that occur during everyday computer use.
+- code: 6-8.CS.b
+  strand: CS
+  topic: Human and Computer Partnerships
+  standards:
+  - code: 6-8.CS.b.1
+    text: Explain why some problems can be solved more easily by computers or humans based on a general understanding of types of tasks at which each excels.
+  - code: 6-8.CS.b.2
+    text: Describe how humans and machines interact to solve problems that cannot be solved by either alone (e.g., “big data” experiments that involve drawing conclusions by analyzing vast amounts of data).
+- code: 6-8.CS.c
+  strand: CS
+  topic: Networks
+  standards:
+  - code: 6-8.CS.c.1
+    text: Explain the difference between physical (wired), local and wide area, wireless, and mobile networks.
+  - code: 6-8.CS.c.2
+    text: Model the components of a network, including devices, routers, switches, cables, wires, and transponders.
+  - code: 6-8.CS.c.3
+    text: Describe how information, both text and non-text, is translated and communicated between digital devices over a computer network.
+- code: 6-8.CS.d
+  strand: CS
+  topic: Services
+  standards:
+  - code: 6-8.CS.d.1
+    text: Identify capabilities of devices that are enabled through services (e.g., a wearable device that stores fitness data in the cloud, a mobile device that uses location services for navigation).
+- code: 6-8.CT.a
+  strand: CT
+  topic: Abstraction
+  standards:
+  - code: 6-8.CT.a.1
+    text: Describe how data is abstracted by listing attributes of everyday items to represent, order and compare those items (e.g., street address as an abstraction for locations; car make, model, and license plate number as an abstraction for cars).
+  - code: 6-8.CT.a.2
+    text: Define a simple function that represents a more complex task/problem and can be reused to solve similar tasks/problems.
+  - code: 6-8.CT.a.3
+    text: Use decomposition to define and apply a hierarchical classification scheme to a complex system, such as the human body, animal classification, or in computing.
+- code: 6-8.CT.b
+  strand: CT
+  topic: Algorithms
+  standards:
+  - code: 6-8.CT.b.1
+    text: Design solutions that use repetition and conditionals.
+  - code: 6-8.CT.b.2
+    text: Use logical reasoning to predict outputs given varying inputs.
+  - code: 6-8.CT.b.3
+    text: Individually and collaboratively, decompose a problem and create a sub-solution for each of its parts (e.g., video game, robot obstacle course, making dinner).
+  - code: 6-8.CT.b.4
+    text: Recognize that more than one algorithm can solve a given problem.
+  - code: 6-8.CT.b.5
+    text: Recognize that boundaries need to be taken into account for an algorithm to produce correct results.
+- code: 6-8.CT.c
+  strand: CT
+  topic: Data
+  standards:
+  - code: 6-8.CT.c.1
+    text: Demonstrate that numbers can be represented in different base systems (e.g., binary, octal, and hexadecimal) and text can be represented in different ways [e.g., American Standard Code for Information Interchange (ASCII)].
+  - code: 6-8.CT.c.2
+    text: Describe how computers store, manipulate, and transfer data types and files (e.g., integers, real numbers, Boolean Operators) in a binary system.
+  - code: 6-8.CT.c.3
+    text: Create, modify, and use a database (e.g., define field formats, add new records, manipulate data), individually and collaboratively, to analyze data and propose solutions for a task/problem.
+  - code: 6-8.CT.c.4
+    text: Perform a variety of operations such as sorting, filtering, and searching in a database to organize and display information in a variety of ways such as number formats (scientific notation and percentages), charts, tables, and graphs.
+  - code: 6-8.CT.c.5
+    text: Select and use data-collection technology (e.g., probes, handheld devices, geographic mapping systems) to individually and collaboratively gather, view, organize, analyze, and report results for content-related problems.
+- code: 6-8.CT.d
+  strand: CT
+  topic: Programming and Development
+  standards:
+  - code: 6-8.CT.d.1
+    text: Individually and collaboratively compare algorithms to solve a problem, based on a given criteria (e.g., time, resource, accessibility).
+  - code: 6-8.CT.d.2
+    text: Use functions to hide the detail in a program.
+  - code: 6-8.CT.d.3
+    text: Create a program, individually and collaboratively, that implements an algorithm to achieve a given goal.
+  - code: 6-8.CT.d.4
+    text: 'Implement problem solutions using a programming language, including all of the following: looping behavior, conditional statements, expressions, variables, and functions.'
+  - code: 6-8.CT.d.5
+    text: Trace programs step-by-step in order to predict their behavior.
+  - code: 6-8.CT.d.6
+    text: Use an iterative approach in development and debugging to understand the dimensions of a problem clearly.
+- code: 6-8.CT.e
+  strand: CT
+  topic: Modeling and Simulation
+  standards:
+  - code: 6-8.CT.e.1
+    text: Create a model of a real-world system and explain why some details, features and behaviors were required in the model and why some could be ignored.
+  - code: 6-8.CT.e.2
+    text: Use and modify simulations to analyze and illustrate a concept in depth (e.g., light rays/mechanical waves interaction with materials, genetic variation).
+  - code: 6-8.CT.e.3
+    text: Select and use computer simulations, individually and collaboratively, to gather, view, analyze, and report results for content-related problems (e.g., migration, trade, cellular function). 9-12

@@ -18,46 +18,45 @@ function badgeById_(id) {
   return null;
 }
 
-function lessonList_() { return DATA.order.map(function (id) { return DATA.lessons[id]; }); }
+function lessonList_() { return DATA.order.filter(function (id) { return DATA.lessons[id]; }).map(function (id) { return DATA.lessons[id]; }); }
+
+function complete_(L, p) { return !!p && percent_(p, L) === 100; }
+
+/** Counts the badge rules in course/rules.py look at. */
+function rewardCounts_(rec) {
+  var c = { steps: 0, lessons: 0, wired: 0, perfect: 0, first_try: 0, extensions: 0, shipped: 0, partner: 0, done: {} };
+  Object.keys(rec.progress || {}).forEach(function (lid) {
+    var L = DATA.lessons[lid], p = rec.progress[lid];
+    if (!L || !p) return;
+    c.steps += stepsDone_(L, p);
+    if (quizPerfect_(p)) { c.perfect++; if (p.quiz_attempts === 1) c.first_try++; }
+    c.extensions += Object.keys(p.ext || {}).filter(function (k) { return p.ext[k]; }).length;
+    if (p.shipped_at) c.shipped++;
+    if (complete_(L, p)) {
+      c.lessons++; c.done[lid] = 1;
+      if (L.wired) c.wired++;
+      if (p.partner) c.partner++;
+    }
+  });
+  return c;
+}
 
 function badgeChecks_(rec, cfg) {
-  var earned = {}, prog = rec.progress || {}, ids = Object.keys(prog).filter(function (l) { return DATA.lessons[l]; });
-  var done = ids.filter(function (l) { return percent_(prog[l], DATA.lessons[l]) === 100; });
-  var keys = Object.keys(rec.xp_keys || {});
-  var any = function (fn) { return ids.some(function (l) { return fn(prog[l], DATA.lessons[l]); }); };
-  var count = function (fn) { return ids.filter(function (l) { return fn(prog[l], DATA.lessons[l]); }).length; };
-  if (any(function (p) { var s = p.sections || {}; return Object.keys(s).some(function (k) { return s[k]; }); })) earned['first-spark'] = 1;
-  if (any(function (p) { return (p.sections || {}).circuit; })) earned['let-there-be-light'] = 1;
-  if (ids.reduce(function (t, l) { return t + (prog[l].sends || 0); }, 0) >= 10) earned['hardware-hacker'] = 1;
-  var fixed = count(function (p) { return p.debug_solved; });
-  if (fixed >= 1) earned['bug-squasher'] = 1;
-  if (fixed >= 5) earned['exterminator'] = 1;
-  if (keys.some(function (k) { return k.indexOf('clean_fix:') === 0; })) earned['clean-fix'] = 1;
-  if (keys.some(function (k) { return k.indexOf('quiz_perfect:') === 0; })) earned['quiz-whiz'] = 1;
-  if (keys.filter(function (k) { return k.indexOf('quiz_first_try:') === 0; }).length >= 3) earned['sharpshooter'] = 1;
-  if (keys.filter(function (k) { return k.indexOf('learn_check_') === 0; }).length >= 15) earned['eagle-eye'] = 1;
-  if (count(function (p) { return p.challenge_submitted_at; }) >= 3) earned['inventor'] = 1;
-  if (done.length) earned['finisher'] = 1;
-  if (count(function (p, L) { return lessonStars_(L, p) === 3; }) >= 5) earned['star-collector'] = 1;
-  var units = {};
-  ids.forEach(function (l) { units[DATA.lessons[l].unit] = 1; });
-  if (Object.keys(units).length >= 3) earned['explorer'] = 1;
-  if (rec.avatar) earned['robot-stylist'] = 1;
-  Object.keys(DATA.units).forEach(function (u) {
-    var inUnit = lessonList_().filter(function (L) { return String(L.unit) === String(u) && L.kind !== 'check'; });
-    if (inUnit.length && inUnit.every(function (L) { return done.indexOf(L.id) >= 0; })) earned['unit-' + u] = 1;
+  var c = rewardCounts_(rec), earned = {};
+  DATA.badges.forEach(function (b) {
+    var rule = b[4] || [], ok = false;
+    if (rule[0] === 'lesson') ok = !!c.done[rule[1]];
+    else if (rule[0] === 'avatar') ok = !!rec.avatar;
+    else if (rule[0] === 'teacher') ok = !!(cfg.picks || {})[rec.email];
+    else if (rule[0] === 'early') {
+      var classes = studentClassIds_(rec, cfg);
+      ok = cfg.assignments.some(function (a) {
+        var p = (rec.progress || {})[a.lesson_id];
+        return classes.indexOf(a.class_id) >= 0 && a.due && p && p.completed_at && p.completed_at.slice(0, 10) <= a.due;
+      });
+    } else if (c[rule[0]] !== undefined) ok = c[rule[0]] >= rule[1];
+    if (ok) earned[b[0]] = 1;
   });
-  var core = lessonList_().filter(function (L) { return L.unit <= 4 && L.kind !== 'check'; });
-  if (core.length && core.every(function (L) { return done.indexOf(L.id) >= 0; })) earned['graduate'] = 1;
-  var classes = studentClassIds_(rec, cfg);
-  if (classes.length && done.length) {
-    cfg.assignments.forEach(function (a) {
-      if (classes.indexOf(a.class_id) < 0 || !a.due) return;
-      var p = prog[a.lesson_id];
-      if (p && p.completed_at && p.completed_at.slice(0, 10) <= a.due) earned['early-bird'] = 1;
-    });
-  }
-  if ((cfg.picks || {})[rec.email]) earned['teachers-pick'] = 1;
   return earned;
 }
 
@@ -72,26 +71,25 @@ function award_(rec, key, amount, reason, gained) {
 
 /** Awards any XP and badges the student has earned but not yet received. Never double-counts. */
 function syncRewards_(rec, cfg) {
-  var before = levelInfo_(rec.xp || 0), gained = [], X = DATA.xp, labels = DATA.section_labels;
+  var before = levelInfo_(rec.xp || 0), gained = [], X = DATA.xp, T = DATA.labels;
   rec.xp_keys = rec.xp_keys || {}; rec.xp_log = rec.xp_log || []; rec.badges = rec.badges || {};
   Object.keys(rec.progress || {}).forEach(function (lid) {
     var L = DATA.lessons[lid], p = rec.progress[lid];
-    if (!L) return;
-    var s = p.sections || {};
-    L.section_keys.forEach(function (k) {
-      if (s[k]) award_(rec, k + ':' + lid, X[k], labels[k] + ' · ' + L.title, gained);
-    });
-    if (p.debug_solved && !(p.debug_hints_used || 0)) award_(rec, 'clean_fix:' + lid, X.clean_fix, labels.clean_fix + ' · ' + L.title, gained);
-    if (p.quiz_total && p.quiz_best === p.quiz_total) {
-      award_(rec, 'quiz_perfect:' + lid, X.quiz_perfect, labels.quiz_perfect + ' · ' + L.title, gained);
-      if (p.quiz_attempts === 1) award_(rec, 'quiz_first_try:' + lid, X.quiz_first_try, labels.quiz_first_try + ' · ' + L.title, gained);
+    if (!L || !p) return;
+    var t = ' · ' + L.title;
+    if (p.mission_done) award_(rec, 'mission:' + lid, X.mission, T.mission + t, gained);
+    for (var i = 0; i < L.build.length; i++) if (stepDone_(L, p, i)) award_(rec, 'step_' + i + ':' + lid, X.step, T.step + ': ' + L.build[i].title, gained);
+    if (quizPassed_(L, p)) award_(rec, 'quiz:' + lid, X.quiz, T.quiz + t, gained);
+    if (quizPerfect_(p)) {
+      award_(rec, 'quiz_perfect:' + lid, X.quiz_perfect, T.quiz_perfect + t, gained);
+      if (p.quiz_attempts === 1) award_(rec, 'quiz_first_try:' + lid, X.quiz_first_try, T.quiz_first_try + t, gained);
     }
-    Object.keys(p.learn_checks || {}).sort().forEach(function (i) {
-      var row = p.learn_checks[i];
-      if (row && row.ok && row.tries === 1 && (L.learn_checks || [])[+i])
-        award_(rec, 'learn_check_' + i + ':' + lid, X.learn_check, labels.learn_check + ' · ' + L.title, gained);
+    Object.keys(p.ext || {}).forEach(function (k) {
+      var E = ((L.ship || {}).extensions || [])[+k];
+      if (p.ext[k] && E) award_(rec, 'ext_' + k + ':' + lid, X.extension, T.extension + ': ' + E.title, gained);
     });
-    if (percent_(p, L) === 100) award_(rec, 'complete:' + lid, X.complete, labels.complete + ' · ' + L.title, gained);
+    if (p.shipped_at) award_(rec, 'ship:' + lid, X.ship, T.ship + t, gained);
+    if (complete_(L, p)) award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
   });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });
   var newBadges = [], earned = badgeChecks_(rec, cfg);
@@ -117,6 +115,12 @@ function lessonXp_(rec, lid) {
   return total;
 }
 
+function possibleXp_(L) {
+  var X = DATA.xp;
+  return X.mission + X.step * L.build.length + X.quiz + X.quiz_perfect + X.quiz_first_try +
+    X.extension * ((L.ship || {}).extensions || []).length + X.ship + X.complete;
+}
+
 function badgeList_(rec) {
   return DATA.badges.map(function (b) {
     var at = (rec.badges || {})[b[0]];
@@ -124,38 +128,39 @@ function badgeList_(rec) {
   });
 }
 
-// ---------------------------------------------------------------- map
-/** Lessons a student must do because their class assigned them (choice branches only once started). */
+// ---------------------------------------------------------------- the skill tree
+/** Lessons a student's class assigned. */
 function assignedIds_(rec, cfg) {
   var classes = studentClassIds_(rec, cfg), out = {};
-  cfg.assignments.forEach(function (a) { if (classes.indexOf(a.class_id) >= 0 && !a.branch) out[a.lesson_id] = 1; });
+  cfg.assignments.forEach(function (a) { if (classes.indexOf(a.class_id) >= 0) out[a.lesson_id] = 1; });
   return out;
 }
 
+var COLOR_UNIT_ = { blue: 1, gold: 2, green: 3, red: 4, purple: 5, teal: 6, orange: 7, pink: 4 };
+
 function mapData_(rec, assigned) {
   var prog = (rec && rec.progress) || {}, complete = {}, nodes = [], current = null;
-  lessonList_().forEach(function (L) { if (prog[L.id] && percent_(prog[L.id], L) === 100) complete[L.id] = 1; });
+  DATA.course.forEach(function (c) { var L = DATA.lessons[c.id]; if (L && complete_(L, prog[c.id])) complete[c.id] = 1; });
   var recent = Object.keys(prog).filter(function (l) { return DATA.lessons[l] && !complete[l]; })
     .sort(function (a, b) { return String(prog[b].updated_at || '').localeCompare(String(prog[a].updated_at || '')); });
   if (recent.length) current = recent[0];
-  lessonList_().forEach(function (L) {
-    var t = DATA.tree[L.id];
-    if (!t) return;
-    var p = prog[L.id], pct = p ? percent_(p, L) : 0;
-    var reqs = t.requires.filter(function (r) { return DATA.lessons[r]; });
-    var also = (t.or_after || []).filter(function (r) { return DATA.lessons[r]; });
-    var unlocked = reqs.every(function (r) { return complete[r]; }) || also.some(function (r) { return complete[r]; }) || assigned[L.id] || pct > 0;
-    var state = complete[L.id] ? 'complete' : pct > 0 ? 'progress' : unlocked ? 'open' : 'locked';
-    nodes.push({ id: L.id, number: L.number, title: L.title, unit: L.unit, x: t.pos[0], y: t.pos[1], requires: reqs,
-                 requires_titles: reqs.filter(function (r) { return !complete[r]; }).map(function (r) { return DATA.lessons[r].title; }),
-                 or_titles: also.map(function (r) { return DATA.lessons[r].title; }),
-                 state: state, pct: pct, stars: lessonStars_(L, p), assigned: !!assigned[L.id], xp_possible: L.possible_xp });
+  DATA.course.forEach(function (c, i) {
+    var L = DATA.lessons[c.id], p = prog[c.id], pct = L && p ? percent_(p, L) : 0;
+    var reqs = DATA.requires[c.id] || [];
+    var unlocked = !reqs.length || reqs.some(function (r) { return complete[r]; }) || assigned[c.id] || pct > 0;
+    var state = !L ? 'locked' : complete[c.id] ? 'complete' : pct > 0 ? 'progress' : unlocked ? 'open' : 'locked';
+    nodes.push({ id: c.id, number: c.number, title: c.title, unit: COLOR_UNIT_[c.color] || 1, x: c.pos[0], y: c.pos[1],
+                 requires: i === 0 ? [] : reqs,
+                 requires_titles: !L ? ['Coming soon'] : reqs.filter(function (r) { return !complete[r]; }).map(function (r) { return DATA.course_by_id[r].title; }),
+                 or_titles: reqs.length > 1 ? reqs.map(function (r) { return DATA.course_by_id[r].title; }) : [],
+                 state: state, pct: pct, stars: L ? lessonStars_(L, p) : 0, assigned: !!assigned[c.id],
+                 xp_possible: L ? possibleXp_(L) : 0, soon: !L });
   });
   if (!current) {
     var open = nodes.filter(function (n) { return n.state === 'open'; })[0];
-    current = open ? open.id : (nodes.length ? nodes[nodes.length - 1].id : null);
+    current = open ? open.id : (nodes.length ? nodes[0].id : null);
   }
-  return { nodes: nodes, current: current, units: DATA.units };
+  return { nodes: nodes, current: current, units: {} };
 }
 
 // ---------------------------------------------------------------- avatars
