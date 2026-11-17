@@ -1,0 +1,385 @@
+id: reaction-game
+title: Reaction Game
+tagline: How fast can you smash the button?
+minutes: 90          # about two class periods
+
+mission:
+  goal: |
+    Build a **reaction timer** with a real push button. The micro:bit waits a **random** amount of time,
+    then shows a target. Smash the button as fast as you can! It shows your time in **milliseconds**
+    and tells you if you were fast. Press too soon and you're caught cheating.
+  picture:
+    type: flow
+    steps:
+      - {icon: "🅰️", label: "Press A to start"}
+      - {icon: "⏳", label: "Random wait"}
+      - {icon: "🎯", label: "Target shows"}
+      - {icon: "👆", label: "Smash the button"}
+      - {icon: "⏱️", label: "Show your time"}
+    caption: One round of the Reaction Game.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit in its breakout board, on a breadboard
+    - A push button and 2 jumper wires
+  learn:
+    - "**variables** are labeled boxes that hold a value"
+    - "**if / else** picks one of two paths"
+    - "**randint** picks a random number"
+  talk: Why would a reaction game be easy to cheat if the target always showed up after exactly 2 seconds? How could the game stop that?
+
+build:
+  - part: Set up
+    title: Open MakeCode in Python
+    do:
+      - Click the green **Open MakeCode** button. Click **New Project** and name it **Reaction Game**.
+      - Switch from **Blocks** to **Python** at the top.
+      - Delete any code that's already there.
+    test:
+      - MakeCode is open in Python, with an empty editor
+
+  - part: "Part 1: The button"
+    title: Wire the push button
+    say: A push button is a switch. When you press it, the two sides connect and electricity can flow. We'll connect one side to **P1** and the other side to **GND**.
+    picture:
+      type: part
+      part: button
+      caption: Use two legs that are diagonally across from each other. Diagonal legs always work.
+    wiring:
+      - "Unplug the micro:bit's USB cable while you wire."
+      - "Push the button into the breadboard so it **straddles the middle gap**."
+      - "Jumper wire from the breakout's **P1** pin to the button's **top-left** leg row."
+      - "Jumper wire from the breakout's **GND** pin to the button's **bottom-right** leg row (diagonal from the first)."
+    test:
+      - The button sits across the middle gap
+      - One wire goes to P1 and the other to GND, on diagonal legs
+    ask: Why do we unplug the micro:bit before moving wires?
+
+  - part: "Part 1: The button"
+    title: Read the button
+    say: "`pins.digital_read_pin` reads a pin and gives back **1** or **0**. The `set_pull` line makes the pin read **1** when nothing is happening. Pressing the button connects P1 to GND, so it reads **0**."
+    do:
+      - Type this code and download it to the micro:bit.
+      - Watch the number. Then hold the button down. Write both numbers below.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      while True:
+          basic.show_number(pins.digital_read_pin(DigitalPin.P1))
+    tip: "**Surprise:** pressed is **0**, not 1. Remember this! In the simulator, click the **P1** pin to press the button."
+    stuck:
+      - "Always 1? Check both wires are in the same rows as the button's legs."
+      - "Always 0? The button may be turned the wrong way. Turn it a quarter turn."
+    test:
+      - The number changes when I press the button
+    fields: ["Not pressed", "Pressed"]
+    ask: Why does pressing the button give 0? Use the word GND in your answer.
+
+  - part: "Part 1: The button"
+    title: If / else
+    say: "**if / else** picks one of two paths. If the condition is True, the `if` lines run. Otherwise, the `else` lines run. Never both."
+    do:
+      - Change your loop so it matches. Lines 3-6 are new.
+      - Run it and press the button.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      while True:
+          if pins.digital_read_pin(DigitalPin.P1) == 0:
+              basic.show_icon(IconNames.HAPPY)
+          else:
+              basic.show_icon(IconNames.SAD)
+    new: "3-6"
+    tip: "`==` (two equals signs) asks **is it equal?** One `=` means **put a value in**."
+    test:
+      - Pressing shows a happy face
+      - Letting go shows a sad face
+    ask: Swap HAPPY and SAD. Now what happens? Was it what you expected?
+
+  - part: "Part 1: The button"
+    title: Variables and random numbers
+    say: "A **variable** is a labeled box that holds a value. `roll = randint(1, 6)` picks a random number from 1 to 6 and puts it in a box named `roll`."
+    do:
+      - Delete your code and type this dice roller. It uses a button event, like your Name Badge.
+      - Press **A** in the simulator a few times.
+    code: |
+      def on_button_pressed_a():
+          roll = randint(1, 6)
+          basic.show_number(roll)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    what: Every press makes a new random number, stores it in `roll`, then shows what's in the box.
+    test:
+      - Pressing A shows a number from 1 to 6
+      - The numbers change in no pattern
+    ask: Change the code to roll a 20-sided die. What did you change?
+
+  - part: "Part 1: The button"
+    title: The micro:bit's stopwatch
+    say: "`input.running_time()` tells you how many **milliseconds** since the micro:bit turned on. 1000 ms = 1 second. Read it twice and subtract to time something."
+    do:
+      - Delete your code and type this. Run it.
+      - Press A, then press your button.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      def on_button_pressed_a():
+          start = input.running_time()
+          while pins.digital_read_pin(DigitalPin.P1) == 1:
+              basic.pause(1)
+          basic.show_number(input.running_time() - start)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "3-6"
+    what: "`start` saves the time when you pressed A. The `while` loop waits as long as the button is **not** pressed (1). When you press it, the loop ends and it shows **now minus start**."
+    test:
+      - Pressing A then my button shows a number
+      - Waiting longer gives a bigger number
+    ask: Press A, count to 3, then press the button. About what number should you see? What did you get?
+
+  - part: "Part 2: Build the game"
+    title: The game plan
+    say: |
+      Here's one round:
+
+      1. Press **A** to start. The screen clears.
+      2. Wait a **random** time, so nobody can guess.
+      3. Show a target 🎯. Start the stopwatch.
+      4. Wait for the button. Show the reaction time.
+    picture:
+      type: flow
+      steps:
+        - {icon: "🅰️", label: "Press A"}
+        - {icon: "⏳", label: "Random wait"}
+        - {icon: "🎯", label: "Target"}
+        - {icon: "⏱️", label: "Show time"}
+    do:
+      - Delete your stopwatch code. You'll build the game in this same project.
+    test:
+      - My editor is empty and ready
+    ask: Which part of the plan uses randint? Which part uses running_time?
+
+  - part: "Part 2: Build the game"
+    title: Random wait, then the target
+    do:
+      - Type this code. Run it and press A a few times.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      def on_button_pressed_a():
+          basic.clear_screen()
+          basic.pause(randint(1000, 4000))
+          basic.show_icon(IconNames.TARGET, 0)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "2-6"
+    what: "`randint(1000, 4000)` waits between 1 and 4 seconds. The `0` after `IconNames.TARGET` means **don't pause after showing it**, so the clock can start right away."
+    test:
+      - After I press A, the target shows up
+      - The wait is different every time
+    ask: Why does a random wait make the game fair?
+
+  - part: "Part 2: Build the game"
+    title: Time the reaction
+    do:
+      - Add the highlighted lines to the bottom of the function.
+      - Run it. Press A, then smash the button when the target shows.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      def on_button_pressed_a():
+          basic.clear_screen()
+          basic.pause(randint(1000, 4000))
+          basic.show_icon(IconNames.TARGET, 0)
+          start = input.running_time()
+          while pins.digital_read_pin(DigitalPin.P1) == 1:
+              basic.pause(1)
+          reaction = input.running_time() - start
+          basic.show_number(reaction)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "6-10"
+    what: This is your stopwatch from Step 6. Now the answer goes in a variable called `reaction`, so we can use it again in the next step.
+    test:
+      - It shows my reaction time after I press the button
+      - The time is a few hundred milliseconds
+    fields: ["My time (ms)", "Partner's time (ms)"]
+    ask: Play 3 rounds each. Who is faster? By about how many milliseconds?
+
+  - part: "Part 2: Build the game"
+    title: Fast or slow?
+    say: Now use **if / else** to judge the time. Under 400 ms is fast.
+    do:
+      - Add the highlighted lines at the bottom of the function.
+      - Run it. Try one fast round and one slow round.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      def on_button_pressed_a():
+          basic.clear_screen()
+          basic.pause(randint(1000, 4000))
+          basic.show_icon(IconNames.TARGET, 0)
+          start = input.running_time()
+          while pins.digital_read_pin(DigitalPin.P1) == 1:
+              basic.pause(1)
+          reaction = input.running_time() - start
+          basic.show_number(reaction)
+          if reaction < 400:
+              basic.show_icon(IconNames.HAPPY)
+          else:
+              basic.show_icon(IconNames.SAD)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "11-14"
+    test:
+      - A fast press shows a happy face
+      - A slow press shows a sad face
+    ask: 400 is a threshold. Would 250 make the game harder or easier? Why?
+
+  - part: "Part 2: Build the game"
+    title: Catch the cheaters
+    say: Some players just **hold the button down** the whole time. Then the time is almost 0! Before the target shows, check if the button is already pressed.
+    do:
+      - Add the `if` line and the `TOO SOON` line after the random wait.
+      - Add `else:` and push the rest of the lines in one more step, like the code below.
+      - Run it. Hold the button down, then press A.
+    code: |
+      pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)
+      def on_button_pressed_a():
+          basic.clear_screen()
+          basic.pause(randint(1000, 4000))
+          if pins.digital_read_pin(DigitalPin.P1) == 0:
+              basic.show_string("TOO SOON")
+          else:
+              basic.show_icon(IconNames.TARGET, 0)
+              start = input.running_time()
+              while pins.digital_read_pin(DigitalPin.P1) == 1:
+                  basic.pause(1)
+              reaction = input.running_time() - start
+              basic.show_number(reaction)
+              if reaction < 400:
+                  basic.show_icon(IconNames.HAPPY)
+              else:
+                  basic.show_icon(IconNames.SAD)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "5-7"
+    tip: "**Indentation matters.** Everything after `else:` is pushed in one more step than before. Select those lines and press **Tab** to push them all in at once."
+    test:
+      - Holding the button shows TOO SOON
+      - A normal round still works
+    ask: Draw or describe the two paths the code can take after the random wait.
+
+  - part: "Part 2: Build the game"
+    title: "Checkpoint: the whole game"
+    say: Your program should match the code in Step 11. Check it line by line, especially the indentation.
+    stuck:
+      - "**Pressed is 0.** If it says TOO SOON every time, check `== 0` and your wiring."
+      - "**Time is always 0?** Make sure `start = ...` comes right after the target shows."
+      - "**Indentation:** lines inside `else:` are pushed in two steps; lines inside the `while` and the last `if` are pushed in three."
+    test:
+      - The whole game works, including TOO SOON
+      - I downloaded it to the real micro:bit and played with the real button
+
+quiz:
+  - question: What does `roll = randint(1, 6)` do?
+    choices: ["Shows the number 6", "Puts a random number from 1 to 6 in a variable called roll", "Rolls the micro:bit over", "Waits 1 to 6 seconds"]
+    answer: 1
+    why: randint picks the random number, and the `=` puts it in the box named roll.
+  - question: "With `set_pull(... PULL_UP)`, what does `pins.digital_read_pin(DigitalPin.P1)` give when the button is pressed?"
+    choices: ["1", "0", "400", "True"]
+    answer: 1
+    why: Pressing connects P1 to GND, so it reads 0. Not pressed reads 1.
+  - question: "`reaction` is 520 and the code says `if reaction < 400:`. Which lines run?"
+    choices: ["The if lines (happy face)", "The else lines (sad face)", "Both", "Neither"]
+    answer: 1
+    why: 520 < 400 is False, so the else lines run. if / else always runs exactly one of the two.
+  - question: Why does the game wait a random amount of time before the target?
+    choices: ["To save battery", "So players can't guess when to press", "To make the numbers bigger", "Because the micro:bit is slow"]
+    answer: 1
+    why: If the wait were always the same, you could count and press early instead of reacting.
+  - question: "`start` is 5000 and `input.running_time()` is now 5320. What is the reaction time?"
+    choices: ["5320 ms", "10320 ms", "320 ms", "5000 ms"]
+    answer: 2
+    why: Now minus start = 5320 - 5000 = 320 milliseconds.
+
+ship:
+  extensions:
+    - title: A light that says GO
+      level: Easier
+      goal: Add an LED on P0 that turns on with the target, and off after the button is pressed.
+      where: Wire an LED and resistor to P0 (like Blink an LED). Add a line next to the target, and a line after the while loop.
+      code: |
+        basic.show_icon(IconNames.TARGET, 0)
+        pins.digital_write_pin(DigitalPin.P0, 1)
+        start = input.running_time()
+        while pins.digital_read_pin(DigitalPin.P1) == 1:
+            basic.pause(1)
+        pins.digital_write_pin(DigitalPin.P0, 0)
+      new: "2,6"
+      hints: ["You wired an LED on P0 in Blink an LED.", "1 turns the LED on and 0 turns it off."]
+    - title: Three ratings
+      level: Easier
+      goal: Show a happy face under 300 ms, a straight face under 500 ms, and a sad face for anything slower.
+      where: Replace the last if / else.
+      code: |
+        if reaction < 300:
+            basic.show_icon(IconNames.HAPPY)
+        elif reaction < ___:
+            basic.show_icon(IconNames.ASLEEP)
+        else:
+            basic.show_icon(IconNames.SAD)
+      hints: ["`elif` means else if. It's checked only when the first if is False.", "Fill in the blank."]
+    - title: Best time
+      level: Medium
+      goal: Remember the fastest time and show NEW BEST when you beat it.
+      where: One line at the very top, and new lines after basic.show_number(reaction).
+      code: |
+        best = 9999
+        def on_button_pressed_a():
+            global best
+            # ... the rest of your game, then after basic.show_number(reaction):
+            if reaction < best:
+                best = reaction
+                basic.show_string("NEW BEST")
+      hints: ["`global best` lets the function change the variable made outside it.", "Why start best at 9999? Think about what the first round should do."]
+    - title: Two-player duel
+      level: Challenge
+      goal: Wire a second button on P2. Whoever presses first after the target wins.
+      where: A new set_pull line for P2, and a new waiting loop.
+      code: |
+        pins.set_pull(DigitalPin.P2, PinPullMode.PULL_UP)
+        # wait while BOTH buttons are not pressed:
+        while pins.digital_read_pin(DigitalPin.P1) == 1 and pins.digital_read_pin(DigitalPin.P2) == 1:
+            basic.pause(1)
+        if pins.digital_read_pin(DigitalPin.P1) == 0:
+            basic.show_number(1)
+        else:
+            basic.show_number(___)
+      hints: ["`and` means both must be True.", "Wire the second button just like the first, but to P2.", "What should it show if player 2 wins?"]
+    - title: Catch every false start
+      level: Challenge
+      goal: Right now the game only catches a button that's held down. Catch a quick tap during the wait too.
+      where: Replace basic.pause(randint(1000, 4000)) with a loop that checks the button while it waits.
+      code: |
+        wait = randint(1000, 4000)
+        begin = input.running_time()
+        cheated = False
+        while input.running_time() - begin < wait:
+            if pins.digital_read_pin(DigitalPin.P1) == 0:
+                cheated = True
+            basic.pause(1)
+        if cheated:
+            basic.show_string("TOO SOON")
+      hints: ["The loop keeps going until the random wait is used up.", "cheated is a True / False variable (a Boolean).", "Use if cheated: in place of your old TOO SOON check."]
+  reflect:
+    - "Explain what a variable is, using `reaction` from your game as the example."
+    - Why do we need if / else to catch cheaters? What would happen without it?
+
+teacher_notes: |
+  * **Timing:** two class periods. Part 1 (wiring and warm-ups) on day 1, Part 2 and an extension on day 2.
+  * **Wiring:** diagonal legs of a 4-leg tactile button always switch, whichever way the button is turned. That avoids the
+    most common "it's always pressed" bug.
+  * **Pull-up:** `pins.set_pull(DigitalPin.P1, PinPullMode.PULL_UP)` means no resistor is needed and pressed reads **0**.
+    Students who skip it get random readings.
+  * **Simulator:** clicking P1 in the simulator acts like the button.
+  * `basic.show_icon(IconNames.TARGET, 0)`: the `0` skips the normal 600 ms pause after showing an icon. Without it every
+    time is 600 ms too short (or the press is missed).
+  * Typical middle-school reaction times are 250-400 ms on a button.
+  * The **Best time** extension needs `global`; the duel extension needs a second button on P2.
+
+standards:
+  - code: 6-8.CT.b.1
+    how: Students design a game that uses conditionals (if / else) to judge a time and catch false starts, and loops to wait for input.
+  - code: 6-8.CS.a.4
+    how: Students wire a push button (a sensor) and read it with digital_read_pin to control the game.
+  - code: 6-8.CT.b.5
+    how: Students handle the boundary case of a button that is already pressed (a false start), and pick a threshold for a fast time.

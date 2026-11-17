@@ -1,0 +1,397 @@
+id: robot-eyes
+title: Robot with Eyes
+tagline: Give your robot a sensor so it can dodge walls on its own
+minutes: 135          # about three class periods
+
+mission:
+  goal: |
+    Your robot can drive, but it's blind. Mount the **ultrasonic sensor** on the front breadboard so the robot
+    can "see" how far away things are. Then program it to **sense → decide → act**: drive until something is close,
+    back up, turn, and keep exploring on its own.
+  picture:
+    type: flow
+    steps:
+      - {icon: "🦇", label: Sense the distance}
+      - {icon: "🤔", label: Decide if it's close}
+      - {icon: "🤖", label: Act - drive or turn}
+    loop: true
+    loop_label: over and over, many times a second
+    caption: Every robot that reacts to the world runs a loop like this.
+  you_need:
+    - A partner
+    - Your robot from Build a Robot (with your move functions saved in MakeCode)
+    - The ultrasonic sensor and 4 jumper wires
+    - Your Distance Detector code (for the distance() function)
+    - Fresh batteries and some open floor with a few boxes or books as walls
+  learn:
+    - "**sense → decide → act**: the loop inside every robot"
+    - "reusing **functions** you wrote before"
+    - "handling a **bad reading** (0 means no echo)"
+  talk: A robot vacuum cleans a room without a map. How do you think it knows when to turn? What would it need to sense?
+
+build:
+  - part: "Part 1: Give it eyes"
+    title: Where will the sensor go?
+    say: |
+      In the Distance Detector you used **P1** and **P2** for Trig and Echo. But on the robot, P1 and P2 already
+      drive the servos! So the sensor moves to two other pins on the breakout board: **P8** and **P12**.
+    picture:
+      type: compare
+      items:
+        - {icon: "⬅️", title: P1, text: left servo}
+        - {icon: "➡️", title: P2, text: right servo}
+        - {icon: "📣", title: P8, text: sensor Trig}
+        - {icon: "👂", title: P12, text: sensor Echo}
+    do:
+      - Find P8 and P12 on your breakout board.
+      - Write which pins are already used on your robot below.
+    tip: "**Check with your teacher** that P8 and P12 are free on your robot. If not, pick two other free pins and use them everywhere this lesson says P8 and P12."
+    test:
+      - I found P8 and P12 on the breakout board
+    fields: ["Left servo pin", "Right servo pin", "Trig pin", "Echo pin"]
+    ask: Why can't two parts share the same pin?
+
+  - part: "Part 1: Give it eyes"
+    title: Mount and wire the sensor
+    say: The sensor's two round "eyes" must look **straight ahead**, over the front of the robot. If they point at the floor, the robot will think the floor is a wall!
+    wiring:
+      - "**Switch off the battery pack and unplug the USB** before you move any wires."
+      - Push the sensor's 4 pins into the **front breadboard**, eyes facing forward, each pin in its own row.
+      - "**VCC** row → **3V** on the breakout board."
+      - "**Trig** row → **P8**."
+      - "**Echo** row → **P12**."
+      - "**GND** row → **GND** on the breakout board."
+    stuck:
+      - Keep the sensor wires away from the wheels so they can't get caught.
+      - Each sensor pin needs its own row. Two pins in one row are connected to each other.
+    test:
+      - The sensor faces straight ahead, not down
+      - VCC → 3V, Trig → P8, Echo → P12, GND → GND
+      - No wires touch the wheels
+    ask: Which wire tells the sensor "send a ping now"? Which wire carries the answer back?
+
+  - part: "Part 1: Give it eyes"
+    title: Test the eyes
+    say: Use your **distance()** function from the Distance Detector, with the new pins. Test it before the robot moves, so you know the sensor works.
+    do:
+      - Open your **Robot** project in MakeCode. Keep all your variables and move functions.
+      - Add the distance() function under your other functions. Notice the new pin numbers.
+      - Replace your `while True` loop with the one below. Download, switch the batteries on, and move your hand in front of the sensor.
+    code: |
+      def distance():
+          pins.digital_write_pin(DigitalPin.P8, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P8, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P8, 0)
+          echo = pins.pulse_in(DigitalPin.P12, PulseValue.HIGH)
+          return Math.round(echo / 58)
+
+      stop()
+      while True:
+          basic.show_number(distance())
+          basic.pause(200)
+    new: "1-8, 10-13"
+    what: This is the same distance() as before, but Trig is now P8 and Echo is P12. The loop just shows the distance, and stop() keeps the wheels still.
+    stuck:
+      - "**Always 0:** a wire is loose, or Trig and Echo are swapped (P8 → Trig, P12 → Echo)."
+      - "**Wheels spin:** check your stop numbers are still in the variables at the top."
+    test:
+      - The number gets smaller when my hand gets closer
+      - The wheels stay still
+    fields: ["Hand close (cm)", "Nothing in front (cm)"]
+    ask: What does the sensor show when nothing is in front of it at all?
+
+  - part: "Part 2: Sense, decide, act"
+    title: Stop before the wall
+    say: |
+      Now the robot **senses** the distance, **decides** if it's too close, and **acts**: drive or stop.
+      This is the simplest robot brain.
+    do:
+      - Change your loop to this.
+      - Download. Put the robot on the floor facing a wall or a box about 1 meter away. Press A.
+    code: |
+      stop()
+      basic.show_icon(IconNames.HAPPY)
+      while not input.button_is_pressed(Button.A):
+          basic.pause(20)
+      while True:
+          cm = distance()
+          if cm < 20:
+              stop()
+          else:
+              forward()
+          basic.pause(50)
+    new: "2-11"
+    what: "The first loop waits for A, like **Press A to start** in your game. Then, many times a second: measure (sense), check if closer than 20 cm (decide), and stop or drive (act)."
+    tip: "**Catch it!** Be ready to pick up the robot if it doesn't stop."
+    test:
+      - The robot waits until I press A
+      - It drives toward the wall and stops before hitting it
+      - If I move the box away, it drives again
+    ask: How far from the wall did it actually stop? Why might it stop a bit closer than 20 cm?
+
+  - part: "Part 2: Sense, decide, act"
+    title: When the sensor says 0
+    say: |
+      Sometimes the echo never comes back: the object is too far, or soft, or at an angle. Then the sensor
+      gives **0**. But 0 is less than 20, so the robot thinks there's a wall and stops for no reason!
+    picture:
+      type: graph
+      points: [80, 75, 70, 0, 62, 58, 0, 50, 44]
+      line: {y: 20, label: too close}
+      y_label: cm
+      caption: The two 0s aren't real walls. They're missing echoes.
+    do:
+      - Change the `if` line so a 0 doesn't count as a wall.
+      - Download and test again.
+    code: |
+      while True:
+          cm = distance()
+          if cm > 0 and cm < 20:
+              stop()
+          else:
+              forward()
+          basic.pause(50)
+    new: "3"
+    what: "`and` means **both** must be True. The robot only stops when the reading is real (more than 0) **and** close (less than 20)."
+    test:
+      - The robot no longer stops for no reason in open space
+      - It still stops before the wall
+    ask: In your own words, why do we need cm > 0 in the if?
+
+  - part: "Part 2: Sense, decide, act"
+    title: Back up and turn
+    say: Stopping is safe, but boring. A real explorer **escapes**. It backs up a little, turns, and tries a new direction.
+    do:
+      - Add an `avoid()` function under distance(). It uses your move functions from the last project.
+      - Change the loop so it calls avoid() when something is close.
+      - Download and test with a wall.
+    code: |
+      def avoid():
+          stop()
+          basic.show_icon(IconNames.SURPRISED)
+          backward()
+          basic.pause(400)
+          turn_right()
+          basic.pause(turn_time)
+          stop()
+          basic.show_icon(IconNames.HAPPY)
+
+      while True:
+          cm = distance()
+          if cm > 0 and cm < 20:
+              avoid()
+          else:
+              forward()
+          basic.pause(50)
+    new: "1-9, 14"
+    what: "`avoid()` is made of smaller functions you already wrote: stop(), backward() and turn_right(). Your turn_time from the last project makes it a quarter turn."
+    test:
+      - When something is close, the robot backs up and turns
+      - Then it drives forward in the new direction
+    ask: Your robot backs up, then turns. What could go wrong if it turned without backing up first?
+
+  - part: "Part 2: Sense, decide, act"
+    title: Explore the maze
+    say: Build a little maze or obstacle course with boxes and books. Let your robot explore it on its own for one minute.
+    do:
+      - Build a course with at least 3 walls.
+      - Start the robot and count how many times it bumps into something.
+      - Change **one** number (the 20, the 400, or the speed) and try again. Write what you changed below.
+    tip: "**Change one thing at a time.** If you change three numbers and it gets better, you won't know which one helped."
+    stuck:
+      - "**Hits walls at an angle:** the sensor only sees straight ahead. Try a bigger distance like 30."
+      - "**Gets stuck in corners:** try turning a different amount, or use turn_left sometimes."
+    test:
+      - My robot explored the course for one minute
+      - We changed one number and tested again
+    fields: ["Bumps before", "What we changed", "Bumps after"]
+    ask: Did your change help? How do you know?
+
+  - part: "Part 2: Sense, decide, act"
+    title: "Checkpoint: the whole program"
+    say: Your program should match this, with your own stop numbers and turn time. Compare it line by line.
+    code: |
+      left_stop = 90
+      right_stop = 90
+      speed = 90
+      turn_time = 500
+
+      def forward():
+          pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop - speed)
+
+      def backward():
+          pins.servo_write_pin(AnalogPin.P1, left_stop - speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop + speed)
+
+      def turn_right():
+          pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop + speed)
+
+      def stop():
+          pins.servo_write_pin(AnalogPin.P1, left_stop)
+          pins.servo_write_pin(AnalogPin.P2, right_stop)
+
+      def distance():
+          pins.digital_write_pin(DigitalPin.P8, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P8, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P8, 0)
+          echo = pins.pulse_in(DigitalPin.P12, PulseValue.HIGH)
+          return Math.round(echo / 58)
+
+      def avoid():
+          stop()
+          basic.show_icon(IconNames.SURPRISED)
+          backward()
+          basic.pause(400)
+          turn_right()
+          basic.pause(turn_time)
+          stop()
+          basic.show_icon(IconNames.HAPPY)
+
+      stop()
+      basic.show_icon(IconNames.HAPPY)
+      while not input.button_is_pressed(Button.A):
+          basic.pause(20)
+      while True:
+          cm = distance()
+          if cm > 0 and cm < 20:
+              avoid()
+          else:
+              forward()
+          basic.pause(50)
+    stuck:
+      - "**Every `def` goes above the loops.** A function has to be defined before it's called."
+      - "**Your turn_left() can stay** too. It just isn't shown here."
+      - "**Robot never moves:** did you press A? Is the battery pack on?"
+    test:
+      - My program matches, and my robot avoids walls on its own
+      - I shared my project in MakeCode and copied the link
+
+quiz:
+  - question: What are the three parts of the loop inside a robot that reacts to the world?
+    choices: ["Start, middle, end", "Sense, decide, act", "Forward, back, turn", "Input, output, battery"]
+    answer: 1
+    why: The robot senses (reads the distance), decides (if it's close), and acts (drives or turns), over and over.
+  - question: Why did we move the sensor to P8 and P12 on the robot?
+    choices: ["P8 and P12 are faster", "P1 and P2 are already used by the servos", "The sensor only works on P8", "To save battery"]
+    answer: 1
+    why: Each pin can only do one job. The servos already use P1 and P2.
+  - question: "The sensor reads 0. What does that most likely mean?"
+    choices: ["Something is touching the sensor", "No echo came back", "The robot is going too fast", "The wall is 0 cm away"]
+    answer: 1
+    why: A 0 usually means the echo never came back, not that something is right there. That's why the if checks `cm > 0`.
+  - question: "What does `if cm > 0 and cm < 20:` need to be True?"
+    choices: ["Either part", "Both parts", "Neither part", "Only cm < 20"]
+    answer: 1
+    why: "`and` needs both sides to be True: the reading is real AND it's close."
+  - question: The robot keeps hitting walls when it drives toward them at an angle. What's the best first thing to try?
+    choices: ["Delete the avoid() function", "Make the 20 cm distance bigger", "Unplug the sensor", "Make the robot faster"]
+    answer: 1
+    why: Sound bounces away from walls at an angle, so the robot sees them late. Reacting from farther away gives it more time.
+
+ship:
+  extensions:
+    - title: Random escape
+      level: Easier
+      goal: In avoid(), turn left or right at random so the robot doesn't get stuck in corners.
+      where: Replace the turn_right() line in avoid().
+      code: |
+        if randint(0, 1) == 0:
+            turn_right()
+        else:
+            turn_left()
+        basic.pause(turn_time)
+      new: "1-5"
+      hints: ["randint(0, 1) gives 0 or 1, like flipping a coin.", "You need your turn_left() function from the last project."]
+    - title: Warning beeps
+      level: Easier
+      goal: Beep when the robot sees something close, like a car backing up.
+      where: Inside avoid(), right after stop().
+      code: |
+        def avoid():
+            stop()
+            music.play_tone(Note.C5, 100)
+            music.play_tone(Note.C5, 100)
+            basic.show_icon(IconNames.SURPRISED)
+      new: "3-4"
+      hints: ["The speaker is on the back of a V2 micro:bit.", "Try different notes for a different sound."]
+    - title: Slow down near walls
+      level: Medium
+      goal: Drive fast in open space, slow when something is getting near, and avoid when it's close.
+      where: Replace the if / else in your loop.
+      code: |
+        if cm > 0 and cm < 20:
+            avoid()
+        elif cm > 0 and cm < 50:
+            speed = 40
+            forward()
+        else:
+            speed = 90
+            forward()
+      new: "3-8"
+      hints: ["This uses three zones, just like the Distance Detector.", "Your move functions all use the speed variable, so changing it changes them all."]
+    - title: Keep your distance
+      level: Medium
+      goal: Make a "follow me" robot. It drives forward when your hand is far, backs up when it's too close, and stops in between.
+      where: Replace the whole while True loop. Keep all your functions.
+      code: |
+        while True:
+            cm = distance()
+            if cm == 0:
+                stop()
+            elif cm < 15:
+                backward()
+            elif cm > ___:
+                forward()
+            else:
+                stop()
+            basic.pause(50)
+      hints: ["Hold a notebook in front of the robot and walk slowly.", "Pick a number for the blank, like 30. Between 15 and that number, the robot stays still.", "Why stop when cm is 0? Think about what 0 means."]
+    - title: Patrol mode
+      level: Challenge
+      goal: Button A starts explore mode, button B switches to follow-me mode. Show E or F on the screen.
+      where: Use a mode variable at the top, and check it inside the loop.
+      code: |
+        mode = "E"
+        while True:
+            if input.button_is_pressed(Button.A):
+                mode = "E"
+            elif input.button_is_pressed(Button.B):
+                mode = "F"
+            cm = distance()
+            if mode == "E":
+                # your explore code here
+            else:
+                # your keep-your-distance code here
+            basic.pause(50)
+      new: "1"
+      hints: ["A variable can hold text, like \"E\" or \"F\".", "Show the mode with basic.show_string(mode) when it changes.", "Get each mode working on its own first, then combine them."]
+  reflect:
+    - Explain sense → decide → act using your robot. What does it sense, what does it decide, and how does it act?
+    - Name a real machine that uses a sensor to avoid bumping into things. How is it like your robot?
+
+teacher_notes: |
+  * **Check the wiring matches your robots.** This lesson assumes servos on **P1 (left) and P2 (right)** from Build a
+    Robot, and the ultrasonic sensor on the front breadboard with **VCC → 3V, Trig → P8, Echo → P12, GND → GND**
+    through the breakout board. If your breakout board or sensor is different, have students write their pins in
+    Step 1 and use them in distance().
+  * **3V vs 5V sensors:** the Distance Detector lesson powers the sensor from 3V. If your sensors are 5V-only
+    (classic HC-SR04), they may give 0 or jumpy readings at 3V.
+  * **The 0 reading:** students who skip Step 5 will see the robot stop randomly in open space. Point them back to it.
+  * **Battery voltage** affects both driving and the sensor. Weak batteries cause restarts mid-run.
+  * **Timing:** about three periods. Day 1: mount, wire and test the sensor. Day 2: stop-before-wall and avoid().
+    Day 3: obstacle course and an extension. A class "maze challenge" with fewest bumps works well on day 3.
+  * The simulator can't drive or ping. Students must download to a real micro:bit.
+
+standards:
+  - code: 6-8.CS.a.4
+    how: Students describe and build the sense → decide → act loop of a robot using an ultrasonic sensor (sensor) and servos (actuators).
+  - code: 6-8.CT.b.1
+    how: Students design a robot loop that uses repetition and conditionals (if / and / else) to avoid obstacles.
+  - code: 6-8.CT.d.6
+    how: Students test on an obstacle course, change one number at a time, and compare results to improve their robot.

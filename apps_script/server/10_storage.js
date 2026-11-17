@@ -137,8 +137,10 @@ function studentSummary_(rec) {
     var L = DATA.lessons[lid];
     if (!L) return;
     var p = rec.progress[lid];
-    lessons[lid] = { pct: percent_(p, L), quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: p.quiz_total || 0,
-                     debug_solved: !!p.debug_solved, challenge: !!p.challenge_submitted_at, stars: lessonStars_(L, p),
+    lessons[lid] = { pct: percent_(p, L), stage: currentStage_(L, p), stages: stagesDone_(L, p),
+                     steps_done: stepsDone_(L, p), steps_total: L.build.length,
+                     quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: p.quiz_total || 0,
+                     shipped: !!p.shipped_at, share: p.share || '', stars: lessonStars_(L, p),
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
@@ -149,8 +151,9 @@ function studentSummary_(rec) {
 function winKind_(e) {
   var key = e.key || '', r = e.reason || '';
   if (key.indexOf('badge:') === 0 || (!key && r.indexOf('Badge: ') === 0)) return 'badge';
-  if (key.indexOf('complete:') === 0 || (!key && r.indexOf(DATA.section_labels.complete + ' · ') === 0)) return 'complete';
-  if (key.indexOf('quiz_perfect:') === 0 || (!key && r.indexOf(DATA.section_labels.quiz_perfect + ' · ') === 0)) return 'quiz_perfect';
+  if (key.indexOf('complete:') === 0) return 'complete';
+  if (key.indexOf('ship:') === 0) return 'ship';
+  if (key.indexOf('quiz_perfect:') === 0) return 'quiz_perfect';
   if (key.indexOf('bonus:') === 0 || (!key && r.indexOf('Bonus from your teacher') === 0)) return 'bonus';
   return null;
 }

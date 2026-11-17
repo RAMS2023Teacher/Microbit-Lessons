@@ -1,0 +1,322 @@
+id: blink-an-led
+title: Blink an LED
+tagline: Build your first circuit and make it blink forever
+minutes: 50          # about one class period
+
+mission:
+  goal: |
+    Build your **first circuit**: a real LED on a breadboard, wired to the micro:bit.
+    Then write a `while True` loop that blinks it **forever**. You'll learn which way an LED goes in,
+    why it needs a resistor, and how a pin turns it on and off.
+  picture:
+    type: compare
+    items:
+      - {icon: "🔌", title: "Pin P0", text: "the micro:bit turns it on (1) or off (0)"}
+      - {icon: "🟫", title: "Resistor", text: "slows the electricity so the LED doesn't burn out"}
+      - {icon: "💡", title: "LED", text: "lights up when electricity flows the right way"}
+  you_need:
+    - A partner
+    - A micro:bit in a breakout board, on a breadboard
+    - 1 LED (any color) and 1 resistor (220 Ω)
+    - 2 jumper wires
+    - A Chromebook with MakeCode open
+  learn:
+    - "**while True** loops repeat forever"
+    - "a **pin** can switch a circuit on and off"
+    - "LEDs have a **+ leg** and a **– leg**"
+  talk: Name three things at home that blink or flash on their own. Why do you think they blink instead of staying on?
+
+build:
+  - part: "Part 1: Blink the screen"
+    title: A loop that never stops
+    say: |
+      Last lesson your code ran once and stopped. `while True:` makes a **loop**: the lines inside it repeat **forever**.
+      Lights that blink, games and alarms all use loops like this.
+    do:
+      - Open MakeCode. Make a **New Project** named **Blink**. Switch to **Python** and delete the starter code.
+      - Type this code exactly. Watch the indentation.
+      - Run it in the simulator.
+    code: |
+      while True:
+          basic.show_icon(IconNames.SQUARE)
+          basic.pause(500)
+          basic.clear_screen()
+          basic.pause(500)
+    what: "Show a square, wait half a second, clear the screen, wait half a second, then jump back to the top. `500` means 500 milliseconds. 1000 milliseconds is 1 second."
+    tip: "**Watch out:** always put a `basic.pause` inside a `while True` loop. Without one, the micro:bit gets too busy to update."
+    test:
+      - The square blinks on and off and never stops
+    ask: How many times does the square blink in 1 second? How do you know from the code?
+
+  - part: "Part 2: Meet the parts"
+    title: The LED has a + and a – leg
+    say: |
+      An **LED** (light-emitting diode) only lets electricity flow **one way**. The **long leg** is **+**.
+      The **short leg** is **–**. Put it in backwards and it just won't light. It won't break.
+    picture:
+      type: part
+      part: led
+      color: red
+      caption: The long leg is + (it goes toward the pin). The short leg is – (it goes toward GND).
+    do:
+      - Find your LED. Hold it up and compare the legs.
+      - Find the flat edge on the rim of the LED. It's on the – side too.
+    test:
+      - I found the long (+) leg and the short (–) leg
+    ask: What are two ways to tell which leg of an LED is the – leg?
+
+  - part: "Part 2: Meet the parts"
+    title: Why a resistor?
+    say: |
+      A **resistor** slows down the electricity. Without one, too much flows through the LED and it can burn out.
+      Ours is **220 Ω** (ohms). A resistor has no + or –, so either way round works.
+    picture:
+      type: part
+      part: resistor
+      ohms: 220
+      caption: The colored stripes tell you how strong the resistor is.
+    do:
+      - Find your 220 Ω resistor.
+      - Bend both legs down so it can sit in the breadboard.
+    test:
+      - I have a 220 Ω resistor with both legs bent down
+    ask: A friend says "my resistor is in backwards." What would you tell them?
+
+  - part: "Part 2: Meet the parts"
+    title: How a breadboard works
+    say: |
+      A **breadboard** joins parts without solder. Inside, each short **row of 5 holes** is connected by a metal strip.
+      Two parts plugged into the **same row** are connected. The long side strips (the **rails**) are connected all the way along.
+    picture:
+      type: compare
+      items:
+        - {icon: "↔️", title: "A row of 5", text: "all 5 holes are joined"}
+        - {icon: "✂️", title: "The middle gap", text: "the two halves are NOT joined"}
+        - {icon: "➖", title: "The blue rail", text: "we use it for GND (–)"}
+    do:
+      - Look at your breadboard. Find a row of 5 holes, the middle gap and the blue (–) rail.
+      - Push the micro:bit into the breakout board, logo facing up.
+    test:
+      - The micro:bit is in the breakout board, on the breadboard
+      - I can point to one row, the middle gap and the blue rail
+    ask: Two legs are in the same row. Are they connected? What if they are on opposite sides of the middle gap?
+
+  - part: "Part 3: Build the circuit"
+    title: Wire the LED
+    say: "Electricity goes **out** of pin P0, **through** the resistor and the LED, and **back** to GND. That loop is a **circuit**."
+    wiring:
+      - "Run a **black** jumper wire from **GND** on the breakout board to the **blue (–) rail**."
+      - "Run a jumper wire from **P0** on the breakout board to an empty row. Call it **row A**."
+      - "Put one leg of the **resistor** in row A and the other leg in a new row a few rows away. Call it **row B**."
+      - "Put the LED's **long (+) leg** in row B, next to the resistor."
+      - "Put the LED's **short (–) leg** in the **blue (–) rail**."
+    picture:
+      type: flow
+      steps:
+        - {icon: "🔌", label: "P0"}
+        - {icon: "🟫", label: "Resistor"}
+        - {icon: "💡", label: "LED + leg"}
+        - {icon: "➖", label: "LED – leg to GND"}
+      caption: "The path the electricity takes: P0, resistor, LED, GND."
+    test:
+      - P0 goes to the resistor, the resistor goes to the LED's long leg
+      - The LED's short leg goes to GND
+      - My partner checked every wire
+    ask: Trace the path with your finger, from P0 back to GND. What parts does it pass through?
+
+  - part: "Part 3: Build the circuit"
+    title: Turn it on
+    say: "`pins.digital_write_pin(DigitalPin.P0, 1)` turns pin P0 **on**. **1** means on. **0** means off."
+    do:
+      - Delete your Step 1 code and type this one line.
+      - Plug in the micro:bit and click **Download**.
+      - Look at your LED.
+    code: |
+      pins.digital_write_pin(DigitalPin.P0, 1)
+    what: "**Digital** means only two choices: on or off, 1 or 0. In the simulator, pin P0 at the bottom of the micro:bit turns red when it's on."
+    stuck:
+      - "**LED is dark?** Flip the LED around. The long leg goes to the resistor."
+      - "**Still dark?** Check that the wire is on **P0**, not P1 or 3V."
+      - "**Check the rows:** the resistor and the LED's long leg must share a row."
+    test:
+      - The LED is on and stays on
+    ask: Change the 1 to a 0 and download again. What happens? Why?
+
+  - part: "Part 4: Make it blink"
+    title: Blink it forever
+    say: Now put the pin inside a `while True` loop. On, wait, off, wait, repeat. That's a blink.
+    do:
+      - Change your code to this.
+      - Download it and watch the LED.
+    code: |
+      while True:
+          pins.digital_write_pin(DigitalPin.P0, 1)
+          basic.pause(500)
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.pause(500)
+    new: "1-5"
+    what: "It's the same shape as your Step 1 loop. The pin lines took the place of the screen lines."
+    test:
+      - The LED blinks on and off
+      - It keeps blinking and never stops
+    ask: Which line turns the LED off? What would happen if you deleted the second basic.pause?
+
+  - part: "Part 4: Make it blink"
+    title: Fast and slow
+    say: The pause numbers control the speed. Smaller numbers mean a faster blink.
+    do:
+      - Change **both** 500s to 100. Download it.
+      - Change them to 1000. Download it.
+      - Find the fastest blink where you can still see it blink. Write it below.
+    code: |
+      while True:
+          pins.digital_write_pin(DigitalPin.P0, 1)
+          basic.pause(100)
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.pause(100)
+    new: "3, 5"
+    test:
+      - I tried a fast blink and a slow blink
+    fields: ["Fastest I can see", "My favorite speed"]
+    ask: Make the LED stay on a long time and off a short time. What numbers did you use?
+
+  - part: "Part 4: Make it blink"
+    title: Blink the screen too
+    say: You can do more than one thing in the loop. Make the screen and the LED blink together.
+    do:
+      - Add the two highlighted lines.
+      - Download it. The screen and the LED should match.
+    code: |
+      while True:
+          pins.digital_write_pin(DigitalPin.P0, 1)
+          basic.show_icon(IconNames.HEART)
+          basic.pause(500)
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.clear_screen()
+          basic.pause(500)
+    new: "3, 6"
+    test:
+      - The heart and the LED turn on and off together
+    ask: Swap the two blocks so the LED is on while the screen is off. Which lines did you move?
+
+  - part: "Part 4: Make it blink"
+    title: "Checkpoint: the blinker"
+    say: Your circuit and your code should both match. Check them with your partner.
+    code: |
+      while True:
+          pins.digital_write_pin(DigitalPin.P0, 1)
+          basic.show_icon(IconNames.HEART)
+          basic.pause(500)
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.clear_screen()
+          basic.pause(500)
+    stuck:
+      - "**LED never lights:** flip the LED; check the long leg shares a row with the resistor; check the wire is on P0."
+      - "**LED stays on:** check the second `digital_write_pin` line ends with `0`."
+      - "**Red squiggles:** every line inside the loop must be pushed in the same amount."
+    test:
+      - My LED blinks with my code
+      - I can explain the path from P0 back to GND
+
+quiz:
+  - question: "What does `while True:` do?"
+    choices: ["Runs the code inside one time", "Repeats the code inside forever", "Waits for button A", "Turns on the LED"]
+    answer: 1
+    why: True is always true, so the loop never stops.
+  - question: Which leg of the LED goes toward the pin (through the resistor)?
+    choices: ["The long leg (+)", "The short leg (–)", "Either one", "Neither"]
+    answer: 0
+    why: Electricity flows into the long + leg and out of the short – leg to GND.
+  - question: Why does the LED need a resistor?
+    choices: ["To make it a different color", "To slow down the electricity so the LED doesn't burn out", "To make it blink", "It doesn't need one"]
+    answer: 1
+    why: Too much electricity can burn out an LED. The resistor limits it.
+  - question: "What does `pins.digital_write_pin(DigitalPin.P0, 0)` do?"
+    choices: ["Turns pin P0 on", "Turns pin P0 off", "Reads pin P0", "Waits 0 seconds"]
+    answer: 1
+    why: 1 is on and 0 is off.
+  - question: Your LED doesn't light up at all. What's the **best** first thing to try?
+    choices: ["Delete all your code", "Flip the LED around", "Get a new breadboard", "Add more pauses"]
+    answer: 1
+    why: A backwards LED is the most common mistake, and it's the easiest to fix.
+
+ship:
+  extensions:
+    - title: Heartbeat rhythm
+      level: Easier
+      goal: Make the LED blink like a heartbeat - two quick blinks, then a rest.
+      where: Replace the lines inside your loop.
+      code: |
+        while True:
+            pins.digital_write_pin(DigitalPin.P0, 1)
+            basic.pause(100)
+            pins.digital_write_pin(DigitalPin.P0, 0)
+            basic.pause(100)
+            pins.digital_write_pin(DigitalPin.P0, 1)
+            basic.pause(100)
+            pins.digital_write_pin(DigitalPin.P0, 0)
+            basic.pause(700)
+      hints: ["Copy the on / pause / off / pause block twice.", "Make the last pause longer for the rest."]
+    - title: Two LEDs take turns
+      level: Medium
+      goal: Add a second LED on pin P1 that is on when the first LED is off.
+      where: Build a second LED circuit from P1, then add P1 lines to your loop.
+      code: |
+        while True:
+            pins.digital_write_pin(DigitalPin.P0, 1)
+            pins.digital_write_pin(DigitalPin.P1, 0)
+            basic.pause(500)
+            pins.digital_write_pin(DigitalPin.P0, 0)
+            pins.digital_write_pin(DigitalPin.P1, 1)
+            basic.pause(500)
+      new: "3, 6"
+      hints: ["Wire the second LED just like the first: P1, resistor, long leg, short leg to the blue rail.", "Both LEDs can share the same GND rail."]
+    - title: Blink only while A is held
+      level: Medium
+      goal: The LED blinks only while you hold button A. Let go and it stays off.
+      where: Wrap your blink lines in an if inside the loop.
+      code: |
+        while True:
+            if input.button_is_pressed(Button.A):
+                pins.digital_write_pin(DigitalPin.P0, 1)
+                basic.pause(200)
+                pins.digital_write_pin(DigitalPin.P0, 0)
+                basic.pause(200)
+            else:
+                basic.pause(20)
+      new: "2, 7-8"
+      hints: ["The blink lines are pushed in twice now: once for the loop and once for the if.", "You'll learn more about if / else in the Reaction Game."]
+    - title: Glow brighter and dimmer
+      level: Challenge
+      goal: Use analog_write_pin to make the LED glow dim, then medium, then bright.
+      where: Replace the lines inside your loop.
+      code: |
+        while True:
+            pins.analog_write_pin(AnalogPin.P0, 50)
+            basic.pause(500)
+            pins.analog_write_pin(AnalogPin.P0, 300)
+            basic.pause(500)
+            pins.analog_write_pin(AnalogPin.P0, 1023)
+            basic.pause(500)
+      hints: ["Analog means many levels, not just on and off.", "0 is off and 1023 is full brightness.", "Note it's AnalogPin.P0 here, not DigitalPin.P0."]
+  reflect:
+    - Explain the path electricity takes in your circuit, from P0 back to GND.
+    - What does while True do, and why does a blinking light need it?
+
+teacher_notes: |
+  * **Timing:** one class period. Part 1 is a quick warm-up; most of the time goes to building and debugging the circuit.
+  * **Hardware assumed:** a micro:bit in a breakout board that plugs into (or sits beside) a breadboard, a 220 Ω resistor,
+    a 5 mm LED and male-to-male jumper wires. Any resistor from 100 Ω to 1 kΩ works; bigger values just make the LED dimmer.
+    No breakout? Alligator clips from P0 and GND on the micro:bit edge to the resistor and LED legs work too.
+  * **Most common bugs:** LED backwards; resistor and LED long leg not in the same row; parts straddling (or not straddling)
+    the middle gap; wire on the wrong pin; missing the second `basic.pause`.
+  * **Simulator:** pin P0 turns red in the simulator when it's on, so students without hardware can still follow along.
+  * Ask students to trace the circuit out loud before they download. It catches most wiring mistakes.
+
+standards:
+  - code: 6-8.CT.b.1
+    how: Students use repetition (a while True loop) to blink an LED forever, and change the timing to control the pattern.
+  - code: 6-8.CS.a.4
+    how: Students use a micro:bit pin as an output to control an LED in an embedded circuit.
+  - code: 6-8.CS.a.7
+    how: Students diagnose a circuit that doesn't work (backwards LED, wrong row, wrong pin) and fix it.

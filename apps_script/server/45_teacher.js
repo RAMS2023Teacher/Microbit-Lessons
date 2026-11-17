@@ -53,30 +53,7 @@ function assignLessons(cid, lessonIds, due, note) {
   (lessonIds || []).forEach(function (lid) {
     if (!DATA.lessons[lid] || have[lid]) return;
     cfg.assignments.push({ id: String(nextId_(cfg)), class_id: cid, lesson_id: lid, due: dateOrEmpty_(due),
-                           note: String(note || '').slice(0, 500), branch: null, created_at: now_() });
-    added++;
-  });
-  saveConfig_(cfg);
-  return { added: added };
-}
-
-/** The Sprint trunk, then one branch or a choice of all three (choice branches only count once started). */
-function assignSprint(cid, choice, due, note) {
-  var cfg = teacher_();
-  if (!cfg.classes[cid]) throw new Error('No such class.');
-  if (choice !== 'choice' && !DATA.sprint.branches[choice]) throw new Error('Pick a branch.');
-  if (!dateOrEmpty_(due)) throw new Error('Pick a due date for the Sprint.');
-  var wanted = DATA.sprint.trunk.map(function (l) { return [l, null]; });
-  if (choice === 'choice') Object.keys(DATA.sprint.branches).forEach(function (b) { DATA.sprint.branches[b].forEach(function (l) { wanted.push([l, b]); }); });
-  else DATA.sprint.branches[choice].forEach(function (l) { wanted.push([l, null]); });
-  var existing = {};
-  cfg.assignments.forEach(function (a) { if (a.class_id === cid) existing[a.lesson_id] = a; });
-  var added = 0;
-  wanted.forEach(function (w) {
-    if (!DATA.lessons[w[0]]) return;
-    if (existing[w[0]]) { existing[w[0]].due = due; existing[w[0]].branch = w[1]; return; }
-    cfg.assignments.push({ id: String(nextId_(cfg)), class_id: cid, lesson_id: w[0], due: due,
-                           note: String(note || '').slice(0, 500), branch: w[1], created_at: now_() });
+                           note: String(note || '').slice(0, 500), created_at: now_() });
     added++;
   });
   saveConfig_(cfg);
@@ -122,15 +99,6 @@ function giveBonus(email, amount, reason, badge) {
   return { ok: true, xp: amount };
 }
 
-/** Hide the Learn cards for a class when the teacher teaches that part live. */
-function setSkipLearn(cid, skip) {
-  var cfg = teacher_();
-  if (!cfg.classes[cid]) throw new Error('No such class.');
-  cfg.classes[cid].skip_learn = !!skip;
-  saveConfig_(cfg);
-  return { ok: true, skip_learn: !!skip };
-}
-
 function saveVideos(map) {
   var cfg = teacher_(), out = {};
   Object.keys(map || {}).forEach(function (lid) {
@@ -156,20 +124,14 @@ function classStudents_(cfg, sum, cid) {
   }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
 }
 
-function owesAssignment_(a, started) {
-  return !a.branch || (DATA.sprint.branches[a.branch] || []).some(function (l) { return started[l]; });
-}
-
+/** One gradebook square: how far the student is with an assigned lesson. */
 function gradebookCell_(a, s) {
-  var started = {};
-  Object.keys(s.lessons).forEach(function (l) { started[l] = 1; });
-  if (!owesAssignment_(a, started)) return { status: 'other-branch', pct: 0, late: false };
   var x = s.lessons[a.lesson_id];
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var status = !x ? 'not-started' : x.pct === 100 ? 'complete' : 'in-progress';
-  return { status: status, pct: x ? x.pct : 0, quiz_best: x ? x.quiz_best : null, quiz_total: x ? x.quiz_total : 0,
-           partner: (x && x.partner) || null,
-           debug_solved: !!(x && x.debug_solved), challenge: !!(x && x.challenge), stars: x ? x.stars : 0,
+  return { status: status, pct: x ? x.pct : 0, stage: x ? x.stage : 'mission', steps_done: x ? x.steps_done : 0,
+           steps_total: x ? x.steps_total : 0, quiz_best: x ? x.quiz_best : null, quiz_total: x ? x.quiz_total : 0,
+           share: x ? x.share : '', shipped: !!(x && x.shipped), stars: x ? x.stars : 0, partner: (x && x.partner) || null,
            late: !!(a.due && a.due < today && status !== 'complete') };
 }
 
@@ -188,7 +150,7 @@ function gradebook(cid) {
   var sum = summary_(), students = classStudents_(cfg, sum, cid);
   var cols = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; }).map(function (a) {
     var L = DATA.lessons[a.lesson_id];
-    return { id: a.id, lesson_id: L.id, number: L.number, title: L.title, due: a.due, note: a.note, branch: a.branch };
+    return { id: a.id, lesson_id: L.id, number: L.number, title: L.title, icon: L.icon, due: a.due, note: a.note };
   });
   var grid = {};
   students.forEach(function (s) { cols.forEach(function (a) { grid[s.email + '|' + a.id] = gradebookCell_(a, s); }); });
@@ -202,16 +164,18 @@ function studentDetail(cid, email) {
   var cfg = teacher_();
   if (!cfg.classes[cid]) throw new Error('No such class.');
   var rec = loadStudentFresh_(email);
-  if (!rec && rosterOf_(cfg, cid)[email]) rec = newStudent_(email), rec.name = rosterOf_(cfg, cid)[email];
+  if (!rec && rosterOf_(cfg, cid)[email]) { rec = newStudent_(email); rec.name = rosterOf_(cfg, cid)[email]; }
   if (!rec) throw new Error('No work saved for that student yet.');
   var assigned = {};
   cfg.assignments.forEach(function (a) { if (a.class_id === cid) assigned[a.lesson_id] = 1; });
   var items = lessonList_().filter(function (L) { return rec.progress[L.id] || assigned[L.id]; }).map(function (L) {
     var p = rec.progress[L.id] || null;
-    return { id: L.id, number: L.number, title: L.title, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0, p: p,
-             feedback: ((cfg.feedback[email] || {})[L.id]) || '', stepped_count: L.stepped_count, has_debug: L.has_debug,
+    return { id: L.id, number: L.number, title: L.title, icon: L.icon, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0,
+             stage: currentStage_(L, p), p: p, feedback: ((cfg.feedback[email] || {})[L.id]) || '',
              partner: p && p.partner ? partnerName_(cfg, p.partner) : null,
-             learn_titles: (L.learn_checks || []).some(function (c) { return c; }) ? L.learn_titles : [] };
+             steps: L.build.map(function (S) { return { title: S.title, ask: S.ask || '', fields: S.fields || [] }; }),
+             talk_q: L.mission.talk, quiz_total: L.quiz.length,
+             extensions: ((L.ship || {}).extensions || []).map(function (e) { return e.title; }), reflect_q: (L.ship || {}).reflect || [] };
   });
   return { cls: cfg.classes[cid], student: { email: email, name: rec.name, xp: rec.xp || 0, level: levelInfo_(rec.xp || 0),
            avatar: avatarOf_(rec), badges: badgeList_(rec).filter(function (b) { return b.earned; }) }, items: items };
@@ -235,7 +199,7 @@ function classroomPackage(cid, how, lessonIds) {
     var grades = {};
     cols.forEach(function (a) {
       var cell = gb.grid[s.email + '|' + a.id], score = null;
-      if (cell && cell.status !== 'not-started' && cell.status !== 'other-branch') {
+      if (cell && cell.status !== 'not-started') {
         var quiz = cell.quiz_total ? Math.round(100 * (cell.quiz_best || 0) / cell.quiz_total) : null;
         score = how === 'complete' ? cell.pct : how === 'quiz' ? quiz : (quiz === null ? null : Math.round((cell.pct + quiz) / 2));
       }
@@ -249,13 +213,14 @@ function classroomPackage(cid, how, lessonIds) {
 
 // ---------------------------------------------------------------- class display (projector)
 // Same data as the Flask site's /teacher/classes/<id>/screen/data, read by app/static/js/screen.js.
-var WIN_ICONS_ = { badge: '🏅', complete: '🏁', quiz_perfect: '🧠', bonus: '🍎' };
+var WIN_ICONS_ = { badge: '🏅', complete: '🏁', ship: '📦', quiz_perfect: '🧠', bonus: '🍎' };
 
 function winText_(name, w) {
   var r = w.reason || '', detail = r.indexOf(' · ') >= 0 ? r.slice(r.indexOf(' · ') + 3) : r;
   if (w.kind === 'badge') return name + ' earned the ' + r.replace('Badge: ', '') + ' badge';
   if (w.kind === 'complete') return name + ' finished ' + detail;
   if (w.kind === 'quiz_perfect') return name + ' got a perfect quiz in ' + detail;
+  if (w.kind === 'ship') return name + ' shipped ' + detail;
   return name + ' got a bonus from the teacher';
 }
 
@@ -272,8 +237,6 @@ function shownNames_(students, mode) {
   return out;
 }
 
-var STOP_ICONS_ = { warmup: '✏️', learn: '📖', circuit: '🔌', lab: '🧪', code: '💻', practice: '🧩', debug: '🐞', quiz: '❓', challenge: '🚀' };
-
 function whereIs_(s) {
   var ids = Object.keys(s.lessons || {}).filter(function (l) { return DATA.lessons[l]; })
     .sort(function (a, b) { return String(s.lessons[b].updated_at || '').localeCompare(String(s.lessons[a].updated_at || '')); });
@@ -285,19 +248,14 @@ function whereIs_(s) {
   return { where: 'Not started', pct: 0, status: 'waiting', lesson_id: null };
 }
 
-/** Race-track stops for a lesson: one per section, named like its agenda. */
-function trackStops_(L) {
-  return L.section_keys.map(function (k) {
-    return { key: k, name: (L.agenda_names || {})[k] || k.charAt(0).toUpperCase() + k.slice(1), icon: STOP_ICONS_[k] || '⭐' };
-  });
-}
+/** Race-track stops: the four stages of a lesson. */
+function trackStops_() { return STAGES_.map(function (st) { return { key: st[0], name: st[1], icon: st[2] }; }); }
 
-/** Standards from the lessons students are on right now, most students first (the focus lesson if nobody is). */
 function standardsInPlay_(counts, focusId) {
   var c = Object.keys(counts).length ? counts : (function () { var o = {}; o[focusId] = 0; return o; })(), out = {}, order = [];
   Object.keys(c).sort(function (a, b) { return c[b] - c[a]; }).forEach(function (lid) {
     var L = DATA.lessons[lid];
-    (L.standards || []).forEach(function (st) {
+    (L.standards_full || []).forEach(function (st) {
       if (!out[st.code]) { out[st.code] = { code: st.code, text: st.text, students: 0, lessons: [] }; order.push(st.code); }
       out[st.code].students += c[lid];
       out[st.code].lessons.push(L.number + '. ' + L.title);
@@ -325,13 +283,13 @@ function screenPayload_(cfg, cid) {
     var mine = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; })
       .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
     var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
-    L = next ? DATA.lessons[next.lesson_id] : DATA.lessons[DATA.order[0]];
+    L = next ? DATA.lessons[next.lesson_id] : lessonList_()[0];
   }
   var rows = students.map(function (s) {
-    var w = wheres[s.email], here = (s.lessons || {})[L.id];
+    var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
     var row = { name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
-                // race track: sections done in today's lesson (null = busy with a different lesson, or not started)
-                done: here ? Math.round(here.pct * L.section_keys.length / 100) : null };
+                // race track: stages done in today's lesson (null = busy with a different lesson, or not started)
+                done: here ? (sd ? STAGES_.filter(function (st) { return sd[st[0]]; }).length : 0) : null };
     if (!here && w.status === 'working') row.elsewhere = w.where;
     if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
     ((sum.students[s.email] || {}).wins || []).forEach(function (x) {
@@ -344,7 +302,7 @@ function screenPayload_(cfg, cid) {
   return { settings: settings, students: rows, wins: wins,
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
-           track: trackStops_(L), question: settings.question || L.essential_question || '', big_idea: L.big_idea || '',
+           track: trackStops_(), question: settings.question || L.mission.talk || '', big_idea: 'Python idea: ' + L.python,
            standards: standardsInPlay_(working, L.id) };
 }
 
@@ -367,9 +325,7 @@ function screenSave(cid, d) {
 }
 
 function screenUnits_() {
-  return catalogUnits_().map(function (u) {
-    return { title: 'Unit ' + u.number + ': ' + u.title, lessons: u.lessons.map(function (l) { return { id: l.id, number: l.number, title: l.title }; }) };
-  });
+  return [{ title: 'Lessons', lessons: lessonList_().map(function (L) { return { id: L.id, number: L.number, title: L.title }; }) }];
 }
 
 // ---------------------------------------------------------------- the icon in the browser tab

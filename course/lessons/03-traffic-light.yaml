@@ -1,0 +1,372 @@
+id: traffic-light
+title: Traffic Light
+tagline: Three LEDs, three functions, one working traffic light
+minutes: 90          # about two class periods
+
+mission:
+  goal: |
+    Build a working **traffic light** with a red, a yellow and a green LED. You'll write your own
+    **functions** like `red_light()` and `green_light()`, so your main loop reads almost like English:
+    green, wait, yellow, wait, red, wait, repeat.
+  picture:
+    type: flow
+    steps:
+      - {icon: "🟢", label: "Green: go", color: "#34c759"}
+      - {icon: "🟡", label: "Yellow: slow", color: "#e0b000"}
+      - {icon: "🔴", label: "Red: stop", color: "#ff3b30"}
+    loop: true
+    loop_label: and again, forever
+    caption: A traffic light is a loop of three steps.
+  you_need:
+    - A partner
+    - A micro:bit in a breakout board, on a breadboard
+    - 3 LEDs (red, yellow, green) and 3 resistors (220 Ω)
+    - 4 jumper wires
+    - A Chromebook with MakeCode open
+  learn:
+    - "**functions**: give a name to a group of lines with `def`"
+    - "**calling** a function to run those lines"
+    - "wiring **three outputs** that share one GND"
+  talk: Think about a traffic light near school. What order do the colors go in? Which color stays on the longest, and why?
+
+build:
+  - part: "Part 1: Wire the lights"
+    title: The red light on P0
+    say: You built this circuit last lesson. The red LED goes on pin **P0**, through a resistor, and back to GND.
+    wiring:
+      - "Run a **black** jumper wire from **GND** on the breakout board to the **blue (–) rail**."
+      - "Run a jumper wire from **P0** to an empty row. Put a **resistor** from that row to a new row."
+      - "Put the **red** LED's **long (+) leg** in the resistor's new row."
+      - "Put the red LED's **short (–) leg** in the **blue (–) rail**."
+    picture:
+      type: part
+      part: led
+      color: red
+      caption: "Remember: long leg toward the pin, short leg to GND."
+    test:
+      - "My red LED is wired from P0 to the blue rail"
+    ask: Which leg of the LED goes into the blue rail? How can you tell which one it is?
+
+  - part: "Part 1: Wire the lights"
+    title: Add yellow on P1 and green on P2
+    say: Each LED gets its **own pin** and its **own resistor**. All three short legs **share** the same GND rail.
+    wiring:
+      - "Run a jumper wire from **P1** to an empty row. Add a **resistor** and the **yellow** LED, just like red."
+      - "Run a jumper wire from **P2** to an empty row. Add a **resistor** and the **green** LED."
+      - "Put both short (–) legs in the **blue (–) rail**."
+      - "Line them up from top to bottom: red, yellow, green, like a real traffic light."
+    picture:
+      type: compare
+      items:
+        - {icon: "🔴", title: "Red", text: "P0"}
+        - {icon: "🟡", title: "Yellow", text: "P1"}
+        - {icon: "🟢", title: "Green", text: "P2"}
+    test:
+      - Yellow is wired from P1, green from P2
+      - Each LED has its own resistor
+      - All three short legs are in the blue rail
+    ask: Why can all three LEDs share one GND rail, but each needs its own pin?
+
+  - part: "Part 1: Wire the lights"
+    title: Test every light
+    say: Before you write the real program, test the wiring. Turn all three lights on.
+    do:
+      - Open MakeCode. Make a **New Project** named **Traffic Light**. Switch to **Python** and delete the starter code.
+      - Type these three lines and click **Download**.
+    code: |
+      pins.digital_write_pin(DigitalPin.P0, 1)
+      pins.digital_write_pin(DigitalPin.P1, 1)
+      pins.digital_write_pin(DigitalPin.P2, 1)
+    stuck:
+      - "**One LED is dark?** Flip it around, then check its wire goes to the right pin."
+      - "**Check the rows:** each resistor must share a row with its LED's long leg."
+    test:
+      - All three LEDs light up
+    ask: One of your LEDs didn't light the first time (or pretend it didn't). What would you check first, and why?
+
+  - part: "Part 2: Functions"
+    title: Your first function
+    say: |
+      A **function** is a group of lines with a **name**. You write it once with `def`. Then you **call** it by its name
+      whenever you need it. It's like a recipe card: write it once, use it many times.
+    do:
+      - Delete your test lines.
+      - Type this function. Then add the last line, all the way to the left.
+      - Download it. All three lights should go off.
+    code: |
+      def all_off():
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          pins.digital_write_pin(DigitalPin.P2, 0)
+
+      all_off()
+    new: "1-6"
+    what: |
+      Lines 1 to 4 **define** the function. `def` means "define", `all_off` is its name, and the colon starts the inside.
+      Line 6 **calls** it. Nothing happens until you call it!
+    tip: "**Python cares about spaces.** The lines inside `def` are pushed in. The call `all_off()` is not."
+    test:
+      - All three LEDs are off
+    ask: "Predict: what happens if you delete the last line, all_off()? Try it. Were you right?"
+
+  - part: "Part 2: Functions"
+    title: A function for red
+    say: Functions can call other functions. `red_light()` first turns everything off, then turns on just the red LED.
+    do:
+      - Add the highlighted lines.
+      - Change the last line so it calls `red_light()`.
+      - Download it.
+    code: |
+      def all_off():
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          pins.digital_write_pin(DigitalPin.P2, 0)
+
+      def red_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P0, 1)
+
+      red_light()
+    new: "6-8, 10"
+    what: "`red_light()` uses `all_off()` so you never have two lights on by mistake. One call now does four things."
+    test:
+      - Only the red LED is on
+    ask: How many pin lines does the micro:bit run when you call red_light() once? Count them.
+
+  - part: "Part 2: Functions"
+    title: Yellow and green functions
+    say: Now make one function for each color. They follow the same pattern as `red_light()`.
+    do:
+      - Add the two highlighted functions under `red_light`.
+      - Change the last line to call `green_light()`. Download it. Then try `yellow_light()`.
+    code: |
+      def all_off():
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          pins.digital_write_pin(DigitalPin.P2, 0)
+
+      def red_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P0, 1)
+
+      def yellow_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P1, 1)
+
+      def green_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P2, 1)
+
+      green_light()
+    new: "10-16, 18"
+    test:
+      - green_light() turns on only green
+      - yellow_light() turns on only yellow
+    ask: What is the same in all three color functions? What is different?
+
+  - part: "Part 3: Run the light"
+    title: The main loop
+    say: Now the fun part. Your **main loop** just calls the functions in order, with a pause after each one.
+    do:
+      - Replace the last line, `green_light()`, with the highlighted loop.
+      - Download it and watch it cycle.
+    code: |
+      while True:
+          green_light()
+          basic.pause(3000)
+          yellow_light()
+          basic.pause(1000)
+          red_light()
+          basic.pause(3000)
+    new: "1-7"
+    what: "Green for 3 seconds, yellow for 1, red for 3, then back to green. 3000 milliseconds is 3 seconds."
+    tip: "Only the loop is shown here. Your four functions stay **above** it. Python needs to know a function before you call it."
+    test:
+      - The lights go green, yellow, red, then repeat
+      - Only one light is on at a time
+    ask: Read your loop out loud. Could someone who doesn't code understand it? Why?
+
+  - part: "Part 3: Run the light"
+    title: Why bother with functions?
+    say: |
+      Without functions, every color change would need **four pin lines**. Your loop would be over 20 lines long and
+      hard to read. With functions, the details are **hidden** inside the recipe, and the loop shows the big idea.
+    picture:
+      type: compare
+      items:
+        - {icon: "😵", title: "Without functions", text: "20+ lines of pin numbers in the loop"}
+        - {icon: "😎", title: "With functions", text: "6 lines that say green, yellow, red"}
+    do:
+      - Change the timing so it feels more like a real traffic light. Write your numbers below.
+    test:
+      - I changed the timing and it still works
+    fields: ["Green (ms)", "Yellow (ms)", "Red (ms)"]
+    ask: Your yellow LED moved to pin P8. How many lines would you change with functions? How many without?
+
+  - part: "Part 3: Run the light"
+    title: A walk sign
+    say: A function can do more than turn on one LED. Make the micro:bit screen show a **walking person** while the light is red.
+    do:
+      - Add the highlighted line to `red_light()`.
+      - Add the highlighted line to `all_off()`, so the walk sign goes away when the light changes.
+      - Download it.
+    code: |
+      def all_off():
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          pins.digital_write_pin(DigitalPin.P2, 0)
+          basic.clear_screen()
+
+      def red_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P0, 1)
+          basic.show_icon(IconNames.STICK_FIGURE)
+    new: "5, 10"
+    what: You changed two functions, and you didn't touch the loop at all. Every time the loop calls `red_light()`, the walk sign shows.
+    test:
+      - The walking person shows only while the light is red
+      - The screen clears when the light turns green
+    ask: You changed the walk sign without touching your loop. Why is that useful?
+
+  - part: "Part 3: Run the light"
+    title: "Checkpoint: the whole traffic light"
+    say: Your program should match this. Compare it line by line, then compare your circuit with your partner's.
+    code: |
+      def all_off():
+          pins.digital_write_pin(DigitalPin.P0, 0)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          pins.digital_write_pin(DigitalPin.P2, 0)
+          basic.clear_screen()
+
+      def red_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P0, 1)
+          basic.show_icon(IconNames.STICK_FIGURE)
+
+      def yellow_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P1, 1)
+
+      def green_light():
+          all_off()
+          pins.digital_write_pin(DigitalPin.P2, 1)
+
+      while True:
+          green_light()
+          basic.pause(3000)
+          yellow_light()
+          basic.pause(1000)
+          red_light()
+          basic.pause(3000)
+    stuck:
+      - "**Two lights on at once?** Check that each color function calls `all_off()` first."
+      - "**Wrong color lights up?** Check which pin each LED is wired to. Red P0, yellow P1, green P2."
+      - "**Red squiggle on a call?** Check the spelling and the `()` at the end. `red_light()` not `red_light`."
+    test:
+      - My traffic light runs green, yellow, red, forever
+      - The walk sign shows on red
+      - I downloaded it to the real micro:bit
+
+quiz:
+  - question: "What does `def` do?"
+    choices: ["Runs the code right away", "Defines (creates) a function with a name", "Deletes a function", "Turns on an LED"]
+    answer: 1
+    why: "`def` creates the recipe. The lines inside don't run until you call the function."
+  - question: "You wrote `def red_light():` but the red LED never turns on. What's the most likely problem?"
+    choices: ["You never called red_light()", "The LED is too bright", "def only works once", "You need more pauses"]
+    answer: 0
+    why: Defining a function doesn't run it. You have to call it by its name.
+  - question: Why does each color function call `all_off()` first?
+    choices: ["To save battery", "So only one light is on at a time", "To make the light blink", "Python requires it"]
+    answer: 1
+    why: Turning everything off first means the old color goes out before the new one comes on.
+  - question: "What is one big reason to use functions?"
+    choices: ["They make the micro:bit faster", "They hide the details, so the main code is short and easy to read", "They use less electricity", "They're the only way to use pins"]
+    answer: 1
+    why: Your loop says green, yellow, red. The pin details are hidden inside the functions.
+  - question: All three LEDs share the GND rail. What does each LED need its own of?
+    choices: ["GND wire", "Pin and resistor", "Breadboard", "micro:bit"]
+    answer: 1
+    why: Each LED needs its own pin so the code can control it alone, and its own resistor to protect it.
+
+ship:
+  extensions:
+    - title: Night mode
+      level: Easier
+      goal: Write a function that flashes the yellow light, like traffic lights do late at night.
+      where: Add a new function above your loop. Call it from the loop instead of the three colors.
+      code: |
+        def night_mode():
+            all_off()
+            pins.digital_write_pin(DigitalPin.P1, 1)
+            basic.pause(500)
+            all_off()
+            basic.pause(500)
+      new: "1-6"
+      hints: ["Call night_mode() inside while True to flash forever.", "Keep your old loop in a comment so you can switch back."]
+    - title: Beep for the walk sign
+      level: Easier
+      goal: Play a short beep when the walk sign comes on, to help people who can't see the light.
+      where: Inside red_light(), after show_icon.
+      code: |
+        def red_light():
+            all_off()
+            pins.digital_write_pin(DigitalPin.P0, 1)
+            basic.show_icon(IconNames.STICK_FIGURE)
+            music.play_tone(Note.C5, 200)
+      new: "5"
+      hints: ["On a micro:bit V2 the beep comes out of the built-in speaker.", "200 is how long the beep lasts, in milliseconds."]
+    - title: Press A to cross
+      level: Medium
+      goal: The light stays green until someone presses A. Then it goes yellow, red, and back to green.
+      where: Replace your main loop.
+      code: |
+        while True:
+            green_light()
+            if input.button_is_pressed(Button.A):
+                yellow_light()
+                basic.pause(1000)
+                red_light()
+                basic.pause(3000)
+            basic.pause(20)
+      new: "3-7"
+      hints: ["The light stays green while nobody presses A.", "The lines inside the if are pushed in twice."]
+    - title: A function with a timer
+      level: Challenge
+      goal: "Give each color function a number for how long it stays on, like `red_light(3000)`."
+      where: Change your color functions and your loop.
+      code: |
+        def red_light(time):
+            all_off()
+            pins.digital_write_pin(DigitalPin.P0, 1)
+            basic.show_icon(IconNames.STICK_FIGURE)
+            basic.pause(time)
+
+        while True:
+            green_light(3000)
+            yellow_light(1000)
+            red_light(3000)
+      new: "1, 5, 8-10"
+      hints: ["The name inside the brackets, time, is a parameter. It holds whatever number you pass in.", "Change green_light and yellow_light the same way.", "Your loop gets even shorter: no more pause lines!"]
+  reflect:
+    - In your own words, what is a function? What's the difference between defining it and calling it?
+    - Your loop calls green_light(). Explain everything that happens on the circuit when it does.
+
+teacher_notes: |
+  * **Timing:** two class periods. Day 1: wire and test all three LEDs (Steps 1-3) and start functions. Day 2: Steps 4-10
+    and an extension.
+  * **Hardware assumed:** micro:bit in a breakout board with a breadboard, red/yellow/green 5 mm LEDs, three 220 Ω resistors,
+    jumper wires. Pins P0, P1 and P2 are used so it also works with alligator clips on the micro:bit's big edge pins.
+  * **Most common bugs:** a function defined but never called; calling `red_light` without `()`; functions written
+    **below** the loop (Python must see `def` first); one LED backwards; two LEDs sharing a row by accident.
+  * **Big idea to push:** functions **hide detail** (6-8.CT.d.2). Step 8's question (moving yellow to P8) is a good whole-class
+    discussion.
+  * Students turn in their MakeCode **share link** in Ship it.
+
+standards:
+  - code: 6-8.CT.a.2
+    how: Students define functions (red_light, yellow_light, green_light, all_off) and reuse them in a loop.
+  - code: 6-8.CT.d.2
+    how: Students use functions to hide the pin details, so the main loop reads green, yellow, red.
+  - code: 6-8.CS.a.4
+    how: Students wire three LED outputs to micro:bit pins and control them as a traffic-light system.

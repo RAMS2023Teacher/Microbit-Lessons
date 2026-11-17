@@ -1,17 +1,6 @@
 // ---------------------------------------------------------------- pages
-/** Lesson pages are stored gzip-compressed (PAGES_GZ, made by the build); unpack one when needed. */
-var PAGE_CACHE_ = {};
-function page_(id) {
-  if (PAGE_CACHE_[id]) return PAGE_CACHE_[id];
-  var packed = PAGES_GZ[id];
-  if (!packed) return null;
-  var blob = Utilities.newBlob(Utilities.base64Decode(packed), 'application/x-gzip');
-  return (PAGE_CACHE_[id] = JSON.parse(Utilities.ungzip(blob).getDataAsString('UTF-8')));
-}
-
-// Every page is one doGet: ?p=/lessons/blink-external-led mirrors the Flask site's URLs.
-// Lesson pages are pre-rendered by the build (PAGES); other pages are drawn in the browser
-// by client/pages.js from the data sent here.
+// Every page is one doGet: ?p=/lessons/dodge-the-drop. The server sends data; client/pages.js and
+// client/lesson.js draw the page in the browser.
 
 function doGet(e) {
   var problems = installProblems_();
@@ -44,13 +33,12 @@ function studentPage_(me, path) {
   if (rewards.xp_gained) saveStudent_(rec);
   var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name };
   var m;
-  if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Dashboard', data: merge_(base, dashboardData_(rec, cfg)) };
+  if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Home', data: merge_(base, dashboardData_(rec, cfg)) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec)) };
-  if (path === '/map') return { name: 'map', title: 'Maker Map', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg)) }) };
+  if (path === '/map') return { name: 'map', title: 'Skill tree', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg)) }) };
   if (path === '/me') return { name: 'profile', title: 'My robot', data: merge_(base, profileData_(rec)) };
-  if (path === '/setup') return { name: 'setup', title: 'micro:bit setup', editor: true, data: merge_(base, { done: !!rec.setup_done }) };
-  if (path === '/editor') return { name: 'playground', title: 'Editor', editor: true, html: page_('_playground').html, data: base };
-  if ((m = /^\/lessons\/([\w-]+)$/.exec(path)) && PAGES_GZ[m[1]]) return lessonPage_(m[1], rec, cfg, base, false);
+  if (path === '/help') return { name: 'help', title: 'MakeCode help', data: merge_(base, { makecode: DATA.makecode_url }) };
+  if ((m = /^\/lessons\/([\w-]+)$/.exec(path))) return lessonPage_(m[1], rec, cfg, base, false);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
 }
 
@@ -59,7 +47,7 @@ function teacherPage_(path) {
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
     tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_(),
     logo_refused: !!PropertiesService.getScriptProperties().getProperty('logo:refused') })) };
-  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { units: catalogUnits_() })) };
+  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null) })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/screen$/.exec(path))) {
@@ -68,17 +56,16 @@ function teacherPage_(path) {
              data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_() }) };
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
-  if (path === '/setup') return { name: 'setup', title: 'micro:bit setup', editor: true, data: merge_(base, { done: true }) };
-  if (path === '/teacher/standards') return { name: 'static', title: 'Standards', html: page_('_standards').html, data: base };
-  if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { units: catalogUnits_(), urls: cfg.videos }) };
+  if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
+  if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { course: courseCards_(null), urls: cfg.videos }) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(null)) };
+  if (path === '/help') return { name: 'help', title: 'MakeCode help', data: merge_(base, { makecode: DATA.makecode_url }) };
   if (path === '/map') {
     var map = mapData_(null, {});
-    map.nodes.forEach(function (n) { n.state = 'open'; });
-    return { name: 'map', title: 'Maker Map', data: merge_(base, { map: map }) };
+    map.nodes.forEach(function (n) { if (!n.soon) n.state = 'open'; });
+    return { name: 'map', title: 'Skill tree', data: merge_(base, { map: map }) };
   }
-  if (path === '/editor') return { name: 'playground', title: 'Editor', editor: true, html: page_('_playground').html, data: base };
-  if ((m = /^\/lessons\/([\w-]+)$/.exec(path)) && PAGES_GZ[m[1]]) return lessonPage_(m[1], null, cfg, base, true);
+  if ((m = /^\/lessons\/([\w-]+)$/.exec(path))) return lessonPage_(m[1], null, cfg, base, true);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
 }
 
@@ -93,115 +80,86 @@ function merge_(a, b) {
   return out;
 }
 
-function catalogUnits_() {
-  return Object.keys(DATA.units).map(function (u) {
-    return { number: +u, title: DATA.units[u].title, blurb: DATA.units[u].blurb,
-             lessons: lessonList_().filter(function (L) { return String(L.unit) === u; }).map(function (L) { return L.card; }) };
-  }).filter(function (u) { return u.lessons.length; });
+/** Every lesson in the course plan, written or not ("soon"), with the student's progress. */
+function courseCards_(rec) {
+  return DATA.course.map(function (c) {
+    var L = DATA.lessons[c.id], p = rec && L ? rec.progress[c.id] : null;
+    return { id: c.id, number: c.number, title: c.title, icon: c.icon, color: c.color, python: c.python, hardware: c.hardware,
+             tagline: L ? L.tagline : '', minutes: L ? L.minutes : 0, soon: !L,
+             pct: L && p ? percent_(p, L) : 0, stage: L ? currentStage_(L, p) : 'mission', stars: L ? lessonStars_(L, p) : 0 };
+  });
 }
 
-function catalogData_(rec) {
-  var pct = {};
-  if (rec) Object.keys(rec.progress).forEach(function (l) { if (DATA.lessons[l]) pct[l] = percent_(rec.progress[l], DATA.lessons[l]); });
-  return { units: catalogUnits_(), pct: pct };
+function catalogData_(rec) { return { course: courseCards_(rec) }; }
+
+function stageName_(stage) {
+  var st = STAGES_.filter(function (s) { return s[0] === stage; })[0];
+  return st ? st[1] : 'Done';
 }
 
 function dashboardData_(rec, cfg) {
-  var classes = studentClassIds_(rec, cfg), started = {};
-  Object.keys(rec.progress).forEach(function (l) { started[l] = 1; });
+  var classes = studentClassIds_(rec, cfg), cards = courseCards_(rec), byId = {};
+  cards.forEach(function (c) { byId[c.id] = c; });
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  var rows = cfg.assignments.filter(function (a) {
-    return classes.indexOf(a.class_id) >= 0 && DATA.lessons[a.lesson_id] && owesAssignment_(a, started);
-  }).sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; })
+  var rows = cfg.assignments.filter(function (a) { return classes.indexOf(a.class_id) >= 0 && DATA.lessons[a.lesson_id]; })
+    .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; })
     .map(function (a) {
-      var L = DATA.lessons[a.lesson_id], p = rec.progress[a.lesson_id], pct = p ? percent_(p, L) : 0;
-      return { lesson: L.card, class_name: cfg.classes[a.class_id].name, due: a.due, note: a.note, pct: pct,
-               overdue: !!(a.due && a.due < today && pct < 100), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
+      var c = byId[a.lesson_id];
+      return { lesson: c, class_name: cfg.classes[a.class_id].name, due: a.due, note: a.note, pct: c.pct,
+               overdue: !!(a.due && a.due < today && c.pct < 100), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
     });
-  var recent = Object.keys(rec.progress).filter(function (l) { return DATA.lessons[l]; })
-    .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); })
-    .slice(0, 3).map(function (l) { return { lesson: DATA.lessons[l].card, pct: percent_(rec.progress[l], DATA.lessons[l]) }; });
-  var badges = badgeList_(rec).filter(function (b) { return b.earned; })
-    .sort(function (a, b) { return String(b.earned_at).localeCompare(String(a.earned_at)); });
-  return { rows: rows, recent: recent, badges: badges.slice(0, 6), badge_total: DATA.badges.length, setup_done: !!rec.setup_done,
-           next_up: nextUp_(rec, rows),
-           classes: classes.map(function (c) { return cfg.classes[c].name; }) };
-}
-
-/** The first part of a lesson the student hasn't finished. */
-function nextPart_(L, p) {
-  var done = (p && p.sections) || {};
-  for (var i = 0; i < L.section_keys.length; i++) {
-    var k = L.section_keys[i];
-    if (!done[k]) return (L.agenda_names || {})[k] || k;
-  }
-  return '';
+  var done = cards.filter(function (c) { return !c.soon && c.pct === 100; }).length;
+  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec), done: done,
+           total: DATA.course.length, classes: classes.map(function (c) { return cfg.classes[c].name; }) };
 }
 
 /** One clear thing to do: the lesson they were last working on, else the next assignment, else the next lesson. */
-function nextUp_(rec, rows) {
-  var card = function (verb, L, p) { return { verb: verb, lesson: L.card, pct: p ? percent_(p, L) : 0, part: nextPart_(L, p) }; };
+function nextUp_(rec, rows, cards) {
+  var pick = function (verb, c) { return { verb: verb, lesson: c, stage: stageName_(c.stage) }; };
   var started = Object.keys(rec.progress).filter(function (l) { return DATA.lessons[l]; })
     .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); });
-  for (var i = 0; i < started.length; i++) {
-    var L = DATA.lessons[started[i]];
-    if (percent_(rec.progress[L.id], L) < 100) return card('Keep going', L, rec.progress[L.id]);
-  }
-  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return card('Start', DATA.lessons[rows[j].lesson.id], rec.progress[rows[j].lesson.id]);
-  for (var k = 0; k < DATA.order.length; k++) {
-    var M = DATA.lessons[DATA.order[k]], q = rec.progress[M.id];
-    if (M.kind !== 'check' && (!q || percent_(q, M) < 100)) return card('Start', M, q);
-  }
+  var byId = {};
+  cards.forEach(function (c) { byId[c.id] = c; });
+  for (var i = 0; i < started.length; i++) if (byId[started[i]].pct < 100) return pick('Keep going', byId[started[i]]);
+  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return pick('Start', rows[j].lesson);
+  for (var k = 0; k < cards.length; k++) if (!cards[k].soon && cards[k].pct < 100) return pick('Start', cards[k]);
   return null;
 }
 
 function profileData_(rec) {
   return { badges: badgeList_(rec), history: rec.xp_log || [], catalog: avatarCatalog_(rec, false),
-           parts: DATA.avatar_parts, levels: DATA.levels, xp_table: DATA.xp };
+           parts: DATA.avatar_parts, levels: DATA.levels, xp_table: DATA.xp, xp_labels: DATA.labels };
 }
 
-function lessonState_(L, p, rec, cfg) {
-  return {
-    sections: (p && p.sections) || {}, circuit_steps: (p && p.circuit_steps) || [],
-    warmup_answer: (p && p.warmup_answer) || '',
-    code: (p && p.code) || L.starter,
-    debug_code: (p && p.debug_code) || L.buggy,
-    practice_code: (p && p.practice_code) || L.practice_starter,
-    practice_solved: !!(p && p.practice_solved), debug_solved: !!(p && p.debug_solved),
-    debug_hints_used: (p && p.debug_hints_used) || 0, debug_reflection: (p && p.debug_reflection) || '',
-    quiz_answers: p && p.quiz_answers ? p.quiz_answers : null, quiz_score: p ? p.quiz_score : null, quiz_best: p ? p.quiz_best : null,
-    challenge_code: (p && (p.challenge_code || p.code)) || L.starter,
-    challenge_response: (p && p.challenge_response) || '', challenge_submitted: !!(p && p.challenge_submitted_at),
-    feedback: rec ? ((cfg.feedback[rec.email] || {})[L.id] || '') : '',
-    learn_checks: (p && p.learn_checks) || {},
-    skip_learn: !!(rec && L.section_keys.indexOf('learn') >= 0 && skipsLearn_(rec, cfg)),
-  };
-}
-
-/** True when one of the student's classes has the teacher teaching Learn live. */
-function skipsLearn_(rec, cfg) {
-  return studentClassIds_(rec, cfg).some(function (cid) { return cfg.classes[cid].skip_learn; });
+/** The lesson as the browser gets it: no quiz answers (they're checked on the server). */
+function publicLesson_(L) {
+  var v = JSON.parse(JSON.stringify(L));
+  v.quiz = L.quiz.map(function (q) { return { question: q.question, choices: q.choices }; });
+  delete v.teacher_notes;
+  return v;
 }
 
 function lessonPage_(lid, rec, cfg, base, teacher) {
-  var L = DATA.lessons[lid], pg = page_(lid), p = rec ? rec.progress[lid] : null;
-  if (rec && L.section_keys.indexOf('learn') >= 0 && skipsLearn_(rec, cfg) && !(p && p.sections && p.sections.learn)) {
-    p = rec.progress[lid] || (rec.progress[lid] = newProgress_());     // taught live, so it counts as done
-    mark_(p, 'learn', true);
-    p.updated_at = now_();
-    var got = syncRewards_(rec, cfg);
-    saveStudent_(rec);
-    if (got.xp_gained) base = merge_(base, { rewards: got, level: got.level });
-  }
-  var state = lessonState_(L, p, rec, cfg);
+  var L = DATA.lessons[lid];
+  var c = DATA.course_by_id[lid];
+  if (!L) return { name: 'error', title: 'Coming soon', data: merge_(base, { message: c ? '"' + c.title + '" is coming soon.' : "We couldn't find that lesson." }) };
+  var p = rec ? rec.progress[lid] || null : null;
+  var state = p ? JSON.parse(JSON.stringify(p)) : newProgress_();
   if (p && p.quiz_answers) state.quiz_results = gradeQuiz_(L, p.quiz_answers);
-  return { name: 'lesson', title: L.title, editor: true, lesson: true, html: pg.html, mainClass: 'lesson-layout',
-           data: merge_(base, { lesson_xp: rec ? lessonXp_(rec, lid) : 0, stars: lessonStars_(L, p), xp_possible: L.possible_xp,
-                                video: embedInfo_(cfg.videos[lid]), teacher_key: teacher ? pg.teacher_key : '' }),
-           globals: { LESSON: pg.view, STATE: state, SECTION_KEYS: L.section_keys } };
+  return { name: 'lesson', title: L.title, mainClass: 'lesson-main',
+           data: merge_(base, { lesson: publicLesson_(L), state: state, stage: currentStage_(L, p), stages: stagesDone_(L, p),
+                                lesson_xp: rec ? lessonXp_(rec, lid) : 0, xp_possible: possibleXp_(L), stars: lessonStars_(L, p),
+                                pct: percent_(p, L), feedback: rec ? ((cfg.feedback[rec.email] || {})[lid] || '') : '',
+                                video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url,
+                                key: teacher ? { quiz: L.quiz.map(function (q) { return q.choices[q.answer]; }), notes: L.teacher_notes || '',
+                                                 standards: L.standards_full || [] } : null }) };
 }
 
-/** Same rules as app/videos.py: YouTube, Google Drive, Vimeo, or a direct video file. */
+function standardsData_() {
+  return { lessons: lessonList_().map(function (L) { return { id: L.id, number: L.number, title: L.title, standards: L.standards_full || [] }; }) };
+}
+
+/** Same rules as before: YouTube, Google Drive, Vimeo, or a direct video file. */
 function embedInfo_(url) {
   if (!url || !/^https:\/\//.test(url)) return null;
   var m;
@@ -235,18 +193,11 @@ function checkInstall() {
   var problems = installProblems_();
   ok(!problems.length, problems.length ? 'Files: ' + problems.join(' | ') : 'All ' + BUILD_FILES.length + ' files are pasted, complete, and match (Code.gs ' + BUILD_ID + ')');
   try {
-    ['styles', 'app', 'editor'].forEach(function (k) { if (asset_(k).length < 1000) throw new Error(k + ' is empty'); });
+    ['styles', 'app'].forEach(function (k) { if (asset_(k).length < 1000) throw new Error(k + ' is empty'); });
     ok(true, 'The site\'s styles and code unpack');
   } catch (e) { ok(false, 'Assets.gs: ' + e.message); }
   try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
-  try {
-    var n = Object.keys(PAGES_GZ).length, first = page_(DATA.order[0]);
-    ok(!!first && first.html.length > 1000, n + ' lesson pages in Pages*.gs, and they unpack');
-  } catch (e) { ok(false, 'Pages*.gs: ' + e.message); }
   try { studentFolder_(); ok(true, 'Drive folder "' + DATA_FOLDER + '" is ready'); } catch (e) { ok(false, 'Drive folder: ' + e.message + ' (run setup)'); }
-  ['v1', 'v2'].forEach(function (v) {
-    try { ok(firmwareInfo(v).parts > 0, 'micro:bit firmware ' + v + ' is saved'); } catch (e) { ok(false, 'firmware ' + v + ': ' + e.message); }
-  });
   try { var icon = faviconUrl_(); ok(true, 'Tab icon: ' + icon); } catch (e) { ok(false, 'Tab icon: ' + e.message); }
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
   try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
@@ -295,26 +246,25 @@ var LOADER_SCRIPT_ = '<script>(function(){var t=document.getElementById("ml-code
 
 function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
-// The game-style fonts (the theme falls back to system fonts if Google Fonts is blocked). A <link>, not a
+// AppVenture's fonts: Lilita One for headings, Nunito for text (system fonts if Google Fonts is blocked). A <link>, not a
 // CSS @import, because Apps Script strips "//" inside <style> blocks.
-var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">';
+var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap">';
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/lessons', 'Lessons'], ['/map', 'Map'], ['/editor', 'Editor'], ['/', 'My classes'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/setup', 'micro:bit setup']]
-    : [['/', '🏠 Home'], ['/lessons', 'Lessons'], ['/map', 'Map']];      // few choices; the editor and setup are on Home
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos']]
+    : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
   var code = [safe64_(setup), safe64_(asset_('app'))];
-  if (page.editor) code.push(safe64_(asset_('editor')));
   var out = ['<!doctype html><html lang="en"><head><base target="_top"><meta charset="utf-8">', FONTS_HTML_,
     '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="apps-script">',
     '<style>', asset_('styles'), '</style></head><body class="apps-script ' + (page.bodyClass || '') + '">', CRASH_SCRIPT_,
     '<header class="topbar" id="topbar"></header>',
     '<main class="', page.mainClass || 'container', '" id="main">',
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
-    '<footer class="footer">Built for young makers · Python + micro:bit + circuits</footer>',
+    '<footer class="footer">micro:bit Maker Lab · MakeCode Python + circuits</footer>',
     '<div id="ml-code" hidden>', code.join('.'), '</div>', LOADER_SCRIPT_, '</body></html>'];
   return withIcon_(HtmlService.createHtmlOutput(out.join(''))
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)

@@ -1,0 +1,358 @@
+id: distance-detector
+title: Distance Detector
+tagline: Measure distance with sound, like a bat
+minutes: 90          # about two class periods
+
+mission:
+  goal: |
+    Wire an **ultrasonic sensor** to your micro:bit and turn it into a **distance detector**. It sends out
+    a click of sound, listens for the echo, and works out how far away things are. Then you'll make the
+    micro:bit **react** when something gets close.
+  picture:
+    type: flow
+    steps:
+      - {icon: "📢", label: "Send a ping"}
+      - {icon: "🧱", label: "It bounces off"}
+      - {icon: "👂", label: "Hear the echo"}
+      - {icon: "⏱️", label: "Time it → cm"}
+    caption: The farther away the object, the longer the echo takes to come back.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A **real** micro:bit and USB cable (the simulator can't hear echoes)
+    - A breadboard and an ultrasonic sensor (two round "eyes", four pins)
+    - "4 alligator-clip-to-pin wires: red, yellow, green, black"
+    - A ruler
+  learn:
+    - how an **ultrasonic sensor** measures distance
+    - "**functions that return a value**: make your own command, like `distance()`"
+    - "**calibration**: checking a sensor against a tool you trust"
+  talk: Bats and dolphins find things in the dark using echoes. Where else have you seen a machine "see" with sound or light?
+
+build:
+  - part: "Part 1: Build the circuit"
+    title: Meet the ultrasonic sensor
+    say: |
+      The sensor works like a **bat**. One eye sends out a click of sound too high for you to hear
+      (**ultrasound**). The sound bounces off an object and comes back as an **echo**. The other eye listens for it.
+
+      The farther away the object is, the longer the echo takes. The micro:bit **times** the echo.
+    picture:
+      type: compare
+      items:
+        - {icon: "🔋", title: "VCC", text: "Power in (3V)"}
+        - {icon: "📢", title: "Trig", text: "Trigger: send a ping now"}
+        - {icon: "👂", title: "Echo", text: "I hear the echo"}
+        - {icon: "⏚", title: "GND", text: "Ground"}
+      caption: The sensor's four pins
+    do:
+      - Find the four labels printed on your sensor.
+    test:
+      - I found the 4 labels printed on my sensor
+    ask: Is the sensor an input or an output for the micro:bit? How do you know?
+
+  - part: "Part 1: Build the circuit"
+    title: Plug the sensor into the breadboard
+    say: On a breadboard, the five holes in a row on one side of the middle gap are **connected inside**. Holes f, g, h, i and j of row 1 are all joined together. So each row is one connection.
+    wiring:
+      - Make sure the USB cable is **unplugged**.
+      - Hold the sensor so the two eyes point **away** from the breadboard.
+      - Push its four pins into **column j**, rows **1, 2, 3 and 4**. One pin in each row.
+      - Read the labels on your sensor and write which pin is in each row below.
+    tip: "**Why one pin per row?** If two pins shared a row, they'd be joined together and the sensor couldn't work. Most sensors go VCC, Trig, Echo, GND. If yours is different, use **your** rows in the next step."
+    test:
+      - The sensor stands up straight and feels snug
+      - Each pin is in its own row
+      - The eyes point away from the board
+    fields: ["Row 1", "Row 2", "Row 3", "Row 4"]
+
+  - part: "Part 1: Build the circuit"
+    title: Wire it to the micro:bit
+    say: Clip the alligator end onto the micro:bit pad. Push the pin end into any free hole (f, g, h or i) in the **same row** as the sensor pin it connects to.
+    wiring:
+      - "**3V** → the **VCC** row"
+      - "**Pin 1** → the **Trig** row"
+      - "**Pin 2** → the **Echo** row"
+      - "**GND** → the **GND** row"
+    tip: "**Stop:** have your partner check every wire against the list before you plug in the USB cable. Unplug the USB before you move any wire."
+    test:
+      - 3V goes to VCC, and GND goes to GND
+      - Pin 1 goes to Trig, and pin 2 goes to Echo
+      - No clips are touching each other
+      - My partner checked my wiring
+    fields: ["3V wire color", "Pin 1 wire color", "Pin 2 wire color", "GND wire color"]
+
+  - part: "Part 2: Code it"
+    title: Send a ping and time the echo
+    do:
+      - Click **Open MakeCode**, make a **New Project** named **Distance Detector**, and switch to **Python**. Delete the starter code.
+      - Type this code. Watch the indentation.
+      - Plug in the USB cable and click **Download**.
+      - Hold your hand in front of the sensor. Move it closer and farther.
+    code: |
+      while True:
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P1, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          echo = pins.pulse_in(DigitalPin.P2, PulseValue.HIGH)
+          basic.show_number(echo)
+    what: "Lines 2–6 switch Trig off, on for a tiny moment, then off. That sends one ping. `pins.pulse_in` times how long the echo takes, in **microseconds** (millionths of a second)."
+    tip: "**Shows 0 every time?** No echo came back. Check your wires against Step 3, and make sure nothing is closer than 2 cm. This project only works on a real micro:bit, so download after every step."
+    test:
+      - Numbers scroll across the screen
+      - The number changes when I move my hand
+    ask: Is the number bigger when your hand is close or far away? Why does that make sense?
+
+  - part: "Part 2: Code it"
+    title: Turn the echo into centimeters
+    say: Sound takes about **58 microseconds** to travel 1 centimeter and back. So dividing the echo time by 58 gives the distance in centimeters.
+    do:
+      - Add the highlighted line that makes `cm`.
+      - Change the `show_number` line so it shows `cm` instead of `echo`.
+      - Add a short pause so the sensor can rest between pings.
+      - Download and test.
+    code: |
+      while True:
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P1, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          echo = pins.pulse_in(DigitalPin.P2, PulseValue.HIGH)
+          cm = Math.round(echo / 58)
+          basic.show_number(cm)
+          basic.pause(100)
+    new: "8-10"
+    what: "`Math.round` rounds to the nearest whole number, so you see 12 instead of 12.413."
+    test:
+      - The numbers are much smaller now
+      - Close = small number, far = big number
+    ask: "The echo time is 1160. About how many centimeters away is the object? Show your math."
+
+  - part: "Part 2: Code it"
+    title: Is it telling the truth? Test it with a ruler
+    say: Scientists check their sensors against something they trust. This is called **calibration**. Your trusted tool is a ruler.
+    do:
+      - Lay the ruler on the table with **0** at the front of the sensor.
+      - Stand a book or folder up at each distance below. Write what the micro:bit shows.
+      - "Bonus: at 20 cm, try a soft sweatshirt, then a book tilted sideways. What happens?"
+    tip: Flat, hard objects held straight give the best echoes. Hold the object still for a few seconds before you read the number.
+    test:
+      - I measured all four distances
+    fields: ["At 5 cm it shows", "At 10 cm it shows", "At 20 cm it shows", "At 30 cm it shows"]
+    ask: How close were your readings to the ruler? Which distance was the most accurate?
+
+  - part: "Part 2: Code it"
+    title: Make your own command
+    say: |
+      Those six ping lines are a lot to look at. A **function** wraps them up and gives them a name.
+      Then you can use that name like any other command.
+
+      **New idea: return.** A function can **send an answer back** to the line that used it.
+    do:
+      - Add the `def` line at the very top.
+      - Push the ping lines in so they belong to the function. Add the `return` line under them.
+      - Rewrite the loop at the bottom so it matches. Download and test.
+    code: |
+      def distance():
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P1, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          echo = pins.pulse_in(DigitalPin.P2, PulseValue.HIGH)
+          return Math.round(echo / 58)
+
+      while True:
+          cm = distance()
+          basic.show_number(cm)
+          basic.pause(100)
+    new: "1, 8, 10-13"
+    what: "`def distance():` creates a new command called `distance`. `return` sends the answer back. Now `cm = distance()` means **measure, and save the answer in cm**."
+    tip: "In Traffic Light your functions **did** something. This one **gives back** a number, just like `input.acceleration()` does."
+    test:
+      - It works exactly like Step 5
+      - My loop is now only 4 lines long
+    ask: Why is it helpful to put the ping code inside a function?
+
+  - part: "Part 2: Code it"
+    title: Make the micro:bit react
+    say: A number is useful, but a detector should **react**. Use `if` / `elif` / `else` to split the distance into three zones.
+    do:
+      - Replace `basic.show_number(cm)` with the highlighted lines.
+      - Download it, then move your hand slowly toward the sensor.
+    code: |
+      def distance():
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P1, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          echo = pins.pulse_in(DigitalPin.P2, PulseValue.HIGH)
+          return Math.round(echo / 58)
+
+      while True:
+          cm = distance()
+          if cm < 10:
+              basic.show_icon(IconNames.NO)
+          elif cm < 30:
+              basic.show_icon(IconNames.SMALL_SQUARE)
+          else:
+              basic.show_icon(IconNames.YES)
+          basic.pause(100)
+    new: "12-17"
+    what: "Closer than 10 cm: an X. Between 10 and 30 cm: a small square. Farther than 30 cm: a check mark. 10 and 30 are **thresholds**, just like in the tilt sensor."
+    test:
+      - Far away shows a check mark
+      - Getting closer shows a square
+      - Very close shows an X
+    ask: Change the two thresholds to make your own zones. What numbers did you pick, and why?
+
+  - part: "Part 2: Code it"
+    title: "Checkpoint: the whole program"
+    say: Your program should match this. Compare it line by line, especially the indentation.
+    code: |
+      def distance():
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          control.wait_micros(2)
+          pins.digital_write_pin(DigitalPin.P1, 1)
+          control.wait_micros(10)
+          pins.digital_write_pin(DigitalPin.P1, 0)
+          echo = pins.pulse_in(DigitalPin.P2, PulseValue.HIGH)
+          return Math.round(echo / 58)
+
+      while True:
+          cm = distance()
+          if cm < 10:
+              basic.show_icon(IconNames.NO)
+          elif cm < 30:
+              basic.show_icon(IconNames.SMALL_SQUARE)
+          else:
+              basic.show_icon(IconNames.YES)
+          basic.pause(100)
+    stuck:
+      - "**Always 0:** a wire is loose or in the wrong row. Recheck Step 3."
+      - "**Trig and Echo swapped:** pin 1 goes to Trig, pin 2 goes to Echo."
+      - "**Jumpy numbers:** hold a flat object straight in front of the eyes."
+      - "**Red error marks:** check the indentation, and the colon `:` after `def`, `while`, `if`, `elif` and `else`."
+      - "**Nothing changes:** did you click Download again?"
+    test:
+      - My code matches and all three zones work
+      - I showed my partner (or teacher) my detector
+    ask: What bug did you have to fix along the way?
+
+quiz:
+  - question: How does an ultrasonic sensor measure distance?
+    choices: ["It shines a laser and measures its color", "It times how long an echo of sound takes to come back", "It measures how heavy the object is", "It counts the LEDs on the screen"]
+    answer: 1
+    why: The sensor sends a ping of ultrasound and times the echo. A longer echo time means the object is farther away.
+  - question: "What does `return` do in `def distance():`?"
+    choices: ["Ends the whole program", "Starts the loop over", "Sends an answer back to the line that called the function", "Shows a number on the screen"]
+    answer: 2
+    why: "`return` hands a value back. That's why `cm = distance()` can save the answer in `cm`."
+  - question: The echo time is 580 microseconds. About how far away is the object?
+    choices: ["5 cm", "10 cm", "58 cm", "580 cm"]
+    answer: 1
+    why: Sound takes about 58 microseconds per centimeter there and back, so 580 ÷ 58 = 10 cm.
+  - question: "With `if cm < 10:` and `elif cm < 30:`, what shows when the object is 20 cm away?"
+    choices: ["The X (NO)", "The small square", "The check mark (YES)", "Nothing"]
+    answer: 1
+    why: 20 is not less than 10, so the first check is False. 20 is less than 30, so the elif runs and shows the square.
+  - question: Checking your sensor's readings against a ruler is called...
+    choices: ["calibration", "debugging", "indentation", "a function"]
+    answer: 0
+    why: Calibration means comparing a sensor with a tool you trust, so you know how accurate it is.
+
+ship:
+  extensions:
+    - title: Digital ruler
+      level: Easier
+      goal: Only measure when you press A, then show the distance.
+      where: Replace your whole while True loop. Keep the function above it.
+      code: |
+        while True:
+            if input.button_is_pressed(Button.A):
+                cm = distance()
+                basic.show_number(cm)
+            basic.pause(20)
+      new: "2-4"
+      hints: ["You waited for button A in Dodge the Drop.", "Add \" cm\" with basic.show_string if you want units.", "Bonus: make button B show inches (divide cm by 2.54)."]
+    - title: Intruder alarm
+      level: Easier
+      goal: Sit quietly while nothing is near. When something comes closer than 30 cm, sound the alarm.
+      where: Replace your whole while True loop. Keep the function above it.
+      code: |
+        basic.show_icon(IconNames.ASLEEP)
+        while distance() > 30:
+            basic.pause(100)
+        while True:
+            basic.show_icon(IconNames.ANGRY)
+            music.play_tone(Note.C5, 200)
+            basic.clear_screen()
+            basic.pause(100)
+      hints: ["The first while loop keeps waiting as long as the path is clear.", "The alarm lines only run after that loop ends.", "Try other icons and notes to design your own alarm.", "How is this like the \"Press A to start\" loop from the game?"]
+    - title: Parking sensor
+      level: Medium
+      goal: Beep like a car backing up. Slow beeps when far away, fast beeps when close.
+      where: Replace the if / elif / else inside your loop.
+      code: |
+        while True:
+            cm = distance()
+            if cm < 50:
+                music.play_tone(Note.C, 50)
+                basic.pause(cm * ___)
+            else:
+                basic.pause(100)
+      hints: ["The pause between beeps depends on the distance.", "cm * 10 means 50 cm away waits 500 ms, and 5 cm away waits 50 ms.", "Farther than 50 cm, stay quiet.", "Fill in the blank."]
+    - title: Warning light
+      level: Medium
+      goal: Add an LED to your breadboard that turns on when something is closer than 15 cm.
+      where: Unplug the USB first and add the LED. Then replace the if lines inside your loop.
+      code: |
+        while True:
+            cm = distance()
+            if cm < 15:
+                pins.digital_write_pin(DigitalPin.P0, 1)
+            else:
+                pins.digital_write_pin(DigitalPin.P0, ___)
+            basic.pause(100)
+      hints: ["Build it like your LED circuit: pin 0 → resistor → LED long leg. LED short leg → the GND row.", "Use rows 6 and up so you don't touch the sensor rows.", "1 turns the LED on. What turns it off? Fill in the blank."]
+    - title: Air instrument
+      level: Challenge
+      goal: Play a note that gets higher as your hand moves away, like a theremin.
+      where: Replace the if / elif / else inside your loop.
+      code: |
+        while True:
+            cm = distance()
+            if cm < 40:
+                music.ring_tone(200 + cm * 20)
+            else:
+                music.rest(music.beat(BeatFraction.SIXTEENTH))
+            basic.pause(50)
+      hints: ["music.ring_tone plays a pitch until you change it. The number is the frequency.", "200 + cm * 20 turns distance into pitch.", "music.rest stops the sound when nothing is close.", "Can you make it play only when button A is held?"]
+  reflect:
+    - Which extension did you add? What job does your detector do now?
+    - "In your own words: how does an ultrasonic sensor measure distance?"
+    - Where is a sensor like this used in the real world? Give one example.
+
+teacher_notes: |
+  * **Timing:** two class periods. Part 1 and Steps 4–5 on day 1; calibration, the function, zones and an extension on day 2.
+  * **Real micro:bit only.** The simulator can't hear echoes, so students download after every step.
+  * **Wiring:** alligator clips from the micro:bit pads (3V, 1, 2, GND) to pin-ends in the breadboard rows. Most sensors are
+    VCC, Trig, Echo, GND, but have students read their own labels (Step 2 table). Use a 3V-friendly sensor; a classic
+    5V HC-SR04 can be unreliable on 3V.
+  * **Always 0** is almost always a loose clip, Trig/Echo swapped, or an object closer than about 2 cm.
+  * **Function with return:** this is the Python idea for the lesson. Point out that `distance()` works like
+    `input.acceleration()`: you call it and it hands back a number.
+  * Sound for Extensions B, C and E comes from the speaker on a micro:bit V2, or headphones clipped to pin 0 and GND
+    (pin 0 can't also drive the Extension D LED at the same time).
+
+standards:
+  - code: 6-8.CS.a.4
+    how: Students wire an ultrasonic sensor and explain how it turns an echo into a distance the micro:bit can use.
+  - code: 6-8.CT.d.2
+    how: Students wrap the ping code in a distance() function that returns a value, hiding the detail from the main loop.
+  - code: 6-8.CT.b.1
+    how: Students use a loop with if / elif / else thresholds to make the detector react in three zones.
