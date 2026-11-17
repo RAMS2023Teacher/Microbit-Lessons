@@ -286,3 +286,19 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .act-controls input { width: 60px; }
 .screen-clock-row { display: flex; align-items: baseline; justify-content: center; gap: 12px; border-top: 2px solid var(--line); margin-top: 12px; padding-top: 10px; }
 .screen-stage .screen-timer .timer-big, .screen-stage .screen-timer .timer-big.long { font-size: 2.6rem; line-height: 1; }
+
+/* class display clock card: big countdown to the bell, the time now under it, a small activity timer at the bottom */
+.screen-stage .screen-timer .timer-big { font: 400 7rem/1 var(--display); margin: 4px 0 2px; }
+.screen-stage .screen-timer .timer-big.clock { font-size: 5.4rem; }
+.screen-stage .screen-timer .timer-big.soon { color: #c2410c; }
+.screen-now { font-size: 1.35rem; font-weight: 800; color: var(--muted); }
+.screen-bell-quick { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 6px; font-weight: 700; }
+.screen-bell-quick[hidden] { display: none; }
+.screen-bell-quick input { width: 130px; margin-left: 6px; }
+.screen-stage .screen-timer .act-clock { display: inline; font: 800 1.6rem var(--mono); margin: 0; }
+.screen-stage .screen-activity { flex-wrap: nowrap; gap: 8px; margin-top: 10px; padding-top: 10px; }
+.screen-stage .screen-activity input { width: 54px; padding: 4px 6px; }
+.screen-stage .screen-activity label { white-space: nowrap; }
+.screen-wins li.muted { display: block; }
+.screen-stage .screen-activity b { white-space: nowrap; }
+.screen-stage .screen-timer .act-clock { min-width: 4.6ch; text-align: center; }

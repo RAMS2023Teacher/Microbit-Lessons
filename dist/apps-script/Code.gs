@@ -1523,5 +1523,5 @@ function render_(me, page) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
 var BUILD_ID = "495f612590";
-var BUILD_EXPECT = {"Assets": "a5b5ebaf4e", "Data": "27dda6d429"};
+var BUILD_EXPECT = {"Assets": "b6fa868b56", "Data": "27dda6d429"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

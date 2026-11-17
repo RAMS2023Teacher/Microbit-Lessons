@@ -42,12 +42,14 @@
       '<div class="track-elsewhere" id="screen-elsewhere"></div></section>' +
       '<section class="card"><h2>🎯 Standards we\'re working on</h2><ul class="screen-stds" id="screen-standards"></ul></section></div>' +
       '<aside class="screen-side">' +
-      '<section class="card screen-timer" aria-label="Time"><div class="screen-clock-label">⏱️ Activity timer</div>' +
-      '<div id="act-clock" class="act-clock" role="timer">5:00</div><div class="act-controls">' +
+      '<section class="card screen-timer" aria-label="Time"><div class="screen-clock-label" id="clock-label">Time left in class</div>' +
+      '<div id="timer-big" class="timer-big" role="timer">--:--</div>' +
+      '<div class="screen-now" id="clock-note"></div>' +
+      '<div class="screen-bell-quick" id="bell-quick" hidden><label>Class ends at <input type="time" id="bell-quick-in"></label>' +
+      '<button type="button" class="btn small" id="bell-quick-go">Count down</button></div>' +
+      '<div class="screen-activity"><b>⏱️ Timer</b> <span id="act-clock" class="act-clock">5:00</span>' +
       '<button type="button" class="btn small" id="act-go">Start</button><button type="button" class="btn small ghost" id="act-reset">Reset</button>' +
-      '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div>' +
-      '<div class="screen-clock-row"><span class="screen-clock-label" id="clock-label">Time left in class</span>' +
-      '<b id="timer-big" class="timer-big">--:--</b></div><div class="muted small" id="clock-note"></div></section>' +
+      '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div></section>' +
       '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p>' +
       '<p class="screen-bigidea" id="screen-bigidea"></p></section>' +
       '<section class="card"><h2>🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
@@ -262,27 +264,38 @@
     try { act = Object.assign(act, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { /* no storage */ }
     const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(act)); } catch (e) { /* no storage */ } };
     const actLeft = () => (act.endAt ? Math.max(0, Math.ceil((act.endAt - Date.now()) / 1000)) : act.left);
+    const clockText = (d) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     function drawClock() {
-      const bell = bellSeconds(), a = actLeft();
+      const bell = bellSeconds(), a = actLeft(), now = clockText(new Date());
+      const big = $('timer-big');
       if (bell !== null) {
+        const end = new Date(new Date().setHours(...data.settings.bell.split(':').map(Number), 0, 0));
         $('clock-label').textContent = bell > 0 ? 'Time left in class' : 'Class is over';
-        $('timer-big').textContent = fmt(bell);
-        $('timer-big').classList.toggle('long', bell >= 3600);
-        $('timer-big').classList.toggle('over', bell === 0);
-        $('timer-big').classList.toggle('soon', bell > 0 && bell <= 300);
-        $('clock-note').textContent = `Class ends at ${new Date(new Date().setHours(...data.settings.bell.split(':').map(Number), 0, 0)).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+        big.textContent = fmt(bell);
+        big.classList.remove('clock');
+        big.classList.toggle('over', bell === 0);
+        big.classList.toggle('soon', bell > 0 && bell <= 300);
+        $('clock-note').textContent = `Now ${now}  ·  Class ends ${clockText(end)}`;
+        $('bell-quick').hidden = true;
       } else {
         $('clock-label').textContent = 'Time now';
-        $('timer-big').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        $('timer-big').classList.remove('over', 'soon');
-        $('timer-big').classList.add('long');
-        $('clock-note').textContent = data ? 'Set "Class ends at" in ⚙ Set up to count down to the bell.' : '';
+        big.textContent = now;
+        big.classList.remove('over', 'soon');
+        big.classList.add('clock');
+        $('clock-note').textContent = '';
+        $('bell-quick').hidden = !data;
       }
       $('act-clock').textContent = fmt(a);
       $('act-clock').classList.toggle('over', a === 0 && !!act.ran);
       $('act-go').textContent = act.endAt ? 'Pause' : 'Start';
       if (act.endAt && a === 0) { act.endAt = null; act.left = 0; act.ran = true; keep(); }
     }
+    $('bell-quick-go').addEventListener('click', () => {
+      const v = $('bell-quick-in').value;
+      if (!/^\d{1,2}:\d{2}$/.test(v)) return;
+      $('set-bell').value = v;
+      save({ bell: v });
+    });
     $('act-go').addEventListener('click', () => {
       if (act.endAt) { act.left = actLeft(); act.endAt = null; }
       else { if (act.left === 0) act.left = act.seconds; act.endAt = Date.now() + act.left * 1000; act.ran = false; }
