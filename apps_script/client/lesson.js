@@ -164,7 +164,7 @@
     function drawBuild() {
       const i = stepAt, St = L.build[i], row = stepRow(i), box = $('stage-view'), last = i === L.build.length - 1;
       const dots = L.build.map((s, k) => {
-        const reachable = k <= stepAt || stepRow(k).done || (k > 0 && stepRow(k - 1).done);
+        const reachable = ML.teacher || k <= stepAt || stepRow(k).done || (k > 0 && stepRow(k - 1).done);
         return (k && L.build[k - 1].part !== s.part ? '<li class="sep" aria-hidden="true">|</li>' : '') +
           `<li><button type="button" class="${stepRow(k).done ? 'done' : ''}${k === i ? ' here' : ''}" data-step="${k}" ${reachable ? '' : 'disabled'} title="${E(s.title)}">${k + 1}</button></li>`;
       }).join('');
@@ -191,7 +191,7 @@
       box.querySelectorAll('.step-dots button').forEach((b) => b.addEventListener('click', () => { stepAt = +b.dataset.step; drawBuild(); }));
       const sync = () => {
         const need = stepReady(i);
-        $('step-next').disabled = !!need.length;
+        $('step-next').disabled = !!need.length && !ML.teacher;
         $('step-need').textContent = need.length ? 'To go on: ' + need.join(', ') + '.' : '';
       };
       const save = debounce(async () => {

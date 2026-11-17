@@ -29,7 +29,7 @@ Google Classroom roster import and a grades package.
 | 3 | Traffic Light | functions with `def` | 3 LEDs |
 | 4 | Reaction Game | variables, `if`/`else`, random | a push button |
 | 5 | Making Music | `for` loops · frequency | headphones or buzzer |
-| 6 | **Dodge the Drop** ✅ | `while` loops · tilt · sprites | just the micro:bit |
+| 6 | Dodge the Drop | `while` loops · tilt · sprites | just the micro:bit |
 | 7 | Night Light | sensor readings, thresholds | light sensor + LED |
 | 8 | Distance Detector | functions that return a value | ultrasonic sensor |
 | 9 | Heartbeat Monitor | signals, thresholds, counting | pulse sensor |
@@ -38,7 +38,9 @@ Google Classroom roster import and a grades package.
 | 12 | Radio Messenger | events: on radio received | two micro:bits |
 | 13 | Invent It | put it all together | your choice |
 
-✅ = written. The others show as "coming soon" until their lesson file is added.
+Robot lessons (10–11) assume: left servo signal on P1, right on P2, servo power from a battery pack whose − is joined to
+the micro:bit GND, and the ultrasonic sensor on Trig P8 / Echo P12 through the breakout board. Change the pins in
+`course/lessons/10-servo-robot.yaml` and `11-robot-eyes.yaml` if your robot is wired differently.
 
 ## For developers
 

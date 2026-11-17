@@ -37,9 +37,9 @@ build:
     picture:
       type: dial
       marks:
-        - {angle: 0, label: "0 = full speed one way"}
+        - {angle: 0, label: "0 = full speed ↻"}
         - {angle: 90, label: "90 = stop", pointer: true}
-        - {angle: 180, label: "180 = full speed the other way"}
+        - {angle: 180, label: "180 = full speed ↺"}
     do:
       - Look at your robot. Find the two servos, the wheels, and the breadboard on the front.
       - Find the three wires coming out of each servo.

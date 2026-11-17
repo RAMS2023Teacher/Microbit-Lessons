@@ -272,13 +272,15 @@
 
   // ---------------------------------------------------------------- dial (servo angle)
   function dial(v) {
-    const W = 300, H = 180, cx = 150, cy = 150, r = 115;
+    const W = 320, H = 182, cx = 160, cy = 150, r = 115;
     let b = `<path d="M${cx - r} ${cy} A${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="#eef1f8" stroke="${LINE}" stroke-width="2"/>`;
     (v.marks || [{ angle: 0 }, { angle: 90 }, { angle: 180 }]).forEach((m) => {
       const a = Math.PI * (1 - m.angle / 180), x = cx + Math.cos(a) * r, y = cy - Math.sin(a) * r;
       b += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${m.pointer ? RED : LINE}" stroke-width="${m.pointer ? 5 : 1.5}" stroke-linecap="round"/>`;
-      const lx = cx + Math.cos(a) * (r + 14), ly = cy - Math.sin(a) * (r + 14);
-      b += t(lx, ly, m.label ?? `${m.angle}°`, `class="vz-label" text-anchor="${m.angle < 60 ? 'start' : m.angle > 120 ? 'end' : 'middle'}"`);
+      const lab = m.label ?? `${m.angle}°`;
+      if (m.angle < 15) b += t(cx - r - 10, cy + 24, lab, 'class="vz-label" text-anchor="start"');        // ends of the arc: label below, inside the picture
+      else if (m.angle > 165) b += t(cx + r + 10, cy + 24, lab, 'class="vz-label" text-anchor="end"');
+      else b += t(cx + Math.cos(a) * (r + 14), cy - Math.sin(a) * (r + 14), lab, `class="vz-label" text-anchor="${m.angle < 60 ? 'end' : m.angle > 120 ? 'start' : 'middle'}"`);
     });
     b += `<circle cx="${cx}" cy="${cy}" r="10" fill="${INK}"/>`;
     return svg(W, H, b, v.alt || 'servo angle dial from 0 to 180 degrees');
