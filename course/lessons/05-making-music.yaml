@@ -80,7 +80,7 @@ build:
       - "Leave the ring alone. **Never use 3V.**"
     tip: "**Ears first!** Hold the headphones away from your ears for the first test. It can be loud."
     do:
-      - Download your Step 1 code to the real micro:bit and listen.
+      - Download your Step 2 code to the real micro:bit and listen.
     stuck:
       - "No sound? Check the clip on pin 0 is touching only the tip, not the ring."
       - "Make sure the code downloaded: the yellow light on the back flashes while it copies."

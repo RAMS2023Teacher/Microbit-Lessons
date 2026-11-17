@@ -141,7 +141,7 @@ build:
               pins.digital_write_pin(DigitalPin.P0, 0)
           basic.pause(100)
     new: "3,5"
-    what: "This is your Step 3 code. The faces are swapped for LED on and LED off. Every 100 ms it reads the light again and decides again."
+    what: "This is your Step 4 code. The faces are swapped for LED on and LED off. Every 100 ms it reads the light again and decides again."
     test:
       - Covering the screen turns the LED on
       - Uncovering it turns the LED off
