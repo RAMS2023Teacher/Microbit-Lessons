@@ -18,16 +18,34 @@
     C[part].forEach((opt) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'part-opt' + (state[part] === opt.id ? ' chosen' : '') + (opt.unlocked ? '' : ' locked');
+      const forSale = !opt.unlocked && opt.cost > 0;
+      b.className = 'part-opt' + (state[part] === opt.id ? ' chosen' : '') + (opt.unlocked ? '' : ' locked') + (forSale ? ' for-sale' : '');
       const look = Object.assign({}, state, { [part]: opt.id });
-      b.innerHTML = RobotAvatar.svg(look, 64) + `<span>${opt.unlocked ? '' : '🔒 '}${opt.label}</span>` +
-        (opt.unlocked ? '' : `<small>${opt.how}</small>`);
+      b.innerHTML = RobotAvatar.svg(look, 64) + `<span>${opt.unlocked ? '' : forSale ? '🛒 ' : '🔒 '}${opt.label}</span>` +
+        (opt.unlocked ? '' : forSale ? `<small class="price">${opt.cost} XP</small>` : `<small>${opt.how}</small>`);
       b.title = opt.unlocked ? opt.label : `${opt.label} — ${opt.how}`;
       b.setAttribute('aria-pressed', state[part] === opt.id);
-      b.disabled = !opt.unlocked;
-      b.addEventListener('click', () => { state[part] = opt.id; preview(); options(); dirty(); });
+      b.disabled = !opt.unlocked && !forSale;
+      b.addEventListener('click', () => {
+        if (forSale) { buy(opt); return; }
+        state[part] = opt.id; preview(); options(); dirty();
+      });
       box.appendChild(b);
     });
+  }
+
+  // Robot parts with a price: buy them with XP to spend (the server checks the price and the balance)
+  async function buy(opt) {
+    if (!confirm(`Buy ${opt.label} for ${opt.cost} XP? (Your level stays the same.)`)) return;
+    const r = await fetch('/api/shop/buy', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify({ item: `part:${part}:${opt.id}` }) });
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok) { $('avatar-status').textContent = d.error || 'Could not buy that.'; $('avatar-status').className = 'save-status small bad'; return; }
+    Object.keys(d.catalog || {}).forEach((k) => { C[k] = d.catalog[k]; });
+    if ($('spend')) $('spend').innerHTML = `⚡ <b>${d.spendable}</b> XP to spend`;
+    state[part] = opt.id;
+    preview(); options(); dirty();
+    $('avatar-status').textContent = `Bought ${opt.label}! Press Save to wear it.`;
   }
 
   function dirty() { $('avatar-status').textContent = 'Not saved yet'; $('avatar-status').className = 'save-status small'; }

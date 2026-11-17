@@ -142,9 +142,9 @@
     h.push('<h1>My robot &amp; badges</h1><div class="profile-grid"><section class="card builder-card"><h2>Build your robot</h2><div class="avatar-builder"><div class="avatar-stage">' +
       '<div id="avatar-preview"></div><label class="field"><span>Robot name</span><input id="avatar-name" maxlength="20" placeholder="e.g. Sparky" value="' + E(d.avatar.name) + '"></label>' +
       '<button type="button" class="btn wide" id="avatar-save">Save my robot</button><button type="button" class="btn ghost wide small" id="avatar-random">🎲 Surprise me</button>' +
-      '<p class="save-status small" id="avatar-status" role="status"></p></div><div class="avatar-parts"><div class="part-tabs" role="tablist">');
+      '<p class="save-status small" id="avatar-status" role="status"></p>' + (ML.teacher ? '' : '<p class="pill-xp" id="spend">⚡ <b>' + (d.spendable || 0) + '</b> XP to spend</p>') + '</div><div class="avatar-parts"><div class="part-tabs" role="tablist">');
     Object.keys(d.parts).forEach(function (k, i) { h.push('<button type="button" role="tab" class="part-tab' + (i ? '' : ' active') + '" data-part="' + E(k) + '">' + E(d.parts[k]) + '</button>'); });
-    h.push('</div><div class="part-options" id="part-options"></div><p class="muted small">🔒 Locked parts unlock as you level up and earn badges.</p></div></div></section>' +
+    h.push('</div><div class="part-options" id="part-options"></div><p class="muted small">🔒 Locked parts unlock as you level up and earn badges. 🛒 Some you can buy with XP to spend.</p></div></div></section>' +
       '<section class="card level-card"><h2>Level ' + lv.level + ': ' + E(lv.title) + '</h2><div class="xpbar big"><i style="width:' + lv.pct + '%"></i></div><p class="muted">' +
       lv.xp + ' XP' + (lv.max ? ' · max level!' : ' · ' + (lv.next - lv.xp) + ' XP to level ' + (lv.level + 1)) + '</p><ol class="level-ladder">');
     d.levels.forEach(function (l, i) {
@@ -170,6 +170,128 @@
     window.AVATAR = d.avatar;
     window.CATALOG = d.catalog;
     if (window.__runProfile) window.__runProfile();
+  };
+
+  // ---------------------------------------------------------------- Robot Rush: the arcade, its leaderboard and the power-up shop
+  var mmss = function (sec) { sec = Math.max(0, Math.floor(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
+  pages.arcade = function () {
+    var h = [], st = d.state || {}, openUntil = st.open && st.until ? Date.now() + st.seconds_left * 1000 : null;
+    h.push('<div class="page-head"><div><h1>🎮 Robot Rush</h1><p class="muted">Race your robot for ' + d.race_seconds + ' seconds. Dodge bugs, grab bolts, beat your class!</p></div>' +
+      (d.practice ? '<span class="pill-xp">Teacher preview: scores aren\'t saved</span>' : '<span class="pill-xp" id="spend">⚡ <b>' + d.spendable + '</b> XP to spend</span>') + '</div>');
+    h.push('<div class="arcade-grid"><div><section class="card arcade-play" id="play-card"><div id="play-gate"></div>' +
+      '<div class="game-wrap" id="game-wrap" hidden><canvas id="rush" aria-label="Robot Rush race"></canvas>' +
+      '<div class="game-pad"><button type="button" class="btn" id="pad-up">▲ Up</button><button type="button" class="btn go" id="pad-dash">🚀 Dash</button>' +
+      '<button type="button" class="btn" id="pad-down">▼ Down</button></div></div><div id="result"></div></section>' +
+      '<section class="card"><h2>🛒 Power-up shop</h2><p class="muted small">Spend XP on upgrades for your robot. Your level never goes down: it counts all the XP you ever earned.</p>' +
+      '<div class="power-grid" id="power-grid"></div><p class="small">🎨 More robot looks to buy in <a href="/me">My robot</a>.</p><p class="bad small" id="shop-msg" role="status"></p></section></div>' +
+      '<section class="card board-card"><h2>🏆 Class leaderboard</h2><div class="board-tabs"><button type="button" class="here" data-b="today">Today</button>' +
+      '<button type="button" data-b="all">All time</button></div><ol class="board" id="board"></ol>' +
+      (d.best ? '<p class="muted small">Your best ever: <b>' + d.best + '</b></p>' : '') + '</section></div>');
+    main.innerHTML = h.join('');
+    var $ = function (id) { return document.getElementById(id); }, which = 'today', board = d.board || { today: [], all: [] };
+
+    function drawBoard() {
+      var rows = board[which] || [], ol = $('board');
+      ol.textContent = '';
+      if (!rows.length) { ol.innerHTML = '<li class="muted">No races yet' + (which === 'today' ? ' today' : '') + '. Be the first!</li>'; return; }
+      rows.forEach(function (r, i) {
+        var li = document.createElement('li');
+        li.className = r.me ? 'me' : '';
+        li.innerHTML = '<span class="rank">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span data-avatar="' + A(r.avatar || {}) + '" data-size="40"></span><b></b><span class="score">' + r.score + '</span>';
+        li.querySelector('b').textContent = r.name + (r.me ? ' (you)' : '');
+        ol.appendChild(li);
+      });
+      RobotAvatar.renderAll(ol);
+    }
+    document.querySelectorAll('.board-tabs button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        which = b.dataset.b;
+        document.querySelectorAll('.board-tabs button').forEach(function (x) { x.classList.toggle('here', x === b); });
+        drawBoard();
+      });
+    });
+
+    function drawShop() {
+      var box = $('power-grid');
+      box.innerHTML = (d.shop || []).map(function (u) {
+        var pips = '';
+        for (var i = 0; i < u.max; i++) pips += '<i class="' + (i < u.level ? 'on' : '') + '"></i>';
+        var btn = u.next_cost == null ? '<span class="maxed">MAX</span>' :
+          '<button type="button" class="btn small' + (d.spendable >= u.next_cost && !d.practice ? ' go' : ' ghost') + '" data-buy="' + E(u.id) + '">' + (u.level ? 'Upgrade' : 'Buy') + ' · ' + u.next_cost + ' XP</button>';
+        return '<div class="power"><span class="power-icon">' + u.icon + '</span><div><b>' + E(u.name) + '</b><span class="pips">' + pips + '</span><small>' + E(u.desc) + '</small></div>' + btn + '</div>';
+      }).join('');
+      box.querySelectorAll('[data-buy]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var u = d.shop.filter(function (x) { return x.id === b.dataset.buy; })[0];
+          if (!confirm('Buy ' + u.name + ' level ' + (u.level + 1) + ' for ' + u.next_cost + ' XP?')) return;
+          b.disabled = true;
+          ML.api('/api/shop/buy', { item: 'power:' + u.id }).then(function (r) {
+            $('shop-msg').textContent = r.ok ? '' : (r.error || 'Could not buy that.');
+            if (r.ok) { d.shop = r.shop; d.spendable = r.spendable; d.powerups = r.powerups; d.race_seconds = r.race_seconds; $('spend').innerHTML = '⚡ <b>' + r.spendable + '</b> XP to spend'; }
+            drawShop();
+          });
+        });
+      });
+    }
+
+    var tick = null;
+    function drawGate() {
+      var gate = $('play-gate'), left = openUntil ? Math.max(0, Math.round((openUntil - Date.now()) / 1000)) : 0;
+      var open = d.practice || left > 0;
+      if (open) {
+        gate.innerHTML = '<div class="gate open"><div><b>' + (d.practice ? 'Practice race' : 'Robot Rush is open!') + '</b>' +
+          (d.practice ? '' : '<span>Closes in <b id="gate-left">' + mmss(left) + '</b></span>') + '</div>' +
+          '<button type="button" class="btn go big" id="start">▶ Start race</button></div>';
+        $('start').addEventListener('click', start);
+      } else {
+        gate.innerHTML = '<div class="gate"><span class="gate-lock">🔒</span><div><b>' + (st.off ? 'Robot Rush is turned off right now.' : 'Finish a lesson to unlock Robot Rush.') + '</b>' +
+          '<span>' + (st.off ? 'Your teacher can turn it back on.' : 'When you finish a whole lesson, Robot Rush opens for ' + d.minutes + ' minutes. Spend XP on power-ups while you wait!') + '</span></div></div>';
+      }
+    }
+    function countdown() {
+      clearInterval(tick);
+      tick = setInterval(function () {
+        var left = Math.max(0, Math.round((openUntil - Date.now()) / 1000)), el = $('gate-left');
+        if (el) el.textContent = mmss(left);
+        if (!left) { clearInterval(tick); if (!racing) drawGate(); }
+      }, 500);
+    }
+    var racing = false;
+    function start() {
+      var btn = $('start');
+      btn.disabled = true;
+      ML.api('/api/arcade/start', {}).then(function (r) {
+        if (!r.ok) { $('play-gate').innerHTML = '<p class="bad"></p>'; $('play-gate').firstChild.textContent = r.error; return; }
+        racing = true;
+        $('play-gate').hidden = true; $('result').textContent = ''; $('game-wrap').hidden = false;
+        $('game-wrap').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        RobotRush.play($('rush'), { avatar: d.avatar, seconds: r.seconds, powerups: r.powerups, controls: function (c) {
+          $('pad-up').onclick = c.up; $('pad-down').onclick = c.down; $('pad-dash').onclick = c.dash;
+        } }).then(function (res) {
+          racing = false;
+          $('result').innerHTML = '<div class="result-card"><b>Finished!</b><span class="big-score">' + res.score + '</span><span class="muted small">' +
+            res.meters + ' m · 🔩 ' + res.bolts + ' bolts' + (res.smashed ? ' · 💥 ' + res.smashed + ' smashed' : '') + '</span><p id="res-note" class="small">Saving…</p></div>';
+          return ML.api('/api/arcade/finish', { run_id: r.run_id, score: res.score }).then(function (f) {
+            var note = $('res-note');
+            if (!f.ok) { note.className = 'bad small'; note.textContent = f.error; }
+            else if (f.practice) note.textContent = 'Practice race: scores are not saved for the teacher.';
+            else {
+              note.textContent = f.new_best ? '🎉 New personal best!' : f.new_day_best ? '⭐ Your best today!' : 'Your best: ' + f.best;
+              board = f.board || board; drawBoard();
+              if (f.state) openUntil = f.state.open ? Date.now() + f.state.seconds_left * 1000 : null;
+            }
+            $('play-gate').hidden = false;
+            drawGate();
+            var s = $('start');
+            if (s) s.textContent = '▶ Race again';
+          });
+        });
+      }).catch(function () { btn.disabled = false; });
+    }
+    drawBoard();
+    drawShop();
+    drawGate();
+    if (openUntil) countdown();
   };
 
   // ---------------------------------------------------------------- teacher pages
@@ -299,7 +421,8 @@
       h.push('</tbody></table></div><p class="muted small">Stage = where they are (Mission, Build step, Quiz, Ship it) · Q = best quiz score · 🔗 = their shipped MakeCode project. ' +
         'The gradebook catches up with new work within about a minute.</p>');
     }
-    h.push('</section><div class="grid-2"><section class="card"><h2>Assign lessons</h2><div class="assign-picker">');
+    h.push('</section><section class="card arcade-teacher" id="arcade-card"></section>');
+    h.push('<div class="grid-2"><section class="card"><h2>Assign lessons</h2><div class="assign-picker">');
     h.push('<fieldset><legend>The course</legend>');
     d.course.forEach(function (l) {
       if (l.soon) { h.push('<label class="check muted"><input type="checkbox" disabled> ' + E(l.number) + '. ' + E(l.title) + ' <small>(coming soon)</small></label>'); return; }
@@ -340,6 +463,34 @@
       if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
     $('del-go').addEventListener('click', function () { act(this, 'deleteClass', [c.id, $('del-name').value], function () { ML.go('/'); }); });
+    // Robot Rush: open it for everyone, close it, or turn it off for this class
+    var arc = d.arcade, arcEnd = null, arcTick = null;
+    function drawArcade() {
+      var left = arcEnd ? Math.max(0, Math.round((arcEnd - Date.now()) / 1000)) : 0, b = arc.board || { today: [] };
+      $('arcade-card').innerHTML = '<div class="arcade-teacher-head"><h2>🎮 Robot Rush</h2><a class="btn ghost small" href="/arcade">Try it yourself</a></div>' +
+        '<p class="muted small">Students get ' + arc.minutes + ' minutes of Robot Rush when they finish a lesson, and spend XP on power-ups. ' +
+        'Their level never goes down when they spend.</p><div class="row">' +
+        (arc.off ? '<b class="bad">Off for this class</b> <button class="btn small" type="button" data-arc="on">Turn it back on</button>'
+          : (left ? '<b class="ok">Open for everyone · <span id="arc-left">' + mmss(left) + '</span></b> <button class="btn small ghost" type="button" data-arc="close">Close now</button>'
+            : '<button class="btn small" type="button" data-arc="open">Open for everyone for ' + arc.minutes + ' minutes</button>') +
+            ' <button class="btn small ghost" type="button" data-arc="off">Turn off for this class</button>') + '</div>' +
+        '<h3>Today\'s top racers</h3>' + (b.today.length ? '<ol class="board small-board">' + b.today.slice(0, 5).map(function (r, i) {
+          return '<li><span class="rank">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span data-avatar="' + A(r.avatar || {}) + '" data-size="30"></span><b>' + E(r.name) + '</b><span class="score">' + r.score + '</span></li>';
+        }).join('') + '</ol>' : '<p class="muted small">No races yet today.</p>');
+      RobotAvatar.renderAll($('arcade-card'));
+      $('arcade-card').querySelectorAll('[data-arc]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          act(btn, 'arcadeClass', [c.id, btn.dataset.arc], function (r) { arc = r; arcEnd = r.seconds_left ? Date.now() + r.seconds_left * 1000 : null; drawArcade(); });
+        });
+      });
+      clearInterval(arcTick);
+      if (left) arcTick = setInterval(function () {
+        var l = Math.max(0, Math.round((arcEnd - Date.now()) / 1000));
+        if ($('arc-left')) $('arc-left').textContent = mmss(l);
+        if (!l) drawArcade();
+      }, 1000);
+    }
+    if (arc) { arcEnd = arc.seconds_left ? Date.now() + arc.seconds_left * 1000 : null; drawArcade(); }
   };
 
   pages.student = function () {

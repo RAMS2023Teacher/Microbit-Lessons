@@ -96,7 +96,8 @@ def build_data() -> dict:
         "levels": [list(x) for x in rules.LEVELS], "badges": [list(b) for b in rules.BADGES],
         "avatar_options": {part: [[o[0], o[1], list(o[2]) if o[2] else None] for o in opts]
                            for part, opts in rules.AVATAR_OPTIONS.items()},
-        "avatar_parts": rules.AVATAR_PARTS, "default_avatar": rules.DEFAULT_AVATAR, "makecode_url": rules.MAKECODE_URL,
+        "avatar_parts": rules.AVATAR_PARTS, "arcade": rules.ARCADE,
+        "powerups": [{"id": u[0], "icon": u[1], "name": u[2], "desc": u[3], "costs": u[4]} for u in rules.POWERUPS], "default_avatar": rules.DEFAULT_AVATAR, "makecode_url": rules.MAKECODE_URL,
     }
 
 
@@ -108,7 +109,7 @@ def read(path) -> str:
 def build_assets() -> dict:
     styles = read("css/base.css") + "\n" + read("css/theme.css")
     app = "\n".join([
-        read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/visuals.js"), read("lib/screen.js"),
+        read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"),
         "window.__runMap = function () {\n" + read("lib/map.js") + "\n};",
         "window.__runProfile = function () {\n" + read("lib/profile.js") + "\n};",
         read("pages.js"), read("lesson.js"),

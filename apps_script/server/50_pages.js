@@ -31,12 +31,14 @@ function studentPage_(me, path) {
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
   var rewards = syncRewards_(rec, cfg);
   if (rewards.xp_gained) saveStudent_(rec);
-  var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name };
+  var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
+                                                arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec) };
   var m;
   if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Home', data: merge_(base, dashboardData_(rec, cfg)) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec)) };
   if (path === '/map') return { name: 'map', title: 'Skill tree', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg)) }) };
   if (path === '/me') return { name: 'profile', title: 'My robot', data: merge_(base, profileData_(rec)) };
+  if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, arcadeData_(rec, cfg, false)) };
   if (path === '/help') return { name: 'help', title: 'MakeCode help', data: merge_(base, { makecode: DATA.makecode_url }) };
   if ((m = /^\/lessons\/([\w-]+)$/.exec(path))) return lessonPage_(m[1], rec, cfg, base, false);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
@@ -47,7 +49,7 @@ function teacherPage_(path) {
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
     tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_(),
     logo_refused: !!PropertiesService.getScriptProperties().getProperty('logo:refused') })) };
-  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null) })) };
+  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null), arcade: arcadeTeacher_(cfg, m[1]) })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/screen$/.exec(path))) {
@@ -56,6 +58,7 @@ function teacherPage_(path) {
              data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_() }) };
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
+  if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { course: courseCards_(null), urls: cfg.videos }) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(null)) };
@@ -252,8 +255,8 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos']]
-    : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot']];
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });

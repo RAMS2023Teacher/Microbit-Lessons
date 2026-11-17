@@ -24,8 +24,11 @@ const RUN = `<script>window.google={script:{run:(function(){
   return make(null,null);})()}};</script>`;
 
 const user = (req) => (/(?:^|;\s*)as=([^;]+)/.exec(req.headers.cookie || '') || [])[1];
+let lastTick = Date.now();
 http.createServer((req, res) => {
   const u = url.parse(req.url, true);
+  w.advance(Date.now() - lastTick);           // the world's clock keeps up with real time (Robot Rush checks race times)
+  lastTick = Date.now();
   // Like real Apps Script: /exec is an outer page; the app runs in a sandboxed iframe on another origin.
   if (u.pathname === '/exec' && process.env.IFRAME && req.headers.host.startsWith('localhost')) {
     const headers = { 'Content-Type': 'text/html; charset=utf-8' };

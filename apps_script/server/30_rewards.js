@@ -89,7 +89,10 @@ function syncRewards_(rec, cfg) {
       if (p.ext[k] && E) award_(rec, 'ext_' + k + ':' + lid, X.extension, T.extension + ': ' + E.title, gained);
     });
     if (p.shipped_at) award_(rec, 'ship:' + lid, X.ship, T.ship + t, gained);
-    if (complete_(L, p)) award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
+    if (complete_(L, p)) {
+      if (rec.xp_keys['complete:' + lid] === undefined) openArcade_(rec);     // a finished lesson opens Robot Rush for a few minutes
+      award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
+    }
   });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });
   var newBadges = [], earned = badgeChecks_(rec, cfg);
@@ -171,17 +174,20 @@ function avatarOf_(rec) {
 }
 function unlockText_(u) {
   if (!u) return '';
+  if (u[0] === 'cost') return 'Buy it for ' + u[1] + ' XP';
   return u[0] === 'level' ? 'Reach level ' + u[1] : 'Earn the ' + badgeById_(u[1]).name + ' badge';
 }
-function isUnlocked_(u, level, badges) {
+function isUnlocked_(u, level, badges, owned, part, id) {
   if (!u) return true;
+  if (u[0] === 'cost') return !!(owned || {})['part:' + part + ':' + id];
   return u[0] === 'level' ? level >= u[1] : !!badges[u[1]];
 }
 function avatarCatalog_(rec, teacher) {
-  var level = levelInfo_((rec && rec.xp) || 0).level, badges = (rec && rec.badges) || {}, out = {};
+  var level = levelInfo_((rec && rec.xp) || 0).level, badges = (rec && rec.badges) || {}, owned = (rec && rec.owned) || {}, out = {};
   Object.keys(DATA.avatar_options).forEach(function (part) {
     out[part] = DATA.avatar_options[part].map(function (o) {
-      return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges), how: unlockText_(o[2]) };
+      return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges, owned, part, o[0]), how: unlockText_(o[2]),
+               cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0 };
     });
   });
   return out;
@@ -193,7 +199,7 @@ function cleanAvatar_(rec, data, teacher) {
     var part = parts[i], choice = data[part] === undefined ? DATA.default_avatar[part] : data[part];
     var match = DATA.avatar_options[part].filter(function (o) { return o[0] === choice; })[0];
     if (!match) return { error: 'Unknown ' + part };
-    if (!teacher && !isUnlocked_(match[2], level, rec.badges || {})) return { error: match[1] + ' is still locked: ' + unlockText_(match[2]) + '.' };
+    if (!teacher && !isUnlocked_(match[2], level, rec.badges || {}, rec.owned, part, choice)) return { error: match[1] + ' is still locked: ' + unlockText_(match[2]) + '.' };
     out[part] = choice;
   }
   var name = String(data.name || '').trim();

@@ -15,12 +15,14 @@
     const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
     // ------------------------------------------------------------ talking to the server
+    let arcadeOpen = null;
     async function api(action, body) {
       const r = await ML.api(base + '/' + action, body);
       if (r.rewards && window.showRewards) window.showRewards(r.rewards);
       if (r.level) ML.updateLevel(r.level);
       if (r.stages) { stagesDone = r.stages; drawStages(); }
       if (typeof r.lesson_xp === 'number') drawXp(r.lesson_xp, r.stars);
+      if (r.arcade) { ML.arcadePill(r.arcade); arcadeOpen = r.arcade; }
       return r;
     }
     const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
@@ -327,7 +329,8 @@
     function celebrate() {
       const box = $('stage-view').querySelector('.panel');
       box.insertAdjacentHTML('afterbegin', `<div class="shipped" style="margin-bottom:14px">🏁 <b>Lesson complete!</b> ` +
-        `<a href="/map">See what you unlocked on the skill tree →</a></div>`);
+        `<a href="/map">See what you unlocked on the skill tree →</a></div>` +
+        (arcadeOpen ? `<a class="arcade-banner" href="/arcade">🎮 <b>Robot Rush is open for ${Math.round(arcadeOpen.seconds_left / 60)} minutes!</b> Race your robot and top the class leaderboard ▶</a>` : ''));
     }
 
     // ------------------------------------------------------------ partners (two classmates, one Chromebook)

@@ -42,6 +42,14 @@ Robot lessons (10–11) assume: left servo signal on P1, right on P2, servo powe
 the micro:bit GND, and the ultrasonic sensor on Trig P8 / Echo P12 through the breakout board. Change the pins in
 `course/lessons/10-servo-robot.yaml` and `11-robot-eyes.yaml` if your robot is wired differently.
 
+## Robot Rush and the shop
+
+Finishing a lesson opens **Robot Rush** for 5 minutes: a 45-second race with the student's own robot, with a class
+leaderboard (today and all time). Students spend **XP to spend** in the shop on power-ups (Turbo, Shield, Bolt magnet,
+Rocket dash, Overtime) and robot parts. Levels count all XP ever earned, so spending never lowers a level. On a class
+page the teacher can open Robot Rush for everyone for 5 minutes, close it, or turn it off. Prices, power-ups and the
+window length are in `course/rules.py` (`AVATAR_OPTIONS`, `POWERUPS`, `ARCADE`).
+
 ## For developers
 
 ```

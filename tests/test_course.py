@@ -22,7 +22,7 @@ def test_course_plan_is_consistent():
             assert b[4][1] in ids, b[0]
     for opts in rules.AVATAR_OPTIONS.values():
         for _, _, unlock in opts:
-            assert unlock is None or unlock[0] == "level" or unlock[1] in badge_ids, unlock
+            assert unlock is None or unlock[0] in ("level", "cost") or unlock[1] in badge_ids, unlock
 
 
 def test_validator_catches_mistakes():

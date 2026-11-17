@@ -6,6 +6,8 @@
 //   /api/lessons/<id>/ship     {share, ext, reflect, submit}  save Ship it (submit: true turns it in)
 //   /api/lessons/<id>/partner  {action: pair|leave, partner_id}
 //   /api/avatar                {body, color, ...}
+//   /api/shop/buy              {item: 'part:eyes:star' | 'power:turbo'}      (35_arcade.js)
+//   /api/arcade/start, /api/arcade/finish {run_id, score}                    Robot Rush
 
 function text_(v, max) {
   if (v == null) return '';
@@ -36,6 +38,8 @@ function finish_(ctx, L, p, extra) {
   var out = { ok: true, percent: pct, stages: stagesDone_(L, p), stage: currentStage_(L, p), rewards: rewards,
               lesson_xp: lessonXp_(ctx.rec, L.id), stars: lessonStars_(L, p), level: levelInfo_(ctx.rec.xp || 0) };
   if (mate) out.partner = mate;
+  var arc = arcadeState_(ctx.rec, ctx.cfg);
+  if (arc.open) out.arcade = arc;
   Object.keys(extra || {}).forEach(function (k) { out[k] = extra[k]; });
   return out;
 }
@@ -45,6 +49,7 @@ function api(path, bodyJson) {
   try {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
     if (path === '/api/avatar') return apiAvatar_(body);
+    if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner)$/.exec(path);
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];

@@ -167,7 +167,8 @@ function studentSummary_(rec) {
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
-           xp_recent: recentXp_(rec) };
+           xp_recent: recentXp_(rec),
+           arcade: rec.arcade ? { best: rec.arcade.best || 0, day: rec.arcade.day || '', day_best: rec.arcade.day_best || 0 } : null };
 }
 
 /** XP earned in the last day and a half, as [time, amount] pairs: the class display adds up today's for the class goal. */
@@ -354,7 +355,10 @@ function syncRewards_(rec, cfg) {
       if (p.ext[k] && E) award_(rec, 'ext_' + k + ':' + lid, X.extension, T.extension + ': ' + E.title, gained);
     });
     if (p.shipped_at) award_(rec, 'ship:' + lid, X.ship, T.ship + t, gained);
-    if (complete_(L, p)) award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
+    if (complete_(L, p)) {
+      if (rec.xp_keys['complete:' + lid] === undefined) openArcade_(rec);     // a finished lesson opens Robot Rush for a few minutes
+      award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
+    }
   });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });
   var newBadges = [], earned = badgeChecks_(rec, cfg);
@@ -436,17 +440,20 @@ function avatarOf_(rec) {
 }
 function unlockText_(u) {
   if (!u) return '';
+  if (u[0] === 'cost') return 'Buy it for ' + u[1] + ' XP';
   return u[0] === 'level' ? 'Reach level ' + u[1] : 'Earn the ' + badgeById_(u[1]).name + ' badge';
 }
-function isUnlocked_(u, level, badges) {
+function isUnlocked_(u, level, badges, owned, part, id) {
   if (!u) return true;
+  if (u[0] === 'cost') return !!(owned || {})['part:' + part + ':' + id];
   return u[0] === 'level' ? level >= u[1] : !!badges[u[1]];
 }
 function avatarCatalog_(rec, teacher) {
-  var level = levelInfo_((rec && rec.xp) || 0).level, badges = (rec && rec.badges) || {}, out = {};
+  var level = levelInfo_((rec && rec.xp) || 0).level, badges = (rec && rec.badges) || {}, owned = (rec && rec.owned) || {}, out = {};
   Object.keys(DATA.avatar_options).forEach(function (part) {
     out[part] = DATA.avatar_options[part].map(function (o) {
-      return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges), how: unlockText_(o[2]) };
+      return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges, owned, part, o[0]), how: unlockText_(o[2]),
+               cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0 };
     });
   });
   return out;
@@ -458,13 +465,177 @@ function cleanAvatar_(rec, data, teacher) {
     var part = parts[i], choice = data[part] === undefined ? DATA.default_avatar[part] : data[part];
     var match = DATA.avatar_options[part].filter(function (o) { return o[0] === choice; })[0];
     if (!match) return { error: 'Unknown ' + part };
-    if (!teacher && !isUnlocked_(match[2], level, rec.badges || {})) return { error: match[1] + ' is still locked: ' + unlockText_(match[2]) + '.' };
+    if (!teacher && !isUnlocked_(match[2], level, rec.badges || {}, rec.owned, part, choice)) return { error: match[1] + ' is still locked: ' + unlockText_(match[2]) + '.' };
     out[part] = choice;
   }
   var name = String(data.name || '').trim();
   if (!/^[A-Za-z0-9 .\-_!']{0,20}$/.test(name)) return { error: 'Robot names can be up to 20 letters, numbers and spaces.' };
   out.name = name;
   return { avatar: out };
+}
+
+// ---------------------------------------------------------------- the shop and Robot Rush
+// XP to spend = all the XP a student ever earned minus what they spent. Levels count all earned XP, so
+// shopping never lowers a level. Robot Rush (client/lib/game.js) opens for DATA.arcade.minutes after a lesson
+// is completed, or when the teacher opens it for the class. Scores are checked here: a race has to be started
+// on the server and take about as long as the race clock, and a score can't be more than a robot could make.
+
+function spendable_(rec) { return Math.max(0, ((rec && rec.xp) || 0) - ((rec && rec.spent) || 0)); }
+
+function powerLevels_(rec) {
+  var out = {};
+  DATA.powerups.forEach(function (u) { out[u.id] = Math.min(u.costs.length, ((rec && rec.powerups) || {})[u.id] || 0); });
+  return out;
+}
+
+function raceSeconds_(levels) { return DATA.arcade.race_seconds + 5 * (levels.time || 0); }
+
+function arcadeDay_() { return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'); }
+
+function openArcade_(rec) {
+  rec.arcade = rec.arcade || {};
+  rec.arcade.until = new Date(Date.now() + DATA.arcade.minutes * 60000).toISOString();
+}
+
+/** Is Robot Rush open for this student right now, and until when? */
+function arcadeState_(rec, cfg) {
+  var classes = studentClassIds_(rec, cfg).map(function (cid) { return cfg.classes[cid]; }).filter(Boolean);
+  if (classes.length && classes.every(function (c) { return c.arcade_off; })) return { open: false, off: true, seconds_left: 0 };
+  var until = (rec.arcade || {}).until || '';
+  classes.forEach(function (c) { if (!c.arcade_off && c.arcade_until && c.arcade_until > until) until = c.arcade_until; });
+  var left = until ? Math.floor((new Date(until).getTime() - Date.now()) / 1000) : 0;
+  return { open: left > 0, until: left > 0 ? until : null, seconds_left: Math.max(0, left), minutes: DATA.arcade.minutes };
+}
+
+/** The class leaderboard: top 10 today and of all time. `fresh` is a student record newer than the summary. */
+function arcadeBoard_(cfg, cid, fresh) {
+  if (!cid || !cfg.classes[cid]) return { today: [], all: [] };
+  var sum = summary_(), day = arcadeDay_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, 'first');
+  var rows = students.map(function (s) {
+    var me = !!fresh && fresh.email === s.email, a = me ? (fresh.arcade || {}) : ((sum.students[s.email] || {}).arcade || {});
+    return { name: names[s.email], avatar: me ? avatarOf_(fresh) : (s.avatar || null), best: a.best || 0,
+             today: a.day === day ? (a.day_best || 0) : 0, me: me };
+  });
+  var top = function (k) {
+    return rows.filter(function (r) { return r[k] > 0; }).sort(function (a, b) { return b[k] - a[k]; }).slice(0, 10)
+      .map(function (r) { return { name: r.name, avatar: r.avatar, score: r[k], me: r.me }; });
+  };
+  return { today: top('today'), all: top('best') };
+}
+
+function shopCatalog_(rec) {
+  var lv = powerLevels_(rec);
+  return DATA.powerups.map(function (u) {
+    return { id: u.id, icon: u.icon, name: u.name, desc: u.desc, level: lv[u.id], max: u.costs.length,
+             next_cost: lv[u.id] < u.costs.length ? u.costs[lv[u.id]] : null };
+  });
+}
+
+/** Everything the Arcade page shows. */
+function arcadeData_(rec, cfg, teacher) {
+  if (teacher) {
+    return { practice: true, state: { open: true }, spendable: 0, shop: shopCatalog_(null), powerups: powerLevels_(null),
+             race_seconds: DATA.arcade.race_seconds, best: 0, board: { today: [], all: [] }, minutes: DATA.arcade.minutes };
+  }
+  var a = rec.arcade || {};
+  return { state: arcadeState_(rec, cfg), spendable: spendable_(rec), shop: shopCatalog_(rec), powerups: powerLevels_(rec),
+           race_seconds: raceSeconds_(powerLevels_(rec)), best: a.best || 0, plays: a.plays || 0, minutes: DATA.arcade.minutes,
+           board: arcadeBoard_(cfg, studentClassIds_(rec, cfg)[0], rec) };
+}
+
+// ---------------------------------------------------------------- student API: /api/shop/buy, /api/arcade/start, /api/arcade/finish
+function shopApi_(path, d) {
+  if (whoIs_().teacher) {          // the teacher's preview: nothing is saved
+    if (path === '/api/arcade/start') return { ok: true, practice: true, run_id: 'practice', seconds: DATA.arcade.race_seconds, powerups: powerLevels_(null) };
+    if (path === '/api/arcade/finish') return { ok: true, practice: true, score: Math.round(Number(d.score) || 0) };
+    return { ok: false, error: 'This is the student shop. Students buy items with the XP they earn.' };
+  }
+  var ctx = student_();
+  if (path === '/api/shop/buy') return shopBuy_(ctx, d);
+  if (path === '/api/arcade/start') return arcadeStart_(ctx);
+  return arcadeFinish_(ctx, d);
+}
+
+function shopBuy_(ctx, d) {
+  var rec = ctx.rec, item = String(d.item || ''), m, cost, power = null, level = 0;
+  rec.owned = rec.owned || {};
+  rec.powerups = rec.powerups || {};
+  if ((m = /^part:(\w+):([\w-]+)$/.exec(item))) {
+    var opt = (DATA.avatar_options[m[1]] || []).filter(function (o) { return o[0] === m[2]; })[0];
+    if (!opt || !opt[2] || opt[2][0] !== 'cost') throw badRequest_("That isn't for sale.");
+    if (rec.owned[item]) return { ok: true, already: true, spendable: spendable_(rec), catalog: avatarCatalog_(rec, false) };
+    cost = opt[2][1];
+  } else if ((m = /^power:(\w+)$/.exec(item))) {
+    power = DATA.powerups.filter(function (u) { return u.id === m[1]; })[0];
+    if (!power) throw badRequest_('No such power-up.');
+    level = powerLevels_(rec)[power.id];
+    if (level >= power.costs.length) return { ok: false, error: power.name + ' is already at the top level.' };
+    cost = power.costs[level];
+  } else throw badRequest_('No such item.');
+  if (spendable_(rec) < cost) return { ok: false, error: 'You need ' + (cost - spendable_(rec)) + ' more XP to spend. Finish more steps to earn it!', spendable: spendable_(rec) };
+  rec.spent = (rec.spent || 0) + cost;
+  if (power) rec.powerups[power.id] = level + 1; else rec.owned[item] = now_();
+  rec.shop_log = rec.shop_log || [];
+  rec.shop_log.unshift({ item: item, cost: cost, at: now_() });
+  if (rec.shop_log.length > 60) rec.shop_log.length = 60;
+  saveStudent_(rec);
+  return { ok: true, spendable: spendable_(rec), shop: shopCatalog_(rec), powerups: powerLevels_(rec), catalog: avatarCatalog_(rec, false),
+           race_seconds: raceSeconds_(powerLevels_(rec)) };
+}
+
+function arcadeStart_(ctx) {
+  var rec = ctx.rec, st = arcadeState_(rec, ctx.cfg);
+  if (!st.open) {
+    return { ok: false, closed: true, error: st.off ? 'Your teacher has turned Robot Rush off for now.'
+      : 'Robot Rush opens for ' + DATA.arcade.minutes + ' minutes when you finish a lesson.' };
+  }
+  var a = rec.arcade = rec.arcade || {}, levels = powerLevels_(rec), id = Math.random().toString(36).slice(2, 10);
+  a.runs = (a.runs || []).filter(function (r) { return Date.now() - new Date(r.at).getTime() < 15 * 60000; }).slice(-4);
+  a.runs.push({ id: id, at: now_() });
+  a.plays = (a.plays || 0) + 1;
+  saveStudent_(rec);
+  return { ok: true, run_id: id, seconds: raceSeconds_(levels), powerups: levels, until: st.until };
+}
+
+function arcadeFinish_(ctx, d) {
+  var rec = ctx.rec, a = rec.arcade = rec.arcade || {};
+  var run = (a.runs || []).filter(function (r) { return r.id === d.run_id; })[0];
+  if (!run) return { ok: false, error: "That race wasn't found. Start a new one." };
+  a.runs = a.runs.filter(function (r) { return r !== run; });
+  var secs = raceSeconds_(powerLevels_(rec)), took = (Date.now() - new Date(run.at).getTime()) / 1000;
+  var score = Math.max(0, Math.round(Number(d.score) || 0));
+  if (took < secs - 3 || took > secs + 600 || score > secs * 250) {
+    saveStudent_(rec);
+    return { ok: false, error: "That score couldn't be counted. Try another race!" };
+  }
+  var day = arcadeDay_(), newBest = score > (a.best || 0);
+  if (newBest) { a.best = score; a.best_at = now_(); }
+  if (a.day !== day) { a.day = day; a.day_best = 0; }
+  var dayBest = score > (a.day_best || 0);
+  if (dayBest) a.day_best = score;
+  a.last = score;
+  saveStudent_(rec);
+  return { ok: true, score: score, best: a.best, new_best: newBest, day_best: a.day_best, new_day_best: dayBest,
+           board: arcadeBoard_(ctx.cfg, studentClassIds_(rec, ctx.cfg)[0], rec), state: arcadeState_(rec, ctx.cfg) };
+}
+
+// ---------------------------------------------------------------- teacher: open, close, turn off
+function arcadeTeacher_(cfg, cid) {
+  var c = cfg.classes[cid], left = c.arcade_until ? Math.floor((new Date(c.arcade_until).getTime() - Date.now()) / 1000) : 0;
+  return { off: !!c.arcade_off, seconds_left: Math.max(0, left), minutes: DATA.arcade.minutes, board: arcadeBoard_(cfg, cid, null) };
+}
+
+/** action: 'open' (everyone can play for a few minutes), 'close', 'off' (no Robot Rush at all), 'on'. */
+function arcadeClass(cid, action) {
+  var cfg = teacher_(), c = cfg.classes[cid];
+  if (!c) throw new Error('No such class.');
+  if (action === 'open') { c.arcade_until = new Date(Date.now() + DATA.arcade.minutes * 60000).toISOString(); c.arcade_off = false; }
+  else if (action === 'close') c.arcade_until = '';
+  else if (action === 'off') { c.arcade_off = true; c.arcade_until = ''; }
+  else if (action === 'on') c.arcade_off = false;
+  else throw new Error('Unknown action.');
+  saveConfig_(cfg);
+  return arcadeTeacher_(cfg, cid);
 }
 
 // ---------------------------------------------------------------- student API
@@ -475,6 +646,8 @@ function cleanAvatar_(rec, data, teacher) {
 //   /api/lessons/<id>/ship     {share, ext, reflect, submit}  save Ship it (submit: true turns it in)
 //   /api/lessons/<id>/partner  {action: pair|leave, partner_id}
 //   /api/avatar                {body, color, ...}
+//   /api/shop/buy              {item: 'part:eyes:star' | 'power:turbo'}      (35_arcade.js)
+//   /api/arcade/start, /api/arcade/finish {run_id, score}                    Robot Rush
 
 function text_(v, max) {
   if (v == null) return '';
@@ -505,6 +678,8 @@ function finish_(ctx, L, p, extra) {
   var out = { ok: true, percent: pct, stages: stagesDone_(L, p), stage: currentStage_(L, p), rewards: rewards,
               lesson_xp: lessonXp_(ctx.rec, L.id), stars: lessonStars_(L, p), level: levelInfo_(ctx.rec.xp || 0) };
   if (mate) out.partner = mate;
+  var arc = arcadeState_(ctx.rec, ctx.cfg);
+  if (arc.open) out.arcade = arc;
   Object.keys(extra || {}).forEach(function (k) { out[k] = extra[k]; });
   return out;
 }
@@ -514,6 +689,7 @@ function api(path, bodyJson) {
   try {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
     if (path === '/api/avatar') return apiAvatar_(body);
+    if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner)$/.exec(path);
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];
@@ -1283,12 +1459,14 @@ function studentPage_(me, path) {
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
   var rewards = syncRewards_(rec, cfg);
   if (rewards.xp_gained) saveStudent_(rec);
-  var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name };
+  var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
+                                                arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec) };
   var m;
   if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Home', data: merge_(base, dashboardData_(rec, cfg)) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec)) };
   if (path === '/map') return { name: 'map', title: 'Skill tree', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg)) }) };
   if (path === '/me') return { name: 'profile', title: 'My robot', data: merge_(base, profileData_(rec)) };
+  if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, arcadeData_(rec, cfg, false)) };
   if (path === '/help') return { name: 'help', title: 'MakeCode help', data: merge_(base, { makecode: DATA.makecode_url }) };
   if ((m = /^\/lessons\/([\w-]+)$/.exec(path))) return lessonPage_(m[1], rec, cfg, base, false);
   return { name: 'error', title: 'Not found', data: { message: "We couldn't find that page." } };
@@ -1299,7 +1477,7 @@ function teacherPage_(path) {
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
     tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_(),
     logo_refused: !!PropertiesService.getScriptProperties().getProperty('logo:refused') })) };
-  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null) })) };
+  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null), arcade: arcadeTeacher_(cfg, m[1]) })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/screen$/.exec(path))) {
@@ -1308,6 +1486,7 @@ function teacherPage_(path) {
              data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_() }) };
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
+  if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { course: courseCards_(null), urls: cfg.videos }) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(null)) };
@@ -1504,8 +1683,8 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos']]
-    : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot']];
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
@@ -1522,6 +1701,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
-var BUILD_ID = "495f612590";
-var BUILD_EXPECT = {"Assets": "b6fa868b56", "Data": "27dda6d429"};
+var BUILD_ID = "5da789cd05";
+var BUILD_EXPECT = {"Assets": "e9d59d3562", "Data": "ad937276a1"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

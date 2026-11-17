@@ -91,6 +91,49 @@ assert.strictEqual(r.body.stars, 3);                               // perfect qu
 const sam = w.g.loadStudent_(S);
 assert.ok(sam.xp_keys['ext_3:' + LID] && sam.xp_keys['complete:' + LID]);
 
+// finishing the lesson opens Robot Rush for a few minutes; the shop spends XP without lowering the level
+assert.ok(r.body.arcade && r.body.arcade.open && r.body.arcade.seconds_left > 250, JSON.stringify(r.body.arcade));
+const xpBefore = w.g.loadStudent_(S).xp, lvBefore = w.g.levelInfo_(xpBefore).level;
+const shop = (body) => w.call(S, 'api', ['/api/shop/buy', JSON.stringify(body)]).body;
+let b = shop({ item: 'power:magnet' });
+assert.ok(b.ok && b.powerups.magnet === 1 && b.spendable === xpBefore - 80, JSON.stringify(b));
+b = shop({ item: 'part:eyes:star' });
+assert.ok(b.ok && b.catalog.eyes.find((o) => o.id === 'star').unlocked);
+assert.ok(w.call(S, 'api', ['/api/avatar', JSON.stringify({ eyes: 'star' })]).body.ok);
+assert.ok(!w.call(S, 'api', ['/api/avatar', JSON.stringify({ eyes: 'shades' })]).body.ok);      // not bought
+assert.ok(!shop({ item: 'part:eyes:round' }).ok);                                                // free parts aren't for sale
+const samNow = w.g.loadStudent_(S);
+assert.ok(samNow.xp >= xpBefore && samNow.spent === 230 && w.g.levelInfo_(samNow.xp).level >= lvBefore);   // spending never lowers XP or level
+b = shop({ item: 'power:time' });
+assert.ok(b.ok && b.race_seconds === 50, JSON.stringify(b));
+b = shop({ item: 'power:time' });
+assert.ok(!b.ok && /more XP/.test(b.error), JSON.stringify(b));                                    // level 2 costs more than Sam has left
+// a race: has to be started, has to take the race time, and the score has to be possible
+const arcade = (action, body) => w.call(S, 'api', ['/api/arcade/' + action, JSON.stringify(body || {})]).body;
+let run = arcade('start');
+assert.ok(run.ok && run.seconds === 50 && run.powerups.magnet === 1);
+assert.ok(!arcade('finish', { run_id: run.run_id, score: 500 }).ok);                               // too fast
+run = arcade('start');
+w.advance(51000);
+assert.ok(!arcade('finish', { run_id: run.run_id, score: 999999 }).ok);                            // impossible score
+run = arcade('start');
+w.advance(51000);
+let fin = arcade('finish', { run_id: run.run_id, score: 2400 });
+assert.ok(fin.ok && fin.new_best && fin.best === 2400 && fin.board.today[0].me && fin.board.today[0].score === 2400, JSON.stringify(fin));
+assert.ok(!arcade('finish', { run_id: run.run_id, score: 2400 }).ok);                              // a race counts once
+// the teacher can turn it off and open it for everyone
+w.call(T, 'arcadeClass', [cls.id, 'off']);
+assert.ok(!arcade('start').ok);
+w.call(T, 'arcadeClass', [cls.id, 'on']);
+w.advance(5 * 60000);
+assert.ok(!arcade('start').ok);                                                                    // the 5 minutes are over
+assert.ok(w.call(T, 'arcadeClass', [cls.id, 'open']).seconds_left > 250);
+assert.ok(arcade('start').ok);
+w.call(T, 'arcadeClass', [cls.id, 'close']);
+assert.ok(/"page":"arcade"/.test(pageView(S, '/arcade')));
+assert.ok(!/"page":"error"/.test(pageView(T, '/arcade')));
+assert.ok(w.call(T, 'api', ['/api/arcade/start', '{}']).body.practice);
+
 // partners: Ava picks Sam's classmate list; work is combined, then saves go to both
 w.advance(120000);
 assert.ok(api(S2, 'partner').body.classmates.some((m) => m.id === S));

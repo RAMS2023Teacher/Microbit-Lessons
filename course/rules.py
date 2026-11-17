@@ -83,7 +83,9 @@ BADGES = [
     ("teachers-pick", "🍎", "Teacher's Pick", "Given by your teacher for great work.", ["teacher"]),
 ]
 
-# ---------------------------------------------------------------- avatar parts (unlock: None, ("level", n) or ("badge", id))
+# ---------------------------------------------------------------- avatar parts
+# unlock: None (free), ("level", n), ("badge", id) or ("cost", n): bought in the shop with XP to spend.
+# Spending never lowers a level: levels count all the XP ever earned; the shop spends from "XP to spend".
 AVATAR_PARTS = {"body": "Body", "color": "Color", "eyes": "Eyes", "mouth": "Mouth",
                 "antenna": "Antenna", "accessory": "Accessory", "bg": "Background"}
 DEFAULT_AVATAR = {"body": "box", "color": "teal", "eyes": "round", "mouth": "smile",
@@ -94,22 +96,40 @@ AVATAR_OPTIONS = {
     "color": [("teal", "Teal", None), ("red", "Red", None), ("orange", "Orange", None),
               ("yellow", "Yellow", None), ("green", "Green", None), ("blue", "Blue", None),
               ("purple", "Purple", None), ("pink", "Pink", None), ("white", "White", None),
-              ("chrome", "Chrome", ("level", 8)), ("gold", "Gold", ("badge", "halfway"))],
+              ("chrome", "Chrome", ("level", 8)), ("gold", "Gold", ("badge", "halfway")),
+              ("lime", "Neon lime", ("cost", 100)), ("galaxy", "Galaxy", ("cost", 250))],
     "eyes": [("dots", "Dots", None), ("round", "Round", None), ("visor", "Visor", ("level", 2)),
              ("cyclops", "Cyclops", ("level", 4)), ("hearts", "Hearts", ("badge", "quiz-whiz")),
-             ("leds", "LED grid", ("level", 5)), ("happy", "Happy", ("badge", "finisher"))],
+             ("leds", "LED grid", ("level", 5)), ("happy", "Happy", ("badge", "finisher")),
+             ("shades", "Sunglasses", ("cost", 150)), ("star", "Star eyes", ("cost", 150))],
     "mouth": [("smile", "Smile", None), ("flat", "Flat", None), ("open", "Open", None),
-              ("grille", "Grille", ("level", 3)), ("zigzag", "Zigzag", ("badge", "remixer"))],
+              ("grille", "Grille", ("level", 3)), ("zigzag", "Zigzag", ("badge", "remixer")),
+              ("fangs", "Fangs", ("cost", 100)), ("mustache", "Mustache", ("cost", 150))],
     "antenna": [("none", "None", None), ("ball", "Ball", None), ("double", "Double", ("level", 2)),
                 ("bolt", "Lightning", ("level", 4)), ("dish", "Radar dish", ("badge", "echo-hunter")),
-                ("propeller", "Propeller", ("level", 7))],
+                ("propeller", "Propeller", ("level", 7)),
+                ("flower", "Flower", ("cost", 100)), ("halo", "Halo", ("cost", 200))],
     "accessory": [("none", "None", None), ("bowtie", "Bow tie", None), ("cap", "Cap", ("level", 3)),
                   ("headphones", "Headphones", ("badge", "musician")),
                   ("goggles", "Safety goggles", ("badge", "circuit-builder")),
-                  ("cape", "Cape", ("level", 9)), ("crown", "Crown", ("badge", "graduate"))],
+                  ("cape", "Cape", ("level", 9)), ("crown", "Crown", ("badge", "graduate")),
+                  ("scarf", "Scarf", ("cost", 120)), ("wizard", "Wizard hat", ("cost", 250)), ("jetpack", "Jetpack", ("cost", 300))],
     "bg": [("sky", "Sky", None), ("mint", "Mint", None), ("sun", "Sunny", None), ("lilac", "Lilac", None),
            ("night", "Night", None), ("circuit", "Circuit board", ("level", 5)),
-           ("stars", "Starfield", ("level", 10))],
+           ("stars", "Starfield", ("level", 10)),
+           ("ocean", "Ocean", ("cost", 150)), ("lava", "Volcano", ("cost", 150)), ("rainbow", "Rainbow", ("cost", 250))],
 }
+
+# ---------------------------------------------------------------- Robot Rush (the arcade game)
+# Opens for ARCADE_MINUTES after a student completes a lesson (or when the teacher opens it for the class).
+ARCADE = {"minutes": 5, "race_seconds": 45}
+# Power-ups bought with XP to spend: id, icon, name, what it does, cost of each level
+POWERUPS = [
+    ("turbo", "⚡", "Turbo", "Your robot runs faster.", [100, 200, 350]),
+    ("shield", "🛡️", "Shield", "Start each race with a shield that blocks one hit. More levels, more shields.", [120, 240, 400]),
+    ("magnet", "🧲", "Bolt magnet", "Pull in bolts from farther away.", [80, 160, 300]),
+    ("dash", "🚀", "Rocket dash", "Press Space for a burst of speed that smashes through bugs. One dash per level.", [100, 200, 350]),
+    ("time", "⏱️", "Overtime", "5 more seconds on the race clock for each level.", [150, 300]),
+]
 
 MAKECODE_URL = "https://makecode.microbit.org/"
