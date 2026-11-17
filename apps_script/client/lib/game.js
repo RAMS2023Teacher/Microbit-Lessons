@@ -13,7 +13,7 @@
       canvas.height = H;
       const pw = Object.assign({ turbo: 0, shield: 0, magnet: 0, dash: 0 }, opts.powerups || {});
       const robot = new Image();
-      robot.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(window.RobotAvatar.svg(opts.avatar || {}, 160));
+      robot.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(window.RobotAvatar.svg(opts.avatar || {}, 160, { noBg: true }));
       const total = opts.seconds || 45, base = 330 * (1 + 0.12 * pw.turbo), magnet = 30 + 55 * pw.magnet;
       const S = { lane: 1, y: LANES[1], t: 0, dist: 0, bolts: 0, smashed: 0, shields: pw.shield, dashes: pw.dash,
                   dashT: 0, stunT: 0, invT: 0, items: [], spawnT: 1, boltT: 0.3, pops: [], parts: [], shake: 0,
@@ -140,7 +140,8 @@
             g.fillStyle = '#fb923c'; g.beginPath(); g.moveTo(PX - 50, S.y - 20); g.lineTo(PX - 110 - Math.random() * 30, S.y); g.lineTo(PX - 50, S.y + 20); g.fill();
             g.fillStyle = '#fde047'; g.beginPath(); g.moveTo(PX - 50, S.y - 10); g.lineTo(PX - 85 - Math.random() * 20, S.y); g.lineTo(PX - 50, S.y + 10); g.fill();
           }
-          if (robot.complete) g.drawImage(robot, PX - 55, S.y - 62 + bob, 110, 110);
+          g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(PX, S.y + 44, 38, 8, 0, 0, Math.PI * 2); g.fill();   // shadow on the road
+          if (robot.complete) g.drawImage(robot, PX - 66, S.y - 84 + bob, 132, 132);
           if (S.shields > 0) { g.strokeStyle = 'rgba(56,189,248,.8)'; g.lineWidth = 4; g.beginPath(); g.arc(PX, S.y - 8, 64, 0, Math.PI * 2); g.stroke(); }
           if (S.stunT > 0) { g.font = '28px sans-serif'; g.fillText('💫', PX, S.y - 78); }
         }

@@ -21,8 +21,10 @@
   };
   const DEFAULT = { body: 'box', color: 'teal', eyes: 'round', mouth: 'smile', antenna: 'ball', accessory: 'none', bg: 'sky' };
 
-  function svg(spec, size) {
-    const a = Object.assign({}, DEFAULT, spec || {});
+  // opts.noBg: just the robot, no background square (used by Robot Rush)
+  function svg(spec, size, opts) {
+    const a = Object.assign({}, DEFAULT, spec || {}), noBg = !!(opts && opts.noBg);
+    if (noBg) a.bg = 'none';
     const id = 'av' + (++uid);
     const [fill, dark] = COLORS[a.color] || COLORS.teal;
     const F = fill.replace('CHROME', id + 'c').replace('GOLD', id + 'g').replace('GALAXY', id + 'x');
@@ -37,7 +39,7 @@
       `<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#eab308"/><stop offset="1" stop-color="#fef3c7"/></linearGradient>` +
       `<linearGradient id="${id}x" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#312e81"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient>` +
       `<clipPath id="${id}clip"><rect width="100" height="100" rx="22"/></clipPath></defs>`);
-    o.push(`<g clip-path="url(#${id}clip)"><rect width="100" height="100" fill="${BG[a.bg] || BG.sky}"/>`);
+    o.push(noBg ? '<g>' : `<g clip-path="url(#${id}clip)"><rect width="100" height="100" fill="${BG[a.bg] || BG.sky}"/>`);
     if (a.bg === 'circuit') {
       o.push('<g stroke="#2dd4bf" stroke-width="1.6" fill="none" opacity=".55"><path d="M0 18h22l8 8h20M100 30H78l-6 6v20M0 70h14l10-10M100 82H70l-8-8"/></g><g fill="#5eead4" opacity=".7"><circle cx="50" cy="26" r="2.2"/><circle cx="72" cy="56" r="2.2"/><circle cx="24" cy="60" r="2.2"/></g>');
     } else if (a.bg === 'stars') {
