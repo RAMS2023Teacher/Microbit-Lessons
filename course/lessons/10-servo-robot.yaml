@@ -1,0 +1,460 @@
+id: servo-robot
+title: Build a Robot
+tagline: Two wheels, one micro:bit, and your own move commands
+minutes: 135          # about three class periods
+
+mission:
+  goal: |
+    Wire two **continuous servos** to the micro:bit and make the robot drive. You'll write your own
+    move commands (`forward()`, `turn_left()` and more) so a whole dance or route takes just a few lines.
+    Then program the robot to **drive a square**.
+  picture:
+    type: flow
+    steps:
+      - {icon: "🔌", label: Wire the servos}
+      - {icon: "🎯", label: Find the stop}
+      - {icon: "🧩", label: Make move functions}
+      - {icon: "🟦", label: Drive a square}
+    caption: Your plan for this project.
+  you_need:
+    - A partner
+    - The robot chassis with two servos (wheels) and a breadboard on the front
+    - A micro:bit in a breakout board, plus a USB cable
+    - The battery pack (charged or fresh batteries)
+    - Some floor space or a big table, and a tape mark to start from
+  learn:
+    - "**continuous servos** spin like motors; the number sets speed and direction"
+    - "**functions** (`def`) give a name to a group of moves"
+    - "**variables** let you tune your robot in one place"
+  talk: Robots in factories and warehouses repeat the same moves all day. Name one move a robot (or a person) does again and again. What smaller steps is it made of?
+
+build:
+  - part: "Part 1: Meet the robot"
+    title: How a continuous servo works
+    say: |
+      A normal servo turns to an **angle** and stops. Yours are **continuous** servos: they spin all the way
+      around, like wheels. The number you send sets **speed and direction**, not an angle.
+    picture:
+      type: dial
+      marks:
+        - {angle: 0, label: "0 = full speed one way"}
+        - {angle: 90, label: "90 = stop", pointer: true}
+        - {angle: 180, label: "180 = full speed the other way"}
+    do:
+      - Look at your robot. Find the two servos, the wheels, and the breadboard on the front.
+      - Find the three wires coming out of each servo.
+    test:
+      - I found both servos and their three wires
+    ask: If 90 means stop, what do you think 120 means? What about 60?
+
+  - part: "Part 1: Meet the robot"
+    title: Wire the servos
+    say: Each servo has three wires. Two bring **power** from the battery pack. One carries the **signal** from the micro:bit. Servos need more power than the micro:bit can give, so they use the batteries.
+    picture:
+      type: part
+      part: servo
+      labels: {gnd: "brown or black = battery –", vcc: "red = battery +", sig: "orange or yellow = signal pin"}
+    wiring:
+      - "**Unplug the USB and switch the battery pack off** before you move any wires."
+      - "**Left** servo signal wire (orange/yellow) → **P1** on the breakout board."
+      - "**Right** servo signal wire (orange/yellow) → **P2** on the breakout board."
+      - "Both servos' **red** wires → the battery pack **+** row on the breadboard."
+      - "Both servos' **brown/black** wires → the battery pack **–** row."
+      - "One wire from the battery **–** row → **GND** on the breakout board. This joins the grounds so the signal works."
+    tip: "**Check with your teacher** that these pins match your robot. If your robot is wired differently, write your pins below and use them everywhere this lesson says P1 or P2."
+    stuck:
+      - "**Left and right** are as if you were sitting on the robot, facing forward."
+      - Never connect the battery **+** to the micro:bit's 3V pin.
+    test:
+      - The left servo signal goes to P1 and the right one to P2
+      - Red wires go to battery +, brown/black wires go to battery –
+      - Battery – is joined to the micro:bit GND
+    fields: ["Left servo pin", "Right servo pin"]
+
+  - part: "Part 1: Meet the robot"
+    title: Spin one wheel
+    say: "`pins.servo_write_pin` sends a number to a servo. Let's see what each number does. **Hold the robot up** so the wheels spin in the air."
+    do:
+      - Open MakeCode, make a **New Project** named **Robot**, switch to **Python**, and delete the starter code.
+      - Type this code. Download it to the micro:bit, then switch the battery pack on.
+      - Press **A** and **B**. Watch the left wheel.
+    code: |
+      while True:
+          if input.button_is_pressed(Button.A):
+              pins.servo_write_pin(AnalogPin.P1, 180)
+          elif input.button_is_pressed(Button.B):
+              pins.servo_write_pin(AnalogPin.P1, 0)
+          else:
+              pins.servo_write_pin(AnalogPin.P1, 90)
+          basic.pause(20)
+    what: Holding A sends 180, holding B sends 0, and letting go sends 90.
+    tip: "**Safety:** test with the wheels off the table, or your robot may drive off the edge!"
+    test:
+      - A spins the left wheel one way
+      - B spins it the other way
+      - Letting go (almost) stops it
+    ask: Which number made the left wheel roll the robot forward, 180 or 0?
+
+  - part: "Part 1: Meet the robot"
+    title: Find your stop numbers
+    say: |
+      Real servos aren't perfect. Yours might creep a little at 90 and stop at 88 or 93 instead. Let's find
+      each servo's **exact stop number** and keep it in a **variable**.
+    do:
+      - Replace your code with this. Download it, hold the robot up, and watch both wheels.
+      - If a wheel still creeps, change its stop number by 1 and download again. Repeat until both are still.
+      - Write your two stop numbers below.
+    code: |
+      left_stop = 90
+      right_stop = 90
+      pins.servo_write_pin(AnalogPin.P1, left_stop)
+      pins.servo_write_pin(AnalogPin.P2, right_stop)
+    new: "1-2"
+    what: "`left_stop` and `right_stop` are **variables**: names that hold a number. Change the number in one place and every line that uses the name changes too."
+    stuck:
+      - Wheels spin fast? Check that the signal wires are on P1 and P2, not on GND or 3V.
+      - Nothing moves at all? Is the battery pack switched on?
+    test:
+      - Both wheels are completely still
+    fields: ["Left stop number", "Right stop number"]
+    ask: Why is it useful to keep the stop numbers in variables instead of typing them everywhere?
+
+  - part: "Part 2: Make your own moves"
+    title: Your first function, forward()
+    say: |
+      The servos face **opposite ways**, one on each side. So to roll forward, the left wheel spins one way and the
+      right wheel spins the other way. A **function** wraps those two lines up and gives them a name.
+    do:
+      - Add the highlighted lines. Put your own stop numbers in lines 1 and 2.
+      - Download it, hold the robot up, and press A.
+    code: |
+      left_stop = 90
+      right_stop = 90
+      speed = 90
+
+      def forward():
+          pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop - speed)
+
+      def stop():
+          pins.servo_write_pin(AnalogPin.P1, left_stop)
+          pins.servo_write_pin(AnalogPin.P2, right_stop)
+
+      stop()
+      while True:
+          if input.button_is_pressed(Button.A):
+              forward()
+              basic.pause(1000)
+              stop()
+          basic.pause(20)
+    new: "3-11, 13-19"
+    what: "`def forward():` **defines** the function: it teaches the micro:bit a new command. Nothing happens until you **call** it with `forward()`. With a stop of 90 and a speed of 90, the left wheel gets 180 and the right wheel gets 0."
+    tip: "If the robot goes **backward**, swap `+` and `-` in forward(). Your servos are mounted the other way around."
+    test:
+      - Pressing A spins both wheels for 1 second, then they stop
+      - On the floor, the robot rolls forward (not backward or in a circle)
+    ask: What is the difference between defining a function and calling it?
+
+  - part: "Part 2: Make your own moves"
+    title: Backward and turns
+    say: To go **backward**, flip both wheels. To **turn in place**, spin both wheels the same way, so one side goes forward and the other goes back.
+    picture:
+      type: compare
+      items:
+        - {icon: "⬆️", title: forward, text: "left +, right –"}
+        - {icon: "⬇️", title: backward, text: "left –, right +"}
+        - {icon: "↪️", title: turn_right, text: "left +, right +"}
+        - {icon: "↩️", title: turn_left, text: "left –, right –"}
+    do:
+      - Add the three new functions under `stop()`.
+      - Change the loop so A goes backward and B turns right. Download and test on the floor.
+    code: |
+      def backward():
+          pins.servo_write_pin(AnalogPin.P1, left_stop - speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop + speed)
+
+      def turn_left():
+          pins.servo_write_pin(AnalogPin.P1, left_stop - speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop - speed)
+
+      def turn_right():
+          pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop + speed)
+
+      stop()
+      while True:
+          if input.button_is_pressed(Button.A):
+              backward()
+              basic.pause(1000)
+              stop()
+          elif input.button_is_pressed(Button.B):
+              turn_right()
+              basic.pause(1000)
+              stop()
+          basic.pause(20)
+    new: "1-11, 15-22"
+    what: Keep your variables, forward() and stop() at the top. These three new functions go right under them. Each one is just two servo lines with a different plus or minus.
+    test:
+      - A makes the robot back up
+      - B makes the robot spin to the right in place
+    ask: Look at turn_left and turn_right. What is the only thing that changes between them?
+
+  - part: "Part 2: Make your own moves"
+    title: Time a 90° turn
+    say: Your robot can't measure angles. It turns for some **time**. You need to find how many milliseconds make a quarter turn on your floor.
+    do:
+      - Add a `turn_time` variable next to your other variables at the top.
+      - Change the B part of the loop to use it, as shown.
+      - Download and press B. Too far? Make the number smaller. Not far enough? Make it bigger. Try until it's a clean right angle.
+    code: |
+      left_stop = 90
+      right_stop = 90
+      speed = 90
+      turn_time = 500
+
+      # ...your functions stay here...
+
+      while True:
+          if input.button_is_pressed(Button.A):
+              forward()
+              basic.pause(1000)
+              stop()
+          elif input.button_is_pressed(Button.B):
+              turn_right()
+              basic.pause(turn_time)
+              stop()
+          basic.pause(20)
+    new: "4, 14"
+    tip: Put a piece of tape on the floor along the robot's side. After the turn, the robot should point straight across the tape.
+    stuck:
+      - Turns are different every time? Fresh batteries help. Weak batteries make the robot slower.
+      - Carpet and smooth floors need different times. Always tune on the floor you'll use.
+    test:
+      - Pressing B turns the robot about 90 degrees
+    fields: ["My turn_time"]
+    ask: Why might your turn_time be different from your neighbor's, even with the same code?
+
+  - part: "Part 3: Drive a square"
+    title: Plan the square
+    say: |
+      Big problems are easier when you **break them into steps**. A square is just four sides.
+      Each side is: drive forward, stop, turn right, stop.
+    picture:
+      type: flow
+      steps:
+        - {icon: "⬆️", label: forward}
+        - {icon: "✋", label: stop}
+        - {icon: "↪️", label: turn right}
+        - {icon: "✋", label: stop}
+      loop: true
+      loop_label: 4 times
+      caption: One side of the square, repeated 4 times.
+    do:
+      - With your partner, walk the square on the floor. Say each move out loud.
+      - Write the moves for **one side** below, in order.
+    test:
+      - We wrote the moves for one side of the square
+    fields: ["Move 1", "Move 2", "Move 3", "Move 4"]
+    ask: Why do we stop between moves instead of going straight from forward into a turn?
+
+  - part: "Part 3: Drive a square"
+    title: Code the square
+    say: Now write a function called `square()` that uses your move functions. A **for loop** repeats one side 4 times.
+    do:
+      - Add the `square()` function under your other functions.
+      - Change the loop so button A drives the square.
+      - Set the robot on its tape mark, press A, and watch.
+    code: |
+      def square():
+          for i in range(4):
+              forward()
+              basic.pause(1000)
+              stop()
+              basic.pause(200)
+              turn_right()
+              basic.pause(turn_time)
+              stop()
+              basic.pause(200)
+
+      stop()
+      while True:
+          if input.button_is_pressed(Button.A):
+              square()
+          basic.pause(20)
+    new: "1-10, 14-15"
+    what: "A function can call other functions! `square()` calls forward(), stop() and turn_right(). The short `basic.pause(200)` stops let the robot settle so the turns stay even."
+    test:
+      - Pressing A makes the robot drive four sides and four turns
+      - The robot ends close to where it started
+    ask: How close to the start did your robot finish? What would you change to make it closer?
+
+  - part: "Part 3: Drive a square"
+    title: "Checkpoint: the whole program"
+    say: Your program should match this, with your own stop numbers and turn time. Compare it line by line.
+    code: |
+      left_stop = 90
+      right_stop = 90
+      speed = 90
+      turn_time = 500
+
+      def forward():
+          pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop - speed)
+
+      def backward():
+          pins.servo_write_pin(AnalogPin.P1, left_stop - speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop + speed)
+
+      def turn_left():
+          pins.servo_write_pin(AnalogPin.P1, left_stop - speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop - speed)
+
+      def turn_right():
+          pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+          pins.servo_write_pin(AnalogPin.P2, right_stop + speed)
+
+      def stop():
+          pins.servo_write_pin(AnalogPin.P1, left_stop)
+          pins.servo_write_pin(AnalogPin.P2, right_stop)
+
+      def square():
+          for i in range(4):
+              forward()
+              basic.pause(1000)
+              stop()
+              basic.pause(200)
+              turn_right()
+              basic.pause(turn_time)
+              stop()
+              basic.pause(200)
+
+      stop()
+      while True:
+          if input.button_is_pressed(Button.A):
+              square()
+          basic.pause(20)
+    stuck:
+      - "**Functions must come before the code that calls them.** Keep every `def` above the `while True` loop."
+      - "**Robot drives in a curve:** one servo is faster. Try a smaller speed (like 60), or re-check your stop numbers."
+      - "**Robot twitches or the micro:bit restarts:** the batteries are weak, or battery – isn't joined to GND."
+    test:
+      - My program matches, and the robot drives a square
+      - I shared my project in MakeCode and copied the link
+
+quiz:
+  - question: You send a continuous servo the number 90. What does it do?
+    choices: ["Turns to 90 degrees and stops", "Stops (or nearly stops)", "Spins at full speed", "Spins at half speed"]
+    answer: 1
+    why: On a continuous servo the number sets speed and direction. 90 is the middle, so it stops. Numbers further from 90 spin faster.
+  - question: "What happens when the micro:bit reaches the line `def forward():`?"
+    choices: ["The robot drives forward", "It learns a new command, but nothing moves yet", "It shows an error", "The robot stops"]
+    answer: 1
+    why: "`def` only defines the function. The robot moves when the code calls it with `forward()`."
+  - question: Why does forward() send opposite numbers to the two servos?
+    choices: ["The servos face opposite ways on the robot", "One servo is broken", "To make the robot turn", "To save battery"]
+    answer: 0
+    why: The servos are mirror images, one on each side. To roll the same way, they have to spin opposite ways.
+  - question: Your robot turns too far. What should you change?
+    choices: ["Make turn_time smaller", "Make turn_time bigger", "Change the stop numbers", "Use turn_left instead"]
+    answer: 0
+    why: The robot turns for turn_time milliseconds. Less time means a smaller turn.
+  - question: Why is the square written as a function that calls other functions?
+    choices: ["It makes the robot faster", "It breaks a big job into small named steps that are easy to read and reuse", "Python needs it", "It uses less battery"]
+    answer: 1
+    why: This is called decomposition. Each small function does one job, and you build bigger moves out of them.
+
+ship:
+  extensions:
+    - title: Victory dance
+      level: Easier
+      goal: Press B to make the robot do a little dance of at least 4 moves, ending with a smiley face.
+      where: Add a dance() function above the loop, and an elif for button B in the loop.
+      code: |
+        def dance():
+            turn_left()
+            basic.pause(300)
+            turn_right()
+            basic.pause(300)
+            backward()
+            basic.pause(300)
+            stop()
+            basic.show_icon(IconNames.HAPPY)
+      new: "1-9"
+      hints: ["Copy the button A part of the loop and change it to Button.B.", "Remember to call stop() at the end, or the robot keeps going!"]
+    - title: Show where you're going
+      level: Easier
+      goal: Each move function shows an arrow on the LEDs, so you can see the plan while the robot drives.
+      where: Add one line at the top of each move function.
+      code: |
+        def forward():
+            basic.show_arrow(ArrowNames.NORTH)
+            pins.servo_write_pin(AnalogPin.P1, left_stop + speed)
+            pins.servo_write_pin(AnalogPin.P2, right_stop - speed)
+      new: "2"
+      hints: ["Use ArrowNames.SOUTH for backward, EAST and WEST for the turns.", "For stop(), try basic.show_icon(IconNames.SQUARE)."]
+    - title: Drive a triangle
+      level: Medium
+      goal: Write a triangle() function. A triangle has 3 sides and each turn is 120 degrees.
+      where: A new function next to square(), and call it from button B.
+      code: |
+        def triangle():
+            for i in range(___):
+                forward()
+                basic.pause(1000)
+                stop()
+                turn_right()
+                basic.pause(turn_time * ___)
+                stop()
+      hints: ["How many sides does a triangle have?", "120 degrees is 120 ÷ 90 = about 1.33 times a right-angle turn.", "Tune it on the floor, just like before."]
+    - title: Choose the speed
+      level: Medium
+      goal: Shake the micro:bit to switch between slow and fast. Show S or F so you know which.
+      where: Inside the loop, before the button checks.
+      code: |
+        if input.is_gesture(Gesture.SHAKE):
+            if speed == 90:
+                speed = 40
+                basic.show_string("S")
+            else:
+                speed = 90
+                basic.show_string("F")
+      new: "1-7"
+      hints: ["A slower speed changes how far the robot goes in 1 second.", "Will your turn_time still be right at the slow speed? Test it."]
+    - title: Write your name
+      level: Challenge
+      goal: Plan and code a route that draws the first letter of your name (try L, U, or Z).
+      where: A new function, called from a button.
+      code: |
+        def letter_l():
+            forward()
+            basic.pause(1500)
+            stop()
+            basic.pause(200)
+            # now turn, and drive the short side...
+      hints: ["Draw the letter on paper first. Write each move and its time.", "Tape a marker to the back of the robot to really draw it!", "Some letters need 45° turns: try turn_time / 2."]
+  reflect:
+    - In your own words, what is a function? Give an example from your robot code.
+    - What was the hardest thing to get right on the real robot, and how did you fix it?
+
+teacher_notes: |
+  * **Check the wiring matches your robot.** This lesson assumes: micro:bit in a breakout board, **left servo
+    signal → P1, right servo signal → P2**, servo red → battery pack +, servo brown/black → battery pack –, and the
+    battery pack – joined to micro:bit **GND**. If your robots are wired differently, tell students to use their
+    pins in place of P1/P2 (Step 2 has blanks for this).
+  * **Continuous servos:** 90 stops, 0 and 180 are full speed in opposite directions. Most stop somewhere from
+    88 to 93; Step 4 has students find each servo's own stop number.
+  * **Direction:** if a robot drives backward in Step 5, its servos are mounted the other way; swapping `+` and `-`
+    in the move functions fixes it.
+  * **Timing:** about three periods. Day 1: Part 1 (wiring, stop numbers). Day 2: Part 2 (functions, turn timing).
+    Day 3: the square and an extension.
+  * **Batteries** are the #1 cause of weird behavior (restarts, slow turns). Keep spares.
+  * **Safety:** test with wheels in the air first; keep robots away from table edges.
+  * The simulator can't drive the robot. Students must download to a real micro:bit.
+
+standards:
+  - code: 6-8.CT.d.2
+    how: Students write move functions (forward, turn_right, stop) that hide the servo numbers, then build bigger moves from them.
+  - code: 6-8.CT.b.3
+    how: Students break driving a square into sides and moves, and code a sub-solution (function) for each part.
+  - code: 6-8.CS.a.5
+    how: Students wire and program a two-servo robot to accomplish a task (driving a square route).
