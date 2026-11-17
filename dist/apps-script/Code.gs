@@ -166,7 +166,14 @@ function studentSummary_(rec) {
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
-           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec) };
+           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
+           xp_recent: recentXp_(rec) };
+}
+
+/** XP earned in the last day and a half, as [time, amount] pairs: the class display adds up today's for the class goal. */
+function recentXp_(rec) {
+  var since = new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+  return (rec.xp_log || []).filter(function (e) { return e.at >= since && e.amount > 0; }).map(function (e) { return [e.at, e.amount]; });
 }
 
 /** A student's last few wins for the class display: badges, finished lessons, perfect quizzes, teacher bonuses. */
@@ -323,7 +330,7 @@ function award_(rec, key, amount, reason, gained) {
   rec.xp_keys[key] = amount;
   rec.xp = (rec.xp || 0) + amount;
   rec.xp_log.unshift({ amount: amount, reason: reason, at: now_(), key: key });
-  if (rec.xp_log.length > 40) rec.xp_log.length = 40;
+  if (rec.xp_log.length > 100) rec.xp_log.length = 100;
   gained.push({ amount: amount, reason: reason });
 }
 
@@ -977,7 +984,8 @@ function standardsInPlay_(counts, focusId) {
 function screenPayload_(cfg, cid) {
   var c = cfg.classes[cid], saved = c.screen || {};
   var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', names: saved.names || 'first',
-                   xp: saved.xp || 'each', bell: saved.bell || '', view: saved.view === 'cards' ? 'cards' : 'track' };
+                   xp: saved.xp || 'each', bell: saved.bell || '', view: saved.view === 'cards' ? 'cards' : 'track',
+                   goal: saved.goal == null ? '' : saved.goal };
   var sum = summary_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, settings.names), wins = [];
   var wheres = {}, working = {};
   students.forEach(function (s) {
@@ -1007,10 +1015,19 @@ function screenPayload_(cfg, cid) {
     });
     return row;
   }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+  // class XP goal for today: XP everyone earned since midnight, against the teacher's goal (blank = 60 per student, 0 = off)
+  var tz = Session.getScriptTimeZone(), day = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd'), todayXp = 0;
+  students.forEach(function (s) {
+    ((sum.students[s.email] || {}).xp_recent || []).forEach(function (e) {
+      if (Utilities.formatDate(new Date(e[0]), tz, 'yyyy-MM-dd') === day) todayXp += e[1];
+    });
+  });
+  var goal = settings.goal === '' ? Math.max(100, students.length * 60) : Number(settings.goal) || 0;
   var since = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
   wins = wins.filter(function (w) { return w.at >= since; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }).slice(0, 8);
   return { settings: settings, students: rows, wins: wins,
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
+           goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
            track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: 'Python idea: ' + L.python,
            standards: standardsInPlay_(working, L.id) };
@@ -1029,7 +1046,8 @@ function screenSave(cid, d) {
   c.screen = { lesson_id: DATA.lessons[d.lesson_id] ? d.lesson_id : '', question: String(d.question || '').trim().slice(0, 300),
                names: d.names === 'robot' ? 'robot' : 'first', view: d.view === 'cards' ? 'cards' : 'track',
                xp: ['each', 'total', 'hide'].indexOf(d.xp) >= 0 ? d.xp : 'each',
-               bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '' };
+               bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '',
+               goal: String(d.goal == null ? '' : d.goal).trim() === '' ? '' : Math.max(0, Math.min(100000, Math.round(Number(d.goal)) || 0)) };
   saveConfig_(cfg);
   return screenPayload_(cfg, cid);
 }
@@ -1504,6 +1522,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
-var BUILD_ID = "1568542c83";
-var BUILD_EXPECT = {"Assets": "2a7b8656f2", "Data": "27dda6d429"};
+var BUILD_ID = "495f612590";
+var BUILD_EXPECT = {"Assets": "5fc2043492", "Data": "27dda6d429"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

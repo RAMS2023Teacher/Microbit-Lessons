@@ -757,11 +757,11 @@ body.screen-page { overflow: hidden; }
 .screen-stage .screen-wins li { font-size: 1rem; }
 .screen-stage .win-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .screen-stage h2 { margin-bottom: 8px; }
-.track.crowded .racer { width: 44px; } .track.crowded .racer-bot svg { width: 30px; height: 30px; }
-.track.crowded .racer b { font-size: .72rem; max-width: 44px; } .track.crowded .racer small { display: none; }
-.track.packed .racer { width: 34px; } .track.packed .racer-bot svg { width: 24px; height: 24px; }
-.track.packed .racer b { font-size: .62rem; max-width: 34px; } .track.packed .racer small { display: none; }
-.track.crowded .track-lane, .track.packed .track-lane { gap: 3px; }
+.track { --bot: 72px; }
+.racer { width: calc(var(--bot) + 16px); }
+.racer b { max-width: calc(var(--bot) + 16px); font-size: calc(var(--bot) * .17 + 4px); }
+.racer-bot svg { width: var(--bot); height: var(--bot); }
+.track.small-bots .racer small { display: none; }
 
 .tab-icon-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .tab-icon-row select { width: auto; }

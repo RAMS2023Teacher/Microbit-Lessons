@@ -265,3 +265,16 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .map-detail .eyebrow { color: var(--brand); }
 
 .big-q { margin: 0 0 12px; padding: 10px 14px; border: 3px solid #1d2a5c; border-radius: 14px; background: #fff7d6; font-size: 1.05rem; }
+
+/* class display: today's class XP goal, in the header */
+.screen-goal { flex: 1; max-width: 620px; margin: 0 24px; background: rgba(255, 255, 255, .12); border-radius: 16px; padding: 8px 16px 9px; color: #fff; }
+.screen-goal[hidden] { display: none; }
+.goal-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 1.15rem; }
+.goal-top b { font-family: var(--display); font-weight: 400; letter-spacing: .02em; }
+.goal-top span { font-family: var(--display); font-size: 1.4rem; color: var(--gold); }
+.goal-bar { height: 22px; border-radius: 99px; background: rgba(0, 0, 0, .35); border: 3px solid #0d1433; overflow: hidden; margin: 5px 0 3px; }
+.goal-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--gold), #ffb020); transition: width 1.2s ease; }
+.screen-goal.hit .goal-bar i { background: linear-gradient(90deg, #4cd964, var(--go)); }
+.goal-note { font-size: .9rem; opacity: .9; }
+.screen-goal.hit .goal-note { font-weight: 800; opacity: 1; }
+.screen-set-grid { grid-template-columns: repeat(3, 1fr); }

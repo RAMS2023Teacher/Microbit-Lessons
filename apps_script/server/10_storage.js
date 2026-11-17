@@ -144,7 +144,14 @@ function studentSummary_(rec) {
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
-           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec) };
+           badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
+           xp_recent: recentXp_(rec) };
+}
+
+/** XP earned in the last day and a half, as [time, amount] pairs: the class display adds up today's for the class goal. */
+function recentXp_(rec) {
+  var since = new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+  return (rec.xp_log || []).filter(function (e) { return e.at >= since && e.amount > 0; }).map(function (e) { return [e.at, e.amount]; });
 }
 
 /** A student's last few wins for the class display: badges, finished lessons, perfect quizzes, teacher bonuses. */

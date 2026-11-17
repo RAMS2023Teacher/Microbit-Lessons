@@ -13,6 +13,8 @@
     // ----- page skeleton (static markup only) -----
     root.innerHTML = '<div class="screen-stage" id="screen-stage">' +
       '<header class="screen-head"><div><h1 id="screen-class"></h1><p id="screen-lesson"></p></div>' +
+      '<div class="screen-goal" id="screen-goal" hidden><div class="goal-top"><b>🎯 Class goal today</b><span id="goal-num"></span></div>' +
+      '<div class="goal-bar"><i id="goal-fill"></i></div><div class="goal-note" id="goal-note"></div></div>' +
       '<b id="screen-total" class="screen-total"></b><div class="screen-tools">' +
       '<button type="button" class="btn small ghost" id="set-open">⚙ Set up</button>' +
       '<button type="button" class="btn small ghost" id="set-full">⛶ Full screen</button>' +
@@ -24,11 +26,13 @@
       '<label class="field"><span>Question of the day</span><textarea id="set-question" rows="2" maxlength="300" ' +
       'placeholder="Leave blank to use the lesson\'s essential question."></textarea></label>' +
 
-      '<div class="grid-3"><label class="field"><span>Class ends at (for "time left")</span><input type="time" id="set-bell"></label>' +
+      '<div class="grid-3 screen-set-grid"><label class="field"><span>Class ends at (for "time left")</span><input type="time" id="set-bell"></label>' +
       '<label class="field"><span>Show students as</span><select id="set-names"><option value="first">First names</option>' +
       '<option value="robot">Robot names</option></select></label>' +
       '<label class="field"><span>XP</span><select id="set-xp"><option value="each">Each student and class total</option>' +
       '<option value="total">Class total only</option><option value="hide">Hide XP</option></select></label>' +
+      '<label class="field"><span>Class XP goal for today</span><input type="number" id="set-goal" min="0" step="50" ' +
+      'placeholder="Auto: 60 per student"><small class="muted">0 turns the goal off</small></label>' +
       '<label class="field"><span>Show progress as</span><select id="set-view"><option value="track">Race track</option>' +
       '<option value="cards">Cards</option></select></label></div>' +
       '<div class="row"><button type="button" class="btn" id="set-save">Save</button><span class="muted small" id="set-status"></span></div></section>' +
@@ -61,7 +65,7 @@
     function tile(s, showXp) {
       const t = el('div', `screen-tile ${s.status}`);
       const av = t.appendChild(el('div', 'screen-avatar'));
-      av.innerHTML = window.RobotAvatar.svg(s.avatar, 52);   // drawn from known parts, not typed text
+      av.innerHTML = window.RobotAvatar.svg(s.avatar, 76);   // drawn from known parts, not typed text
       const info = t.appendChild(el('div', 'screen-who'));
       info.appendChild(el('b', '', s.name));
       info.appendChild(el('span', '', s.where));
@@ -79,11 +83,23 @@
     function racer(st, moved) {
       const r = el('div', 'racer' + (moved ? ' moved' : '') + (st.status === 'waiting' ? ' idle' : ''));
       const av = r.appendChild(el('div', 'racer-bot'));
-      av.innerHTML = window.RobotAvatar.svg(st.avatar, 42);
+      av.innerHTML = window.RobotAvatar.svg(st.avatar, 96);
       r.appendChild(el('b', '', st.name));
       if (data.settings.xp === 'each') r.appendChild(el('small', '', `Lv ${st.level || 1}`));
       r.title = `${st.name}: ${st.where}`;
       return r;
+    }
+    // Robots are as big as they can be while the busiest stop still fits on the screen.
+    function fitRacers(wrap, track, lanes) {
+      const fits = (b) => {
+        track.style.setProperty('--bot', b + 'px');
+        track.classList.toggle('small-bots', b < 56);
+        const bottom = wrap.getBoundingClientRect().bottom - 4;   // screen coordinates, so the display's scaling doesn't matter
+        return lanes.every((l) => !l.lastElementChild || l.lastElementChild.getBoundingClientRect().bottom <= bottom);
+      };
+      let lo = 24, hi = 120;                                   // biggest size that still fits, measured on the page
+      while (lo < hi) { const mid = Math.ceil((lo + hi) / 2 / 2) * 2; if (fits(mid)) lo = mid; else hi = mid - 2; }
+      fits(lo);
     }
     function renderTrack() {
       const wrap = $('screen-track'), stops = data.track || [], n = stops.length;
@@ -108,9 +124,13 @@
         lanes[pos].appendChild(racer(st, moved));
       });
       lanes.forEach((lane) => { if (lane.children.length) lane.parentElement.classList.add('busy'); });
-      const most = Math.max(...lanes.map((l) => l.children.length));
-      track.classList.toggle('crowded', most > 4 && most <= 14);     // robots get smaller so a busy stop still fits
-      track.classList.toggle('packed', most > 14);
+      // busy stops get more room, so a crowd of robots doesn't have to shrink
+      track.style.gridTemplateColumns = lanes.map((l) => `minmax(74px, ${Math.max(1, Math.sqrt(l.children.length)).toFixed(2)}fr)`).join(' ');
+      fitRacers(wrap, track, lanes);
+      const refit = () => { if (track.isConnected) fitRacers(wrap, track, lanes); };   // again once fonts and layout settle
+      requestAnimationFrame(refit);
+      setTimeout(refit, 600);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
       const box = $('screen-elsewhere');
       box.textContent = '';
       if (elsewhere.length) {
@@ -139,9 +159,19 @@
       $('screen-counts').textContent = data.students.length ? `${n('working')} working · ${n('done')} done · ${n('waiting')} not started` : '';
       $('screen-total').hidden = data.settings.xp === 'hide';
       $('screen-total').textContent = `⚡ ${data.total_xp} class XP`;
+      const g = data.goal;
+      $('screen-goal').hidden = !g;
+      if (g) {
+        const pct = Math.min(100, Math.round(100 * g.today / g.target)), hit = g.today >= g.target;
+        $('goal-num').textContent = `${g.today.toLocaleString()} / ${g.target.toLocaleString()} XP`;
+        $('goal-fill').style.width = pct + '%';
+        $('screen-goal').classList.toggle('hit', hit);
+        $('goal-note').textContent = hit ? '🎉 Goal reached! Great work, everyone!' :
+          `${(g.target - g.today).toLocaleString()} XP to go · every step, quiz and ship counts`;
+      }
       $('screen-lesson').textContent = data.lesson ? `Today: ${data.lesson.number}. ${data.lesson.title}` : '';
       $('screen-question').textContent = data.question || 'Add a question in ⚙ Set up.';
-      $('screen-bigidea').textContent = data.big_idea ? `Big idea: ${data.big_idea}` : '';
+      $('screen-bigidea').textContent = data.big_idea || '';
       const stds = $('screen-standards');
       stds.textContent = '';
       (data.standards || []).forEach((st) => {
@@ -188,13 +218,14 @@
       $('set-xp').value = data.settings.xp;
       $('set-bell').value = data.settings.bell || '';
       $('set-view').value = data.settings.view || 'track';
+      $('set-goal').value = data.settings.goal === '' || data.settings.goal == null ? '' : data.settings.goal;
     }
     async function save(extra) {
       $('set-status').textContent = 'Saving…';
       try {
         data = await C.save(Object.assign({
           lesson_id: $('set-lesson').value, question: $('set-question').value, view: $('set-view').value,
-          names: $('set-names').value, xp: $('set-xp').value, bell: $('set-bell').value,
+          names: $('set-names').value, xp: $('set-xp').value, bell: $('set-bell').value, goal: $('set-goal').value,
         }, extra || {}));
         $('set-status').textContent = 'Saved ✓';
         render();

@@ -267,7 +267,8 @@ function standardsInPlay_(counts, focusId) {
 function screenPayload_(cfg, cid) {
   var c = cfg.classes[cid], saved = c.screen || {};
   var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', names: saved.names || 'first',
-                   xp: saved.xp || 'each', bell: saved.bell || '', view: saved.view === 'cards' ? 'cards' : 'track' };
+                   xp: saved.xp || 'each', bell: saved.bell || '', view: saved.view === 'cards' ? 'cards' : 'track',
+                   goal: saved.goal == null ? '' : saved.goal };
   var sum = summary_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, settings.names), wins = [];
   var wheres = {}, working = {};
   students.forEach(function (s) {
@@ -297,10 +298,19 @@ function screenPayload_(cfg, cid) {
     });
     return row;
   }).sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+  // class XP goal for today: XP everyone earned since midnight, against the teacher's goal (blank = 60 per student, 0 = off)
+  var tz = Session.getScriptTimeZone(), day = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd'), todayXp = 0;
+  students.forEach(function (s) {
+    ((sum.students[s.email] || {}).xp_recent || []).forEach(function (e) {
+      if (Utilities.formatDate(new Date(e[0]), tz, 'yyyy-MM-dd') === day) todayXp += e[1];
+    });
+  });
+  var goal = settings.goal === '' ? Math.max(100, students.length * 60) : Number(settings.goal) || 0;
   var since = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
   wins = wins.filter(function (w) { return w.at >= since; }).sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); }).slice(0, 8);
   return { settings: settings, students: rows, wins: wins,
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
+           goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
            track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: 'Python idea: ' + L.python,
            standards: standardsInPlay_(working, L.id) };
@@ -319,7 +329,8 @@ function screenSave(cid, d) {
   c.screen = { lesson_id: DATA.lessons[d.lesson_id] ? d.lesson_id : '', question: String(d.question || '').trim().slice(0, 300),
                names: d.names === 'robot' ? 'robot' : 'first', view: d.view === 'cards' ? 'cards' : 'track',
                xp: ['each', 'total', 'hide'].indexOf(d.xp) >= 0 ? d.xp : 'each',
-               bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '' };
+               bell: /^\d{1,2}:\d{2}$/.test(String(d.bell || '')) ? d.bell : '',
+               goal: String(d.goal == null ? '' : d.goal).trim() === '' ? '' : Math.max(0, Math.min(100000, Math.round(Number(d.goal)) || 0)) };
   saveConfig_(cfg);
   return screenPayload_(cfg, cid);
 }

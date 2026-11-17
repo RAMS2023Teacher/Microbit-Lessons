@@ -113,6 +113,10 @@ assert.ok(det.p.talk && det.steps.length === L.build.length && det.reflect_q.len
 const scr = w.call(T, 'screenData', [cls.id]);
 assert.strictEqual(scr.track.length, 4);
 assert.ok(scr.students.some((s) => s.done === 4) && scr.question && scr.wins.length);
+assert.ok(scr.goal && scr.goal.auto && scr.goal.target === 120 && scr.goal.today > 0, JSON.stringify(scr.goal));   // 2 students x 60
+assert.strictEqual(w.call(T, 'screenSave', [cls.id, { goal: '500' }]).goal.target, 500);
+assert.strictEqual(w.call(T, 'screenSave', [cls.id, { goal: '0' }]).goal, null);
+assert.strictEqual(w.call(T, 'screenSave', [cls.id, { goal: '', xp: 'each' }]).goal.target, 120);
 const tp = pageData(T, '/lessons/' + LID);
 assert.ok(tp.key.quiz.length === L.quiz.length && tp.key.notes);
 assert.ok(api(T, 'step', { i: 0, tests: [0] }).body.teacher);
