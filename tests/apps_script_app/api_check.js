@@ -46,7 +46,7 @@ assert.strictEqual(page.stage, 'mission');
 assert.ok(page.lesson.quiz.every((q) => !('answer' in q) && !('why' in q)));
 assert.ok(!lp.includes(L.quiz[0].why.slice(0, 30)), 'quiz explanation leaked');
 assert.strictEqual(page.key, null);
-assert.match(pageView(S, '/lessons/servo-robot'), /coming soon/);
+for (const id of w.g.DATA.order) assert.ok(!/"page":"error"/.test(pageView(S, '/lessons/' + id)), 'lesson page failed: ' + id);
 
 // Mission
 let r = api(S, 'mission', { talk: 'ok' });
@@ -120,7 +120,7 @@ assert.ok(api(T, 'quiz', { answers: right }).body.quiz.passed);
 const map = pageData(S, '/map').map;
 assert.strictEqual(map.nodes.length, 13);
 assert.strictEqual(map.nodes.find((n) => n.id === LID).state, 'complete');
-assert.ok(map.nodes.find((n) => n.id === 'servo-robot').soon);
+assert.ok(map.nodes.every((n) => !n.soon), 'a lesson is missing');
 assert.match(w.call(T, 'classroomPackage', [cls.id, 'both', [LID]]).assignments[0].title, /Dodge the Drop/);
 assert.throws(() => w.call(S, 'gradebook', [cls.id]), /Only the teacher/);
 
