@@ -278,3 +278,11 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .goal-note { font-size: .9rem; opacity: .9; }
 .screen-goal.hit .goal-note { font-weight: 800; opacity: 1; }
 .screen-set-grid { grid-template-columns: repeat(3, 1fr); }
+
+/* class display: the activity timer is the big number; the clock is a smaller line under it */
+.screen-stage .screen-timer .act-clock { display: block; font: 400 7.2rem/1 var(--display); color: var(--ink); margin: 2px 0 6px; min-width: 0; }
+.screen-stage .screen-timer .act-clock.over { color: var(--bad); animation: timer-pulse 1s ease-in-out infinite; }
+.act-controls { display: flex; gap: 8px; align-items: center; justify-content: center; }
+.act-controls input { width: 60px; }
+.screen-clock-row { display: flex; align-items: baseline; justify-content: center; gap: 12px; border-top: 2px solid var(--line); margin-top: 12px; padding-top: 10px; }
+.screen-stage .screen-timer .timer-big, .screen-stage .screen-timer .timer-big.long { font-size: 2.6rem; line-height: 1; }

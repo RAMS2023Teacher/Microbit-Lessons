@@ -42,11 +42,12 @@
       '<div class="track-elsewhere" id="screen-elsewhere"></div></section>' +
       '<section class="card"><h2>🎯 Standards we\'re working on</h2><ul class="screen-stds" id="screen-standards"></ul></section></div>' +
       '<aside class="screen-side">' +
-      '<section class="card screen-timer" aria-label="Time"><div class="screen-clock-label" id="clock-label">Time left in class</div>' +
-      '<div id="timer-big" class="timer-big" role="timer">--:--</div><div class="muted small" id="clock-note"></div>' +
-      '<div class="screen-activity"><b>Activity timer</b> <span id="act-clock" class="act-clock">5:00</span>' +
+      '<section class="card screen-timer" aria-label="Time"><div class="screen-clock-label">⏱️ Activity timer</div>' +
+      '<div id="act-clock" class="act-clock" role="timer">5:00</div><div class="act-controls">' +
       '<button type="button" class="btn small" id="act-go">Start</button><button type="button" class="btn small ghost" id="act-reset">Reset</button>' +
-      '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div></section>' +
+      '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div>' +
+      '<div class="screen-clock-row"><span class="screen-clock-label" id="clock-label">Time left in class</span>' +
+      '<b id="timer-big" class="timer-big">--:--</b></div><div class="muted small" id="clock-note"></div></section>' +
       '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p>' +
       '<p class="screen-bigidea" id="screen-bigidea"></p></section>' +
       '<section class="card"><h2>🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
