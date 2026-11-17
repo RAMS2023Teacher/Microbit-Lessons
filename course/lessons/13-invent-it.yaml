@@ -1,0 +1,326 @@
+id: invent-it
+title: Invent It
+tagline: Design and build your own micro:bit invention
+minutes: 180         # about four class periods
+
+mission:
+  goal: |
+    This time **you** decide what to build. Pick a real problem for a real person, then solve it with
+    the parts and Python you've learned. Engineers don't get it right the first time. They **plan,
+    build, test, fix and improve**. That's exactly what you'll do.
+  picture:
+    type: flow
+    steps:
+      - {icon: "🎯", label: "Pick a problem"}
+      - {icon: "📝", label: "Plan it"}
+      - {icon: "🛠️", label: "Build v1"}
+      - {icon: "🧪", label: "Test it"}
+      - {icon: "🔧", label: "Fix & improve"}
+    loop: true
+    loop_label: and again!
+    caption: The design cycle. Real inventors go around it many times.
+  you_need:
+    - A partner (or work on your own if your teacher says so)
+    - A Chromebook with MakeCode open
+    - A micro:bit and USB cable
+    - Any parts from earlier lessons that your idea needs
+  learn:
+    - "the **design process**: plan, build, test, improve"
+    - "**sense → decide → act**, the pattern inside most inventions"
+    - "**testing with a real user** to find problems you missed"
+  talk: Think of something at school or at home that is annoying, unsafe or boring. Who has that problem? Could a micro:bit help?
+
+build:
+  - part: "Part 1: Plan"
+    title: Pick a problem and a person
+    say: |
+      Good inventions start with a **person** and a **problem**, not with a part. "A plant that tells
+      you when it's too dark" is better than "something with the light sensor." Small is good. You can
+      always add more later.
+    do:
+      - With your partner, list three ideas. For each, say who it's for.
+      - Pick the one you can build in about two class periods.
+      - Fill in the two blanks.
+    test:
+      - We listed at least three ideas
+      - We picked one, and it's for a real person
+    fields: ["Who it's for", "The problem"]
+    ask: Why did you pick this idea over your other two?
+
+  - part: "Part 1: Plan"
+    title: Choose your parts
+    say: You've already used all of these. Pick **at least one input** and **at least one output**.
+    picture:
+      type: compare
+      items:
+        - {icon: "🎛️", title: "Inputs (sense)", text: "Buttons, tilt, shake, light level, sound level, temperature, ultrasonic distance, pulse sensor"}
+        - {icon: "🧠", title: "Decide", text: "if / elif / else, thresholds, counting, random, timers"}
+        - {icon: "💡", title: "Outputs (act)", text: "LED screen, LEDs on a breadboard, music and tones, servos and wheels"}
+        - {icon: "📡", title: "Talk", text: "Radio to a second micro:bit"}
+    do:
+      - Look back at the lesson where you used each part. That's your code to borrow.
+      - Check with your teacher that the parts you need are available.
+    test:
+      - We picked at least one input and one output
+      - The parts we need are available
+    fields: ["Input(s)", "Output(s)", "Lesson we'll borrow from"]
+
+  - part: "Part 1: Plan"
+    title: Sense → decide → act
+    say: |
+      Almost every invention follows one pattern. **Sense**: read an input. **Decide**: use `if` to
+      choose what to do. **Act**: do it with an output. Then **repeat**. Write your plan in that shape.
+    picture:
+      type: flow
+      steps:
+        - {icon: "👀", label: "Sense"}
+        - {icon: "🧠", label: "Decide"}
+        - {icon: "⚡", label: "Act"}
+      loop: true
+      loop_label: repeat
+    do:
+      - Fill in the three blanks for your invention, in plain English.
+      - "Example. Sense: read the light level. Decide: is it under 50? Act: turn on the LED."
+    test:
+      - I can say what my invention senses, decides and does
+    fields: ["Sense", "Decide", "Act"]
+    ask: What should your invention do when the decision is **False**? (Do nothing? Turn something off? Something else?)
+
+  - part: "Part 1: Plan"
+    title: Write pseudo-code
+    say: |
+      **Pseudo-code** is a plan that *looks* like code but is written in plain English. It's how
+      programmers think before they type. Use the same indentation as Python.
+    picture:
+      type: compare
+      items:
+        - {icon: "📝", title: "Pseudo-code", text: "forever: read distance. if it's under 10 cm, beep and show X. otherwise show a check."}
+        - {icon: "🐍", title: "Python", text: "while True: d = sonar.ping(...) if d < 10: ..."}
+    do:
+      - Write your pseudo-code in the answer box below.
+      - Read it to your partner. Can they tell what your invention does?
+    test:
+      - My pseudo-code has a loop and at least one if
+      - My partner understood my plan
+    ask: Paste or type your pseudo-code here.
+
+  - part: "Part 2: Build"
+    title: "Pattern 1: the forever loop"
+    say: Here is the **sense → decide → act** pattern as Python. Most inventions start from this. Swap in your own input, decision and output.
+    do:
+      - Make a **New Project** in MakeCode with your invention's name. Switch to **Python**.
+      - Type this starter. Run it and cover the light sensor (in the simulator, drag the light level).
+      - Then change it to use **your** input and output.
+    code: |
+      while True:
+          reading = input.light_level()
+          if reading < 50:
+              basic.show_icon(IconNames.HEART)
+          else:
+              basic.clear_screen()
+          basic.pause(200)
+    new: "2-6"
+    what: "Line 2 senses. Line 3 decides, using a **threshold** (50). Lines 4 and 6 act. The pause keeps the loop from running too fast."
+    test:
+      - The starter works before I change anything
+      - I swapped in my own input or output
+    fields: ["My threshold or condition"]
+
+  - part: "Part 2: Build"
+    title: "Pattern 2: events"
+    say: Some inventions don't loop. They **wait** for something to happen, like a button, a shake or a radio message. That's an **event**.
+    do:
+      - "If your invention reacts to a button, shake or radio message, add an event like this one."
+      - "If it doesn't, read it anyway, then tick the box."
+    code: |
+      armed = False
+
+      def on_button_pressed_a():
+          global armed
+          armed = not armed
+          if armed:
+              basic.show_icon(IconNames.YES)
+          else:
+              basic.show_icon(IconNames.NO)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "3-10"
+    what: "This turns the invention **on and off** with button A. `not armed` flips True to False and back. Your forever loop can check `if armed:` before it acts."
+    test:
+      - I know whether my invention needs an event
+      - If it does, my event works
+    ask: Does your invention use the forever loop, an event, or both? Why?
+
+  - part: "Part 2: Build"
+    title: Build version 1
+    say: |
+      **Version 1** is the smallest thing that works. Get one input and one output working together
+      first. No extras yet. Fancy features can wait until it works.
+    wiring:
+      - "**Unplug the USB** (or battery) before you change any wires."
+      - "Wire one part at a time. Test it, then add the next part."
+      - "Check: **GND** to GND, **3V** to the power pin, signal to the pin your code uses."
+    do:
+      - "No circuit in your idea? Skip the wiring and just build the code."
+      - Build version 1. Test it in the simulator, then on the real micro:bit.
+      - Save often. MakeCode saves automatically, but **download** a copy too.
+    stuck:
+      - "**Is the pin in your code the pin on your wire?** P0, P1 and P2 are easy to mix up."
+      - "**Show the reading.** Add `basic.show_number(reading)` to see what your sensor really reads."
+      - "**Indentation:** lines inside `if` are pushed in one more step than the loop."
+    test:
+      - One input and one output work together
+      - It works on the real micro:bit, not just the simulator
+    ask: What was harder than you expected?
+
+  - part: "Part 3: Test and improve"
+    title: Test it with someone else
+    say: |
+      You know how your invention is *supposed* to work. Someone else doesn't. That's why real
+      engineers watch **users** try their designs. Don't explain it. Just hand it over and watch.
+    do:
+      - Find a tester from another pair. Tell them only who it's for, not how it works.
+      - Watch them use it. Don't help! Write down where they get stuck or confused.
+      - Ask them what they'd change.
+    test:
+      - Someone outside our pair tested it
+      - We wrote down at least one problem they found
+    fields: ["Tester's name", "Where they got stuck", "What they'd change"]
+
+  - part: "Part 3: Test and improve"
+    title: Fix one bug
+    say: |
+      A **bug** is anything that doesn't work the way you planned, even if it doesn't crash. Pick the
+      biggest problem from testing and fix it. Change **one thing at a time**, then test again.
+    do:
+      - Pick one bug or problem.
+      - Guess the cause. Change one thing. Test.
+      - Still broken? Undo it and try a different guess.
+    stuck:
+      - "**Threshold wrong?** Show the sensor reading on the screen and pick a better number."
+      - "**Too fast or too slow?** Change the `basic.pause` time."
+      - "**Never happens?** Check that `if` uses `<` or `>` the right way round."
+    test:
+      - We fixed at least one bug
+      - We tested again after the fix
+    ask: What was the bug, what caused it, and how did you fix it?
+
+  - part: "Part 3: Test and improve"
+    title: Add one improvement
+    say: Now that version 1 works, make **version 2**. Add one thing that makes it better for your user.
+    do:
+      - "Ideas: a sound, a start button, a counter, a second sensor, radio to a second micro:bit, a box or case."
+      - Add it, then test the **whole** invention again. New code can break old code.
+    test:
+      - We added one improvement
+      - Everything that worked before still works
+    fields: ["Our improvement"]
+    ask: How does this improvement help the person you built it for?
+
+  - part: "Part 3: Test and improve"
+    title: Get ready to demo
+    say: Inventors show their work. Get ready to show yours in **one minute**.
+    do:
+      - "Practice a 1-minute demo: **who** it's for, the **problem**, then show it working."
+      - Clean up your code. Give variables clear names, like `distance` instead of `d`.
+      - "In MakeCode, click **Share** and copy the link. You'll paste it in **Ship it**."
+    test:
+      - We practiced our 1-minute demo
+      - We have our MakeCode share link
+    ask: If you had one more week, what would you add next?
+
+quiz:
+  - question: What's the best first step when you invent something?
+    choices: ["Pick the coolest part", "Pick a person and a problem to solve", "Write as much code as you can", "Add sound effects"]
+    answer: 1
+    why: Inventions solve problems for people. Once you know the problem, you can pick the parts that fit it.
+  - question: In **sense → decide → act**, which part is the `if`?
+    choices: ["Sense", "Decide", "Act", "None of them"]
+    answer: 1
+    why: The sensor reading is the sense, the if chooses what to do (decide), and the output is the act.
+  - question: Why build a small version 1 before adding extras?
+    choices: ["Extras aren't allowed", "So you know the core works before adding more that could break it", "Small programs run faster", "The teacher grades on size"]
+    answer: 1
+    why: If one small thing works, any new bug must be in what you just added. That makes bugs much easier to find.
+  - question: Your night light never turns on. What should you try first?
+    choices: ["Delete everything and start over", "Show the sensor reading on the screen to check your threshold", "Add more LEDs", "Change three things at once"]
+    answer: 1
+    why: Seeing the real reading tells you if your threshold makes sense. Then change one thing and test again.
+  - question: Why do engineers watch someone else test their invention?
+    choices: ["To show off", "Users find problems the builders didn't notice", "It's faster than testing it yourself", "So the tester can fix the code"]
+    answer: 1
+    why: You know how it's supposed to work, so you use it the "right" way. A new user shows you what's confusing.
+
+ship:
+  extensions:
+    - title: Add feedback
+      level: Easier
+      goal: Make your invention tell the user what it's doing, with a sound, an icon or a light.
+      where: Inside the part of your code that acts.
+      code: |
+        if reading < 50:
+            music.play_tone(Note.C, 100)
+            basic.show_icon(IconNames.HEART)
+      new: "2"
+      hints: ["Users like to know something worked.", "Keep sounds short so they don't get annoying."]
+    - title: A start screen
+      level: Easier
+      goal: Show your invention's name and wait for button A before it starts.
+      where: At the very top of your program.
+      code: |
+        basic.show_string("NAME")
+        while not input.button_is_pressed(Button.A):
+            basic.pause(20)
+      new: "1-3"
+      hints: ["You wrote this loop in Dodge the Drop.", "Use a short name, it has to scroll."]
+    - title: Use a function
+      level: Medium
+      goal: Move your decide-and-act code into a function with a clear name, so your loop reads like a sentence.
+      where: Above your forever loop.
+      code: |
+        def warn():
+            basic.show_icon(IconNames.NO)
+            music.play_tone(Note.C, 200)
+
+        while True:
+            if input.light_level() < 50:
+                warn()
+            basic.pause(200)
+      new: "1-3"
+      hints: ["You made functions in Traffic Light and Build a Robot.", "A good function name says what it does: warn(), drive_forward(), show_score()."]
+    - title: Go wireless
+      level: Challenge
+      goal: Split your invention across two micro:bits. One senses, the other acts, and radio connects them.
+      where: Sender and receiver programs, like Radio Messenger.
+      code: |
+        # sensor micro:bit
+        radio.set_group(7)
+        while True:
+            radio.send_number(input.light_level())
+            basic.pause(500)
+      new: "2-5"
+      hints: ["Write the receiver yourself. It needs radio.on_received_number.", "Use your own group number.", "Now the sensor can be across the room from the alarm."]
+    - title: Build a case
+      level: Challenge
+      goal: Make a case, stand or holder (cardboard, LEGO or 3D printed) so your invention is ready for a real user.
+      where: Not code. Plan where the micro:bit, battery and wires go, and leave the buttons and sensors uncovered.
+      hints: ["Light and ultrasonic sensors must be able to see out.", "Leave a gap for the USB cable so you can update the code.", "Sketch it on paper first."]
+  reflect:
+    - Describe one bug you found and how you fixed it.
+    - What did your tester teach you about your design?
+    - What Python idea from this course did you use most in your invention?
+
+teacher_notes: |
+  * **Timing:** about four class periods. Day 1 Part 1 (plan; check their plan before they build). Day 2-3 Part 2 build. Day 4 test, improve and demo.
+  * **Scope check:** the most common problem is an idea that's too big. Steer pairs to one input and one output for version 1.
+  * **Parts:** have a sign-out sheet for sensors, servos and robots. Not every pair needs a circuit; screen, button, tilt and sound ideas are fine.
+  * **Starter ideas** for stuck pairs: plant light alarm, locker or door alarm (ultrasonic), step counter, reaction-time tester, heart-rate coach, tilt-controlled robot, quiet-room noise meter, classroom vote counter by radio.
+  * **Grading:** the reflections, the plan fields (sense/decide/act, pseudo-code) and the share link show the process. Weight the process, not how fancy the result is.
+  * **Demo day:** one minute per pair: who it's for, the problem, show it working, one bug they fixed.
+
+standards:
+  - code: 6-8.CS.a.5
+    how: Students design, build and demonstrate their own embedded device that uses sensors and outputs to accomplish a task for a user.
+  - code: 6-8.CT.d.6
+    how: Students build a small version 1, test it with a user, fix a bug and add an improvement, testing again each time.
+  - code: 6-8.CT.b.3
+    how: Students decompose their invention into sense, decide and act parts and write pseudo-code before programming.

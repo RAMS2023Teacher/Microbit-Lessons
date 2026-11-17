@@ -1,0 +1,391 @@
+id: radio-messenger
+title: Radio Messenger
+tagline: Send messages and icons from one micro:bit to another
+minutes: 90          # about two class periods
+
+mission:
+  goal: |
+    Turn two micro:bits into **walkie-talkies for text**. Press a button on one micro:bit and a message
+    or an icon pops up on your partner's. Then turn it into a **remote control** that sends
+    Forward, Left, Right and Stop, just like the controller for a robot.
+  picture:
+    type: flow
+    steps:
+      - {icon: "🔘", label: "Press A"}
+      - {icon: "📡", label: "radio sends Hi"}
+      - {icon: "📶", label: "Same group hears it"}
+      - {icon: "💬", label: "Event shows Hi"}
+    caption: One micro:bit sends. Every micro:bit on the same group hears it.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - Two micro:bits and USB cables (or just the simulator, which shows two micro:bits)
+  learn:
+    - "**events**: code that runs *when* something happens"
+    - "**radio groups**: who can hear your messages"
+    - "sending **strings** (text) and **numbers**"
+  talk: Texting, walkie-talkies, Bluetooth headphones. Name a device that sends messages without wires. Who else could pick up those messages?
+
+build:
+  - part: Set up
+    title: Pick your group number
+    say: |
+      Every pair in the room picks a **different group number** from 1 to 255. Your micro:bits only
+      listen to messages on their own group, so a different number keeps your messages out of the
+      rest of the class's way.
+    do:
+      - Click the green **Open MakeCode** button. Make a **New Project** named **Radio Messenger**.
+      - Switch from **Blocks** to **Python** and delete the starter code.
+      - With your partner, pick a group number. Ask the pairs next to you so you don't pick the same one.
+    test:
+      - MakeCode is open in Python, with an empty editor
+      - We picked a group number nobody near us is using
+    fields: ["Our group number"]
+
+  - part: "Part 1: Events"
+    title: Code that waits for something to happen
+    say: |
+      So far your code ran top to bottom. An **event** is different. You write a function, then tell the
+      micro:bit: **run this function when button A is pressed.** The function waits until the event happens.
+    do:
+      - Type this code exactly.
+      - Run it and press **A** in the simulator a few times.
+    code: |
+      def on_button_pressed_a():
+          basic.show_icon(IconNames.HAPPY)
+          basic.pause(500)
+          basic.clear_screen()
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "1-5"
+    what: "Lines 1-4 make a function. Line 5 connects it to an event: **when A is pressed, run `on_button_pressed_a`**. Notice there are no `()` after the function name on line 5. You're handing the function over, not running it yet."
+    test:
+      - Nothing shows until I press A
+      - Every time I press A, a happy face flashes
+    ask: In Dodge the Drop you used a while loop to wait for button A. How is an event different?
+
+  - part: "Part 2: Send and receive"
+    title: Send a message
+    say: "`radio.set_group` tunes your micro:bit to your group. `radio.send_string` sends **text** (a string) to every micro:bit on that group."
+    do:
+      - Add the highlighted lines. Put **your** group number where it says 7.
+      - Change the event so it **sends** "Hi" instead of showing a face.
+      - Run it. A **second micro:bit** appears in the simulator. That's your partner's micro:bit!
+    code: |
+      radio.set_group(7)
+
+      def on_button_pressed_a():
+          radio.send_string("Hi")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "1, 4"
+    what: The message flies out over the radio. Nothing shows yet, because no micro:bit knows what to do when a message arrives. That's the next step.
+    tip: "**Watch out:** both micro:bits must use the **same** group number. If one says 7 and the other says 8, they can't hear each other."
+    test:
+      - I see two micro:bits in the simulator
+      - The group number in my code is the one we picked
+    ask: You pressed A and nothing showed up on the other micro:bit. Why not?
+
+  - part: "Part 2: Send and receive"
+    title: Receive a message
+    say: Receiving is another **event**. When a string arrives over the radio, the micro:bit runs your function and hands it the message.
+    do:
+      - Add the highlighted lines at the bottom.
+      - Run it. Press **A** on the first simulator micro:bit and watch the **second** one.
+    code: |
+      radio.set_group(7)
+
+      def on_button_pressed_a():
+          radio.send_string("Hi")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_received_string(receivedString):
+          basic.show_string(receivedString)
+      radio.on_received_string(on_received_string)
+    new: "7-9"
+    what: "`receivedString` holds whatever text arrived. The same program runs on **both** micro:bits, so each one can send and each one can receive."
+    test:
+      - Pressing A on one micro:bit shows "Hi" on the other
+      - It works in both directions
+    ask: Both micro:bits run the exact same code. Why doesn't a micro:bit show "Hi" on its own screen when it sends?
+
+  - part: "Part 2: Send and receive"
+    title: Try it on real micro:bits
+    say: The simulator is a model. Real radios have distance, walls and other people's signals.
+    do:
+      - Click **Download** and put the program on **your** micro:bit.
+      - Your partner downloads the **same** program to their micro:bit.
+      - Press A on one. Then walk apart and keep testing.
+    stuck:
+      - "**Nothing shows?** Check that both micro:bits have the newest download and the same group number."
+      - "**Plugged in?** Both micro:bits need power: USB or a battery pack."
+    test:
+      - A message went from one real micro:bit to the other
+      - We tested how far apart we can be
+    fields: ["About how far it worked"]
+    ask: What made the message stop getting through? (Distance? A wall? Something else?)
+
+  - part: "Part 3: Messenger"
+    title: Two buttons, two messages
+    do:
+      - Add the highlighted lines so button B sends a different message.
+      - Pick your own words for both messages. Keep them short. Long strings take a while to scroll.
+      - Run it and test both buttons.
+    code: |
+      radio.set_group(7)
+
+      def on_button_pressed_a():
+          radio.send_string("Hi")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          radio.send_string("Bye")
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+
+      def on_received_string(receivedString):
+          basic.show_string(receivedString)
+      radio.on_received_string(on_received_string)
+    new: "7-9"
+    tip: "**Each event needs its own function name.** Two functions both called `on_button_pressed_a` would clash."
+    test:
+      - A sends one message and B sends another
+      - My partner sees the right message for each button
+    fields: ["Button A says", "Button B says"]
+
+  - part: "Part 3: Messenger"
+    title: Send a number, show an icon
+    say: |
+      Text is slow to scroll. A faster idea: send a **number** as a code. Both micro:bits agree that
+      **1 means heart** and **2 means smile**. This is called a **protocol**: rules both sides agree on.
+    do:
+      - Change the button events to send **numbers** with `radio.send_number`.
+      - Add a new receive event for numbers at the bottom.
+      - Run it and test both buttons.
+    code: |
+      radio.set_group(7)
+
+      def on_button_pressed_a():
+          radio.send_number(1)
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          radio.send_number(2)
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+
+      def on_received_number(receivedNumber):
+          if receivedNumber == 1:
+              basic.show_icon(IconNames.HEART)
+          elif receivedNumber == 2:
+              basic.show_icon(IconNames.HAPPY)
+      radio.on_received_number(on_received_number)
+    new: "4, 8, 11-16"
+    what: The number is tiny and arrives fast. The receiver uses `if` / `elif` to decode it into an icon.
+    test:
+      - A shows a heart on my partner's micro:bit
+      - B shows a smile on my partner's micro:bit
+    ask: "Add a third icon for number 3. Which button or event will send it? (Hint: A+B is Button.AB.)"
+
+  - part: "Part 3: Messenger"
+    title: Who else can read it?
+    say: |
+      Radio is a **broadcast**. Your message goes to **every** micro:bit on your group, not just your
+      partner's. Anyone who sets the same group number can read it, or send fake messages to you.
+      Real apps scramble (encrypt) messages so only the right person can read them.
+    do:
+      - Ask a nearby pair for their group number. Change yours to match for a moment.
+      - Send a message. Did they see it? Did you see theirs?
+      - Change your group number back.
+    test:
+      - We saw that another pair could read our messages
+      - Our group number is back to our own
+    ask: What kind of message should you never send over a radio like this? Why?
+
+  - part: "Part 4: Remote control"
+    title: A remote control
+    say: |
+      A robot's remote sends short **commands**. Use one letter for each: **F** forward, **L** left,
+      **R** right, **S** stop. For now, the receiver shows an arrow. In an extension, it drives your robot.
+    do:
+      - Replace your button events and number event with this code. Keep `radio.set_group` at the top.
+      - Run it. Press A, B, A+B, and shake the first micro:bit.
+    code: |
+      radio.set_group(7)
+
+      def on_button_pressed_a():
+          radio.send_string("L")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          radio.send_string("R")
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+
+      def on_button_pressed_ab():
+          radio.send_string("F")
+      input.on_button_pressed(Button.AB, on_button_pressed_ab)
+
+      def on_gesture_shake():
+          radio.send_string("S")
+      input.on_gesture(Gesture.SHAKE, on_gesture_shake)
+
+      def on_received_string(receivedString):
+          if receivedString == "F":
+              basic.show_arrow(ArrowNames.NORTH)
+          elif receivedString == "L":
+              basic.show_arrow(ArrowNames.WEST)
+          elif receivedString == "R":
+              basic.show_arrow(ArrowNames.EAST)
+          elif receivedString == "S":
+              basic.show_icon(IconNames.NO)
+      radio.on_received_string(on_received_string)
+    new: "11-17, 19-28"
+    tip: "**Shake in the simulator:** click the **SHAKE** button that appears on the simulator micro:bit."
+    what: Four events send four commands. One receive event decodes them with `if` / `elif`. Capital letters matter. "f" is not the same as "F".
+    test:
+      - A+B shows an up arrow on the other micro:bit
+      - A shows left, B shows right
+      - Shaking shows an X for stop
+    ask: Why is one letter a good command for a robot, instead of a long word like "Forward"?
+
+  - part: "Part 4: Remote control"
+    title: "Checkpoint: the whole remote"
+    say: Compare your program with Step 9 line by line. Then put it on both real micro:bits and test it.
+    stuck:
+      - "**Group number** must be the same on both micro:bits."
+      - "**Two equals signs** in `== \"F\"`, and the letter in quotes."
+      - "**No `()`** after the function name inside `input.on_button_pressed(...)`."
+      - "**Every function name is different:** `on_button_pressed_a`, `on_button_pressed_b`, `on_button_pressed_ab`."
+    test:
+      - All four commands work in the simulator
+      - All four commands work on two real micro:bits
+
+quiz:
+  - question: What is an **event**?
+    choices: ["A loop that runs forever", "Code that runs when something happens, like a button press", "A message sent over the radio", "A variable that holds text"]
+    answer: 1
+    why: "An event handler waits. The micro:bit runs it each time the event (a button press, a shake, a radio message) happens."
+  - question: "Two micro:bits can't hear each other. One has `radio.set_group(5)` and the other has `radio.set_group(6)`. What's wrong?"
+    choices: ["They need the same group number", "Group numbers must be over 100", "send_string only works on button B", "Nothing is wrong"]
+    answer: 0
+    why: A micro:bit only listens on its own group. Both must use the same number.
+  - question: "Who can read a message you send with `radio.send_string`?"
+    choices: ["Only your partner", "Only the teacher", "Any micro:bit nearby set to the same group", "Nobody, it's encrypted"]
+    answer: 2
+    why: Radio is a broadcast. Anyone who picks your group number can read it, which is why you never send private information.
+  - question: "The receiver gets the number 2. Which line shows a smile?"
+    choices: ["if receivedNumber = 2:", "if receivedNumber == 2:", "if receivedString == 2:", "radio.send_number(2)"]
+    answer: 1
+    why: "`==` compares. A single `=` stores a value, and `receivedString` is for text, not numbers."
+  - question: Why use one letter like "F" as a robot command?
+    choices: ["Letters are prettier", "It's short, so it's sent fast and is easy to check", "The radio can't send words", "The micro:bit can only read capital letters"]
+    answer: 1
+    why: Short commands are quick to send and simple to decode with if / elif. That matters when a robot is moving.
+
+ship:
+  extensions:
+    - title: Message counter
+      level: Easier
+      goal: Count how many messages you've received. Touch the logo to show the total.
+      where: Add a variable at the top, add 1 inside the receive event, and a logo-touch event to show it.
+      code: |
+        count = 0
+
+        def on_received_string(receivedString):
+            global count
+            count += 1
+            basic.show_string(receivedString)
+        radio.on_received_string(on_received_string)
+
+        def on_logo_pressed():
+            basic.show_number(count)
+        input.on_logo_event(TouchButtonEvent.PRESSED, on_logo_pressed)
+      new: "1, 4-5, 9-11"
+      hints: ["`global count` lets the function change the variable made at the top.", "No touch logo on your micro:bit (older V1)? Use a different button event instead."]
+    - title: Hot and cold
+      level: Medium
+      goal: The receiver shows how strong the signal is, so you can find a hidden micro:bit.
+      where: Inside your receive event. The sender sends a message every second.
+      code: |
+        def on_received_string(receivedString):
+            strength = radio.received_packet(RadioPacketProperty.SIGNAL_STRENGTH)
+            led.plot_bar_graph(strength + 128, 128)
+        radio.on_received_string(on_received_string)
+
+        # on the hidden micro:bit:
+        while True:
+            radio.send_string("ping")
+            basic.pause(1000)
+      new: "2-3"
+      hints: ["Signal strength is a negative number, about -128 (far) to -42 (close).", "Adding 128 turns it into a number from 0 up, for the bar graph.", "Hide one micro:bit, then walk around with the other. More LEDs means you're closer."]
+    - title: Tilt remote
+      level: Medium
+      goal: Tilt the remote to send F, L, R or S, instead of pressing buttons.
+      where: A new loop at the bottom of the remote's program.
+      code: |
+        while True:
+            x = input.acceleration(Dimension.X)
+            y = input.acceleration(Dimension.Y)
+            if y < -300:
+                radio.send_string("F")
+            elif x < -300:
+                radio.send_string("___")
+            elif x > 300:
+                radio.send_string("___")
+            else:
+                radio.send_string("S")
+            basic.pause(200)
+      hints: ["This is the tilt sensor from Dodge the Drop.", "Fill in the two blanks.", "Tilting forward (away from you) makes y negative."]
+    - title: Drive your robot by radio
+      level: Challenge
+      goal: Put the receiver code on your robot's micro:bit so the remote drives the real robot.
+      where: In your Build a Robot project. Add `radio.set_group` and this receive event. Use your own drive functions.
+      code: |
+        radio.set_group(7)
+
+        def on_received_string(receivedString):
+            if receivedString == "F":
+                forward()
+            elif receivedString == "L":
+                turn_left()
+            elif receivedString == "R":
+                turn_right()
+            elif receivedString == "S":
+                stop()
+        radio.on_received_string(on_received_string)
+      new: "1-11"
+      hints: ["Use the function names you wrote in Build a Robot. Yours might be called something a little different.", "The remote micro:bit keeps the Step 9 program. The robot gets this one.", "Test with the robot's wheels off the table first!"]
+    - title: Secret code
+      level: Challenge
+      goal: Scramble your messages so another group can't read them, then unscramble them on your partner's micro:bit.
+      where: Send a number that has been changed with a secret key. The receiver undoes it.
+      code: |
+        key = 13
+
+        def on_button_pressed_a():
+            radio.send_number(1 + key)
+        input.on_button_pressed(Button.A, on_button_pressed_a)
+
+        def on_received_number(receivedNumber):
+            code = receivedNumber - key
+            if code == 1:
+                basic.show_icon(IconNames.HEART)
+        radio.on_received_number(on_received_number)
+      new: "1, 4, 8"
+      hints: ["Only you and your partner know the key.", "Another pair listening on your group sees 14, not 1. They don't know what it means.", "This is a very simple code. Real apps use much stronger math."]
+  reflect:
+    - In your own words, what's the difference between code in a while loop and code in an event?
+    - Anyone on your group can read your radio messages. Where else in real life is that true, and what do you do about it?
+
+teacher_notes: |
+  * **Timing:** two class periods. Parts 1-2 on day 1 (events, send, receive, real hardware), Parts 3-4 and an extension on day 2.
+  * **Group numbers:** have pairs write their group number on the whiteboard so nobody repeats it. Duplicate groups are the #1 "it's not working / we see weird messages" cause.
+  * **Simulator:** a second micro:bit appears automatically as soon as the code uses `radio`. Both simulators run the same program.
+  * **Most common bugs:** writing `on_button_pressed_a()` with parentheses inside `input.on_button_pressed(...)`; two functions with the same name; `=` instead of `==`; lowercase "f" vs "F".
+  * **Step 8 (who else can read it)** is the digital citizenship moment. Push the point that a broadcast reaches anyone listening, and connect it to group chats, open Wi-Fi and screenshots.
+  * **Drive your robot by radio** needs the robot's drive functions from Build a Robot. Have students lift the robot off the table for the first test.
+  * **Message counter:** the logo touch event is micro:bit V2 only. V1 students can use a different event.
+
+standards:
+  - code: 6-8.CS.c.3
+    how: Students send text and numbers between two micro:bits by radio and design a simple protocol (numbers and letters that stand for icons and commands).
+  - code: 6-8.CS.c.1
+    how: Students compare wireless radio with wired connections and test how distance and walls affect the signal.
+  - code: 6-8.CAS.a.4
+    how: Students see that anyone on the same radio group can read their messages, and discuss what is safe to send.

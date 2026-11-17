@@ -1,0 +1,434 @@
+id: heartbeat-monitor
+title: Heartbeat Monitor
+tagline: See your pulse as a wave, then count it
+minutes: 100         # about two class periods
+
+mission:
+  goal: |
+    Build a **heart-rate monitor**. A pulse sensor uses light to see blood moving in your fingertip.
+    You'll watch your pulse appear as a **wave**, write code that spots each **beat**, and turn the
+    count into **beats per minute**. Then you'll test how accurate it is.
+  picture:
+    type: graph
+    points: [480, 470, 520, 610, 560, 490, 475, 470, 515, 605, 570, 495, 478, 472, 525, 615, 555, 488]
+    line: {y: 550, label: threshold}
+    x_label: "time →"
+    y_label: signal
+    caption: Each peak is one heartbeat. Code can count the peaks that cross the line.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A **real** micro:bit and USB cable (the simulator has no pulse sensor)
+    - A Pulse Sensor and 3 alligator-clip wires
+  learn:
+    - "**analog signals**: a sensor reading that can be any number from 0 to 1023"
+    - "**thresholds**: a line that turns a wave into yes / no"
+    - "**counting** events in a loop, and checking your device's **accuracy**"
+  talk: Smartwatches can measure your heart rate without a strap or a needle. How do you think they do it?
+
+build:
+  - part: "Part 1: Build the sensor"
+    title: How the pulse sensor sees blood
+    say: |
+      The sensor shines a **green light** into your skin. Blood soaks up green light.
+      Each heartbeat pushes extra blood into your fingertip, so **less light bounces back** to the
+      light detector next to the LED.
+
+      The sensor turns that changing light into a changing voltage. The micro:bit reads it as a number from **0 to 1023**.
+    picture:
+      type: compare
+      items:
+        - {icon: "🟣", title: "Purple", text: "Signal: the number"}
+        - {icon: "🔴", title: "Red", text: "Power (3V)"}
+        - {icon: "⚫", title: "Black", text: "Ground (GND)"}
+      caption: The Pulse Sensor's three wires
+    do:
+      - Find the three wires on your Pulse Sensor and the heart on the front.
+      - The side with the heart touches your skin.
+    test:
+      - I found the purple, red and black wires
+    ask: Is the pulse sensor an input or an output for the micro:bit? How do you know?
+
+  - part: "Part 1: Build the sensor"
+    title: Wire it to the micro:bit
+    say: Use alligator clips to connect each sensor wire to a pad on the edge of the micro:bit.
+    wiring:
+      - Make sure the USB cable is **unplugged**.
+      - "**Purple** (signal) → pin **0**"
+      - "**Red** (power) → **3V**"
+      - "**Black** (ground) → **GND**"
+    tip: "**Stop:** have your partner check every clip before you plug in the USB. No clips should touch each other."
+    test:
+      - Purple goes to 0, red to 3V, black to GND
+      - No clips are touching each other
+      - My partner checked my wiring
+
+  - part: "Part 2: See the signal"
+    title: Read the number
+    do:
+      - Click **Open MakeCode**, make a **New Project** named **Heartbeat**, and switch to **Python**. Delete the starter code.
+      - Type this code and click **Download**.
+      - Rest your fingertip gently on the sensor. Hold still and watch the numbers.
+    code: |
+      while True:
+          signal = pins.analog_read_pin(AnalogPin.P0)
+          basic.show_number(signal)
+          basic.pause(100)
+    what: "`pins.analog_read_pin` reads a number from 0 to 1023. **Analog** means it can be any number in that range, not just on or off like a button."
+    tip: The simulator can't feel your pulse, so this project only works on a real micro:bit. Download after every step.
+    test:
+      - Numbers scroll across the screen
+      - The numbers change when I touch the sensor
+    ask: Can you see your heartbeat in these numbers? Why is it hard to tell?
+
+  - part: "Part 2: See the signal"
+    title: Graph it
+    say: Scrolling numbers are too slow to read. A **graph** shows hundreds of readings at once. `serial.write_value` sends each reading to MakeCode so it can draw one.
+    do:
+      - Replace your loop with this code. The pause is short, so it reads 50 times a second.
+      - Click **Download**. Your micro:bit must be **connected** to MakeCode (paired) for this step.
+      - Under the simulator, click **Show data Device**.
+      - Rest your fingertip on the sensor and hold very still for 10 seconds.
+    code: |
+      while True:
+          signal = pins.analog_read_pin(AnalogPin.P0)
+          serial.write_value("pulse", signal)
+          basic.pause(20)
+    new: "3-4"
+    picture:
+      type: graph
+      points: [480, 470, 520, 610, 560, 490, 475, 470, 515, 605, 570, 495, 478, 472, 525, 615, 555, 488]
+      x_label: "time →"
+      y_label: pulse
+      caption: A good signal looks like this. Each tall peak is one heartbeat.
+    tip: "**No Show data button?** Your micro:bit isn't connected. Click the **⋯** next to Download and choose **Connect device**."
+    test:
+      - A wavy line appears on the graph
+      - I can see a peak for each heartbeat
+    ask: Count the peaks on your graph for 10 seconds. How many did you see?
+
+  - part: "Part 2: See the signal"
+    title: Make the signal better
+    say: Real sensors pick up **noise**, things that mess up the signal. Test what makes your wave clear or messy. Try each change for about 30 seconds and watch the graph.
+    do:
+      - "**Pressure:** press very lightly, then hard."
+      - "**Movement:** hold still, then wiggle your finger."
+      - "**Light:** cover the sensor with your other hand, then hold it under a bright light."
+      - "**Place:** try your fingertip, then your earlobe."
+      - "Rate each one below: **clear**, **noisy** or **lost**."
+    test:
+      - I tried all four tests
+    fields: ["Hard press", "Wiggling", "Bright light", "Earlobe"]
+    ask: What gives you the clearest wave? Describe how you will hold the sensor from now on.
+
+  - part: "Part 3: Count the beats"
+    title: Find your threshold
+    say: |
+      The micro:bit sees a stream of numbers, not heartbeats. We need a rule it can follow.
+
+      **The rule:** a beat is when the signal goes **above a line**. That line is called a **threshold**.
+      Pick a number between the bottom and the top of your peaks.
+    picture:
+      type: graph
+      points: [480, 470, 520, 610, 560, 490, 475, 470, 515, 605, 570, 495, 478, 472, 525, 615, 555, 488]
+      line: {y: 550, label: threshold}
+      x_label: "time →"
+      caption: Every peak crosses the dashed line once. The low parts stay under it.
+    do:
+      - Look at your graph from Step 4. Hover over the lowest point and the top of a peak.
+      - Write those numbers below. Pick a threshold about halfway between them.
+    test:
+      - Every peak on my graph goes above my threshold
+      - The low parts of the wave stay below it
+    fields: ["Lowest point", "Top of a peak", "My threshold"]
+
+  - part: "Part 3: Count the beats"
+    title: Flash with every beat
+    say: Now use your threshold to make a **decision**. If the signal is above the line, light the middle LED. If not, turn it off.
+    do:
+      - Replace your code with this. Change **550** to **your** threshold.
+      - Download it and rest your finger on the sensor.
+    code: |
+      threshold = 550
+      while True:
+          signal = pins.analog_read_pin(AnalogPin.P0)
+          if signal > threshold:
+              led.plot(2, 2)
+          else:
+              led.unplot(2, 2)
+          basic.pause(20)
+    new: "1, 4-7"
+    what: "`led.plot(2, 2)` turns on the middle LED (x 2, y 2). `led.unplot` turns it off. These are fast, so the loop can keep reading 50 times a second."
+    test:
+      - The middle LED blinks in time with my pulse
+    ask: Change the threshold to something much higher, then much lower. What happens each time?
+
+  - part: "Part 3: Count the beats"
+    title: Count the beats (first try)
+    say: "Let's **count** every time the signal is above the line. **Predict before you run it:** if your heart beats 10 times, what number will it show?"
+    do:
+      - Add the highlighted lines.
+      - Download it. Hold still for about 10 seconds, then press **B**.
+    code: |
+      threshold = 550
+      beats = 0
+      while True:
+          signal = pins.analog_read_pin(AnalogPin.P0)
+          if signal > threshold:
+              led.plot(2, 2)
+              beats += 1
+          else:
+              led.unplot(2, 2)
+          if input.button_is_pressed(Button.B):
+              basic.show_number(beats)
+          basic.pause(20)
+    new: "2, 7, 10-11"
+    test:
+      - Pressing B shows a number
+    ask: Was the number way too big? The loop checks 50 times a second. How many times does it count one peak?
+
+  - part: "Part 3: Count the beats"
+    title: Count each beat only once
+    say: |
+      One peak stays above the line for many trips through the loop, so it got counted many times.
+
+      **The fix:** remember whether the signal **was already above** the line. Count a beat only when it
+      **crosses up**. When it drops back below, get ready for the next one.
+    do:
+      - Add the highlighted lines and change the `if` line.
+      - Download it. Hold still for 15 seconds while your partner counts your pulse on your wrist. Then press **B**.
+    code: |
+      threshold = 550
+      beats = 0
+      was_above = False
+      while True:
+          signal = pins.analog_read_pin(AnalogPin.P0)
+          if signal > threshold and not was_above:
+              led.plot(2, 2)
+              beats += 1
+              was_above = True
+          elif signal < threshold:
+              led.unplot(2, 2)
+              was_above = False
+          if input.button_is_pressed(Button.B):
+              basic.show_number(beats)
+          basic.pause(20)
+    new: "3, 6, 9-10, 12"
+    what: "`was_above` is **True** or **False**. A beat counts only if the signal is above the line **and** it wasn't above a moment ago."
+    test:
+      - The count goes up by 1 for each heartbeat
+      - My count is close to my partner's wrist count
+    fields: ["My partner counted", "The micro:bit counted"]
+    ask: Why do we need was_above? Explain it like you're telling a friend.
+
+  - part: "Part 3: Count the beats"
+    title: Beats per minute
+    say: |
+      Heart rate is measured in **beats per minute (BPM)**. We don't have to wait a whole minute.
+      Count for **15 seconds** and multiply by 4.
+
+      You'll put the counting in a **function** that **returns** the BPM, like `distance()` in the last lesson.
+    do:
+      - Replace your code with this one. Keep **your** threshold.
+      - Download it. Press **A**, hold still for 15 seconds, and read your BPM.
+    code: |
+      threshold = 550
+
+      def measure():
+          beats = 0
+          was_above = False
+          start = input.running_time()
+          while input.running_time() - start < 15000:
+              signal = pins.analog_read_pin(AnalogPin.P0)
+              if signal > threshold and not was_above:
+                  led.plot(2, 2)
+                  beats += 1
+                  was_above = True
+              elif signal < threshold:
+                  led.unplot(2, 2)
+                  was_above = False
+              basic.pause(20)
+          return beats * 4
+
+      while True:
+          basic.show_icon(IconNames.HEART)
+          while not input.button_is_pressed(Button.A):
+              basic.pause(20)
+          basic.clear_screen()
+          bpm = measure()
+          basic.show_number(bpm)
+    new: "3-7, 17, 19-25"
+    what: "`input.running_time()` is how many milliseconds since the micro:bit turned on. The inner loop keeps counting until 15,000 ms (15 seconds) have passed. Then `measure()` returns beats × 4."
+    test:
+      - It shows a heart and waits for A
+      - After 15 seconds it shows my BPM
+      - I can press A again to measure again
+    ask: Why does the code multiply by 4? What would you multiply by if you counted for 30 seconds?
+
+  - part: "Part 4: Test it"
+    title: How accurate is it?
+    say: |
+      Engineers always test their devices. Measure your BPM on the micro:bit while your partner counts your pulse at your wrist **for the same 15 seconds**, then multiplies by 4.
+
+      **Percent error** = the difference ÷ the hand count × 100.
+      Example: hand 72, micro:bit 76. The difference is 4. 4 ÷ 72 × 100 ≈ **6% error**.
+    do:
+      - Do it three times. Then swap jobs with your partner.
+      - Write your best trial below.
+    tip: Nobody has to share their heart rate. You can test the device on your partner, or just report the percent error. This is a class project, **not a medical device**.
+    test:
+      - I measured three times and found my percent error
+    fields: ["Hand BPM", "micro:bit BPM", "Percent error"]
+    ask: Name one source of error in your test that has nothing to do with the sensor.
+
+  - part: "Part 4: Test it"
+    title: "Checkpoint: the whole program"
+    say: Your program should match this, with your own threshold. Compare it line by line, especially the indentation.
+    code: |
+      threshold = 550
+
+      def measure():
+          beats = 0
+          was_above = False
+          start = input.running_time()
+          while input.running_time() - start < 15000:
+              signal = pins.analog_read_pin(AnalogPin.P0)
+              if signal > threshold and not was_above:
+                  led.plot(2, 2)
+                  beats += 1
+                  was_above = True
+              elif signal < threshold:
+                  led.unplot(2, 2)
+                  was_above = False
+              basic.pause(20)
+          return beats * 4
+
+      while True:
+          basic.show_icon(IconNames.HEART)
+          while not input.button_is_pressed(Button.A):
+              basic.pause(20)
+          basic.clear_screen()
+          bpm = measure()
+          basic.show_number(bpm)
+    stuck:
+      - "**BPM is 0:** your threshold is too high, or a clip is loose. Look at the graph again (Step 4)."
+      - "**BPM is way too high:** your threshold is too low, so noise counts as beats. Or check `not was_above`."
+      - "**Jumpy results:** rest your arm on the desk, press gently and hold very still."
+      - "**Red error marks:** check the indentation. The lines inside `measure()` are pushed in once, the lines in the inner loop twice."
+    test:
+      - My code matches and measures my BPM
+      - My percent error is under 15%, or I know why it isn't
+
+quiz:
+  - question: How does the pulse sensor detect a heartbeat?
+    choices: ["It listens for the sound of your heart", "It measures how much green light bounces back from your skin", "It feels your finger getting warmer", "It counts the LEDs on the micro:bit"]
+    answer: 1
+    why: Each beat pushes more blood into your fingertip. Blood soaks up green light, so less light bounces back to the detector.
+  - question: "`pins.analog_read_pin(AnalogPin.P0)` gives a number from..."
+    choices: ["0 to 1", "0 to 4", "0 to 255", "0 to 1023"]
+    answer: 3
+    why: Analog pins read any number from 0 to 1023. A button is digital, so it's only on or off.
+  - question: "Without `was_above`, why was the beat count way too high?"
+    choices: ["The sensor was broken", "Each peak stayed above the line for many trips through the loop, so it was counted many times", "The threshold was 0", "The micro:bit can't count past 10"]
+    answer: 1
+    why: The loop checks 50 times a second. Counting only when the signal crosses up through the line counts each peak once.
+  - question: Your micro:bit counted 18 beats in 15 seconds. What is the BPM?
+    choices: ["18", "33", "72", "180"]
+    answer: 2
+    why: 15 seconds is a quarter of a minute, so multiply by 4. 18 × 4 = 72 BPM.
+  - question: Your partner counted 80 BPM and the micro:bit said 72. What is the percent error?
+    choices: ["8%", "10%", "72%", "80%"]
+    answer: 1
+    why: The difference is 8. 8 ÷ 80 × 100 = 10%.
+
+ship:
+  extensions:
+    - title: Beep with every beat
+      level: Easier
+      goal: Play a short click every time a beat is counted, like a hospital monitor.
+      where: Inside measure(), right after beats += 1.
+      code: |
+        if signal > threshold and not was_above:
+            led.plot(2, 2)
+            beats += 1
+            music.play_tone(Note.C5, 20)
+            was_above = True
+      new: "4"
+      hints: ["Keep the tone short. A long tone slows the loop and it can miss beats.", "Sound comes from the speaker on a micro:bit V2, or headphones on pin 0 and GND. Pin 0 is in use, so on a V1 skip this one."]
+    - title: Two lines, not one
+      level: Medium
+      goal: Use a high line to start a beat and a lower line to end it, so a wobbly peak can't count twice.
+      where: Replace threshold = 550 at the top, and the if / elif inside measure().
+      code: |
+        high = 570
+        low = 530
+        # inside measure():
+        if signal > high and not was_above:
+            led.plot(2, 2)
+            beats += 1
+            was_above = True
+        elif signal < low:
+            led.unplot(2, 2)
+            was_above = False
+      hints: ["Pick high a bit above your old threshold and low a bit below it.", "The signal must drop below low before the next beat can count.", "Test it against a wrist count. Is your percent error lower?"]
+    - title: Heart-rate log
+      level: Medium
+      goal: Measure 4 times in a row and graph each BPM in Show data. Compare sitting still with after 20 slow arm circles.
+      where: Replace the while True loop at the bottom. Keep measure() above it.
+      code: |
+        basic.show_icon(IconNames.HEART)
+        while not input.button_is_pressed(Button.A):
+            basic.pause(20)
+        for i in range(4):
+            bpm = measure()
+            serial.write_value("bpm", bpm)
+            basic.show_number(bpm)
+        basic.show_icon(IconNames.YES)
+      hints: ["You used for loops in Making Music.", "Keep the micro:bit connected and click Show data Device to see the graph.", "Keep any exercise gentle, and skip it if you'd rather not."]
+    - title: Ignore impossible beats
+      level: Challenge
+      goal: Throw away beats that come too close together to be real (faster than 180 BPM is 333 ms apart).
+      where: Inside measure(). Add last_beat = 0 above the inner loop, then change the beat lines.
+      code: |
+        if signal > threshold and not was_above:
+            was_above = True
+            now = input.running_time()
+            if now - last_beat > 333:
+                beats += 1
+                led.plot(2, 2)
+                last_beat = now
+      hints: ["now - last_beat is the time since the last beat, in milliseconds.", "A wiggle can make a tiny extra bump. This rule ignores it.", "Test it while wiggling your finger a little. Does the count stay closer to the hand count?"]
+    - title: Do our hearts sync?
+      level: Challenge
+      goal: With your partner, test a real research question. Both measure BPM every 15 seconds for 2 minutes sitting quietly, then 2 minutes breathing slowly together (in for 5 seconds, out for 5).
+      where: Use the Heart-rate log code with range(8). Each partner wears their own sensor.
+      code: |
+        for i in range(8):
+            bpm = measure()
+            serial.write_value("bpm", bpm)
+      hints: ["Scientists found heart rates rise and fall together when people sing or breathe together.", "The beats themselves don't line up. Look at whether the BPM numbers go up and down at the same times.", "Write both partners' 8 numbers in a table. Do they move together more when you breathe together?"]
+  reflect:
+    - In your own words, how does your code turn a wavy signal into a number of beats?
+    - What was your percent error, and what is one change that would make your monitor more accurate?
+
+teacher_notes: |
+  * **Timing:** two class periods. Parts 1–2 (wiring, graphing, noise tests) on day 1; Parts 3–4 and an extension on day 2.
+    Adapted from Lessons 2–3 of the *Sensors & Signals: Do Our Hearts Sync?* unit; the class-wide sync experiment
+    (Lessons 4–5) is a separate project, and the partner version is Extension E here.
+  * **Hardware:** PulseSensor.com Pulse Sensor. Purple → P0, red → 3V, black → GND. A housing or finger sleeve helps.
+  * **Show data** needs the micro:bit paired with MakeCode (WebUSB in Chrome). Pair it before Step 4.
+  * **Placement:** fingertip or earlobe, pressed **gently**. Pressing hard squeezes the blood out and flattens the wave.
+    Rest the forearm on the desk and stay still; movement and bright room light add noise.
+  * **Thresholds differ by person and by sensor.** That's the point of Step 6. If the signal drifts, have students
+    re-check their graph and pick a new threshold.
+  * **Health data is private.** No one has to share their heart rate; students may test on a partner or report only
+    percent error. It is not a medical device: an odd reading is almost always the sensor. Never discuss an individual's
+    heart rate in front of the class, and skip exercise for students with heart or breathing conditions.
+
+standards:
+  - code: 6-8.CS.a.4
+    how: Students explain how the pulse sensor turns changing light into an electrical signal the micro:bit reads.
+  - code: 6-8.CT.c.5
+    how: Students use a sensor and MakeCode's data graph to collect heartbeat data and choose a threshold from it.
+  - code: 6-8.CT.d.6
+    how: Students test their beat counter against a hand count, find the double-counting bug, and fix it with was_above.
