@@ -13,7 +13,7 @@ These files are **generated** by `python tools/build.py`. Don't edit them here: 
 
 | File | Add it as | Size |
 |---|---|---|
-| `Assets.gs` | Script (+ → Script), name it `Assets` | 96 KB |
+| `Assets.gs` | Script (+ → Script), name it `Assets` | 97 KB |
 | `Code.gs` | Script (+ → Script), name it `Code` | 93 KB |
 | `Data.gs` | Script (+ → Script), name it `Data` | 257 KB |
 

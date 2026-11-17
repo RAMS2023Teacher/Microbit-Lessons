@@ -38,8 +38,7 @@ function finish_(ctx, L, p, extra) {
   var out = { ok: true, percent: pct, stages: stagesDone_(L, p), stage: currentStage_(L, p), rewards: rewards,
               lesson_xp: lessonXp_(ctx.rec, L.id), stars: lessonStars_(L, p), level: levelInfo_(ctx.rec.xp || 0) };
   if (mate) out.partner = mate;
-  var arc = arcadeState_(ctx.rec, ctx.cfg);
-  if (arc.open) out.arcade = arc;
+  out.arcade = arcadeState_(ctx.rec, ctx.cfg);
   Object.keys(extra || {}).forEach(function (k) { out[k] = extra[k]; });
   return out;
 }

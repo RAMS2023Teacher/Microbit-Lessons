@@ -110,9 +110,9 @@ function saveStudent_(rec) {
 
 // ---------------------------------------------------------------- gradebook summary
 // One small record per student, rebuilt from files that changed since the last look.
-function summary_() {
+function summary_(fresh) {
   var s = readNamed_('summary', null) || { built_ms: 0, students: {} };
-  if (Date.now() - (s.built_ms || 0) < SUMMARY_MAX_AGE_MS) return s;
+  if (!fresh && Date.now() - (s.built_ms || 0) < SUMMARY_MAX_AGE_MS) return s;
   var since = (s.built_ms || 0) - 120000;       // overlap a little, Drive times are rounded
   var started = Date.now();
   var props = PropertiesService.getScriptProperties().getProperties();

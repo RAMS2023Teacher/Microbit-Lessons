@@ -175,7 +175,7 @@
   // ---------------------------------------------------------------- Robot Rush: the arcade, its leaderboard and the power-up shop
   var mmss = function (sec) { sec = Math.max(0, Math.floor(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
   pages.arcade = function () {
-    var h = [], st = d.state || {}, openUntil = st.open && st.until ? Date.now() + st.seconds_left * 1000 : null;
+    var h = [], st = d.state || {}, openUntil = st.open ? Date.now() + st.seconds_left * 1000 : null;
     h.push('<div class="page-head"><div><h1>🎮 Robot Rush</h1><p class="muted">Race your robot for ' + d.race_seconds + ' seconds. Dodge bugs, grab bolts, beat your class!</p></div>' +
       (d.practice ? '<span class="pill-xp">Teacher preview: scores aren\'t saved</span>' : '<span class="pill-xp" id="spend">⚡ <b>' + d.spendable + '</b> XP to spend</span>') + '</div>');
     h.push('<div class="arcade-grid"><div><section class="card arcade-play" id="play-card"><div id="play-gate"></div>' +
@@ -234,27 +234,28 @@
       });
     }
 
-    var tick = null;
+    var tick = null, bank = st.bank || 0;
     function drawGate() {
       var gate = $('play-gate'), left = openUntil ? Math.max(0, Math.round((openUntil - Date.now()) / 1000)) : 0;
-      var open = d.practice || left > 0;
-      if (open) {
-        gate.innerHTML = '<div class="gate open"><div><b>' + (d.practice ? 'Practice race' : 'Robot Rush is open!') + '</b>' +
-          (d.practice ? '' : '<span>Closes in <b id="gate-left">' + mmss(left) + '</b></span>') + '</div>' +
+      if (d.practice || (left > 0 && bank > 0)) {
+        gate.innerHTML = '<div class="gate open"><div><b>' + (d.practice ? 'Practice race' : 'The arcade is open!') + '</b>' +
+          (d.practice ? '' : '<span>You have <b id="gate-bank">' + mmss(bank) + '</b> of play time. Each race uses ' + d.race_seconds + ' seconds.</span>') + '</div>' +
           '<button type="button" class="btn go big" id="start">▶ Start race</button></div>';
         $('start').addEventListener('click', start);
+      } else if (left > 0) {
+        gate.innerHTML = '<div class="gate"><span class="gate-lock">⏳</span><div><b>The arcade is open, but you\'re out of play time.</b>' +
+          '<span>Finish a lesson to earn ' + d.minutes + ' minutes of Robot Rush. Spend XP on power-ups while you work!</span></div></div>';
       } else {
-        gate.innerHTML = '<div class="gate"><span class="gate-lock">🔒</span><div><b>' + (st.off ? 'Robot Rush is turned off right now.' : 'Finish a lesson to unlock Robot Rush.') + '</b>' +
-          '<span>' + (st.off ? 'Your teacher can turn it back on.' : 'When you finish a whole lesson, Robot Rush opens for ' + d.minutes + ' minutes. Spend XP on power-ups while you wait!') + '</span></div></div>';
+        gate.innerHTML = '<div class="gate"><span class="gate-lock">🔒</span><div><b>The arcade is closed.</b>' +
+          '<span>Your teacher opens it in class. Finish a lesson to earn ' + d.minutes + ' minutes of play time' +
+          (bank ? ': you have <b>' + mmss(bank) + '</b> saved.' : '.') + '</span></div></div>';
       }
     }
     function countdown() {
       clearInterval(tick);
       tick = setInterval(function () {
-        var left = Math.max(0, Math.round((openUntil - Date.now()) / 1000)), el = $('gate-left');
-        if (el) el.textContent = mmss(left);
-        if (!left) { clearInterval(tick); if (!racing) drawGate(); }
-      }, 500);
+        if (openUntil && openUntil <= Date.now()) { clearInterval(tick); openUntil = null; if (!racing) drawGate(); }
+      }, 1000);
     }
     var racing = false;
     function start() {
@@ -263,6 +264,7 @@
       ML.api('/api/arcade/start', {}).then(function (r) {
         if (!r.ok) { $('play-gate').innerHTML = '<p class="bad"></p>'; $('play-gate').firstChild.textContent = r.error; return; }
         racing = true;
+        bank = r.bank || 0;
         $('play-gate').hidden = true; $('result').textContent = ''; $('game-wrap').hidden = false;
         $('game-wrap').scrollIntoView({ block: 'center', behavior: 'smooth' });
         RobotRush.play($('rush'), { avatar: d.avatar, seconds: r.seconds, powerups: r.powerups, controls: function (c) {
@@ -278,7 +280,7 @@
             else {
               note.textContent = f.new_best ? '🎉 New personal best!' : f.new_day_best ? '⭐ Your best today!' : 'Your best: ' + f.best;
               board = f.board || board; drawBoard();
-              if (f.state) openUntil = f.state.open ? Date.now() + f.state.seconds_left * 1000 : null;
+              if (f.state) { openUntil = f.state.open ? Date.now() + f.state.seconds_left * 1000 : null; bank = f.state.bank || 0; }
             }
             $('play-gate').hidden = false;
             drawGate();
@@ -463,24 +465,27 @@
       if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
     $('del-go').addEventListener('click', function () { act(this, 'deleteClass', [c.id, $('del-name').value], function () { ML.go('/'); }); });
-    // Robot Rush: open it for everyone, close it, or turn it off for this class
+    // Robot Rush: closed unless the teacher opens it for this class
     var arc = d.arcade, arcEnd = null, arcTick = null;
     function drawArcade() {
       var left = arcEnd ? Math.max(0, Math.round((arcEnd - Date.now()) / 1000)) : 0, b = arc.board || { today: [] };
       $('arcade-card').innerHTML = '<div class="arcade-teacher-head"><h2>🎮 Robot Rush</h2><a class="btn ghost small" href="/arcade">Try it yourself</a></div>' +
-        '<p class="muted small">Students get ' + arc.minutes + ' minutes of Robot Rush when they finish a lesson, and spend XP on power-ups. ' +
-        'Their level never goes down when they spend.</p><div class="row">' +
-        (arc.off ? '<b class="bad">Off for this class</b> <button class="btn small" type="button" data-arc="on">Turn it back on</button>'
-          : (left ? '<b class="ok">Open for everyone · <span id="arc-left">' + mmss(left) + '</span></b> <button class="btn small ghost" type="button" data-arc="close">Close now</button>'
-            : '<button class="btn small" type="button" data-arc="open">Open for everyone for ' + arc.minutes + ' minutes</button>') +
-            ' <button class="btn small ghost" type="button" data-arc="off">Turn off for this class</button>') + '</div>' +
+        '<p class="muted small">The arcade is closed unless you open it here or on the 📺 Class display. Finishing a lesson earns a student ' + arc.minutes +
+        ' minutes of play time, which they can only use while the arcade is open for this class. Spending XP on power-ups never lowers a level.</p><div class="row">' +
+        (left ? '<b class="ok">Open · closes in <span id="arc-left">' + mmss(left) + '</span></b> <button class="btn small ghost" type="button" data-arc="close">Close now</button>'
+          : '<button class="btn small" type="button" data-arc="open">Open for this class (1 hour)</button>') +
+        ' <button class="btn small ghost" type="button" data-arc="gift">Give everyone ' + arc.minutes + ' minutes</button></div>' +
         '<h3>Today\'s top racers</h3>' + (b.today.length ? '<ol class="board small-board">' + b.today.slice(0, 5).map(function (r, i) {
           return '<li><span class="rank">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span data-avatar="' + A(r.avatar || {}) + '" data-size="30"></span><b>' + E(r.name) + '</b><span class="score">' + r.score + '</span></li>';
         }).join('') + '</ol>' : '<p class="muted small">No races yet today.</p>');
       RobotAvatar.renderAll($('arcade-card'));
       $('arcade-card').querySelectorAll('[data-arc]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          act(btn, 'arcadeClass', [c.id, btn.dataset.arc], function (r) { arc = r; arcEnd = r.seconds_left ? Date.now() + r.seconds_left * 1000 : null; drawArcade(); });
+          if (btn.dataset.arc === 'gift' && !confirm('Give every student in this class ' + arc.minutes + ' minutes of play time?')) return;
+          act(btn, 'arcadeClass', [c.id, btn.dataset.arc, 60], function (r) {
+            arc = r; arcEnd = r.seconds_left ? Date.now() + r.seconds_left * 1000 : null; drawArcade();
+            if (r.gifted != null) flash('Gave ' + r.gifted + ' students ' + arc.minutes + ' minutes of play time.', 'ok');
+          });
         });
       });
       clearInterval(arcTick);
@@ -595,6 +600,7 @@
       classId: id, className: d.cls.name, backHref: '/teacher/classes/' + id, units: d.units, refreshMs: 20000,
       load: function () { return ML.run('screenData', id); },
       save: function (body) { return ML.run('screenSave', id, body); },
+      arcade: function (action, minutes) { return ML.run('arcadeClass', id, action, minutes); },
     });
   };
 

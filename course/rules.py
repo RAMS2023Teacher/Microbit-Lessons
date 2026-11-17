@@ -121,7 +121,8 @@ AVATAR_OPTIONS = {
 }
 
 # ---------------------------------------------------------------- Robot Rush (the arcade game)
-# Opens for ARCADE_MINUTES after a student completes a lesson (or when the teacher opens it for the class).
+# Closed unless the teacher opens the arcade for a class. Finishing a lesson earns "minutes" of play time;
+# each race uses "race_seconds" of it (more with the Overtime power-up).
 ARCADE = {"minutes": 5, "race_seconds": 45}
 # Power-ups bought with XP to spend: id, icon, name, what it does, cost of each level
 POWERUPS = [

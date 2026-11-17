@@ -106,25 +106,17 @@
     h.push('</nav>');
     bar.innerHTML = h.join('');
   }
-  // "Robot Rush is open" countdown in the top bar, after a lesson is finished (35_arcade.js)
-  var arcadeTimer = null;
+  // "Arcade open" in the top bar, while the teacher has the arcade open and the student has play time (35_arcade.js)
   ML.arcadePill = function (st) {
-    var bar = document.querySelector('#topbar nav');
-    if (!bar || ML.teacher || !st || !st.open || !st.seconds_left) return;
-    var end = Date.now() + st.seconds_left * 1000, pill = document.getElementById('nav-arcade');
+    var bar = document.querySelector('#topbar nav'), pill = document.getElementById('nav-arcade');
+    if (!bar || ML.teacher) return;
+    if (!st || !st.can_play) { if (pill) pill.remove(); return; }
     if (!pill) {
       pill = document.createElement('a');
       pill.id = 'nav-arcade'; pill.className = 'arcade-pill'; pill.setAttribute('href', ML.href('/arcade')); pill.setAttribute('target', '_top');
       bar.insertBefore(pill, bar.firstChild);
     }
-    clearInterval(arcadeTimer);
-    var draw = function () {
-      var left = Math.max(0, Math.round((end - Date.now()) / 1000));
-      pill.textContent = '🎮 Robot Rush open · ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
-      if (!left) { clearInterval(arcadeTimer); pill.remove(); }
-    };
-    draw();
-    arcadeTimer = setInterval(draw, 1000);
+    pill.textContent = '🎮 Arcade open · ' + Math.floor(st.bank / 60) + ':' + String(st.bank % 60).padStart(2, '0') + ' to play';
   };
 
   ML.updateLevel = function (lv) {

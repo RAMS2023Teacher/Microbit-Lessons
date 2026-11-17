@@ -44,11 +44,13 @@ the micro:bit GND, and the ultrasonic sensor on Trig P8 / Echo P12 through the b
 
 ## Robot Rush and the shop
 
-Finishing a lesson opens **Robot Rush** for 5 minutes: a 45-second race with the student's own robot, with a class
-leaderboard (today and all time). Students spend **XP to spend** in the shop on power-ups (Turbo, Shield, Bolt magnet,
-Rocket dash, Overtime) and robot parts. Levels count all XP ever earned, so spending never lowers a level. On a class
-page the teacher can open Robot Rush for everyone for 5 minutes, close it, or turn it off. Prices, power-ups and the
-window length are in `course/rules.py` (`AVATAR_OPTIONS`, `POWERUPS`, `ARCADE`).
+**Robot Rush** is a 45-second race with the student's own robot, with a class leaderboard (today and all time).
+The arcade is **closed unless the teacher opens it** for a class, from the class display (🎮 Open arcade, until the bell)
+or the class page. Finishing a lesson earns 5 minutes of play time; each race uses its length from that time, and only
+while the arcade is open for the student's own class. The teacher can also give everyone 5 minutes.
+Students spend **XP to spend** in the shop on power-ups (Turbo, Shield, Bolt magnet, Rocket dash, Overtime) and robot
+parts. Levels count all XP ever earned, so spending never lowers a level. Prices, power-ups and play time are in
+`course/rules.py` (`AVATAR_OPTIONS`, `POWERUPS`, `ARCADE`).
 
 ## For developers
 

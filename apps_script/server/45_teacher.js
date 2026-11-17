@@ -313,7 +313,7 @@ function screenPayload_(cfg, cid) {
            goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
            track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: 'Python idea: ' + L.python,
-           standards: standardsInPlay_(working, L.id) };
+           standards: standardsInPlay_(working, L.id), arcade: arcadeTeacher_(cfg, cid) };
 }
 
 function screenData(cid) {

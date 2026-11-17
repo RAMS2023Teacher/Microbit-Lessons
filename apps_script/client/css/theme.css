@@ -353,3 +353,7 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 @media (prefers-reduced-motion: reduce) { .arcade-pill { animation: none; } }
 .part-opt.locked.for-sale { opacity: 1; cursor: pointer; border: 2px dashed #e2b100; background: #fffbea; }
 .part-opt.locked.for-sale .robot-avatar { filter: none; }
+.screen-page .arcade-btn { background: linear-gradient(90deg, #4338ca, #7c3aed); color: #fff; }
+.screen-page .arcade-btn.on { background: linear-gradient(90deg, #db2777, #f97316); animation: arcade-glow 1.6s ease-in-out infinite; }
+.screen-wins .arcade-row { display: grid; grid-template-columns: 32px 38px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.arcade-score { font-family: var(--display); font-weight: 400; font-size: 1.3rem; }

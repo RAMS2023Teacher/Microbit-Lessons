@@ -16,6 +16,7 @@
       '<div class="screen-goal" id="screen-goal" hidden><div class="goal-top"><b>🎯 Class goal today</b><span id="goal-num"></span></div>' +
       '<div class="goal-bar"><i id="goal-fill"></i></div><div class="goal-note" id="goal-note"></div></div>' +
       '<b id="screen-total" class="screen-total"></b><div class="screen-tools">' +
+      '<button type="button" class="btn small arcade-btn" id="arcade-toggle">🎮 Open arcade</button>' +
       '<button type="button" class="btn small ghost" id="set-open">⚙ Set up</button>' +
       '<button type="button" class="btn small ghost" id="set-full">⛶ Full screen</button>' +
       '<a class="btn small ghost" id="screen-exit">Exit</a></div></header>' +
@@ -52,7 +53,7 @@
       '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div></section>' +
       '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p>' +
       '<p class="screen-bigidea" id="screen-bigidea"></p></section>' +
-      '<section class="card"><h2>🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
+      '<section class="card"><h2 id="wins-title">🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
       '</aside></div></div>';
     const $ = (id) => document.getElementById(id);
     $('screen-class').textContent = C.className || 'Class';
@@ -188,6 +189,8 @@
       if (!(data.standards || []).length) stds.appendChild(el('li', 'muted', 'This lesson has no standards listed.'));
       const wins = $('screen-wins');
       wins.textContent = '';
+      drawArcade();
+      if (arcadeOpen()) return;                       // while the arcade is open, this card shows its leaderboard
       if (!(data.wins || []).length) wins.appendChild(el('li', 'muted', 'Badges, finished lessons and perfect quizzes show up here.'));
       (data.wins || []).slice(0, 5).forEach((w) => {
         const li = wins.appendChild(el('li'));
@@ -198,6 +201,46 @@
       fillSetup();
       drawClock();
     }
+
+    // ----- Robot Rush: closed unless the teacher opens it here (or on the class page) -----
+    let arcadeEnd = null;
+    const arcadeOpen = () => arcadeEnd && arcadeEnd > Date.now();
+    function drawArcade() {
+      const a = data && data.arcade;
+      if (a) arcadeEnd = a.open ? Date.now() + a.seconds_left * 1000 : null;
+      const btn = $('arcade-toggle');
+      btn.classList.toggle('on', !!arcadeOpen());
+      btn.textContent = arcadeOpen() ? '🎮 Arcade open · Close' : '🎮 Open arcade';
+      if (!arcadeOpen() || !a) { $('wins-title').textContent = '🏆 Recent wins'; return; }
+      $('wins-title').textContent = '🎮 Robot Rush · today';
+      const wins = $('screen-wins');
+      wins.textContent = '';
+      const rows = (a.board && a.board.today) || [];
+      if (!rows.length) wins.appendChild(el('li', 'muted', `The arcade is open! Finish a lesson to earn ${a.minutes} minutes of play time.`));
+      rows.slice(0, 5).forEach((r, i) => {
+        const li = wins.appendChild(el('li', 'arcade-row'));
+        li.appendChild(el('span', 'win-icon', ['🥇', '🥈', '🥉'][i] || String(i + 1)));
+        li.appendChild(el('span', 'else-bot')).innerHTML = window.RobotAvatar.svg(r.avatar, 34);
+        li.appendChild(el('span', 'win-text', r.name));
+        li.appendChild(el('b', 'arcade-score', String(r.score)));
+      });
+    }
+    $('arcade-toggle').addEventListener('click', async () => {
+      const btn = $('arcade-toggle');
+      btn.disabled = true;
+      try {
+        if (arcadeOpen()) {
+          if (!confirm('Close the arcade? Students keep the play time they saved.')) return;
+          await C.arcade('close');
+        } else {
+          const bell = bellSeconds();                 // open until the bell when it's set, otherwise for an hour
+          await C.arcade('open', bell ? Math.max(5, Math.ceil(bell / 60)) : 60);
+        }
+        await refresh();
+      } catch (e) {
+        alert((e && e.message) || 'Could not change the arcade.');
+      } finally { btn.disabled = false; }
+    });
 
     async function refresh() {
       if (document.hidden) return;

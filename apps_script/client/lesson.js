@@ -330,7 +330,9 @@
       const box = $('stage-view').querySelector('.panel');
       box.insertAdjacentHTML('afterbegin', `<div class="shipped" style="margin-bottom:14px">🏁 <b>Lesson complete!</b> ` +
         `<a href="/map">See what you unlocked on the skill tree →</a></div>` +
-        (arcadeOpen ? `<a class="arcade-banner" href="/arcade">🎮 <b>Robot Rush is open for ${Math.round(arcadeOpen.seconds_left / 60)} minutes!</b> Race your robot and top the class leaderboard ▶</a>` : ''));
+        (arcadeOpen ? (arcadeOpen.can_play
+          ? `<a class="arcade-banner" href="/arcade">🎮 <b>You earned ${arcadeOpen.minutes} minutes of Robot Rush!</b> The arcade is open: race your robot ▶</a>`
+          : `<div class="arcade-banner">🎮 <b>You earned ${arcadeOpen.minutes} minutes of Robot Rush play time!</b> Use it when your teacher opens the arcade.</div>`) : ''));
     }
 
     // ------------------------------------------------------------ partners (two classmates, one Chromebook)

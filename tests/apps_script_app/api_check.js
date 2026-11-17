@@ -91,8 +91,8 @@ assert.strictEqual(r.body.stars, 3);                               // perfect qu
 const sam = w.g.loadStudent_(S);
 assert.ok(sam.xp_keys['ext_3:' + LID] && sam.xp_keys['complete:' + LID]);
 
-// finishing the lesson opens Robot Rush for a few minutes; the shop spends XP without lowering the level
-assert.ok(r.body.arcade && r.body.arcade.open && r.body.arcade.seconds_left > 250, JSON.stringify(r.body.arcade));
+// finishing the lesson banks 5 minutes of Robot Rush; the arcade itself stays closed until the teacher opens it
+assert.ok(r.body.arcade && !r.body.arcade.open && r.body.arcade.bank === 300 && !r.body.arcade.can_play, JSON.stringify(r.body.arcade));
 const xpBefore = w.g.loadStudent_(S).xp, lvBefore = w.g.levelInfo_(xpBefore).level;
 const shop = (body) => w.call(S, 'api', ['/api/shop/buy', JSON.stringify(body)]).body;
 let b = shop({ item: 'power:magnet' });
@@ -108,10 +108,17 @@ b = shop({ item: 'power:time' });
 assert.ok(b.ok && b.race_seconds === 50, JSON.stringify(b));
 b = shop({ item: 'power:time' });
 assert.ok(!b.ok && /more XP/.test(b.error), JSON.stringify(b));                                    // level 2 costs more than Sam has left
-// a race: has to be started, has to take the race time, and the score has to be possible
-const arcade = (action, body) => w.call(S, 'api', ['/api/arcade/' + action, JSON.stringify(body || {})]).body;
+const arcade = (action, body, who) => w.call(who || S, 'api', ['/api/arcade/' + action, JSON.stringify(body || {})]).body;
+assert.ok(arcade('start').closed);                                                                 // closed until the teacher opens it
+// another class's arcade doesn't count
+const other = w.call(T, 'createClass', ['Period 5']);
+w.call(T, 'arcadeClass', [other.id, 'open', 45]);
+assert.ok(arcade('start').closed);
+w.call(T, 'arcadeClass', [other.id, 'close']);
+// the teacher opens it for Sam's class: each race uses its length from the bank
+assert.ok(w.call(T, 'arcadeClass', [cls.id, 'open', 50]).seconds_left > 2900);
 let run = arcade('start');
-assert.ok(run.ok && run.seconds === 50 && run.powerups.magnet === 1);
+assert.ok(run.ok && run.seconds === 50 && run.powerups.magnet === 1 && run.bank === 250, JSON.stringify(run));
 assert.ok(!arcade('finish', { run_id: run.run_id, score: 500 }).ok);                               // too fast
 run = arcade('start');
 w.advance(51000);
@@ -121,15 +128,16 @@ w.advance(51000);
 let fin = arcade('finish', { run_id: run.run_id, score: 2400 });
 assert.ok(fin.ok && fin.new_best && fin.best === 2400 && fin.board.today[0].me && fin.board.today[0].score === 2400, JSON.stringify(fin));
 assert.ok(!arcade('finish', { run_id: run.run_id, score: 2400 }).ok);                              // a race counts once
-// the teacher can turn it off and open it for everyone
-w.call(T, 'arcadeClass', [cls.id, 'off']);
-assert.ok(!arcade('start').ok);
-w.call(T, 'arcadeClass', [cls.id, 'on']);
-w.advance(5 * 60000);
-assert.ok(!arcade('start').ok);                                                                    // the 5 minutes are over
-assert.ok(w.call(T, 'arcadeClass', [cls.id, 'open']).seconds_left > 250);
-assert.ok(arcade('start').ok);
+assert.strictEqual(fin.state.bank, 150);
+assert.ok(arcade('start').ok && arcade('start').ok && arcade('start').ok);              // 150 s = three 50 s races
+assert.ok(/play time/.test(arcade('start').error));                                                // the bank is empty
+assert.ok(!arcade('start', {}, S2).ok);                                                            // Ava hasn't earned any time
+assert.strictEqual(w.call(T, 'arcadeClass', [cls.id, 'gift']).gifted, 2);                          // the teacher gives everyone 5 minutes
+assert.ok(arcade('start', {}, S2).ok);
+const scrA = w.call(T, 'screenData', [cls.id]).arcade;
+assert.ok(scrA.open && scrA.board.today.length === 1, JSON.stringify(scrA));
 w.call(T, 'arcadeClass', [cls.id, 'close']);
+assert.ok(arcade('start').closed);
 assert.ok(/"page":"arcade"/.test(pageView(S, '/arcade')));
 assert.ok(!/"page":"error"/.test(pageView(T, '/arcade')));
 assert.ok(w.call(T, 'api', ['/api/arcade/start', '{}']).body.practice);
