@@ -34,10 +34,10 @@ build:
     title: The red light on P0
     say: You built this circuit last lesson. The red LED goes on pin **P0**, through a resistor, and back to GND.
     wiring:
-      - "Run a <b>black</b> jumper wire from <b>GND</b> on the breakout board to the <b>blue (–) rail</b>."
-      - "Run a jumper wire from <b>P0</b> to an empty row. Put a <b>resistor</b> from that row to a new row."
-      - "Put the <b>red</b> LED's <b>long (+) leg</b> in the resistor's new row."
-      - "Put the red LED's <b>short (–) leg</b> in the <b>blue (–) rail</b>."
+      - "Run a **black** jumper wire from **GND** on the breakout board to the **blue (–) rail**."
+      - "Run a jumper wire from **P0** to an empty row. Put a **resistor** from that row to a new row."
+      - "Put the **red** LED's **long (+) leg** in the resistor's new row."
+      - "Put the red LED's **short (–) leg** in the **blue (–) rail**."
     picture:
       type: part
       part: led
@@ -51,9 +51,9 @@ build:
     title: Add yellow on P1 and green on P2
     say: Each LED gets its **own pin** and its **own resistor**. All three short legs **share** the same GND rail.
     wiring:
-      - "Run a jumper wire from <b>P1</b> to an empty row. Add a <b>resistor</b> and the <b>yellow</b> LED, just like red."
-      - "Run a jumper wire from <b>P2</b> to an empty row. Add a <b>resistor</b> and the <b>green</b> LED."
-      - "Put both short (–) legs in the <b>blue (–) rail</b>."
+      - "Run a jumper wire from **P1** to an empty row. Add a **resistor** and the **yellow** LED, just like red."
+      - "Run a jumper wire from **P2** to an empty row. Add a **resistor** and the **green** LED."
+      - "Put both short (–) legs in the **blue (–) rail**."
       - "Line them up from top to bottom: red, yellow, green, like a real traffic light."
     picture:
       type: compare

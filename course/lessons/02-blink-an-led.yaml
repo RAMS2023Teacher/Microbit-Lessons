@@ -105,11 +105,11 @@ build:
     title: Wire the LED
     say: "Electricity goes **out** of pin P0, **through** the resistor and the LED, and **back** to GND. That loop is a **circuit**."
     wiring:
-      - "Run a <b>black</b> jumper wire from <b>GND</b> on the breakout board to the <b>blue (–) rail</b>."
-      - "Run a jumper wire from <b>P0</b> on the breakout board to an empty row. Call it <b>row A</b>."
-      - "Put one leg of the <b>resistor</b> in row A and the other leg in a new row a few rows away. Call it <b>row B</b>."
-      - "Put the LED's <b>long (+) leg</b> in row B, next to the resistor."
-      - "Put the LED's <b>short (–) leg</b> in the <b>blue (–) rail</b>."
+      - "Run a **black** jumper wire from **GND** on the breakout board to the **blue (–) rail**."
+      - "Run a jumper wire from **P0** on the breakout board to an empty row. Call it **row A**."
+      - "Put one leg of the **resistor** in row A and the other leg in a new row a few rows away. Call it **row B**."
+      - "Put the LED's **long (+) leg** in row B, next to the resistor."
+      - "Put the LED's **short (–) leg** in the **blue (–) rail**."
     picture:
       type: flow
       steps:

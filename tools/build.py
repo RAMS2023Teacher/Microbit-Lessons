@@ -68,7 +68,7 @@ def lesson_data(lesson: dict) -> dict:
             "code": code, "new": L.line_set(s["new"], len(code.split("\n"))) if s.get("new") else [],
             "what": md(s.get("what")), "tip": md(s.get("tip")), "stuck": [md_inline(x) for x in s.get("stuck") or []],
             "test": [md_inline(x) for x in s.get("test") or []], "ask": plain(s.get("ask")), "fields": s.get("fields") or [],
-            "picture": s.get("picture"), "wiring": s.get("wiring") or [],
+            "picture": s.get("picture"), "wiring": [md_inline(w.get("text", "") if isinstance(w, dict) else w) for w in s.get("wiring") or []],
         })
     for e in (lesson.get("ship") or {}).get("extensions") or []:
         code = (e.get("code") or "").rstrip("\n")
