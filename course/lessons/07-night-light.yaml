@@ -1,0 +1,310 @@
+id: night-light
+title: Night Light
+tagline: A light that turns itself on when it gets dark
+minutes: 90          # about two class periods
+
+mission:
+  goal: |
+    Build an **automatic night light**. The micro:bit measures how bright the room is. When it gets
+    **dark**, it turns on an LED. When it gets **light**, it turns it off. You'll measure real light
+    levels and choose the **threshold**: the number where dark begins.
+  picture:
+    type: graph
+    points: [180, 175, 160, 120, 70, 30, 20, 25, 90, 170]
+    line: {y: 50, label: "threshold: below = dark"}
+    x_label: "time →"
+    y_label: "light level"
+    caption: When the light level drops below the threshold, the LED turns on.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit in its breakout board, on a breadboard
+    - An LED, a 220 Ω resistor and jumper wires
+    - A flashlight (a phone light works)
+  learn:
+    - "a **sensor** turns the real world into a number"
+    - "a **threshold** is the cutoff number for a decision"
+    - "**variables** make a number easy to change"
+  talk: Name two things that turn on or off by themselves when it gets dark. How do you think they know?
+
+build:
+  - part: Set up
+    title: Open MakeCode in Python
+    do:
+      - Click the green **Open MakeCode** button. Click **New Project** and name it **Night Light**.
+      - Switch from **Blocks** to **Python** at the top.
+      - Delete any code that's already there.
+    test:
+      - MakeCode is open in Python, with an empty editor
+
+  - part: "Part 1: Measure light"
+    title: The screen is a light sensor
+    say: "Surprise: the micro:bit's 25 LEDs can **sense light** too. `input.light_level()` gives a number from **0** (dark) to **255** (very bright)."
+    do:
+      - Type this code and download it to the real micro:bit.
+      - Cover the screen with your hand. Then shine a flashlight on it. Write the numbers below.
+    code: |
+      while True:
+          basic.show_number(input.light_level())
+    tip: "In the simulator, a **sun slider** appears next to the micro:bit. Drag it to change the light. The very first reading can be 0 while the sensor wakes up."
+    test:
+      - The number goes down when I cover the screen
+      - The number goes up with a flashlight
+    fields: ["Covered", "Room light", "Flashlight"]
+    ask: Which reading was the most different from the others? Why do you think so?
+
+  - part: "Part 1: Measure light"
+    title: A light meter
+    say: Scrolling numbers are slow. A **bar graph** shows the light level right away.
+    do:
+      - Change line 2 to match. Run it and move your hand closer and farther.
+    code: |
+      while True:
+          basic.plot_bar_graph(input.light_level(), 255)
+    new: "2"
+    what: "`plot_bar_graph` lights up more LEDs for bigger numbers. `255` is the biggest number, which fills the whole screen."
+    test:
+      - The bars go up and down as the light changes
+    ask: Why is the second number 255 and not 100?
+
+  - part: "Part 1: Measure light"
+    title: Choose a threshold
+    say: "A **threshold** is the cutoff number for a decision. Below it is **dark**. Above it is **light**. A good threshold sits between your **Covered** and **Room light** numbers."
+    picture:
+      type: graph
+      points: [150, 148, 152, 40, 35, 38, 150]
+      line: {y: 90, label: "threshold"}
+      x_label: "hand away → covered → away"
+      y_label: "light level"
+      caption: Pick a number between the low readings and the high readings.
+    do:
+      - Delete your code and type this. Use **your own** threshold in place of 50.
+      - Run it, then cover the screen.
+    code: |
+      while True:
+          if input.light_level() < 50:
+              basic.show_icon(IconNames.ASLEEP)
+          else:
+              basic.show_icon(IconNames.HAPPY)
+          basic.pause(100)
+    test:
+      - Covering the screen shows a sleeping face
+      - Room light shows a happy face
+    fields: ["My threshold"]
+    ask: How did you pick your threshold? What happens if it's too close to the room light number?
+
+  - part: "Part 2: Wire the LED"
+    title: Wire the LED
+    say: This is the same circuit as Blink an LED. Current flows from **P0**, through the resistor, through the LED, and back to **GND**.
+    picture:
+      type: part
+      part: led
+      color: white
+      caption: The long leg (+) goes toward P0. The short leg (–) goes toward GND.
+    wiring:
+      - "Unplug the micro:bit's USB cable while you wire."
+      - "Jumper wire from the breakout's **P0** pin to a row on the breadboard."
+      - "Put the **220 Ω resistor** from that row to a new row."
+      - "Put the LED's **long leg** in the resistor's new row. Put the **short leg** in the next row."
+      - "Jumper wire from the short leg's row to **GND**."
+    test:
+      - P0 → resistor → long leg; short leg → GND
+    ask: What does the resistor do in this circuit?
+
+  - part: "Part 2: Wire the LED"
+    title: Test the LED
+    do:
+      - Delete your code and type these two lines. Download to the micro:bit.
+    code: |
+      pins.digital_write_pin(DigitalPin.P0, 1)
+      basic.show_icon(IconNames.YES)
+    what: "`1` turns P0 on, so current flows and the LED lights. The check mark tells you the code ran."
+    stuck:
+      - "**Check mark but no light?** Turn the LED around. The long leg must face P0."
+      - "Each leg must be in a row with the part it connects to."
+      - "Make sure the wire goes to GND, not 3V."
+    test:
+      - My LED is on
+    ask: What line would turn the LED off?
+
+  - part: "Part 3: Build the night light"
+    title: Dark means LED on
+    say: Now join the two halves. Read the light. If it's dark, turn the LED **on**. Otherwise, turn it **off**.
+    do:
+      - Delete your code and type this. Use your threshold in place of 50.
+      - Download it. Cover the screen, then uncover it.
+    code: |
+      while True:
+          if input.light_level() < 50:
+              pins.digital_write_pin(DigitalPin.P0, 1)
+          else:
+              pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.pause(100)
+    new: "3,5"
+    what: "This is your Step 3 code. The faces are swapped for LED on and LED off. Every 100 ms it reads the light again and decides again."
+    test:
+      - Covering the screen turns the LED on
+      - Uncovering it turns the LED off
+    ask: Why does the code check the light over and over in a loop, instead of just once?
+
+  - part: "Part 3: Build the night light"
+    title: A variable for the threshold
+    say: "Engineers put important numbers in a **variable** at the top, with a clear name. Then there's one place to change it, and anyone reading the code knows what the number means."
+    do:
+      - Add line 1. Change `50` in the `if` line to `threshold`.
+      - Run it. Then change only line 1 to test a new threshold.
+    code: |
+      threshold = 50
+      while True:
+          light = input.light_level()
+          if light < threshold:
+              pins.digital_write_pin(DigitalPin.P0, 1)
+          else:
+              pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.pause(100)
+    new: "1,3-4"
+    what: "`light` holds the reading. `threshold` holds the cutoff. The `if` line now reads almost like English: **if light is less than threshold**."
+    test:
+      - The night light still works
+      - Changing only line 1 changes when the LED turns on
+    ask: Why is `threshold` a better name than `x` or `n`?
+
+  - part: "Part 3: Build the night light"
+    title: Test it in the real world
+    say: Real engineers test their device where it will be used. Try your night light in three places.
+    do:
+      - Test under a desk, in normal room light, and next to a window or flashlight.
+      - Write what the LED did in each place.
+      - If it's wrong anywhere, change your threshold and test again.
+    test:
+      - I tested in three places
+      - My night light does the right thing in all three
+    fields: ["Under a desk", "Room light", "Window or flashlight"]
+    ask: Did you change your threshold? What number works best, and why?
+
+  - part: "Part 3: Build the night light"
+    title: "Checkpoint: the whole night light"
+    say: Your program should match this. Your threshold number may be different.
+    code: |
+      threshold = 50
+      while True:
+          light = input.light_level()
+          if light < threshold:
+              pins.digital_write_pin(DigitalPin.P0, 1)
+          else:
+              pins.digital_write_pin(DigitalPin.P0, 0)
+          basic.pause(100)
+    stuck:
+      - "**LED never turns on?** Your threshold may be too low. Show the light level again and check."
+      - "**LED always on?** Your threshold may be too high, or the LED is wired to 3V instead of P0."
+      - "**Indentation:** lines inside the `if` and `else` are pushed in twice."
+    test:
+      - My program matches, and the night light works on the real micro:bit
+
+quiz:
+  - question: What does `input.light_level()` give you?
+    choices: ["A number from 0 to 255", "True or False", "The time", "A number from 1 to 6"]
+    answer: 0
+    why: 0 means dark and 255 means very bright.
+  - question: A threshold is...
+    choices: ["the brightest the LED can be", "the cutoff number where a decision changes", "a kind of resistor", "how long to pause"]
+    answer: 1
+    why: Below the threshold is dark, so the LED turns on. Above it is light, so the LED turns off.
+  - question: "The threshold is 50 and the light level is 120. What does the LED do?"
+    choices: ["Turns on", "Turns off", "Blinks", "Nothing changes"]
+    answer: 1
+    why: 120 < 50 is False, so the else line runs and turns P0 off.
+  - question: Your covered reading is 10 and your room reading is 150. Which threshold is best?
+    choices: ["5", "80", "149", "250"]
+    answer: 1
+    why: 80 sits between the two readings, so small changes won't fool it. 149 is too close to room light.
+  - question: Why put the threshold in a variable at the top?
+    choices: ["It makes the LED brighter", "So there's one clear place to change it", "Python needs it", "It makes the code run faster"]
+    answer: 1
+    why: A named variable explains what the number means, and you only change it in one place.
+
+ship:
+  extensions:
+    - title: Show the moon
+      level: Easier
+      goal: Show a picture on the screen when the night light is on.
+      where: Inside the if and the else.
+      code: |
+        if light < threshold:
+            pins.digital_write_pin(DigitalPin.P0, 1)
+            basic.show_icon(IconNames.ASLEEP)
+        else:
+            pins.digital_write_pin(DigitalPin.P0, 0)
+            basic.clear_screen()
+      new: "3,6"
+      hints: ["Lit-up screen LEDs can change the light reading a little. Test that your threshold still works.", "Try other icons, or draw a moon with basic.show_leds."]
+    - title: Good morning alarm
+      level: Easier
+      goal: Play a tune when it gets light again.
+      where: Inside the else.
+      code: |
+        else:
+            pins.digital_write_pin(DigitalPin.P0, 0)
+            music.play_tone(Note.C5, 100)
+      new: "3"
+      hints: ["It will beep every time through the loop while it's light. Can you make it beep only once? (Hint, a variable that remembers if it was dark.)"]
+    - title: Smooth dimmer
+      level: Medium
+      goal: The darker it gets, the brighter the LED glows.
+      where: Replace the if / else with these two lines.
+      code: |
+        while True:
+            light = input.light_level()
+            brightness = 1023 - light * 4
+            pins.analog_write_pin(AnalogPin.P0, brightness)
+            basic.pause(100)
+      new: "3-4"
+      hints: ["analog_write_pin takes 0 (off) to 1023 (full power), not just 0 or 1.", "light × 4 turns 0-255 into 0-1020. Subtracting from 1023 flips it, so dark = bright."]
+    - title: Count the nights
+      level: Medium
+      goal: Count how many times it gets dark. Press A to show the count.
+      where: A counter variable at the top, and a check for the moment it goes from light to dark.
+      code: |
+        nights = 0
+        was_dark = False
+        def on_button_pressed_a():
+            basic.show_number(nights)
+        input.on_button_pressed(Button.A, on_button_pressed_a)
+        while True:
+            light = input.light_level()
+            if light < threshold and not was_dark:
+                nights += 1
+            was_dark = light < threshold
+            basic.pause(100)
+      hints: ["`was_dark` remembers the last reading, so one dark spell counts once.", "Keep your LED lines in the loop too."]
+    - title: Stop the flicker
+      level: Challenge
+      goal: When the light is right at the threshold, the LED can flicker on and off. Use two thresholds to stop it.
+      where: Replace your if / else.
+      code: |
+        if light < 40:
+            pins.digital_write_pin(DigitalPin.P0, 1)
+        elif light > 60:
+            pins.digital_write_pin(DigitalPin.P0, 0)
+      hints: ["Between 40 and 60, neither line runs, so the LED stays the way it was.", "Thermostats use the same trick. It's called hysteresis."]
+  reflect:
+    - Explain how your night light decides when to turn on. Use the words sensor and threshold.
+    - Where else could a light sensor and a threshold be useful in real life?
+
+teacher_notes: |
+  * **Timing:** two class periods. Parts 1-2 on day 1, Part 3 and an extension on day 2.
+  * **The light sensor is the LED screen.** Readings vary between boards and rooms, which is why students measure their
+    own values and choose their own threshold. Accept any threshold that sits between their dark and room readings.
+  * The first `input.light_level()` reading after power-on can be 0.
+  * **Simulator:** a sun slider appears when the code uses `light_level`.
+  * **Wiring:** the same LED circuit as Blink an LED (P0 → 220 Ω → LED long leg; short leg → GND).
+  * Showing icons on the screen while reading light can shift the readings a little (the extension mentions this).
+  * The **Smooth dimmer** extension uses `analog_write_pin` (PWM, 0-1023).
+
+standards:
+  - code: 6-8.CS.a.4
+    how: Students use the light sensor and an LED (an actuator) to build a simple control system.
+  - code: 6-8.CS.a.6
+    how: Students collect light readings in different conditions and use the data to choose a threshold.
+  - code: 6-8.CT.b.1
+    how: Students design a loop with an if / else that turns the LED on and off based on the reading.
