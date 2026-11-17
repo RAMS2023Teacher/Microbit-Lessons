@@ -1,0 +1,339 @@
+id: name-badge
+title: Name Badge
+tagline: Your first micro:bit program, worn like a badge
+minutes: 50          # about one class period
+
+mission:
+  goal: |
+    Turn your micro:bit into a **digital name badge**. When it starts, it says hello.
+    Press **A** and it scrolls your name. Press **B** and it shows a picture that says something about you.
+    Then you'll send it to the real micro:bit and wear it!
+  picture:
+    type: leds
+    frames: ["00000:01010:00000:10001:01110", "01010:11111:11111:01110:00100", "00100:00100:00100:00000:00100"]
+    caption: A smiley, a heart, a "!" - your badge can show any picture you design.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit and USB cable (or just the simulator)
+  learn:
+    - "code runs **in order**, top to bottom"
+    - "**events**: code that waits for a button press"
+    - "how to **download** your code to the micro:bit"
+  talk: A name badge tells people who you are. What would you want your badge to say about you, besides your name?
+
+build:
+  - part: Set up
+    title: Open MakeCode in Python
+    do:
+      - Click the green **Open MakeCode** button. Click **New Project** and name it **Name Badge**.
+      - At the top, switch from **Blocks** to **Python**.
+      - Delete any code that's already there, so the editor is empty.
+      - "The micro:bit picture on the left is the **simulator**. It runs your code right on the screen."
+    tip: "**Python cares about spelling and capitals.** `basic.show_string` works. `Basic.Show_String` does not. Copy the code exactly."
+    test:
+      - MakeCode is open in Python, with an empty editor
+      - I can see the simulator on the left
+
+  - part: "Part 1: Code runs in order"
+    title: Say hello
+    say: A **program** is a list of instructions. The micro:bit does them one at a time, starting at the top.
+    do:
+      - Type this one line exactly.
+      - Watch the simulator. It runs your code by itself.
+    code: |
+      basic.show_string("Hello!")
+    what: "`basic.show_string` scrolls text across the LEDs. The text goes inside quotation marks. Those quotes tell Python this is words, not code."
+    test:
+      - '"Hello!" scrolls across the simulator one time'
+    ask: The message only scrolls once. Why do you think it doesn't keep repeating?
+
+  - part: "Part 1: Code runs in order"
+    title: One thing after another
+    say: When you add more lines, the micro:bit runs them **in order**. Line 1 finishes, then line 2 starts, and so on.
+    do:
+      - Add the two highlighted lines under your first line.
+      - Before you run it, answer the question below.
+      - Click the restart button under the simulator (the circle arrow) to run it again.
+    code: |
+      basic.show_string("Hello!")
+      basic.show_icon(IconNames.HEART)
+      basic.show_number(7)
+    new: "2-3"
+    what: "`basic.show_icon` shows a ready-made picture. `basic.show_number` shows a number. Each line waits for the one before it to finish."
+    test:
+      - It shows Hello!, then a heart, then 7
+    ask: "Predict: what would you see if you moved the show_number line to the top? Try it. Were you right?"
+
+  - part: "Part 1: Code runs in order"
+    title: Draw your own picture
+    say: "`basic.show_leds` lets you draw any picture. Each `#` is an LED that's **on**. Each `.` is an LED that's **off**."
+    do:
+      - Add the highlighted lines at the bottom. Keep the three quote marks.
+      - Run it. You should see a smiley face at the end.
+      - Change some `#` and `.` to draw your own picture.
+    code: |
+      basic.show_string("Hello!")
+      basic.show_icon(IconNames.HEART)
+      basic.show_number(7)
+      basic.show_leds("""
+          . . . . .
+          . # . # .
+          . . . . .
+          # . . . #
+          . # # # .
+          """)
+    new: "4-10"
+    picture:
+      type: leds
+      image: "00000:01010:00000:10001:01110"
+      caption: This is what the code above draws. 5 rows, 5 LEDs in each row.
+    test:
+      - The smiley shows at the end
+      - I changed it to my own picture, and my picture shows
+    ask: What did you draw? Why did you pick it?
+
+  - part: "Part 2: Buttons"
+    title: Press A for your name
+    say: |
+      So far the code runs once and stops. An **event** is code that waits for something to happen, like a button press.
+      Every time the event happens, that code runs again.
+    do:
+      - Delete everything in the editor.
+      - Type this code. Put **your** name in the quotes.
+      - Press **A** on the simulator. Press it again.
+    code: |
+      def on_button_pressed_a():
+          basic.show_string("Sam")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+    new: "1-3"
+    what: |
+      Lines 1 and 2 are a **recipe**: "when someone presses A, scroll Sam." The pushed-in line is the inside of the recipe.
+      Line 3 connects the recipe to button A. Without line 3, pressing A does nothing.
+    tip: "**Python cares about spaces.** Line 2 must be pushed in (indented). Press Tab or use 4 spaces."
+    test:
+      - Nothing scrolls until I press A
+      - My name scrolls every time I press A
+    ask: Try deleting line 3, then press A. What happens? Put it back afterwards.
+
+  - part: "Part 2: Buttons"
+    title: Press B for a picture
+    say: Each button gets its own event. The pattern is the same, with **B** instead of A.
+    do:
+      - Add the highlighted lines at the bottom.
+      - Pick an icon that says something about you. Type `IconNames.` and MakeCode lists them all.
+      - Press A, then press B.
+    code: |
+      def on_button_pressed_a():
+          basic.show_string("Sam")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          basic.show_icon(IconNames.HAPPY)
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+    new: "5-7"
+    what: Each event has its own name (`on_button_pressed_a`, `on_button_pressed_b`), so Python can tell them apart.
+    test:
+      - A still scrolls my name
+      - B shows my icon
+    ask: Which icon did you pick, and what does it say about you?
+
+  - part: "Part 2: Buttons"
+    title: Press A and B together
+    say: "`Button.AB` means **both buttons at once**. That's a third event you can use."
+    do:
+      - Add the highlighted lines at the bottom.
+      - Put a fun fact in the quotes, like your grade, a favorite food or a team.
+      - In the simulator, click the **A+B** button that appears under the micro:bit.
+    code: |
+      def on_button_pressed_a():
+          basic.show_string("Sam")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          basic.show_icon(IconNames.HAPPY)
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+
+      def on_button_pressed_ab():
+          basic.show_string("Grade 7")
+          basic.clear_screen()
+      input.on_button_pressed(Button.AB, on_button_pressed_ab)
+    new: "9-12"
+    what: "`basic.clear_screen()` turns every LED off, so the badge is blank when it's done."
+    test:
+      - A+B scrolls my fun fact
+      - The screen goes blank after it
+    ask: In your A+B event, which line runs first? How do you know?
+
+  - part: "Part 2: Buttons"
+    title: Say hello when it starts
+    say: Code that is **not** inside an event runs one time, as soon as the micro:bit turns on. That's the place for a hello.
+    do:
+      - Add the highlighted line at the very **bottom**, all the way to the left (not pushed in).
+      - Restart the simulator. Then try all three buttons.
+    code: |
+      def on_button_pressed_a():
+          basic.show_string("Sam")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          basic.show_icon(IconNames.HAPPY)
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+
+      def on_button_pressed_ab():
+          basic.show_string("Grade 7")
+          basic.clear_screen()
+      input.on_button_pressed(Button.AB, on_button_pressed_ab)
+
+      basic.show_string("Hi!")
+    new: "14"
+    test:
+      - '"Hi!" scrolls once when the badge starts'
+      - All three buttons still work
+    ask: Why does "Hi!" only show once, but your name shows every time you press A?
+
+  - part: "Part 3: Wear it"
+    title: Send it to the micro:bit
+    say: The simulator is just practice. To put your code on the real micro:bit, you **download** it.
+    do:
+      - Plug the micro:bit into the Chromebook with the USB cable.
+      - Click the **three dots** next to the Download button and choose **Connect device**. Follow the steps and pick your micro:bit.
+      - Click **Download**. The yellow light on the back blinks while your code copies over.
+      - When it stops, your code runs on the real micro:bit. Press the buttons!
+    tip: "**No micro:bit today?** Your simulator counts. Tick the box once it works in the simulator, and download it next time."
+    stuck:
+      - "**Nothing shows?** Press the reset button on the back of the micro:bit."
+      - "**Connect device didn't find it?** Unplug the cable, plug it back in, and try again."
+      - "**Still stuck?** Try a different USB cable. Some cables only charge."
+    test:
+      - My code is running on the real micro:bit (or I tested it all in the simulator)
+      - All three buttons work on the real micro:bit
+
+  - part: "Part 3: Wear it"
+    title: "Checkpoint: the whole badge"
+    say: Your program should match this, with your own name, icon and fact. Compare it line by line.
+    code: |
+      def on_button_pressed_a():
+          basic.show_string("Sam")
+      input.on_button_pressed(Button.A, on_button_pressed_a)
+
+      def on_button_pressed_b():
+          basic.show_icon(IconNames.HAPPY)
+      input.on_button_pressed(Button.B, on_button_pressed_b)
+
+      def on_button_pressed_ab():
+          basic.show_string("Grade 7")
+          basic.clear_screen()
+      input.on_button_pressed(Button.AB, on_button_pressed_ab)
+
+      basic.show_string("Hi!")
+    stuck:
+      - "**Red squiggle?** Check the colon `:` at the end of each `def` line, and the brackets `()`."
+      - "**Indentation:** the lines inside each `def` are pushed in. Everything else starts at the left edge."
+      - "**Quotes:** words in `show_string` need quotes on both sides."
+    test:
+      - My badge matches and every part works
+      - My partner tried my badge and it worked for them too
+
+quiz:
+  - question: "In what order does the micro:bit run these lines? `basic.show_number(1)` then `basic.show_number(2)` then `basic.show_number(3)`"
+    choices: ["3, 2, 1", "1, 2, 3", "All at the same time", "In a random order"]
+    answer: 1
+    why: Code runs in order, top to bottom. Each line finishes before the next one starts.
+  - question: What is an **event**?
+    choices: ["A line that runs only once", "Code that waits for something to happen, like a button press", "A picture on the LEDs", "A kind of number"]
+    answer: 1
+    why: An event's code runs every time the thing happens. Press A five times and the A event runs five times.
+  - question: "What does `input.on_button_pressed(Button.A, on_button_pressed_a)` do?"
+    choices: ["Presses button A for you", "Shows the letter A", "Connects button A to the recipe called on_button_pressed_a", "Deletes button A"]
+    answer: 2
+    why: Without this line, the recipe exists but nothing ever runs it.
+  - question: "In `basic.show_leds`, what does a `#` mean?"
+    choices: ["The LED is on", "The LED is off", "A number", "A comment"]
+    answer: 0
+    why: "`#` means on and `.` means off. Five rows of five make the whole screen."
+  - question: Your name doesn't scroll when you press A. What should you check **first**?
+    choices: ["Buy a new micro:bit", "That the line inside the def is pushed in, and the on_button_pressed line is there", "Change the name", "Press B instead"]
+    answer: 1
+    why: Most button bugs come from missing indentation or a missing connecting line.
+
+ship:
+  extensions:
+    - title: Shake to say hi
+      level: Easier
+      goal: Shaking the badge shows a waving picture or a message.
+      where: Add a new event at the bottom of your program.
+      code: |
+        def on_gesture_shake():
+            basic.show_string("Hi there!")
+        input.on_gesture(Gesture.SHAKE, on_gesture_shake)
+      new: "1-3"
+      hints: ["It's the same pattern as the button events, with on_gesture.", "In the simulator, click the SHAKE button under the micro:bit."]
+    - title: A slower, calmer scroll
+      level: Easier
+      goal: Make your name scroll slower so it's easier to read.
+      where: Change the line inside your A event.
+      code: |
+        def on_button_pressed_a():
+            basic.show_string("Sam", 150)
+        input.on_button_pressed(Button.A, on_button_pressed_a)
+      new: "2"
+      hints: ["The second number is how long each step of the scroll takes, in milliseconds.", "Try 50 and 200. Which is easiest to read?"]
+    - title: A tiny animation
+      level: Medium
+      goal: Button B shows two or three of your own pictures, one after another, like a flip book.
+      where: Replace the line inside your B event.
+      code: |
+        def on_button_pressed_b():
+            basic.show_leds("""
+                . . . . .
+                . # . # .
+                . . . . .
+                # # # # #
+                . . . . .
+                """)
+            basic.pause(300)
+            basic.show_leds("""
+                . . . . .
+                . # . # .
+                . . . . .
+                # . . . #
+                . # # # .
+                """)
+        input.on_button_pressed(Button.B, on_button_pressed_b)
+      hints: ["basic.pause(300) waits 300 milliseconds between pictures.", "Change one or two LEDs each frame so it looks like movement."]
+    - title: Name and number
+      level: Challenge
+      goal: "Button A scrolls your name, then counts up 1, 2, 3 - all in one press."
+      where: Inside your A event, after your name.
+      code: |
+        def on_button_pressed_a():
+            basic.show_string("Sam")
+            basic.show_number(1)
+            basic.show_number(2)
+            basic.show_number(3)
+            basic.clear_screen()
+        input.on_button_pressed(Button.A, on_button_pressed_a)
+      new: "3-6"
+      hints: ["Code inside an event still runs in order.", "Next lesson you'll learn a much shorter way to repeat things!"]
+  reflect:
+    - What's the difference between code inside an event and code that's not inside an event?
+    - What was one bug you or your partner fixed today? How did you find it?
+
+teacher_notes: |
+  * **Timing:** one class period. Steps 1-4 (code in order) take about 15 minutes; buttons and downloading take the rest.
+  * **First time in MakeCode Python:** a new project starts with some code already in it. Students should delete it.
+  * **Most common bugs:** the line inside a `def` isn't indented; the `input.on_button_pressed(...)` line is missing or
+    indented by mistake; missing quotes around text.
+  * **Downloading:** on Chromebooks, use **Connect device** (WebUSB) once per session, then Download sends the code
+    straight to the micro:bit. If WebUSB fails, Download saves a .hex file that students drag onto the MICROBIT drive.
+  * **No hardware day:** every step works in the simulator.
+  * Students turn in their MakeCode **share link** in Ship it.
+
+standards:
+  - code: 6-8.CT.d.5
+    how: Students predict the order lines will run in, then run the program to check.
+  - code: 6-8.CT.d.3
+    how: Students write a program with three button events that makes a personal name badge.
+  - code: 6-8.CS.a.7
+    how: Students download code to the micro:bit and troubleshoot connection problems (reset button, cable, reconnecting).

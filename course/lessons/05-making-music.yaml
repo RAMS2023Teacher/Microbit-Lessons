@@ -1,0 +1,330 @@
+id: making-music
+title: Making Music
+tagline: Code songs and sound effects with for loops
+minutes: 90          # about two class periods
+
+mission:
+  goal: |
+    Turn your micro:bit into a **music player**. Learn how sound works, hook up headphones, and code a song.
+    Use **for loops** so you don't have to type the same notes over and over. Then make a **siren** sound
+    effect by changing the frequency in a loop.
+  picture:
+    type: compare
+    items:
+      - {icon: "〰️", title: "Vibration", text: "Something shakes back and forth and pushes the air."}
+      - {icon: "🎚️", title: "Frequency", text: "Vibrations each second (Hz). More = higher pitch."}
+      - {icon: "🔊", title: "Amplitude", text: "How big each vibration is. Bigger = louder."}
+    caption: Sound is a vibration that travels through the air as a wave.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit and USB cable
+    - Headphones and 2 alligator clips (or a micro:bit V2, which has a speaker)
+  learn:
+    - "**frequency** sets the pitch of a sound"
+    - "**for loops** repeat a set number of times"
+    - "a loop **counter** can change a sound each time through"
+  talk: Hum a low note, then a high note. What do you think changes in the air when your note goes higher?
+
+build:
+  - part: Set up
+    title: Open MakeCode in Python
+    do:
+      - Click the green **Open MakeCode** button. Click **New Project** and name it **Making Music**.
+      - Switch from **Blocks** to **Python** at the top.
+      - Delete any code that's already there.
+    test:
+      - MakeCode is open in Python, with an empty editor
+
+  - part: "Part 1: How sound works"
+    title: Frequency sets the pitch
+    say: |
+      **Frequency** is how many vibrations happen each second. It's measured in **hertz (Hz)**.
+      More vibrations = higher pitch. Middle C is **262 Hz**. People can hear about **20 to 20,000 Hz**.
+
+      **Octave trick:** double the frequency and you get the same note, one octave higher.
+    do:
+      - Type this code and run it in the simulator.
+    code: |
+      music.play_tone(262, 500)
+      music.play_tone(523, 500)
+      music.play_tone(440, 500)
+    what: "Each line plays a frequency (in Hz) for 500 milliseconds. 262 is middle C. 523 is about 262 × 2: C again, one octave higher. 440 is the A note orchestras tune to."
+    test:
+      - I hear three notes
+      - The second note sounds like the first, only higher
+    ask: What frequency would play C one more octave higher than 523? Add a line to test it.
+
+  - part: "Part 1: How sound works"
+    title: Four wave shapes
+    say: Sounds come in different wave shapes. The micro:bit can't wiggle smoothly. It can only switch pin 0 fully **ON** and fully **OFF**, very fast. That makes a **square wave**. Switch it 262 times a second and you hear middle C.
+    picture:
+      type: compare
+      items:
+        - {icon: "∿", title: "Sine", text: "Smooth and pure, like a whistle."}
+        - {icon: "⊓", title: "Square", text: "Buzzy, like old video games. The micro:bit uses this!"}
+        - {icon: "△", title: "Triangle", text: "Softer, a bit like a flute."}
+        - {icon: "⩘", title: "Sawtooth", text: "Bright and sharp, great for synths."}
+      caption: The four basic wave shapes.
+    test:
+      - I can name the wave shape the micro:bit makes
+    fields: ["Flips per second for middle C", "Flips per second for A"]
+    ask: Why does the micro:bit make a square wave and not a smooth sine wave?
+
+  - part: "Part 1: How sound works"
+    title: Hook up headphones
+    say: "Headphone plugs have three parts: the **tip**, the **ring** and the **sleeve**. We use the tip and the sleeve. No headphones? A micro:bit **V2** has a speaker on the back, so you can skip the wiring."
+    wiring:
+      - "Clip **pin 0** to the **tip** (the very end of the plug)."
+      - "Clip **GND** to the **sleeve** (the long base)."
+      - "Leave the ring alone. **Never use 3V.**"
+    tip: "**Ears first!** Hold the headphones away from your ears for the first test. It can be loud."
+    do:
+      - Download your Step 1 code to the real micro:bit and listen.
+    stuck:
+      - "No sound? Check the clip on pin 0 is touching only the tip, not the ring."
+      - "Make sure the code downloaded: the yellow light on the back flashes while it copies."
+    test:
+      - I hear the three notes in my headphones (or from the V2 speaker)
+    ask: You only hear sound in one ear. Why? (Hint, the tip is the left ear.)
+
+  - part: "Part 2: Code a song"
+    title: Music commands
+    say: "There are two ways to pick a note: a note name like `Note.E`, or a frequency number like `330`. Both work! A **beat** is one count of the music. **Tempo** is how many beats per minute."
+    do:
+      - Delete your code and type this. Run it.
+    code: |
+      music.set_tempo(120)
+      music.play_tone(Note.C, music.beat(BeatFraction.WHOLE))
+      music.rest(music.beat(BeatFraction.HALF))
+      music.play_tone(Note.E, music.beat(BeatFraction.WHOLE))
+      music.play_tone(Note.G, music.beat(BeatFraction.DOUBLE))
+    what: "`set_tempo(120)` means 120 beats per minute. `WHOLE` is one beat, `HALF` is half a beat, `DOUBLE` is two beats. `music.rest` is silence."
+    test:
+      - I hear C, a short silence, then E and a long G
+    ask: Change the tempo to 60, then to 240. What happens to the song?
+
+  - part: "Part 2: Code a song"
+    title: A for loop
+    say: "A **for loop** repeats every line indented under it. `range(4)` means **do this 4 times**. Use it when you know how many times to repeat."
+    do:
+      - Delete your code and type this. Run it.
+    code: |
+      music.set_tempo(120)
+      for i in range(4):
+          music.play_tone(Note.C, music.beat(BeatFraction.HALF))
+      music.play_tone(Note.G, music.beat(BeatFraction.WHOLE))
+    what: Line 3 is indented, so it repeats 4 times. Line 4 is not indented, so it plays once, after the loop is done.
+    test:
+      - I hear four short Cs, then one G
+    ask: What would you change to play the C eight times? What if you indent the last line too? Predict, then try it.
+
+  - part: "Part 2: Code a song"
+    title: "Hot Cross Buns, part 1"
+    say: The song starts with the same three notes twice. That's a job for a for loop.
+    do:
+      - Delete your code and type this. Run it.
+    code: |
+      music.set_tempo(120)
+      for i in range(2):  # "Hot cross buns" twice
+          music.play_tone(Note.E, music.beat(BeatFraction.WHOLE))
+          music.play_tone(Note.D, music.beat(BeatFraction.WHOLE))
+          music.play_tone(Note.C, music.beat(BeatFraction.DOUBLE))
+    tip: "Anything after a `#` is a **comment**: a note for people. The micro:bit skips it."
+    test:
+      - "I hear \"Hot cross buns, hot cross buns\""
+    ask: Which lines repeat? How can you tell just by looking?
+
+  - part: "Part 2: Code a song"
+    title: "Hot Cross Buns, the whole song"
+    do:
+      - Add the highlighted lines at the bottom. Line 6 and line 8 are **not** indented.
+      - Run it and sing along.
+    code: |
+      music.set_tempo(120)
+      for i in range(2):  # "Hot cross buns" twice
+          music.play_tone(Note.E, music.beat(BeatFraction.WHOLE))
+          music.play_tone(Note.D, music.beat(BeatFraction.WHOLE))
+          music.play_tone(Note.C, music.beat(BeatFraction.DOUBLE))
+      for i in range(4):  # "one a penny"
+          music.play_tone(Note.C, music.beat(BeatFraction.HALF))
+      for i in range(4):  # "two a penny"
+          music.play_tone(Note.D, music.beat(BeatFraction.HALF))
+      music.play_tone(Note.E, music.beat(BeatFraction.WHOLE))
+      music.play_tone(Note.D, music.beat(BeatFraction.WHOLE))
+      music.play_tone(Note.C, music.beat(BeatFraction.DOUBLE))
+    new: "6-12"
+    what: Three loops and three plain lines play the whole song.
+    test:
+      - The whole song plays
+      - The "one a penny, two a penny" part is fast
+    fields: ["Notes in the song", "play_tone lines in my code"]
+    ask: Without loops this song needs 17 play_tone lines. How many does yours have? Why are loops worth it?
+
+  - part: "Part 3: Sound effects"
+    title: Sweep the frequency
+    say: "In a for loop, `i` is a **counter**. It counts 0, 1, 2, 3... Use it in math to change the sound each time through."
+    do:
+      - Delete your code and type this. Run it.
+    code: |
+      for i in range(20):
+          music.play_tone(400 + i * 30, 40)
+    what: "The first time `i` is 0, so it plays 400 Hz. Next time `i` is 1, so 430 Hz. Then 460... The pitch climbs 30 Hz each time. A smooth slide in pitch is called a **sweep**."
+    test:
+      - I hear the sound slide up
+    fields: ["First frequency", "Last frequency"]
+    ask: "`i` stops at 19, not 20. What is the last frequency it plays? Show your math."
+
+  - part: "Part 3: Sound effects"
+    title: Make a siren
+    say: A siren sweeps **up**, then **down**, and repeats. That's a loop inside a loop.
+    do:
+      - Change your code to match. Watch the indentation.
+      - Run it.
+    code: |
+      # Siren: sweep up, then down, 3 times
+      for siren in range(3):
+          for i in range(20):
+              music.play_tone(400 + i * 30, 40)
+          for i in range(20):
+              music.play_tone(970 - i * 30, 40)
+    new: "1-2,5-6"
+    what: The outside loop runs 3 times. Each time, it does a whole sweep up and a whole sweep down.
+    test:
+      - The siren goes up and down 3 times
+    ask: "Change 30 to 60. Then change 40 to 100. What happens to the siren each time?"
+
+  - part: "Part 3: Sound effects"
+    title: Channels
+    say: |
+      A **channel** is one voice that plays one sound at a time. Old game consoles mixed a few channels
+      to make a whole song: two square waves for melody and harmony, a triangle for bass, and noise for drums.
+
+      `play_tone` plays one note at a time, so **one micro:bit is one channel**. No chords!
+      Two micro:bits = two channels. That's a duet!
+    picture:
+      type: compare
+      items:
+        - {icon: "🎵", title: "Pulse 1", text: "Square wave: melody"}
+        - {icon: "🎶", title: "Pulse 2", text: "Square wave: harmony"}
+        - {icon: "🎸", title: "Triangle", text: "Bass line"}
+        - {icon: "🥁", title: "Noise", text: "Drums"}
+      caption: The main sound channels on the NES game console.
+    test:
+      - I can explain what a channel is
+    ask: How could you and another team make a song with two channels?
+
+  - part: "Part 3: Sound effects"
+    title: "Your turn: compose!"
+    say: Make your own song. It can be a song you know or one you make up.
+    do:
+      - Make a **New Project** called **My Song**.
+      - Use `set_tempo` to choose the speed.
+      - Use **at least two for loops** in your song.
+      - "Bonus: add a sound effect with a frequency loop."
+    stuck:
+      - "**Indentation:** lines that repeat are pushed in under the `for`. Lines after the loop are not."
+      - "**Too fast or too slow?** Change the number in `set_tempo`."
+      - "Need note names? Type `Note.` and MakeCode shows a list."
+    test:
+      - My song uses at least two for loops
+      - I played it for my partner on the real micro:bit (or simulator)
+    ask: What song did you make? Where did you use loops?
+
+quiz:
+  - question: Which frequency makes the highest pitch?
+    choices: ["262 Hz", "440 Hz", "523 Hz", "100 Hz"]
+    answer: 2
+    why: More vibrations each second = higher pitch. 523 is the biggest number.
+  - question: What kind of sound wave does the micro:bit make?
+    choices: ["Sine", "Square", "Triangle", "Sawtooth"]
+    answer: 1
+    why: It can only switch the pin fully ON or fully OFF, which makes a square wave.
+  - question: "How many times does `for i in range(4):` repeat?"
+    choices: ["3", "4", "5", "Forever"]
+    answer: 1
+    why: range(4) means do it 4 times. The counter i goes 0, 1, 2, 3.
+  - question: "In `for i in range(20): music.play_tone(400 + i * 30, 40)`, what frequency plays when i is 2?"
+    choices: ["400 Hz", "430 Hz", "460 Hz", "2 Hz"]
+    answer: 2
+    why: 400 + 2 × 30 = 460.
+  - question: When you hook up headphones, which clip goes to the tip of the plug?
+    choices: ["Pin 0", "GND", "3V", "Pin 2"]
+    answer: 0
+    why: Pin 0 goes to the tip and GND goes to the sleeve. Never use 3V.
+
+ship:
+  extensions:
+    - title: Play on a button
+      level: Easier
+      goal: Your song plays when you press A, instead of right away.
+      where: Put your song inside a button function, like your Name Badge.
+      code: |
+        def on_button_pressed_a():
+            music.set_tempo(120)
+            for i in range(2):
+                music.play_tone(Note.E, music.beat(BeatFraction.WHOLE))
+                # ... the rest of your song, pushed in one more step
+        input.on_button_pressed(Button.A, on_button_pressed_a)
+      new: "1,6"
+      hints: ["Select your song and press Tab to push it all in at once.", "Add a second song on button B!"]
+    - title: Laser blaster
+      level: Easier
+      goal: Make a short laser sound that sweeps quickly down from high to low.
+      where: A new for loop. Play it when you press B.
+      code: |
+        def on_button_pressed_b():
+            for i in range(15):
+                music.play_tone(1500 - i * ___, 20)
+        input.on_button_pressed(Button.B, on_button_pressed_b)
+      hints: ["A minus sign makes the frequency go down.", "Small pause numbers make the sweep fast. Try 20.", "Fill in the blank. Don't go below 0!"]
+    - title: Show the beat
+      level: Medium
+      goal: Light up the screen in time with your song.
+      where: Inside one of your for loops, before the play_tone line.
+      code: |
+        for i in range(4):
+            basic.show_number(i + 1, 0)
+            music.play_tone(Note.C, music.beat(BeatFraction.HALF))
+      new: "2"
+      hints: ["`i + 1` counts 1, 2, 3, 4 instead of 0, 1, 2, 3.", "The 0 means show it without pausing, so the music stays on time."]
+    - title: Two-channel duet
+      level: Challenge
+      goal: Team up with another pair. One micro:bit plays the melody, the other plays a bass line. Start together!
+      where: The bass player codes low notes, about half the frequency of the melody.
+      code: |
+        music.set_tempo(120)
+        for i in range(2):
+            music.play_tone(131, music.beat(BeatFraction.WHOLE))   # low C
+            music.play_tone(196, music.beat(BeatFraction.WHOLE))   # low G
+            music.play_tone(131, music.beat(BeatFraction.DOUBLE))
+      hints: ["Both micro:bits must use the same tempo.", "131 is half of 262: middle C, one octave lower.", "Start both songs by pressing A at the same time (put them in on_button_pressed)."]
+    - title: A song from a list
+      level: Challenge
+      goal: Store the notes in a list, then play them all with one for loop.
+      where: Replace a group of play_tone lines.
+      code: |
+        notes = [Note.E, Note.D, Note.C, Note.D, Note.E, Note.E, Note.E]
+        for n in notes:
+            music.play_tone(n, music.beat(BeatFraction.HALF))
+      hints: ["`for n in notes` gives you each note in the list, one at a time.", "Add notes to the list to make the song longer."]
+  reflect:
+    - "Explain a for loop in your own words. When is it better than typing the lines again?"
+    - How does the micro:bit make a sound with a certain pitch?
+
+teacher_notes: |
+  * **Timing:** two class periods. Part 1 (sound and headphones) on day 1, Parts 2-3 and composing on day 2.
+  * **Headphones:** pin 0 → tip, GND → sleeve. Students hold them away from their ears for the first test. Never 3V.
+    The micro:bit **V2** plays through its built-in speaker as well, so headphones are optional on V2 boards.
+  * **Noise:** the simulator plays sound through the Chromebook. Ask students to keep volume low or use headphones.
+  * **Common bugs:** a song line indented by mistake (it repeats), or not indented (it plays once); `range(4)` counts 0-3.
+  * The siren step is a nested loop. Have students say out loud what the outside loop does.
+  * Students turn in their MakeCode **share link** for their own song in Ship it.
+
+standards:
+  - code: 6-8.CT.b.1
+    how: Students use for loops (including a nested loop) to play repeated parts of a song and build a siren sweep.
+  - code: 6-8.CT.b.2
+    how: Students predict how many times a loop runs and which frequency the loop counter makes, then test it.
+  - code: 6-8.CS.a.4
+    how: Students drive an actuator (headphones or a speaker) from a pin, and explain how a square wave becomes sound.
