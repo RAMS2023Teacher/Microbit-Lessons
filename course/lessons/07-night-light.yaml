@@ -4,6 +4,7 @@ tagline: A light that turns itself on when it gets dark
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "How do sensors help machines respond to the world around them?"
   goal: |
     Build an **automatic night light**. The micro:bit measures how bright the room is. When it gets
     **dark**, it turns on an LED. When it gets **light**, it turns it off. You'll measure real light

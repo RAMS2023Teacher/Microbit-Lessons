@@ -127,7 +127,7 @@
     function drawMission() {
       const m = L.mission, box = $('stage-view');
       box.innerHTML = `<section class="panel" data-readable><div class="step-head"><h2>🎯 Your mission</h2><button type="button" class="read-aloud" data-read title="Read to me">🔊</button></div>` +
-        `<div class="goal">${m.goal}</div>${picture(m.picture)}` +
+        (m.big_question ? `<p class="big-q">❓ <b>Big question:</b> ${E(m.big_question)}</p>` : '') + `<div class="goal">${m.goal}</div>${picture(m.picture)}` +
         (m.learn.length ? `<div class="panel-soft box-new"><h3>✨ You'll learn</h3><ul class="learn-list">${m.learn.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : '') +
         `<div class="panel-soft box-what"><h3>🧰 You'll need</h3><ul class="need-list">${m.you_need.map((x) => `<li>${x}</li>`).join('')}</ul></div>` +
         (d.video ? `<div class="panel-soft"><h3>🎬 Watch first</h3><div class="video-box" id="video"></div></div>` : '') +

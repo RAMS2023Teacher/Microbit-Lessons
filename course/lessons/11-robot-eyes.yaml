@@ -4,6 +4,7 @@ tagline: Give your robot a sensor so it can dodge walls on its own
 minutes: 135          # about three class periods
 
 mission:
+  big_question: "How can a robot sense, decide and act on its own?"
   goal: |
     Your robot can drive, but it's blind. Mount the **ultrasonic sensor** on the front breadboard so the robot
     can "see" how far away things are. Then program it to **sense → decide → act**: drive until something is close,

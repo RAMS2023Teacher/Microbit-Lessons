@@ -61,9 +61,11 @@ def validate(lesson: dict) -> list[str]:
     if lesson.get("id") not in plan:
         return [f"id {lesson.get('id')!r} isn't in rules.COURSE"]
     m = lesson.get("mission") or {}
-    for key in ("goal", "you_need", "talk"):
+    for key in ("big_question", "goal", "you_need", "talk"):
         if not m.get(key):
             errs.append(f"mission: add '{key}'")
+    if words(m.get("big_question")) > 15:
+        errs.append("mission: keep the big_question (the class display's question of the day) to 15 words")
     if words(m.get("goal")) > 70:
         errs.append("mission: keep the goal under 70 words")
     steps = lesson.get("build") or []

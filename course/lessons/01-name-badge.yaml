@@ -4,6 +4,7 @@ tagline: Your first micro:bit program, worn like a badge
 minutes: 50          # about one class period
 
 mission:
+  big_question: "How does a computer know what to do, and in what order?"
   goal: |
     Turn your micro:bit into a **digital name badge**. When it starts, it says hello.
     Press **A** and it scrolls your name. Press **B** and it shows a picture that says something about you.

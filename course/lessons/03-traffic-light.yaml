@@ -4,6 +4,7 @@ tagline: Three LEDs, three functions, one working traffic light
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "Why do programmers break big jobs into small named pieces?"
   goal: |
     Build a working **traffic light** with a red, a yellow and a green LED. You'll write your own
     **functions** like `red_light()` and `green_light()`, so your main loop reads almost like English:

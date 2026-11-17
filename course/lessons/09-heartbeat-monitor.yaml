@@ -4,6 +4,7 @@ tagline: See your pulse as a wave, then count it
 minutes: 100         # about two class periods
 
 mission:
+  big_question: "How do we turn a messy signal into useful information?"
   goal: |
     Build a **heart-rate monitor**. A pulse sensor uses light to see blood moving in your fingertip.
     You'll watch your pulse appear as a **wave**, write code that spots each **beat**, and turn the

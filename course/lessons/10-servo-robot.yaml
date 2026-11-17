@@ -4,6 +4,7 @@ tagline: Two wheels, one micro:bit, and your own move commands
 minutes: 135          # about three class periods
 
 mission:
+  big_question: "How do simple moves add up to complex behavior?"
   goal: |
     Wire two **continuous servos** to the micro:bit and make the robot drive. You'll write your own
     move commands (`forward()`, `turn_left()` and more) so a whole dance or route takes just a few lines.

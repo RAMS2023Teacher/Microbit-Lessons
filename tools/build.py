@@ -53,7 +53,7 @@ def lesson_data(lesson: dict) -> dict:
         "icon": lesson["icon"], "color": lesson["color"], "python": lesson["python"], "hardware": lesson["hardware"],
         "minutes": lesson.get("minutes", 45), "wired": L.wired(lesson),
         "mission": {"goal": md(m["goal"]), "picture": m.get("picture"), "you_need": [md_inline(x) for x in m["you_need"]],
-                    "learn": [md_inline(x) for x in m.get("learn") or []], "talk": md_inline(m["talk"]), "talk_text": plain(m["talk"])},
+                    "learn": [md_inline(x) for x in m.get("learn") or []], "talk": md_inline(m["talk"]), "talk_text": plain(m["talk"]), "big_question": plain(m["big_question"])},
         "build": [],
         "quiz": [{"question": md_inline(q["question"]), "choices": [md_inline(c) for c in q["choices"]],
                   "answer": q["answer"], "why": md_inline(q["why"])} for q in lesson["quiz"]],

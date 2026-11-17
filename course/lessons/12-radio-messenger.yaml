@@ -4,6 +4,7 @@ tagline: Send messages and icons from one micro:bit to another
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "How do devices talk to each other, and who else can listen?"
   goal: |
     Turn two micro:bits into **walkie-talkies for text**. Press a button on one micro:bit and a message
     or an icon pops up on your partner's. Then turn it into a **remote control** that sends

@@ -4,6 +4,7 @@ tagline: Tilt to dodge the falling raindrops
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "How do games keep running until something happens?"
   goal: |
     Build your first **micro:bit game**. You are the LED on the bottom row. A raindrop falls
     from the top. **Tilt** the micro:bit to move left and right. Dodge the drop to score a point.

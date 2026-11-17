@@ -13,6 +13,7 @@ tagline: Tilt to dodge the falling raindrops
 minutes: 90
 
 mission:
+  big_question: How do games keep running until something happens?   # ≤ 15 words: the enduring understanding, shown as the class display's question of the day
   goal: What they'll build, in 2-3 sentences (≤ 70 words)
   picture: {type: leds, frames: [...]}       # optional: any visual (leds, part, circuit, compare...)
   you_need: [A partner, A micro:bit and USB cable]

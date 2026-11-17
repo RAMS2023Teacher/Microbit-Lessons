@@ -4,6 +4,7 @@ tagline: Code songs and sound effects with for loops
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "How do loops let us repeat patterns without rewriting code?"
   goal: |
     Turn your micro:bit into a **music player**. Learn how sound works, hook up headphones, and code a song.
     Use **for loops** so you don't have to type the same notes over and over. Then make a **siren** sound

@@ -4,6 +4,7 @@ tagline: Measure distance with sound, like a bat
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "How can a machine measure something it can't touch?"
   goal: |
     Wire an **ultrasonic sensor** to your micro:bit and turn it into a **distance detector**. It sends out
     a click of sound, listens for the echo, and works out how far away things are. Then you'll make the

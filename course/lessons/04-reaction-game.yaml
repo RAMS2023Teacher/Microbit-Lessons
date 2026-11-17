@@ -4,6 +4,7 @@ tagline: How fast can you smash the button?
 minutes: 90          # about two class periods
 
 mission:
+  big_question: "How can a program make decisions and remember things?"
   goal: |
     Build a **reaction timer** with a real push button. The micro:bit waits a **random** amount of time,
     then shows a target. Smash the button as fast as you can! It shows your time in **milliseconds**

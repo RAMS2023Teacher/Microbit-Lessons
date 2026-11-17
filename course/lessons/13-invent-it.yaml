@@ -4,6 +4,7 @@ tagline: Design and build your own micro:bit invention
 minutes: 180         # about four class periods
 
 mission:
+  big_question: "How do engineers turn a problem into a working solution?"
   goal: |
     This time **you** decide what to build. Pick a real problem for a real person, then solve it with
     the parts and Python you've learned. Engineers don't get it right the first time. They **plan,

@@ -4,6 +4,7 @@ tagline: Build your first circuit and make it blink forever
 minutes: 50          # about one class period
 
 mission:
+  big_question: "How can code control something in the real world?"
   goal: |
     Build your **first circuit**: a real LED on a breadboard, wired to the micro:bit.
     Then write a `while True` loop that blinks it **forever**. You'll learn which way an LED goes in,

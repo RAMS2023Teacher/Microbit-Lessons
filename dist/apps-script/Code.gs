@@ -1012,7 +1012,7 @@ function screenPayload_(cfg, cid) {
   return { settings: settings, students: rows, wins: wins,
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
-           track: trackStops_(), question: settings.question || L.mission.talk || '', big_idea: 'Python idea: ' + L.python,
+           track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: 'Python idea: ' + L.python,
            standards: standardsInPlay_(working, L.id) };
 }
 
@@ -1504,6 +1504,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
-var BUILD_ID = "9560224004";
-var BUILD_EXPECT = {"Assets": "2f230349f5", "Data": "ab9103303e"};
+var BUILD_ID = "1568542c83";
+var BUILD_EXPECT = {"Assets": "2a7b8656f2", "Data": "27dda6d429"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];
