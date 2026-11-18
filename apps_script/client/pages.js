@@ -134,14 +134,13 @@
     main.className = 'container wide';
     var lv = d.level, h = ['<div class="page-head"><div><h1>Skill tree' + (d.map.course ? ' <small class="muted">' + E(d.map.course.name) + '</small>' : '') + '</h1>' +
       (d.map.courses ? '<p class="row">' + d.map.courses.map(function (co) { return '<a class="btn small' + (co.id === d.map.course.id ? '' : ' ghost') + '" href="/map/' + E(co.id) + '">' + E(co.name) + '</a>'; }).join(' ') + '</p>' : '') +
-      '<p class="muted">Finish a lesson to send power down the paths after it. ' +
-      'Where the path splits, either lesson unlocks the next one.</p></div>'];
+      '<p class="muted">Each lesson you finish builds a gadget and a robot part, and powers the paths after it.</p></div>'];
     if (!ML.teacher) h.push('<a class="level-chip card" href="/me"><span data-avatar="' + A(d.avatar) + '" data-size="52"></span><span><b>Level ' + lv.level + ' · ' +
       E(lv.title) + '</b><span class="xpbar"><i style="width:' + lv.pct + '%"></i></span><small class="muted">' + levelLine(lv) + '</small></span></a>');
-    h.push('</div><div class="map-layout"><div class="map-scroll card"><div class="map" id="map" aria-label="Lesson map"></div></div><aside class="map-side">' +
+    h.push('</div><div class="lab-hero" id="lab-hero"></div><div class="map-layout"><div class="map-scroll card"><div class="map" id="map" aria-label="Lesson map"></div></div><aside class="map-side">' +
       '<div class="card map-detail" id="map-detail" aria-live="polite"></div><div class="card map-legend"><h3>Legend</h3><ul>' +
-      '<li><span class="dot complete"></span> Complete</li><li><span class="dot progress"></span> In progress</li><li><span class="dot open"></span> Unlocked — ready to go</li>' +
-      '<li><span class="dot locked"></span> Locked</li><li>📌 Assigned by your teacher</li><li>★ The 3 star lights on a chip: perfect quiz · an extension · shipped</li></ul></div></aside></div>');
+      '<li><span class="dot complete"></span> Built (gold edge)</li><li><span class="dot progress"></span> In progress</li><li><span class="dot open"></span> Unlocked, ready to go</li>' +
+      '<li><span class="dot locked"></span> Locked (grey outline)</li><li>📌 Assigned by your teacher</li><li>★ 3 stars: perfect quiz · an extension · shipped</li></ul></div></aside></div>');
     main.innerHTML = h.join('');
     window.MAP = d.map;
     window.ME = ML.teacher ? null : d.avatar;
