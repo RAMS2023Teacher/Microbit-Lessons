@@ -16,10 +16,13 @@
       '<div class="screen-goal" id="screen-goal" hidden><div class="goal-top"><b>🎯 Class goal today</b><span id="goal-num"></span></div>' +
       '<div class="goal-bar"><i id="goal-fill"></i></div><div class="goal-note" id="goal-note"></div></div>' +
       '<b id="screen-total" class="screen-total"></b><div class="screen-tools">' +
+      '<button type="button" class="help-pill" id="help-pill" hidden></button>' +
+      '<button type="button" class="btn small ghost" id="bell-test" title="Help sound: click once so this computer can play it">🔔</button>' +
       '<button type="button" class="btn small arcade-btn" id="arcade-toggle">🎮 Open arcade</button>' +
       '<button type="button" class="btn small ghost" id="set-open">⚙ Set up</button>' +
       '<button type="button" class="btn small ghost" id="set-full">⛶ Full screen</button>' +
       '<a class="btn small ghost" id="screen-exit">Exit</a></div></header>' +
+      '<section class="help-dock" id="help-dock" hidden><h2>✋ Needs help</h2><ul id="help-list"></ul></section>' +
       '<p class="screen-offline" id="screen-offline" hidden>Can\'t reach Maker Lab. Retrying…</p>' +
       '<p class="screen-offline" id="screen-fullhint" hidden>Press your keyboard\'s full-screen key (or F11) to fill the screen.</p>' +
       '<section class="card screen-setup" id="screen-setup" hidden><div class="setup-head"><h2>⚙ Set up</h2>' +
@@ -67,7 +70,8 @@
 
     // ----- where everyone is -----
     function tile(s, showXp) {
-      const t = el('div', `screen-tile ${s.status}`);
+      const t = el('div', `screen-tile ${s.status}${helpWho.has(s.who) ? ' needs-help' : ''}`);
+      t.dataset.who = s.who || '';
       const av = t.appendChild(el('div', 'screen-avatar'));
       av.innerHTML = window.RobotAvatar.svg(s.avatar, 76);   // drawn from known parts, not typed text
       const info = t.appendChild(el('div', 'screen-who'));
@@ -85,7 +89,8 @@
     // ----- race track: one stop per section of today's lesson; each robot sits where its student is -----
     const lastPos = {};
     function racer(st, moved) {
-      const r = el('div', 'racer' + (moved ? ' moved' : '') + (st.status === 'waiting' ? ' idle' : ''));
+      const r = el('div', 'racer' + (moved ? ' moved' : '') + (st.status === 'waiting' ? ' idle' : '') + (helpWho.has(st.who) ? ' needs-help' : ''));
+      r.dataset.who = st.who || '';
       const av = r.appendChild(el('div', 'racer-bot'));
       av.innerHTML = window.RobotAvatar.svg(st.avatar, 96);
       r.appendChild(el('b', '', st.name));
@@ -228,12 +233,48 @@
       } finally { btn.disabled = false; }
     });
 
+    // ----- ✋ help requests: checked every few seconds, a doorbell for each new one -----
+    let helpWho = new Set(), seenHelp = null;
+    const minsAgo = (iso) => { const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m < 1 ? 'just now' : m + ' min'; };
+    function drawHelp(list) {
+      list = list || [];
+      const keys = list.map((r) => r.who + '|' + r.at);
+      if (seenHelp && keys.some((k) => !seenHelp.has(k)) && window.SFX) window.SFX.play('help');
+      seenHelp = new Set(keys);
+      helpWho = new Set(list.map((r) => r.who));
+      document.querySelectorAll('[data-who]').forEach((n) => n.classList.toggle('needs-help', helpWho.has(n.dataset.who)));
+      const pill = $('help-pill'), dock = $('help-dock'), ul = $('help-list');
+      pill.hidden = dock.hidden = !list.length;
+      pill.textContent = `✋ ${list.length} need${list.length === 1 ? 's' : ''} help`;
+      ul.textContent = '';
+      list.forEach((r) => {
+        const li = ul.appendChild(el('li'));
+        li.appendChild(el('span', 'else-bot')).innerHTML = window.RobotAvatar.svg(r.avatar, 40);
+        const info = li.appendChild(el('div', 'help-info'));
+        info.appendChild(el('b', '', r.name));
+        info.appendChild(el('span', '', r.where));
+        if (r.note) info.appendChild(el('q', '', r.note));
+        li.appendChild(el('small', 'muted', minsAgo(r.at)));
+        const ok = li.appendChild(el('button', 'btn small go', '✓ Helped'));
+        ok.type = 'button';
+        ok.addEventListener('click', async () => { ok.disabled = true; try { drawHelp(await C.helped(r.who)); } catch (e) { ok.disabled = false; } });
+      });
+    }
+    async function pollHelp() {
+      if (!C.help) return;
+      try { drawHelp(await C.help()); } catch (e) { /* try again next time */ }
+    }
+    $('help-pill').addEventListener('click', () => $('help-dock').scrollIntoView({ block: 'nearest' }));
+    $('bell-test').addEventListener('click', () => { if (window.SFX) { if (window.SFX.muted()) window.SFX.toggle(); window.SFX.play('help'); } });
+    setInterval(pollHelp, 5000);
+
     async function refresh() {
       if (document.hidden) return;
       try {
         data = await C.load();
         $('screen-offline').hidden = true;
         render();
+        drawHelp(data.help);
       } catch (e) {
         $('screen-offline').hidden = false;
       }

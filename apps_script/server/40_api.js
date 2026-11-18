@@ -48,6 +48,7 @@ function api(path, bodyJson) {
   try {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
     if (path === '/api/run') return runCall_(body);
+    if (path === '/api/help') return { status: 200, body: helpApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner)$/.exec(path);
@@ -93,6 +94,8 @@ var RUN_ = {
   syncAllClassroom: function () { return syncAllClassroom(); },
   unlinkClassroom: function (a) { return unlinkClassroom(a[0]); },
   arcadeClass: function (a) { return arcadeClass(a[0], a[1], a[2]); },
+  helpList: function (a) { return helpList(a[0]); },
+  helpResolve: function (a) { return helpResolve(a[0], a[1]); },
 };
 function runCall_(d) {
   var fn = RUN_[d && d.fn];

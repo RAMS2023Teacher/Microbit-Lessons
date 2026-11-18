@@ -105,6 +105,7 @@
       `<nav class="stages" id="stages" aria-label="Lesson stages"></nav>` +
       `<div class="lesson-grid"><div id="stage-view"></div><aside class="lesson-side">` +
       `<a class="btn go makecode-btn" href="${E(d.makecode)}" target="_blank" rel="noopener">🧰 Open MakeCode ↗</a>` +
+      (ML.teacher ? '' : `<div class="side-panel help-panel" id="help-box"></div>`) +
       (d.feedback ? `<div class="side-panel"><h3>💬 From your teacher</h3><div id="fb"></div></div>` : '') +
       `<div class="side-panel" id="partner-panel" ${ML.teacher ? 'hidden' : ''}><h3>👥 Partner</h3><div id="partner-box"></div></div>` +
       `<div class="side-panel"><h3>🎁 Rewards</h3><div class="side-row">⭐ This lesson <b id="xp-side">${d.lesson_xp} XP</b></div>` +
@@ -412,5 +413,39 @@
     drawStages();
     show(view);
     if (!ML.teacher) partner();
+
+    // ------------------------------------------------------------ ✋ I'm stuck: rings on the teacher's class display
+    let helpOn = !!d.help, helpTimer = null;
+    function drawHelp(open) {
+      const box = $('help-box');
+      if (!box) return;
+      if (helpOn) {
+        box.className = 'side-panel help-panel waiting';
+        box.innerHTML = `<h3>✋ Help is on the way!</h3><p class="small">Your teacher can see you need help. Keep trying while you wait, ` +
+          `or ask your partner.</p><button type="button" class="btn small ghost" id="help-cancel">I figured it out 👍</button>`;
+        $('help-cancel').addEventListener('click', async () => { await ML.api('/api/help', { action: 'cancel' }); helpOn = false; drawHelp(); });
+        clearInterval(helpTimer);
+        helpTimer = setInterval(async () => {        // the teacher pressed ✓ Helped on the display
+          const r = await ML.api('/api/help', { action: 'status' }).catch(() => null);
+          if (r && r.ok && !r.help) { helpOn = false; clearInterval(helpTimer); drawHelp(); }
+        }, 20000);
+        return;
+      }
+      box.className = 'side-panel help-panel';
+      box.innerHTML = open
+        ? `<h3>✋ What are you stuck on?</h3><textarea id="help-note" rows="2" maxlength="140" placeholder="Optional, e.g. my code shows an error"></textarea>` +
+          `<div class="row"><button type="button" class="btn small go" id="help-send">Ask for help</button><button type="button" class="btn small ghost" id="help-no">Never mind</button></div>`
+        : `<button type="button" class="btn help-btn" id="help-ask">✋ I'm stuck: ask for help</button>`;
+      if (!open) { $('help-ask').addEventListener('click', () => drawHelp(true)); return; }
+      $('help-note').focus();
+      $('help-no').addEventListener('click', () => drawHelp(false));
+      $('help-send').addEventListener('click', async () => {
+        $('help-send').disabled = true;
+        const r = await ML.api('/api/help', { action: 'ask', lesson: L.id, stage: view, step: stepAt, note: $('help-note').value });
+        if (r && r.ok) { helpOn = true; C.sound('ready'); }
+        drawHelp();
+      });
+    }
+    drawHelp();
   };
 })();

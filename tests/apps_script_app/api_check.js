@@ -210,6 +210,21 @@ w.call(T, 'setClassGrade', [six.id, 'g7']);                                     
 assert.strictEqual(pageData(S6, '/').total, 13);
 w.call(T, 'setClassGrade', [six.id, 'g6']);
 
+// ✋ help: a student asks, the display lists it (no emails), the teacher marks it helped
+const help = (who, body) => w.call(who, 'api', ['/api/help', JSON.stringify(body)]).body;
+assert.ok(help(S, { action: 'ask', lesson: LID, stage: 'build', step: 3, note: 'my drop never falls' }).help);
+let hl = w.call(T, 'helpList', [cls.id]);
+assert.ok(hl.length === 1 && hl[0].name === 'Sam' && /Dodge the Drop · Step 4/.test(hl[0].where) && hl[0].note === 'my drop never falls', JSON.stringify(hl));
+assert.ok(!JSON.stringify(hl).includes('@'));
+assert.strictEqual(w.call(T, 'helpList', [other.id]).length, 0);                                  // only this class
+assert.ok(w.call(T, 'screenData', [cls.id]).help.length === 1);
+assert.ok(pageData(S, '/lessons/' + LID).help);
+assert.strictEqual(w.call(T, 'helpResolve', [cls.id, hl[0].who]).length, 0);
+assert.strictEqual(help(S, { action: 'status' }).help, null);
+help(S, { action: 'ask', lesson: LID, stage: 'quiz' });
+assert.strictEqual(help(S, { action: 'cancel' }).help, null);
+assert.throws(() => w.call(S, 'helpList', [cls.id]), /Only the teacher/);
+
 // creating or importing a class has to say which grade
 assert.throws(() => w.call(T, 'createClass', ['No grade']), /6th or 7th/);
 w.state.classroom.courses = [{ id: 'gc1', name: '6th Grade CS', section: 'Period 2' }];

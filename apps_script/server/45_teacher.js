@@ -300,7 +300,7 @@ function screenPayload_(cfg, cid) {
   }
   var rows = students.map(function (s) {
     var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
-    var row = { name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
+    var row = { who: helpWho_(s.email), name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
                 // race track: stages done in today's lesson (null = busy with a different lesson, or not started)
                 done: here ? (sd ? STAGES_.filter(function (st) { return sd[st[0]]; }).length : 0) : null };
     if (!here && w.status === 'working') row.elsewhere = w.where;
@@ -325,7 +325,7 @@ function screenPayload_(cfg, cid) {
            goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
            track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: L.idea_label + ': ' + L.python,
-           standards: standardsInPlay_(working, L.id), arcade: arcadeTeacher_(cfg, cid) };
+           standards: standardsInPlay_(working, L.id), arcade: arcadeTeacher_(cfg, cid), help: helpList_(cfg, cid) };
 }
 
 function screenData(cid) {

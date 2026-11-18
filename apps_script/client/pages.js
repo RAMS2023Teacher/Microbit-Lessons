@@ -632,6 +632,8 @@
       load: function () { return ML.run('screenData', id); },
       save: function (body) { return ML.run('screenSave', id, body); },
       arcade: function (action, minutes) { return ML.run('arcadeClass', id, action, minutes); },
+      help: function () { return ML.run('helpList', id); },
+      helped: function (who) { return ML.run('helpResolve', id, who); },
     });
   };
 

@@ -72,6 +72,9 @@
       noise(0.46, 0.4, 0.1);
     },
     buy: () => { noise(0, 0.05, 0.25); note(N.G6, 0.05, 0.12, 'square', 0.13); note(N.C7, 0.13, 0.4, 'square', 0.13); noise(0.13, 0.12, 0.08); },
+    help: () => {                                           // a doorbell, twice: someone needs help
+      [0, 0.9].forEach((t) => { note(N.E6, t, 0.5, 'sine', 0.32); note(N.C6, t + 0.32, 0.8, 'sine', 0.32); note(N.G5, t + 0.32, 0.8, 'triangle', 0.12); });
+    },
     nope: () => { note(180, 0, 0.12, 'sawtooth', 0.16, 150); note(130, 0.12, 0.2, 'sawtooth', 0.16, 100); },
   };
 

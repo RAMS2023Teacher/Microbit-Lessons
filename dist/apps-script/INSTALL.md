@@ -13,8 +13,8 @@ These files are **generated** by `python tools/build.py`. Don't edit them here: 
 
 | File | Add it as | Size |
 |---|---|---|
-| `Assets.gs` | Script (+ → Script), name it `Assets` | 108 KB |
-| `Code.gs` | Script (+ → Script), name it `Code` | 100 KB |
+| `Assets.gs` | Script (+ → Script), name it `Assets` | 110 KB |
+| `Code.gs` | Script (+ → Script), name it `Code` | 103 KB |
 | `Data.gs` | Script (+ → Script), name it `Data` | 403 KB |
 
    **Updating from the earlier version?** Delete the old `Pages1` file (and any `Styles`, `App` or `Editor` HTML files).
