@@ -1,4 +1,4 @@
-/* Class display for the projector: time left in class, an activity timer, the question of the day (the lesson's
+/* Class display for the projector: time left in class, the question of the day (the lesson's
  * essential question), a race track of where everyone is (with their robot), the standards in play, and recent wins. Shared by the Flask site and the Apps Script version:
  *   ClassScreen.start({ classId, className, backHref, units, load: () => Promise<data>, save: (settings) => Promise<data> })
  * Everything a student typed is put on the page with textContent, never as HTML. */
@@ -48,9 +48,7 @@
       '<div class="screen-now" id="clock-note"></div>' +
       '<div class="screen-bell-quick" id="bell-quick" hidden><label>Class ends at <input type="time" id="bell-quick-in"></label>' +
       '<button type="button" class="btn small" id="bell-quick-go">Count down</button></div>' +
-      '<div class="screen-activity"><b>⏱️ Timer</b> <span id="act-clock" class="act-clock">5:00</span>' +
-      '<button type="button" class="btn small" id="act-go">Start</button><button type="button" class="btn small ghost" id="act-reset">Reset</button>' +
-      '<label class="small">min <input type="number" id="act-mins" min="1" max="120" value="5"></label></div></section>' +
+      '</section>' +
       '<section class="card"><h2>❓ Question of the day</h2><p class="screen-big" id="screen-question"></p>' +
       '<p class="screen-bigidea" id="screen-bigidea"></p></section>' +
       '<section class="card"><h2 id="wins-title">🏆 Recent wins</h2><ul class="screen-wins" id="screen-wins"></ul></section>' +
@@ -293,7 +291,7 @@
       });
     });
 
-    // ----- clocks: time left until the bell, and an activity timer kept in this browser -----
+    // ----- the clock: time left until the bell (or the time now) -----
     const fmt = (s) => `${Math.floor(s / 3600) ? Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') : Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     function bellSeconds() {
       const b = data && data.settings.bell;
@@ -302,14 +300,9 @@
       end.setHours(h, m, 0, 0);
       return Math.max(0, Math.ceil((end - Date.now()) / 1000));
     }
-    const KEY = 'screen-activity-' + C.classId;
-    let act = { seconds: 300, left: 300, endAt: null };
-    try { act = Object.assign(act, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { /* no storage */ }
-    const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(act)); } catch (e) { /* no storage */ } };
-    const actLeft = () => (act.endAt ? Math.max(0, Math.ceil((act.endAt - Date.now()) / 1000)) : act.left);
     const clockText = (d) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     function drawClock() {
-      const bell = bellSeconds(), a = actLeft(), now = clockText(new Date());
+      const bell = bellSeconds(), now = clockText(new Date());
       const big = $('timer-big');
       if (bell !== null) {
         const end = new Date(new Date().setHours(...data.settings.bell.split(':').map(Number), 0, 0));
@@ -328,29 +321,12 @@
         $('clock-note').textContent = '';
         $('bell-quick').hidden = !data;
       }
-      $('act-clock').textContent = fmt(a);
-      $('act-clock').classList.toggle('over', a === 0 && !!act.ran);
-      $('act-go').textContent = act.endAt ? 'Pause' : 'Start';
-      if (act.endAt && a === 0) { act.endAt = null; act.left = 0; act.ran = true; keep(); }
     }
     $('bell-quick-go').addEventListener('click', () => {
       const v = $('bell-quick-in').value;
       if (!/^\d{1,2}:\d{2}$/.test(v)) return;
       $('set-bell').value = v;
       save({ bell: v });
-    });
-    $('act-go').addEventListener('click', () => {
-      if (act.endAt) { act.left = actLeft(); act.endAt = null; }
-      else { if (act.left === 0) act.left = act.seconds; act.endAt = Date.now() + act.left * 1000; act.ran = false; }
-      keep(); drawClock();
-    });
-    $('act-reset').addEventListener('click', () => { act.endAt = null; act.left = act.seconds; act.ran = false; keep(); drawClock(); });
-    $('act-mins').value = Math.round(act.seconds / 60);
-    $('act-mins').addEventListener('change', () => {
-      const m = Math.max(1, Math.min(120, parseInt($('act-mins').value, 10) || 5));
-      $('act-mins').value = m;
-      act = { seconds: m * 60, left: m * 60, endAt: null };
-      keep(); drawClock();
     });
     setInterval(drawClock, 250);
     drawClock();
