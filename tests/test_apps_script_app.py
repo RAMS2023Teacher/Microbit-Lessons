@@ -36,6 +36,13 @@ def test_reliability(built):
     assert r.returncode == 0, r.stdout + r.stderr
 
 
+@needs_node
+def test_translation_reports_student_view(built):
+    r = subprocess.run(["node", str(ROOT / "tests/apps_script_app/a11y_check.js"), str(built)],
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
 def test_pasted_files_are_up_to_date(built):
     """dist/apps-script is what teachers paste, so it must match the lessons and code."""
     dist = ROOT / "dist" / "apps-script"

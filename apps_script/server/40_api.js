@@ -99,6 +99,10 @@ var RUN_ = {
   helpList: function (a) { return helpList(a[0]); },
   feedbackReport: function (a) { return feedbackReport(a[0]); },
   dataInfo: function () { return dataInfo(); },
+  translate: function (a) { return translate(a[0], a[1]); },
+  reportBug: function (a) { return reportBug(a[0]); },
+  bugList: function () { return bugList(); },
+  bugUpdate: function (a) { return bugUpdate(a[0], a[1]); },
   backupNow: function () { return backupNow(); },
   helpResolve: function (a) { return helpResolve(a[0], a[1]); },
 };

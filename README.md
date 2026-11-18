@@ -75,6 +75,18 @@ Students spend **XP to spend** in the shop on power-ups (Turbo, Shield, Bolt mag
 parts. Levels count all XP ever earned, so spending never lowers a level. Prices, power-ups and play time are in
 `course/rules.py` (`AVATAR_OPTIONS`, `POWERUPS`, `ARCADE`).
 
+## Accessibility, translation, problem reports, student view
+
+- **Aa display settings** (top bar, every page): font (Standard, **Lexend**, Atkinson Hyperlegible, plain), text size,
+  line spacing, high contrast, less motion, and **language: English / Português (Brasil)**. Saved per student on their
+  Chromebook. Portuguese uses Google's translator inside Apps Script (`server/70_translate.js`, `client/lib/translate.js`):
+  each sentence is translated once and kept (cache + Drive), code, numbers and names are never translated, and
+  read-aloud switches to a Brazilian Portuguese voice.
+- **🐞 Report a problem** (footer, and Aa): students describe the problem; the page adds where they were, the browser
+  and recent errors. Page errors are reported on their own (3 per visit at most). Teacher: **Reports** page with
+  "Copy for Claude" (no names).
+- **👀 Student view** (class page): see Maker Lab exactly as a student in that class does. Nothing is saved.
+
 ## For developers
 
 ```

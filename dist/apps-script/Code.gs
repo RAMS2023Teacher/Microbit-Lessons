@@ -903,6 +903,10 @@ var RUN_ = {
   helpList: function (a) { return helpList(a[0]); },
   feedbackReport: function (a) { return feedbackReport(a[0]); },
   dataInfo: function () { return dataInfo(); },
+  translate: function (a) { return translate(a[0], a[1]); },
+  reportBug: function (a) { return reportBug(a[0]); },
+  bugList: function () { return bugList(); },
+  bugUpdate: function (a) { return bugUpdate(a[0], a[1]); },
   backupNow: function () { return backupNow(); },
   helpResolve: function (a) { return helpResolve(a[0], a[1]); },
 };
@@ -1673,7 +1677,12 @@ function doGet(e) {
   var path = String((e && e.parameter && e.parameter.p) || '/');
   var page;
   try {
+    var sv;
+    if (me.teacher && (sv = /^\/student-view\/(\w+)$/.exec(path))) { setStudentView_(sv[1]); path = '/'; }
+    else if (me.teacher && path === '/exit-student-view') { setStudentView_(''); path = '/'; }
+    var view = me.teacher ? studentView_() : '';
     if (!me.email) page = { name: 'error', title: 'Sign in', data: { message: 'Open Maker Lab while signed in to your school Google account.' } };
+    else if (view) page = previewPage_(me, path, view);
     else page = me.teacher ? teacherPage_(path) : studentPage_(me, path);
   } catch (err) {
     var busy = /^BUSY/.test((err && err.message) || '');
@@ -1683,9 +1692,29 @@ function doGet(e) {
   return render_(me, page);
 }
 
-function studentPage_(me, path) {
-  var rec = loadStudent_(me.email), cfg = config_();
-  var listed = rosterName_(cfg, me.email);
+// ---------------------------------------------------------------- 👀 student view (the teacher sees a class as a student)
+// A pretend student in that class, made fresh for every page and never saved. The teacher's lesson and shop actions
+// are already previews on the server (nothing saved), so the pages just work.
+function studentView_() {
+  var cid = PropertiesService.getScriptProperties().getProperty('teacher:student-view') || '';
+  return cid && config_().classes[cid] ? cid : '';
+}
+function setStudentView_(cid) {
+  var props = PropertiesService.getScriptProperties();
+  if (cid && config_().classes[cid]) props.setProperty('teacher:student-view', cid); else props.deleteProperty('teacher:student-view');
+}
+function previewPage_(me, path, cid) {
+  var cfg = config_(), rec = newStudent_(me.email);
+  rec.name = 'Student view';
+  rec.classes = [cid];
+  var page = studentPage_(me, path, rec);
+  page.preview = { cls: cfg.classes[cid].name, grade: DATA.courses[courseOfClass_(cfg, cid)].short };
+  return page;
+}
+
+function studentPage_(me, path, preview) {
+  var rec = preview || loadStudent_(me.email), cfg = config_();
+  var listed = preview ? '' : rosterName_(cfg, me.email);
   if (listed && (!rec || !rec.name)) {          // on a Google Classroom roster: no join page, use the Classroom name
     rec = rec || newStudent_(me.email);
     rec.name = listed;
@@ -1693,7 +1722,7 @@ function studentPage_(me, path) {
   }
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
   var rewards = syncRewards_(rec, cfg);
-  if (rewards.xp_gained) saveStudent_(rec);
+  if (rewards.xp_gained && !preview) saveStudent_(rec);
   var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
                                                 arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec),
                                                 course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor };
@@ -1725,6 +1754,7 @@ function teacherPage_(path) {
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
+  if (path === '/teacher/reports') return { name: 'reports', title: 'Problem reports', data: merge_(base, bugList()) };
   if ((m = /^\/teacher\/feedback(?:\/(\w+))?$/.exec(path))) return { name: 'feedback', title: 'Lesson feedback', data: merge_(base, feedbackReport(m[1])) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { courses: allCourses_(), urls: cfg.videos }) };
@@ -1875,6 +1905,8 @@ function checkInstall() {
   } catch (e) { ok(false, 'Assets.gs: ' + e.message); }
   try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
   try { studentFolder_(); ok(true, 'Drive folder "' + DATA_FOLDER + '" is ready'); } catch (e) { ok(false, 'Drive folder: ' + e.message + ' (run setup)'); }
+  try { var tr = LanguageApp.translate('Good morning', 'en', 'pt'); ok(!!tr, 'Translation to Portuguese works ("Good morning" → "' + tr + '")'); }
+  catch (e) { ok(false, 'Translation: ' + e.message + ' (Portuguese pages will stay in English until this works)'); }
   try { var icon = faviconUrl_(); ok(true, 'Tab icon: ' + icon); } catch (e) { ok(false, 'Tab icon: ' + e.message); }
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
   try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
@@ -1925,13 +1957,15 @@ function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
 // AppVenture's fonts: Lilita One for headings, Nunito for text (system fonts if Google Fonts is blocked). A <link>, not a
 // CSS @import, because Apps Script strips "//" inside <style> blocks.
-var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap">';
+var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&family=Lexend:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">';
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/reports', 'Reports'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
-  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
+  if (page.preview) nav = [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
+  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher && !page.preview, nav: nav,
+             preview: page.preview || null, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
   var code = [safe64_(setup), safe64_(asset_('app'))];
@@ -1941,7 +1975,7 @@ function render_(me, page) {
     '<header class="topbar" id="topbar"></header>',
     '<main class="', page.mainClass || 'container', '" id="main">',
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
-    '<footer class="footer">micro:bit Maker Lab · MakeCode Python + circuits</footer>',
+    '<footer class="footer">micro:bit Maker Lab · <button type="button" class="linklike" id="footer-bug">🐞 Report a problem</button></footer>',
     '<div id="ml-code" hidden>', code.join('.'), '</div>', LOADER_SCRIPT_, '</body></html>'];
   return withIcon_(HtmlService.createHtmlOutput(out.join(''))
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
@@ -2139,6 +2173,150 @@ function dataInfo() {
     others: others, history: history.slice(-10).reverse(),
   };
 }
-var BUILD_ID = "76c1a59a2c";
-var BUILD_EXPECT = {"Assets": "458d5c68fa", "Data": "c391ebe738"};
+
+// ---------------------------------------------------------------- translation (Português do Brasil)
+// The page sends the sentences it shows (HTML with only inline tags; code, numbers and names already swapped for
+// <span translate="no">§n</span> placeholders by client/lib/translate.js). Each sentence is translated once with
+// Google's LanguageApp and kept: in the cache (6 h) and in 16 small Drive files ("translations-pt-0" … "-f"),
+// so later visits are instant. A request stops after about 8 seconds and the page asks again for the rest.
+// No lock: two students translating the same sentence at once just both save the same answer.
+
+var TR_LANGS_ = { pt: 'pt' };
+var TR_BUDGET_MS_ = 8000;
+
+function trHash_(s) {
+  var h1 = 0x811c9dc5, h2 = 5381;
+  for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619) >>> 0; h2 = ((h2 * 33) ^ c) >>> 0; }
+  return ('0000000' + h1.toString(16)).slice(-8) + ('0000000' + h2.toString(16)).slice(-8);
+}
+
+/** Translate up to 80 sentences. Returns {done: {hash: translation}, left: number still to do (ask again)}. */
+function translate(lang, items) {
+  if (!whoIs_().email) throw new Error('Sign in with your school Google account.');
+  var tl = TR_LANGS_[lang];
+  if (!tl) throw new Error('That language isn\'t available.');
+  items = (items || []).slice(0, 80).map(function (s) { return String(s).slice(0, 4000); });
+  var cache = CacheService.getScriptCache(), out = {}, need = {};
+  items.forEach(function (s) { need[trHash_(s)] = s; });
+  var hashes = Object.keys(need), hit = cache.getAll(hashes.map(function (h) { return 'tr:' + lang + ':' + h; })) || {};
+  hashes.forEach(function (h) { var v = hit['tr:' + lang + ':' + h]; if (v != null) { out[h] = v; delete need[h]; } });
+  // saved translations, one small file per first letter of the hash
+  var shards = {};
+  Object.keys(need).forEach(function (h) { (shards[h.charAt(0)] = shards[h.charAt(0)] || []).push(h); });
+  var shardData = {};
+  Object.keys(shards).forEach(function (k) {
+    shardData[k] = readNamed_('translations-' + lang + '-' + k, {});
+    shards[k].forEach(function (h) { if (shardData[k][h] != null) { out[h] = shardData[k][h]; delete need[h]; } });
+  });
+  // new sentences: ask Google, many at once, until the time runs out
+  var fresh = {}, todo = Object.keys(need), t0 = Date.now();
+  while (todo.length && Date.now() - t0 < TR_BUDGET_MS_) {
+    var batch = [], size = 0;
+    while (todo.length && batch.length < 40 && size + need[todo[0]].length < 4500) { size += need[todo[0]].length; batch.push(todo.shift()); }
+    if (!batch.length) batch.push(todo.shift());
+    trBatch_(batch.map(function (h) { return need[h]; }), tl).forEach(function (t, i) { if (t != null) fresh[batch[i]] = t; });
+  }
+  var put = {};
+  Object.keys(fresh).forEach(function (h) {
+    out[h] = fresh[h];
+    put['tr:' + lang + ':' + h] = fresh[h];
+    var k = h.charAt(0);
+    if (!shardData[k]) shardData[k] = readNamed_('translations-' + lang + '-' + k, {});
+    shardData[k][h] = fresh[h];
+  });
+  Object.keys(out).forEach(function (h) { if (!put['tr:' + lang + ':' + h]) put['tr:' + lang + ':' + h] = out[h]; });
+  try { cache.putAll(put, 21600); } catch (e) { /* too big for the cache: the Drive copy still has it */ }
+  var changed = {};
+  Object.keys(fresh).forEach(function (h) { changed[h.charAt(0)] = 1; });
+  Object.keys(changed).forEach(function (k) { writeNamed_('translations-' + lang + '-' + k, shardData[k]); });
+  return { done: out, left: Object.keys(need).length - Object.keys(fresh).length };
+}
+
+/** One call to Google for several sentences: each goes in its own <div id="tN">, and comes back the same way. */
+function trBatch_(list, tl) {
+  var html = list.map(function (s, i) { return '<div id="t' + i + '">' + s + '</div>'; }).join('');
+  var res = retry_(function () { return LanguageApp.translate(html, 'en', tl, { contentType: 'html' }); });
+  var got = [], re = /<div id="t(\d+)">([\s\S]*?)<\/div>/g, m;
+  while ((m = re.exec(res))) got[+m[1]] = m[2];
+  return list.map(function (s, i) {
+    if (got[i] != null) return got[i];
+    try { return retry_(function () { return LanguageApp.translate(s, 'en', tl, { contentType: 'html' }); }); } catch (e) { return null; }
+  });
+}
+
+// ---------------------------------------------------------------- 🐞 problem reports
+// Students (and the teacher) report a problem from Aa → "Report a problem" or the footer; the page adds where they
+// were (page, lesson, stage, step), the browser, the app version and its last errors. Page errors are also reported
+// on their own (client/lib/bugs.js, at most 3 per visit) and repeats are dropped here. Reports are kept in one file
+// ("bugs"), newest 400. Saving takes the lock briefly (read, add one, write); nothing slow happens inside it.
+
+var BUG_KEEP_ = 400, BUG_PER_DAY_ = 10;
+var BUG_KINDS_ = { broken: "Something didn't work", words: 'Words are wrong or confusing', find: "I can't find something", other: 'Something else', auto: 'Page error (automatic)' };
+
+function reportBug(d) {
+  var me = whoIs_();
+  if (!me.email) throw new Error('Sign in with your school Google account.');
+  d = d || {};
+  var kind = BUG_KINDS_[d.kind] ? d.kind : 'other';
+  var text = String(d.text || '').slice(0, 1500).trim();
+  if (kind !== 'auto' && text.length < 3) throw new Error('Tell us a little about what happened.');
+  var cache = CacheService.getScriptCache(), day = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var mine = 'bugs:' + day + ':' + me.email, count = Number(cache.get(mine) || 0);
+  if (count >= BUG_PER_DAY_) return { ok: true, skipped: 'too many today' };
+  if (kind === 'auto') {                                       // the same page error once a day is enough
+    var key = 'bug:' + trHash_(String(d.text || '') + '|' + String(d.page || ''));
+    if (cache.get(key)) return { ok: true, skipped: 'seen' };
+    cache.put(key, '1', 21600);
+  }
+  cache.put(mine, String(count + 1), 21600);
+  var ctx = d.ctx || {};
+  var rec = me.teacher ? null : (function () { try { return loadStudent_(me.email); } catch (e) { return null; } })();
+  var bug = { id: Math.random().toString(36).slice(2, 10), at: now_(), status: 'new', kind: kind, text: text,
+              email: me.email, name: me.teacher ? 'Teacher' : ((rec && rec.name) || me.email.split('@')[0]),
+              page: String(d.page || '').slice(0, 200),
+              lesson: String(ctx.lesson || '').slice(0, 60), stage: String(ctx.stage || '').slice(0, 20),
+              step: ctx.step == null ? null : Number(ctx.step), lang: String(ctx.lang || '').slice(0, 5),
+              browser: String(d.browser || '').slice(0, 200), screen: String(d.screen || '').slice(0, 40),
+              version: typeof BUILD_STAMPS !== "undefined" ? (BUILD_STAMPS.Assets || "") + "/" + (BUILD_STAMPS.Data || "") : "",
+              errors: (d.errors || []).slice(-5).map(function (e) { return String(e).slice(0, 300); }) };
+  withLock_(function () {
+    var list = readNamed_('bugs', []);
+    list.unshift(bug);
+    if (list.length > BUG_KEEP_) list = list.slice(0, BUG_KEEP_);
+    writeNamed_('bugs', list);
+  });
+  return { ok: true, id: bug.id };
+}
+
+/** Teacher: all reports, newest first, with the lesson's title and file. */
+function bugList() {
+  teacher_();
+  return { kinds: BUG_KINDS_, bugs: readNamed_('bugs', []).map(function (b) {
+    var L = DATA.lessons[b.lesson];
+    var out = JSON.parse(JSON.stringify(b));
+    delete out.email;
+    if (L) { out.lesson_title = L.number + '. ' + L.title; out.file = L.file; out.course = DATA.courses[L.course].short;
+             if (b.step != null && L.build[b.step]) out.step_title = 'Step ' + (b.step + 1) + ': ' + L.build[b.step].title; }
+    return out;
+  }) };
+}
+
+/** Teacher: mark a report fixed / new again, or delete it. */
+function bugUpdate(id, status) {
+  teacher_();
+  if (['new', 'fixed', 'deleted'].indexOf(status) < 0) throw new Error('Unknown status.');
+  withLock_(function () {
+    var list = readNamed_('bugs', []);
+    list = status === 'deleted' ? list.filter(function (b) { return b.id !== id; })
+      : list.map(function (b) { if (b.id === id) b.status = status; return b; });
+    writeNamed_('bugs', list);
+  });
+  return bugList();
+}
+
+function bugCountNew_() {
+  try { return readNamed_('bugs', []).filter(function (b) { return b.status === 'new'; }).length; } catch (e) { return 0; }
+}
+var BUILD_ID = "d4a2513ca2";
+var BUILD_EXPECT = {"Assets": "8a4d6f1bcf", "Data": "c391ebe738"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

@@ -211,6 +211,7 @@
         li.className = r.me ? 'me' : '';
         li.innerHTML = '<span class="rank">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span data-avatar="' + A(r.avatar || {}) + '" data-size="40"></span><b></b><span class="score">' + r.score + '</span>';
         li.querySelector('b').textContent = r.name + (r.me ? ' (you)' : '');
+        li.querySelector('b').setAttribute('translate', 'no');
         ol.appendChild(li);
       });
       RobotAvatar.renderAll(ol);
@@ -438,6 +439,7 @@
     var c = d.cls, h = [];
     h.push('<div class="page-head"><div><a class="muted small" href="/">← My classes</a><h1>' + E(c.name) + '</h1></div>' +
       '<div class="row"><a class="btn" href="/teacher/classes/' + E(c.id) + '/screen">📺 Class display</a>' +
+      '<a class="btn ghost" href="/student-view/' + E(c.id) + '">👀 Student view</a>' +
       '<a class="btn ghost" href="/teacher/classes/' + E(c.id) + '/google-classroom">Google Classroom grades</a></div>' +
       '<div class="join-code">Join code <b>' + E(c.code) + '</b><small>' + E(d.url) + '</small></div></div>' +
       '<p class="grade-pick">Course: <select id="grade-pick">' + (d.grades || []).map(function (g) { return '<option value="' + E(g.id) + '"' + (g.id === d.grade ? ' selected' : '') + '>' + E(g.name) + '</option>'; }).join('') +
@@ -722,6 +724,64 @@
     });
   };
 
+  // ---------------------------------------------------------------- 🐞 problem reports (from students, the teacher and page errors)
+  pages.reports = function () {
+    main.className = 'container wide';
+    var show = 'new', K = d.kinds || {};
+    var when = function (iso) { return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+    function markdown(list) {
+      var out = ['# Maker Lab problem reports', '', list.length + ' report(s) · student names removed · app version ' + ((list[0] || {}).version || '?'), '',
+        'Please use these to find and fix bugs in the Maker Lab repository (Apps Script app in apps_script/, lessons in course/lessons/).', ''];
+      list.forEach(function (b, i) {
+        out.push('## ' + (i + 1) + '. ' + (K[b.kind] || b.kind) + ' · ' + b.at.slice(0, 16).replace('T', ' '), '');
+        if (b.text) out.push('> ' + b.text.replace(/\n+/g, ' '), '');
+        out.push('- Page: `' + b.page + '`' + (b.lesson_title ? ' · lesson ' + b.lesson_title + ' (`' + b.file + '`)' : '') +
+          (b.stage ? ' · stage ' + b.stage : '') + (b.step_title ? ' · ' + b.step_title : ''));
+        out.push('- Browser: ' + b.browser + ' · screen ' + b.screen + (b.lang && b.lang !== 'en' ? ' · language ' + b.lang : '') + ' · version ' + b.version);
+        if (b.errors && b.errors.length) { out.push('- Page errors:'); b.errors.forEach(function (e) { out.push('  - `' + e.replace(/`/g, "'") + '`'); }); }
+        out.push('');
+      });
+      return out.join('\n');
+    }
+    function draw() {
+      var list = d.bugs.filter(function (b) { return show === 'all' || b.status === show; });
+      var counts = { new: 0, fixed: 0 };
+      d.bugs.forEach(function (b) { counts[b.status] = (counts[b.status] || 0) + 1; });
+      var h = ['<div class="page-head"><div><h1>🐞 Problem reports</h1><p class="muted">What students reported with "Report a problem", plus page errors ' +
+        'caught on their own. Students\' names are shown here but never copied into the report for Claude.</p><p class="row">' +
+        [['new', 'New (' + counts.new + ')'], ['fixed', 'Fixed (' + counts.fixed + ')'], ['all', 'All (' + d.bugs.length + ')']].map(function (t) {
+          return '<button type="button" class="btn small' + (t[0] === show ? '' : ' ghost') + '" data-show="' + t[0] + '">' + t[1] + '</button>';
+        }).join(' ') + '</p></div><div class="row"><button class="btn go" id="bug-copy" type="button">📋 Copy for Claude</button></div></div>'];
+      if (!list.length) h.push('<section class="card"><p class="muted">No ' + (show === 'all' ? '' : show + ' ') + 'reports. 🎉</p></section>');
+      list.forEach(function (b) {
+        h.push('<section class="card bug-card ' + E(b.status) + '"><div class="fb-head"><b class="bug-kind">' + E(K[b.kind] || b.kind) + '</b>' +
+          '<span class="muted small">' + E(when(b.at)) + ' · <span translate="no">' + E(b.name) + '</span></span>' +
+          '<span class="row"><button class="btn small ' + (b.status === 'fixed' ? 'ghost' : 'go') + '" type="button" data-id="' + E(b.id) + '" data-st="' + (b.status === 'fixed' ? 'new' : 'fixed') + '">' +
+          (b.status === 'fixed' ? 'Mark new' : '✓ Fixed') + '</button><button class="btn small ghost" type="button" data-id="' + E(b.id) + '" data-st="deleted">Delete</button></span></div>' +
+          (b.text ? '<p class="bug-text">' + E(b.text) + '</p>' : '') +
+          '<p class="small muted">' + E(b.page) + (b.lesson_title ? ' · ' + E(b.lesson_title) : '') + (b.step_title ? ' · ' + E(b.step_title) : b.stage ? ' · ' + E(b.stage) : '') +
+          (b.lang && b.lang !== 'en' ? ' · ' + E(b.lang) : '') + ' · ' + E(b.screen) + '</p>' +
+          (b.errors && b.errors.length ? '<details><summary class="small">Page errors (' + b.errors.length + ')</summary><pre class="code-block small">' + E(b.errors.join('\n')) + '</pre></details>' : '') +
+          '</section>');
+      });
+      main.innerHTML = h.join('');
+      main.querySelectorAll('[data-show]').forEach(function (b) { b.addEventListener('click', function () { show = b.dataset.show; draw(); }); });
+      main.querySelectorAll('[data-st]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (b.dataset.st === 'deleted' && !confirm('Delete this report?')) return;
+          act(b, 'bugUpdate', [b.dataset.id, b.dataset.st], function (r) { d.bugs = r.bugs; draw(); });
+        });
+      });
+      document.getElementById('bug-copy').addEventListener('click', function () {
+        var text = markdown(list), btn = this;
+        var ok = function () { btn.textContent = '✓ Copied'; setTimeout(function () { btn.textContent = '📋 Copy for Claude'; }, 1600); };
+        var fallback = function () { var ta = document.body.appendChild(document.createElement('textarea')); ta.value = text; ta.select(); try { document.execCommand('copy'); ok(); } catch (e) { /* select */ } ta.remove(); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback); else fallback();
+      });
+    }
+    draw();
+  };
+
   pages.standards = function () {
     var h = ['<h1>MA DLCS standards</h1><p class="muted">What each lesson covers, and how.</p>'];
     d.lessons.forEach(function (l) {
@@ -750,5 +810,7 @@
     if (window.RobotAvatar) window.RobotAvatar.renderAll();
     if (window.Visuals) window.Visuals.renderAll();
     ML.fixLinks(document);
+    if (window.MLTranslate) window.MLTranslate.start();
+    try { if (sessionStorage.getItem('ml-reopen-prefs')) { sessionStorage.removeItem('ml-reopen-prefs'); window.MLPrefs.open(); } } catch (e) { /* fine */ }
   };
 })();

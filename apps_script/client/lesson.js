@@ -159,7 +159,8 @@
       const copyEl = box.cloneNode(true);
       copyEl.querySelectorAll('button, .code-box, input, textarea, figure').forEach((x) => x.remove());
       const u = new SpeechSynthesisUtterance(copyEl.textContent.replace(/\s+/g, ' ').trim());
-      u.rate = 0.95; u.onend = () => { reading = null; btn.textContent = '🔊'; };
+      u.rate = 0.95; if (document.documentElement.lang === 'pt-BR') u.lang = 'pt-BR';
+      u.onend = () => { reading = null; btn.textContent = '🔊'; };
       reading = btn; btn.textContent = '⏹'; voice.speak(u);
     }
 
@@ -204,10 +205,12 @@
       }).join('');
       nav.querySelectorAll('.stage').forEach((b) => b.addEventListener('click', () => show(b.dataset.stage)));
     }
+    const tellCtx = () => { ML.ctx = { lesson: L.id, stage: view, step: view === 'build' ? stepAt : null }; };   // for problem reports
     function show(stage) {
       view = stage;
       drawStages();
       ({ mission: drawMission, build: drawBuild, quiz: drawQuiz, ship: drawShip })[stage]();
+      tellCtx();
       const top = $('stages').getBoundingClientRect().top + window.scrollY - 10;
       if (window.scrollY > top) window.scrollTo({ top, behavior: 'smooth' });
     }
@@ -257,6 +260,7 @@
       return missing;
     }
     function drawBuild() {
+      ML.ctx = { lesson: L.id, stage: 'build', step: stepAt };
       const i = stepAt, St = L.build[i], row = stepRow(i), box = $('stage-view'), last = i === L.build.length - 1;
       const dots = L.build.map((s, k) => {
         const reachable = ML.teacher || k <= stepAt || stepRow(k).done || (k > 0 && stepRow(k - 1).done);
@@ -458,7 +462,7 @@
       if (p.status === 'paired') {
         const t = box.appendChild(el('p', ''));
         t.append('You and ');
-        t.appendChild(el('b', '')).textContent = p.name;
+        const nb = t.appendChild(el('b', '')); nb.textContent = p.name; nb.setAttribute('translate', 'no');
         t.append(' are partners. Everything saves for both of you.');
         const stop = box.appendChild(el('button', 'linklike small', 'Stop working together'));
         stop.type = 'button';

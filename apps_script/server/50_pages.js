@@ -11,7 +11,12 @@ function doGet(e) {
   var path = String((e && e.parameter && e.parameter.p) || '/');
   var page;
   try {
+    var sv;
+    if (me.teacher && (sv = /^\/student-view\/(\w+)$/.exec(path))) { setStudentView_(sv[1]); path = '/'; }
+    else if (me.teacher && path === '/exit-student-view') { setStudentView_(''); path = '/'; }
+    var view = me.teacher ? studentView_() : '';
     if (!me.email) page = { name: 'error', title: 'Sign in', data: { message: 'Open Maker Lab while signed in to your school Google account.' } };
+    else if (view) page = previewPage_(me, path, view);
     else page = me.teacher ? teacherPage_(path) : studentPage_(me, path);
   } catch (err) {
     var busy = /^BUSY/.test((err && err.message) || '');
@@ -21,9 +26,29 @@ function doGet(e) {
   return render_(me, page);
 }
 
-function studentPage_(me, path) {
-  var rec = loadStudent_(me.email), cfg = config_();
-  var listed = rosterName_(cfg, me.email);
+// ---------------------------------------------------------------- 👀 student view (the teacher sees a class as a student)
+// A pretend student in that class, made fresh for every page and never saved. The teacher's lesson and shop actions
+// are already previews on the server (nothing saved), so the pages just work.
+function studentView_() {
+  var cid = PropertiesService.getScriptProperties().getProperty('teacher:student-view') || '';
+  return cid && config_().classes[cid] ? cid : '';
+}
+function setStudentView_(cid) {
+  var props = PropertiesService.getScriptProperties();
+  if (cid && config_().classes[cid]) props.setProperty('teacher:student-view', cid); else props.deleteProperty('teacher:student-view');
+}
+function previewPage_(me, path, cid) {
+  var cfg = config_(), rec = newStudent_(me.email);
+  rec.name = 'Student view';
+  rec.classes = [cid];
+  var page = studentPage_(me, path, rec);
+  page.preview = { cls: cfg.classes[cid].name, grade: DATA.courses[courseOfClass_(cfg, cid)].short };
+  return page;
+}
+
+function studentPage_(me, path, preview) {
+  var rec = preview || loadStudent_(me.email), cfg = config_();
+  var listed = preview ? '' : rosterName_(cfg, me.email);
   if (listed && (!rec || !rec.name)) {          // on a Google Classroom roster: no join page, use the Classroom name
     rec = rec || newStudent_(me.email);
     rec.name = listed;
@@ -31,7 +56,7 @@ function studentPage_(me, path) {
   }
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
   var rewards = syncRewards_(rec, cfg);
-  if (rewards.xp_gained) saveStudent_(rec);
+  if (rewards.xp_gained && !preview) saveStudent_(rec);
   var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
                                                 arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec),
                                                 course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor };
@@ -63,6 +88,7 @@ function teacherPage_(path) {
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
+  if (path === '/teacher/reports') return { name: 'reports', title: 'Problem reports', data: merge_(base, bugList()) };
   if ((m = /^\/teacher\/feedback(?:\/(\w+))?$/.exec(path))) return { name: 'feedback', title: 'Lesson feedback', data: merge_(base, feedbackReport(m[1])) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { courses: allCourses_(), urls: cfg.videos }) };
@@ -213,6 +239,8 @@ function checkInstall() {
   } catch (e) { ok(false, 'Assets.gs: ' + e.message); }
   try { ok(Object.keys(DATA.lessons).length > 0, Object.keys(DATA.lessons).length + ' lessons in Data.gs'); } catch (e) { ok(false, 'Data.gs: ' + e.message); }
   try { studentFolder_(); ok(true, 'Drive folder "' + DATA_FOLDER + '" is ready'); } catch (e) { ok(false, 'Drive folder: ' + e.message + ' (run setup)'); }
+  try { var tr = LanguageApp.translate('Good morning', 'en', 'pt'); ok(!!tr, 'Translation to Portuguese works ("Good morning" → "' + tr + '")'); }
+  catch (e) { ok(false, 'Translation: ' + e.message + ' (Portuguese pages will stay in English until this works)'); }
   try { var icon = faviconUrl_(); ok(true, 'Tab icon: ' + icon); } catch (e) { ok(false, 'Tab icon: ' + e.message); }
   try { config_(); ok(true, 'Settings file reads'); } catch (e) { ok(false, 'Settings: ' + e.message); }
   try { ok(true, 'Google Classroom: ' + classroomCoursesRaw_().length + ' active classes you teach'); }
@@ -263,13 +291,15 @@ function json_(v) { return JSON.stringify(v).replace(/</g, '\\u003c'); }
 
 // AppVenture's fonts: Lilita One for headings, Nunito for text (system fonts if Google Fonts is blocked). A <link>, not a
 // CSS @import, because Apps Script strips "//" inside <style> blocks.
-var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap">';
+var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&family=Lexend:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">';
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/reports', 'Reports'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
-  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
+  if (page.preview) nav = [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
+  var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher && !page.preview, nav: nav,
+             preview: page.preview || null, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
   Object.keys(globals).forEach(function (k) { setup += 'window.' + k + '=' + json_(globals[k]) + ';'; });
   var code = [safe64_(setup), safe64_(asset_('app'))];
@@ -279,7 +309,7 @@ function render_(me, page) {
     '<header class="topbar" id="topbar"></header>',
     '<main class="', page.mainClass || 'container', '" id="main">',
     page.html || '<p class="muted" style="padding:24px">Loading Maker Lab…</p><noscript>Maker Lab needs JavaScript turned on.</noscript>', '</main>',
-    '<footer class="footer">micro:bit Maker Lab · MakeCode Python + circuits</footer>',
+    '<footer class="footer">micro:bit Maker Lab · <button type="button" class="linklike" id="footer-bug">🐞 Report a problem</button></footer>',
     '<div id="ml-code" hidden>', code.join('.'), '</div>', LOADER_SCRIPT_, '</body></html>'];
   return withIcon_(HtmlService.createHtmlOutput(out.join(''))
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)

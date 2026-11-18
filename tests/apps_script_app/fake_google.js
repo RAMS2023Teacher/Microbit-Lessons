@@ -100,7 +100,17 @@ function makeWorld(dist, opts) {
       get: (k) => { const e = state.cache[k]; if (!e) return null; if (e.exp <= state.clock) { delete state.cache[k]; return null; } return e.v; },
       put: (k, v, ttl) => { if (String(v).length > 100000) throw new Error('Argument too large: value'); state.cache[k] = { v: String(v), exp: state.clock + (ttl || 600) * 1000 }; },
       remove: (k) => { delete state.cache[k]; },
+      getAll: (keys) => { const o = {}; keys.forEach((k) => { const e = state.cache[k]; if (e && e.exp > state.clock) o[k] = e.v; }); return o; },
+      putAll: (obj, ttl) => { Object.keys(obj).forEach((k) => { state.cache[k] = { v: String(obj[k]), exp: state.clock + (ttl || 600) * 1000 }; }); },
     }) },
+    // Google Translate stand-in: puts "PT·" before every piece of text, keeps tags and translate="no" spans as they are
+    LanguageApp: { translate: (text, from, to, o) => {
+      state.stats.translations = (state.stats.translations || 0) + 1;
+      if (state.fail.translate) throw new Error('Service invoked too many times for one day: translate.');
+      const keep = [];
+      const t = String(text).replace(/<span translate="no">[\s\S]*?<\/span>/g, (m) => '\u0000' + (keep.push(m) - 1) + '\u0000');
+      return t.replace(/(^|>)([^<]+)/g, (m, a, x) => a + x.replace(/[A-Za-z][^\u0000]*/, (w) => 'PT·' + w)).replace(/\u0000(\d+)\u0000/g, (m, i) => keep[+i]);
+    } },
     LockService: { getScriptLock: () => ({
       waitLock: () => { if (state.fail.lock) throw new Error('Lock timeout: another process was holding the lock for too long.'); state.stats.locks++; },
       tryLock: () => true, releaseLock: () => {}, hasLock: () => true,

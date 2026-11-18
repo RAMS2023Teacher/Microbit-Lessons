@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isReduced = () => (window.MLPrefs ? window.MLPrefs.reducedMotion() : !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches));
 
   function stack() {
     let s = document.getElementById('reward-stack');
@@ -25,7 +25,7 @@
   }
 
   function confetti() {
-    if (reduced) return;
+    if (isReduced()) return;
     const box = document.createElement('div');
     box.className = 'confetti';
     const colors = ['#ffd23f', '#0fa3a3', '#ef4444', '#60a5fa', '#a78bfa', '#4ade80'];
@@ -58,7 +58,7 @@
 
   /** "+20 XP" floats up from where the student clicked, and coins fly into the XP bar in the top bar. */
   function flyCoins(amount, from) {
-    if (reduced) return;
+    if (isReduced()) return;
     const [x, y] = from ? centerOf(from) : [lastX, lastY];
     const tag = document.createElement('div');
     tag.className = 'xp-float';
@@ -102,7 +102,7 @@
 
   /** A sparkle burst around a button (used when buying). */
   function burst(el, emoji) {
-    if (reduced || !el) return;
+    if (isReduced() || !el) return;
     const [x, y] = centerOf(el);
     for (let i = 0; i < 12; i++) {
       const p = document.createElement('div');

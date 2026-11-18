@@ -138,7 +138,7 @@
   function topbar() {
     var bar = document.getElementById('topbar'), d = ML.data || {}, h = [];
     if (!bar) return;
-    h.push('<a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>Maker Lab</a><nav>');
+    h.push('<a class="brand" href="/" translate="no"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>Maker Lab</a><nav>');
     (ML.nav || []).forEach(function (n) {
       var here = n[0] === ML.path || (n[0] !== '/' && ML.path.indexOf(n[0]) === 0);
       h.push('<a href="' + n[0] + '"' + (here ? ' class="here"' : '') + '>' + ML.esc(n[1]) + '</a>');
@@ -146,10 +146,13 @@
     if (!ML.teacher && d.level) {
       h.push('<a class="usermenu-lite" href="/me" title="My robot &amp; badges"><span class="nav-avatar" data-avatar="' + ML.avatarAttr(d.avatar) +
         '" data-size="30"></span><span class="nav-xp"><b id="nav-level">Lv ' + d.level.level + '</b><span class="nav-xp-bar"><i id="nav-xp-fill" style="width:' +
-        d.level.pct + '%"></i></span></span> ' + ML.esc(d.name || '') + '</a>');
+        d.level.pct + '%"></i></span></span> <span translate="no">' + ML.esc(d.name || '') + '</span></a>');
     }
-    h.push('<button type="button" class="sound-toggle" id="sound-toggle" title="Sound on or off"></button></nav>');
+    h.push('<button type="button" class="prefs-btn" id="prefs-open" translate="no" title="Display settings and language" aria-label="Display settings and language">Aa</button>' +
+      '<button type="button" class="sound-toggle" id="sound-toggle" title="Sound on or off"></button></nav>');
     bar.innerHTML = h.join('');
+    var pb = document.getElementById('prefs-open');
+    if (window.MLPrefs) pb.addEventListener('click', function () { window.MLPrefs.open(); }); else pb.remove();
     var st = document.getElementById('sound-toggle');
     var drawSound = function () { var off = window.SFX && window.SFX.muted(); st.textContent = off ? '🔇' : '🔊'; st.setAttribute('aria-label', off ? 'Turn sound on' : 'Turn sound off'); };
     if (window.SFX) { drawSound(); st.addEventListener('click', function () { window.SFX.toggle(); drawSound(); }); } else st.remove();
@@ -175,6 +178,15 @@
   };
 
   topbar();
+  if (ML.preview) {                              // 👀 student view: always show how to get out
+    var bar = document.createElement('div');
+    bar.className = 'preview-bar';
+    bar.innerHTML = '👀 <b>Student view</b>: ' + ML.esc(ML.preview.cls) + ' (' + ML.esc(ML.preview.grade) + '). This is what students see; nothing is saved. ' +
+      '<a class="btn small" href="/exit-student-view">Exit student view</a>';
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
+  var fb = document.getElementById('footer-bug');
+  if (fb) { if (window.MLBugs) fb.addEventListener('click', function () { window.MLBugs.open(); }); else fb.remove(); }
   if (ML.data && ML.data.arcade_state && ML.path !== '/arcade') ML.arcadePill(ML.data.arcade_state);
   fixLinks(document);
   window.addEventListener('load', function () {
