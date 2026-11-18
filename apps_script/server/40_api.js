@@ -98,12 +98,20 @@ var RUN_ = {
   arcadeClass: function (a) { return arcadeClass(a[0], a[1], a[2]); },
   helpList: function (a) { return helpList(a[0]); },
   feedbackReport: function (a) { return feedbackReport(a[0]); },
+  dataInfo: function () { return dataInfo(); },
+  backupNow: function () { return backupNow(); },
   helpResolve: function (a) { return helpResolve(a[0], a[1]); },
 };
+// Teacher actions that read, change and save the settings file take turns (two tabs, like the class display and the
+// class page, could otherwise save over each other). Slow ones (Google Classroom, giving everyone play time) don't.
+var RUN_LOCKED_ = { createClass: 1, setClassGrade: 1, deleteClass: 1, assignLessons: 1, updateAssignment: 1, removeStudent: 1,
+                    saveFeedback: 1, giveBonus: 1, saveVideos: 1, screenSave: 1, setTabIcon: 1 };
 function runCall_(d) {
-  var fn = RUN_[d && d.fn];
-  if (!fn) return { status: 404, body: { ok: false, error: 'Maker Lab doesn\'t know "' + (d && d.fn) + '". Reload the page; if it keeps happening, the files may be from different versions.' } };
-  return { status: 200, body: { ok: true, value: fn((d.args || []).slice(0, 6)) } };
+  var name = d && d.fn, fn = RUN_[name];
+  if (!fn) return { status: 404, body: { ok: false, error: 'Maker Lab doesn\'t know "' + name + '". Reload the page; if it keeps happening, the files may be from different versions.' } };
+  var args = (d.args || []).slice(0, 6);
+  var locked = RUN_LOCKED_[name] || (name === 'arcadeClass' && args[1] !== 'gift');
+  return { status: 200, body: { ok: true, value: locked ? withLock_(function () { return fn(args); }) : fn(args) } };
 }
 
 function badRequest_(msg) { var e = new Error(msg); e.status = 400; return e; }

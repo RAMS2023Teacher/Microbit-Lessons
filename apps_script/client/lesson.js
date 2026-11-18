@@ -497,9 +497,10 @@
         $('help-cancel').addEventListener('click', async () => { await ML.api('/api/help', { action: 'cancel' }); helpOn = false; drawHelp(); });
         clearInterval(helpTimer);
         helpTimer = setInterval(async () => {        // the teacher pressed ✓ Helped on the display
+          if (document.hidden) return;
           const r = await ML.api('/api/help', { action: 'status' }).catch(() => null);
           if (r && r.ok && !r.help) { helpOn = false; clearInterval(helpTimer); drawHelp(); }
-        }, 20000);
+        }, 30000);
         return;
       }
       box.className = 'side-panel help-panel';

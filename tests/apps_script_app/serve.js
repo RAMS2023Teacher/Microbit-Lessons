@@ -24,7 +24,7 @@ const RUN = `<script>window.google={script:{run:(function(){
   return make(null,null);})()}};</script>`;
 
 const user = (req) => (/(?:^|;\s*)as=([^;]+)/.exec(req.headers.cookie || '') || [])[1];
-let lastTick = Date.now();
+let lastTick = Date.now(), busyNext = 0;      // /__busy?n=3: the next 3 server calls are turned away
 http.createServer((req, res) => {
   const u = url.parse(req.url, true);
   w.advance(Date.now() - lastTick);           // the world's clock keeps up with real time (Robot Rush checks race times)
@@ -54,12 +54,18 @@ http.createServer((req, res) => {
     return req.on('end', () => {
       const { fn, args, as } = JSON.parse(body);
       let reply;
+      if (busyNext > 0) {                       // like Google turning requests away when too many run at once
+        busyNext--;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ ok: false, error: 'Exception: Too many simultaneous invocations: Spreadsheets' }));
+      }
       try { reply = { ok: true, value: w.call(as || decodeURIComponent(user(req) || w.owner), fn, args) }; }
       catch (e) { reply = { ok: false, error: e.message }; }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(reply === undefined ? { ok: true } : reply));
     });
   }
+  if (u.pathname === '/__busy') { busyNext = Number(u.query.n) || 3; res.writeHead(200); return res.end('ok'); }
   if (u.pathname === '/__advance') { w.advance(Number(u.query.ms) || 120000); res.writeHead(200); return res.end('ok'); }
   res.writeHead(404); res.end('not found');
 }).listen(port, () => console.log('Maker Lab (fake Google) on ' + base));

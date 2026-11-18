@@ -9,34 +9,71 @@
 
   // Every server call goes through the one function every version has: api(). ML.run('createClass', ...) becomes
   // api('/api/run', {fn: 'createClass', args: [...]}) and the server picks the function (40_api.js, RUN_).
-  function callApi(path, body) {
+  // All calls wait in ONE line (one request at a time per browser), identical waiting requests are shared, and
+  // "busy" answers (Google's "too many simultaneous invocations", a lock timeout, the server's BUSY) are tried again
+  // with growing, spread-out waits. Those errors mean the request did not run, so trying again is safe.
+  var BUSY = /simultaneous|too many|BUSY|lock|try again later|invoked too many|quota|service unavailable|timed out/i;
+  var queue = Promise.resolve(), waiting = 0, pendingRun = {}, pending = null;
+  function rawApi(path, body) {
     return new Promise(function (ok, no) {
-      google.script.run.withSuccessHandler(ok).withFailureHandler(no).api(path, body);
+      google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) { no(new Error((e && e.message) || String(e))); }).api(path, body);
     });
   }
+  function busyNote(on) {
+    var n = document.getElementById('busy-note');
+    if (!n && on) { n = document.createElement('div'); n.id = 'busy-note'; n.className = 'busy-note'; n.textContent = '⏳ Busy… saving your work'; document.body.appendChild(n); }
+    if (n) n.hidden = !on;
+  }
+  function attempt(path, body, n) {
+    return rawApi(path, body).then(function (r) {
+      if (r && r.status === 503) throw new Error((r.body && r.body.error) || 'BUSY');
+      return r;
+    }).catch(function (e) {
+      if (n < 5 && BUSY.test(e.message)) {
+        busyNote(true);
+        var wait = 1200 * Math.pow(1.8, n) + Math.random() * 1500;
+        return new Promise(function (r) { setTimeout(r, wait); }).then(function () { return attempt(path, body, n + 1); });
+      }
+      if (BUSY.test(e.message)) throw new Error('Maker Lab is very busy right now. Your work is safe. Wait a few seconds and try again.');
+      throw e;
+    });
+  }
+  function inLine(fn) {
+    waiting++;
+    var p = queue.catch(function () {}).then(fn);
+    var done = function () { if (--waiting === 0) busyNote(false); };
+    queue = p.then(done, done);
+    return p;
+  }
+  function callApi(path, body) { return inLine(function () { return attempt(path, body, 0); }); }
   function run(name) {
     var args = Array.prototype.slice.call(arguments, 1);
     if (name === 'api') return callApi(args[0], args[1]);
-    return callApi('/api/run', JSON.stringify({ fn: name, args: args })).then(function (r) {
+    var key = name + '|' + JSON.stringify(args);
+    if (pendingRun[key]) return pendingRun[key];                   // the same request is already waiting: share it
+    var p = callApi('/api/run', JSON.stringify({ fn: name, args: args })).then(function (r) {
       if (r && r.body && r.body.ok) return r.body.value;
       throw new Error((r && r.body && r.body.error) || 'Something went wrong.');
     });
+    pendingRun[key] = p;
+    var clear = function () { delete pendingRun[key]; };
+    p.then(clear, clear);
+    return p;
   }
   ML.run = run;
 
   // ------------------------------------------------------------ fetch
-  var queue = Promise.resolve(), pending = null;
   function apiCall(path, body) {
     var key = path + '|' + (body.i === undefined ? '' : body.i);
-    if (pending && pending.key === key && !pending.started && !body.submit && !/quiz|partner/.test(path)) {
+    if (pending && pending.key === key && !pending.started && !body.submit && !/quiz|partner|shop|arcade|help|feedback/.test(path)) {
       Object.keys(body).forEach(function (k) { pending.body[k] = body[k]; });      // merge saves that haven't started yet
       return pending.promise;
     }
     var job = { key: key, body: body, started: false };
-    job.promise = queue = queue.catch(function () {}).then(function () {
+    job.promise = inLine(function () {
       job.started = true;
       if (pending === job) pending = null;
-      return run('api', path, JSON.stringify(job.body));
+      return attempt(path, JSON.stringify(job.body), 0);
     });
     pending = job;
     return job.promise;

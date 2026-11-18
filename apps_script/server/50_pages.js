@@ -14,7 +14,8 @@ function doGet(e) {
     if (!me.email) page = { name: 'error', title: 'Sign in', data: { message: 'Open Maker Lab while signed in to your school Google account.' } };
     else page = me.teacher ? teacherPage_(path) : studentPage_(me, path);
   } catch (err) {
-    page = { name: 'error', title: 'Problem', data: { message: (err && err.message) || 'Something went wrong.' } };
+    var busy = /^BUSY/.test((err && err.message) || '');
+    page = { name: 'error', title: busy ? 'Busy' : 'Problem', data: { message: busy ? 'Maker Lab is very busy right now. Your work is safe. This page will try again in a few seconds.' : (err && err.message) || 'Something went wrong.', retry: busy } };
   }
   page.path = path;
   return render_(me, page);
@@ -47,6 +48,7 @@ function studentPage_(me, path) {
 
 function teacherPage_(path) {
   var cfg = config_(), m, base = { teacher: true };
+  if (path === '/' || path === '/teacher') backupStep_(1500);
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
     tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_(),
     logo_refused: !!PropertiesService.getScriptProperties().getProperty('logo:refused') })) };

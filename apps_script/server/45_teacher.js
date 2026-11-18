@@ -331,7 +331,9 @@ function screenPayload_(cfg, cid) {
 function screenData(cid) {
   var cfg = teacher_();
   if (!cfg.classes[cid]) throw new Error('No such class.');
-  return screenPayload_(cfg, cid);
+  var out = screenPayload_(cfg, cid);
+  backupStep_(2000);                 // the class display refreshes often: build today's backup a little at a time
+  return out;
 }
 
 function screenSave(cid, d) {

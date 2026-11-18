@@ -12,17 +12,22 @@ function stripLikeAppsScript(html) {
 function makeWorld(dist, opts) {
   opts = opts || {};
   const owner = opts.owner || 'teacher@school.org';
-  const state = { user: owner, files: {}, folders: {}, props: {}, cache: {}, nextId: 1, clock: Date.now(), classroom: { courses: [], students: {} } };
+  const state = { user: owner, files: {}, folders: {}, props: {}, cache: {}, nextId: 1, clock: Date.now(), classroom: { courses: [], students: {} },
+                  // reliability tests: make Drive fail on demand, and count what a request reads and writes
+                  fail: { read: false, write: false, open: false }, stats: { reads: 0, writes: 0, lists: 0, creates: 0, locks: 0 } };
+  const driveDown = () => new Error('Service unavailable: Drive. Please try again later.');
   const newId = (p) => p + (state.nextId++);
   const tick = () => (state.clock += 1000);
 
   function fileObj(id) {
+    if (state.fail.open) throw driveDown();
     const f = state.files[id];
     if (!f) throw new Error('No item with the given ID could be found.');
     return {
-      getId: () => id, getName: () => f.name,
-      setContent: (t) => { f.content = String(t); f.modified = tick(); return fileObj(id); },
-      getBlob: () => ({ getDataAsString: () => f.content }),
+      getId: () => id, getName: () => f.name, getUrl: () => 'https://drive.google.com/file/d/' + id,
+      setContent: (t) => { if (state.fail.write) throw driveDown(); state.stats.writes++; f.content = String(t); f.modified = tick(); return fileObj(id); },
+      getBlob: () => ({ getDataAsString: () => { if (state.fail.read) throw driveDown(); state.stats.reads++; return f.content; } }),
+      setTrashed: (v) => { f.trashed = !!v; if (v) f.parent = 'trash'; return fileObj(id); },
       getLastUpdated: () => new Date(f.modified),
       setSharing: (access, perm) => {
         if (access === 'ANYONE_WITH_LINK' && opts.noPublicSharing) throw new Error('Sharing outside your organization is not allowed.');
@@ -31,11 +36,14 @@ function makeWorld(dist, opts) {
     };
   }
   function folderObj(id) {
+    if (state.fail.open) throw driveDown();
     if (!state.folders[id]) throw new Error('No item with the given ID could be found.');
     return {
-      getId: () => id,
-      createFolder: (name) => { const nid = newId('fo'); state.folders[nid] = { name, parent: id }; return folderObj(nid); },
+      getId: () => id, getName: () => state.folders[id].name, getUrl: () => 'https://drive.google.com/drive/folders/' + id,
+      createFolder: (name) => { state.stats.creates++; const nid = newId('fo'); state.folders[nid] = { name, parent: id }; return folderObj(nid); },
       createFile: (name, content, mime) => {
+        if (state.fail.write) throw driveDown();
+        state.stats.creates++;
         const nid = newId('fi');
         if (typeof name === 'object') {          // createFile(blob)
           state.files[nid] = { name: name.name, content: name.bytes.toString('base64'), mime: name.type, binary: true, parent: id, modified: tick() };
@@ -50,6 +58,7 @@ function makeWorld(dist, opts) {
         return { hasNext: () => i < hits.length, next: () => fileObj(hits[i++]) };
       },
       getFiles: () => {
+        state.stats.lists++;
         const hits = Object.keys(state.files).filter((k) => state.files[k].parent === id);
         let i = 0;
         return { hasNext: () => i < hits.length, next: () => fileObj(hits[i++]) };
@@ -87,17 +96,27 @@ function makeWorld(dist, opts) {
       deleteProperty: (k) => { delete state.props[k]; },
       getProperties: () => Object.assign({}, state.props),
     }) },
-    CacheService: { getScriptCache: () => ({
-      get: (k) => (k in state.cache ? state.cache[k] : null),
-      put: (k, v) => { if (String(v).length > 100000) throw new Error('Argument too large: value'); state.cache[k] = String(v); },
+    CacheService: { getScriptCache: () => ({            // entries expire with the world's clock, like the real cache
+      get: (k) => { const e = state.cache[k]; if (!e) return null; if (e.exp <= state.clock) { delete state.cache[k]; return null; } return e.v; },
+      put: (k, v, ttl) => { if (String(v).length > 100000) throw new Error('Argument too large: value'); state.cache[k] = { v: String(v), exp: state.clock + (ttl || 600) * 1000 }; },
       remove: (k) => { delete state.cache[k]; },
     }) },
+    LockService: { getScriptLock: () => ({
+      waitLock: () => { if (state.fail.lock) throw new Error('Lock timeout: another process was holding the lock for too long.'); state.stats.locks++; },
+      tryLock: () => true, releaseLock: () => {}, hasLock: () => true,
+    }) },
     DriveApp: {
-      createFolder: (name) => { const id = newId('fo'); state.folders[id] = { name, parent: 'root' }; return folderObj(id); },
+      createFolder: (name) => { state.stats.creates++; const id = newId('fo'); state.folders[id] = { name, parent: 'root' }; return folderObj(id); },
+      getFoldersByName: (name) => {
+        const hits = Object.keys(state.folders).filter((k) => state.folders[k].name === name);
+        let i = 0;
+        return { hasNext: () => i < hits.length, next: () => folderObj(hits[i++]) };
+      },
       getFolderById: folderObj, getFileById: fileObj,
       Access: { ANYONE_WITH_LINK: 'ANYONE_WITH_LINK', DOMAIN_WITH_LINK: 'DOMAIN_WITH_LINK' }, Permission: { VIEW: 'VIEW' },
     },
     Utilities: {
+      sleep: () => {},
       formatDate: (d, tz, fmt) => {
         const iso = new Date(d).toISOString();
         if (fmt === 'yyyy-MM-dd') return iso.slice(0, 10);

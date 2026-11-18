@@ -503,3 +503,6 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .screen-stage .help-pill { flex: none; white-space: nowrap; }
 .screen-stage .racer { width: max(calc(var(--bot) + 44px), 104px); }
 .screen-stage .racer b { max-width: max(calc(var(--bot) + 44px), 104px); }
+.busy-note { position: fixed; left: 16px; bottom: 16px; z-index: 140; background: #1d2a5c; color: #fff; padding: 10px 16px; border-radius: 14px;
+  font-weight: 800; box-shadow: 0 6px 20px rgba(0, 0, 0, .3); }
+.busy-note[hidden] { display: none; }

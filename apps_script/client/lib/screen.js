@@ -264,12 +264,12 @@
       });
     }
     async function pollHelp() {
-      if (!C.help) return;
+      if (!C.help || document.hidden) return;                      // never from a background tab
       try { drawHelp(await C.help()); } catch (e) { /* try again next time */ }
     }
     $('help-pill').addEventListener('click', () => $('help-dock').scrollIntoView({ block: 'nearest' }));
     $('bell-test').addEventListener('click', () => { if (window.SFX) { if (window.SFX.muted()) window.SFX.toggle(); window.SFX.play('help'); } });
-    setInterval(pollHelp, 5000);
+    setInterval(pollHelp, 10000);                                  // 10 s: fast enough to notice, light on the server
 
     async function refresh() {
       if (document.hidden) return;

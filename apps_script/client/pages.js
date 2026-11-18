@@ -40,6 +40,7 @@
   pages.error = function () {
     main.innerHTML = '<div class="card center"><h1>Hmm</h1><p></p><a class="btn" href="/">Go home</a></div>';
     main.querySelector('p').textContent = d.message;
+    if (d.retry) setTimeout(ML.reload, 4000 + Math.random() * 4000);      // busy: try again by itself, spread out
   };
 
   pages.join = function () {
@@ -331,10 +332,34 @@
       '<p class="muted small">After saving, reload the page to see it in the tab.</p>' +
       (d.logo_refused ? '<p class="small bad">Google wouldn\'t accept the logo from your Drive, so the tab shows 🤖. Pick one of the emoji instead.</p>' : '') +
       '</section>' +
+      '<section class="card data-card" id="data-card"><h2>🗄️ Your data</h2><p class="muted small">Loading…</p></section>' +
       '<section class="card tip"><h2>Getting started</h2><ol><li><b>Import classes</b> from Google Classroom, or create a class. Each class also gets a 6-letter <b>join code</b>.</li>' +
       '<li>Share this page\'s web address with students. Students on an imported roster are already in. Anyone else types the code and their name once. No passwords.</li>' +
       '<li>Assign lessons with due dates. The gradebook shows who\'s done what.</li><li>Open any lesson to see the <b>teacher answer key</b>. Add videos on the <a href="/teacher/videos">Videos</a> page.</li></ol></section>');
     main.innerHTML = h.join('');
+    // Your data: where Maker Lab keeps everything, backups, and other "Maker Lab data" folders (owner only)
+    var drawData = function (info) {
+      var box = document.getElementById('data-card'), h2 = [];
+      h2.push('<h2>🗄️ Your data</h2>');
+      h2.push(info.folder.url ? '<p>Maker Lab keeps everything in <a href="' + E(info.folder.url) + '" target="_blank" rel="noopener">' + E(info.folder.name) +
+        '</a> in your Google Drive: <b>' + info.students + '</b> students, <b>' + info.classes + '</b> classes.</p>'
+        : info.folder.missing ? '<p class="bad">Maker Lab can\'t open its data folder right now. Your data is not lost: nothing new was made. Try again in a minute.</p>'
+        : '<p class="muted">No data yet.</p>');
+      h2.push('<p class="small">' + (info.today ? (info.today.done ? '✅ Today\'s backup is done.' : '⏳ Today\'s backup: ' + info.today.students + ' students so far.') : 'Today\'s backup hasn\'t started yet.') +
+        ' <button class="btn small ghost" id="backup-go" type="button">Back up now</button></p>');
+      if (info.backups.length) h2.push('<p class="small">Backups: ' + info.backups.map(function (b) {
+        return b.url ? '<a href="' + E(b.url) + '" target="_blank" rel="noopener">' + E(b.day) + '</a> (' + b.students + ')' : E(b.day);
+      }).join(' · ') + '</p>');
+      if (info.others.length) h2.push('<p class="small bad">⚠️ Your Drive has ' + info.others.length + ' other "Maker Lab data" folder(s): ' +
+        info.others.map(function (o) { return '<a href="' + E(o.url) + '" target="_blank" rel="noopener">open</a>'; }).join(', ') +
+        '. Maker Lab only uses the one above. Don\'t delete anything; ask Claude if you\'re not sure which is right.</p>');
+      box.innerHTML = h2.join('');
+      document.getElementById('backup-go').addEventListener('click', function () {
+        var b = this; b.disabled = true; b.textContent = 'Backing up…';
+        ML.run('backupNow').then(drawData).catch(function (e) { b.disabled = false; b.textContent = 'Back up now'; flash(e.message, 'error'); });
+      });
+    };
+    ML.run('dataInfo').then(drawData).catch(function () { document.getElementById('data-card').querySelector('p').textContent = 'Couldn\'t load right now.'; });
     document.getElementById('new-go').addEventListener('click', function () {
       act(this, 'createClass', [document.getElementById('new-class').value, document.getElementById('new-grade').value], function (c) { ML.go('/teacher/classes/' + c.id); });
     });

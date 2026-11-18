@@ -8,39 +8,80 @@ function whoIs_() {
 
 function now_() { return new Date().toISOString(); }
 
+// ---------------------------------------------------------------- reliability (docs/RELIABILITY.md)
+// An error from Google means "try again", never "it's missing". Storage (folders, files) is only ever created when
+// no id has EVER been saved for it, inside a lock, and a failed read is never replaced by a blank record.
+var BUSY_MSG_ = 'BUSY: Maker Lab is very busy right now. Your work is safe. Trying again...';
+function busy_() { var e = new Error(BUSY_MSG_); e.status = 503; return e; }
+
+/** Run a Google call, trying again a few times. If it keeps failing, throw BUSY (the browser will retry). */
+function retry_(fn) {
+  for (var i = 0; i < 4; i++) {
+    try { return fn(); } catch (e) {
+      if (i === 3) { console.warn('Google call failed: ' + ((e && e.message) || e)); throw busy_(); }
+      Utilities.sleep(250 * (i + 1));
+    }
+  }
+}
+
+/** Take turns for read-change-write of shared things. Keep it short: nothing slow inside. */
+function withLock_(fn) {
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { throw busy_(); }
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
+/** Every storage id ever set, so the right folder or file can always be found again. */
+function rememberStorage_(key, id) {
+  var props = PropertiesService.getScriptProperties(), list = [];
+  try { list = JSON.parse(props.getProperty('storage:history') || '[]'); } catch (e) { list = []; }
+  list.push({ key: key, id: id, at: now_() });
+  props.setProperty('storage:history', JSON.stringify(list.slice(-40)));
+}
+
 // ---------------------------------------------------------------- Drive folders
 function folder_(key, name, parentFn) {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty(key);
-  if (id) {
-    try { return DriveApp.getFolderById(id); } catch (e) { /* deleted: make a new one */ }
-  }
-  var f = parentFn ? parentFn().createFolder(name) : DriveApp.createFolder(name);
-  props.setProperty(key, f.getId());
-  return f;
+  if (id) return retry_(function () { return DriveApp.getFolderById(id); });   // can't open it now: BUSY, never a new one
+  var parent = parentFn ? parentFn() : null;                                     // outside the lock (it may need its own)
+  return withLock_(function () {
+    var again = props.getProperty(key);                                          // another first visitor may have made it
+    if (again) return retry_(function () { return DriveApp.getFolderById(again); });
+    var f = parent ? parent.createFolder(name) : DriveApp.createFolder(name);
+    props.setProperty(key, f.getId());
+    rememberStorage_(key, f.getId());
+    return f;
+  });
 }
 function dataFolder_() { return folder_('folder:data', DATA_FOLDER, null); }
 function studentFolder_() { return folder_('folder:students', 'students', dataFolder_); }
+function backupFolder_() { return folder_('folder:backups', 'backups', dataFolder_); }
 
+/** A saved JSON file. Throws BUSY if Drive fails; throws (never returns {}) if the file is damaged. */
 function readJsonFile_(id) {
-  return JSON.parse(DriveApp.getFileById(id).getBlob().getDataAsString());
+  var text = retry_(function () { return DriveApp.getFileById(id).getBlob().getDataAsString(); });
+  try { return JSON.parse(text); } catch (e) { throw new Error('A Maker Lab data file is damaged (' + id + '). Nothing was changed. Ask Claude to look at it.'); }
 }
 
-/** A JSON file in the data folder, found by a script property, made on first write. */
+/** A JSON file in the data folder, found by a script property. `fallback` only when it has never been made. */
 function readNamed_(key, fallback) {
   var id = PropertiesService.getScriptProperties().getProperty('file:' + key);
   if (!id) return fallback;
-  try { return readJsonFile_(id); } catch (e) { return fallback; }
+  return readJsonFile_(id);
 }
 function writeNamed_(key, value) {
   var props = PropertiesService.getScriptProperties();
-  var id = props.getProperty('file:' + key);
-  var text = JSON.stringify(value);
-  if (id) {
-    try { DriveApp.getFileById(id).setContent(text); return; } catch (e) { /* deleted: make a new one */ }
-  }
-  var f = dataFolder_().createFile(key + '.json', text, 'application/json');
-  props.setProperty('file:' + key, f.getId());
+  var id = props.getProperty('file:' + key), text = JSON.stringify(value);
+  if (id) { retry_(function () { DriveApp.getFileById(id).setContent(text); }); return; }
+  var folder = dataFolder_();
+  withLock_(function () {
+    var again = props.getProperty('file:' + key);
+    if (again) { retry_(function () { DriveApp.getFileById(again).setContent(text); }); return; }
+    var f = folder.createFile(key + '.json', text, 'application/json');
+    props.setProperty('file:' + key, f.getId());
+    rememberStorage_('file:' + key, f.getId());
+  });
 }
 
 // ---------------------------------------------------------------- teacher settings
@@ -84,25 +125,28 @@ function newStudent_(email) {
 function studentFileId_(email) {
   return PropertiesService.getScriptProperties().getProperty('student:' + email);
 }
+/** A student's record. null ONLY when they have never had one (not joined). A read error throws BUSY. */
 function loadStudent_(email) {
   var cached = CacheService.getScriptCache().get('s:' + email);
   if (cached) return JSON.parse(cached);
   var id = studentFileId_(email);
   if (!id) return null;
-  try { return readJsonFile_(id); } catch (e) { return null; }
+  return readJsonFile_(id);
 }
 function saveStudent_(rec) {
   rec.updated_at = now_();
   var text = JSON.stringify(rec);
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('student:' + rec.email);
-  var saved = false;
-  if (id) {
-    try { DriveApp.getFileById(id).setContent(text); saved = true; } catch (e) { /* deleted: make a new one */ }
-  }
-  if (!saved) {
-    var name = 'student-' + rec.email.replace(/[^a-z0-9._-]/g, '_') + '.json';
-    props.setProperty('student:' + rec.email, studentFolder_().createFile(name, text, 'application/json').getId());
+  if (id) retry_(function () { DriveApp.getFileById(id).setContent(text); });       // fails: BUSY, never a second file
+  else {
+    var folder = studentFolder_();
+    withLock_(function () {                                                         // first save of a new student
+      var again = props.getProperty('student:' + rec.email);
+      if (again) { retry_(function () { DriveApp.getFileById(again).setContent(text); }); return; }
+      var name = 'student-' + rec.email.replace(/[^a-z0-9._-]/g, '_') + '.json';
+      props.setProperty('student:' + rec.email, folder.createFile(name, text, 'application/json').getId());
+    });
   }
   if (text.length < 90000) CacheService.getScriptCache().put('s:' + rec.email, text, 600);
   else CacheService.getScriptCache().remove('s:' + rec.email);
@@ -110,9 +154,15 @@ function saveStudent_(rec) {
 
 // ---------------------------------------------------------------- gradebook summary
 // One small record per student, rebuilt from files that changed since the last look.
+// The whole class opens the same views at once, so the summary is shared through the cache for a few seconds,
+// and only one request at a time rebuilds it (the others use the copy they have).
 function summary_(fresh) {
+  var cache = CacheService.getScriptCache(), hit = !fresh && cache.get('summary');
+  if (hit) return JSON.parse(hit);
   var s = readNamed_('summary', null) || { built_ms: 0, students: {} };
-  if (!fresh && Date.now() - (s.built_ms || 0) < SUMMARY_MAX_AGE_MS) return s;
+  if (!fresh && Date.now() - (s.built_ms || 0) < SUMMARY_MAX_AGE_MS) { cacheSummary_(s); return s; }
+  if (!fresh && s.built_ms && cache.get('summary:building')) return s;         // someone else is rebuilding it
+  cache.put('summary:building', '1', 30);
   var since = (s.built_ms || 0) - 120000;       // overlap a little, Drive times are rounded
   var started = Date.now();
   var props = PropertiesService.getScriptProperties().getProperties();
@@ -128,7 +178,12 @@ function summary_(fresh) {
   }
   s.built_ms = started;
   writeNamed_('summary', s);
+  cacheSummary_(s);
+  cache.remove('summary:building');
   return s;
+}
+function cacheSummary_(s) {
+  try { var t = JSON.stringify(s); if (t.length < 95000) CacheService.getScriptCache().put('summary', t, 20); } catch (e) { /* too big to share: fine */ }
 }
 
 function studentSummary_(rec) {
