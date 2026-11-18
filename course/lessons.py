@@ -1,4 +1,4 @@
-"""Load and check the lessons in course/lessons/*.yaml.
+"""Load and check the lessons: course/lessons/*.yaml (7th grade) and course/lessons/g6/*.yaml (6th grade).
 
 A lesson has four stages, like the App Inventor curriculum:
   mission  what you'll make, what you need, a partner question
@@ -19,7 +19,12 @@ from . import rules
 
 HERE = Path(__file__).resolve().parent
 LEVELS = ("Easier", "Medium", "Challenge")
-STEP_KEYS = {"part", "title", "say", "do", "code", "new", "what", "tip", "stuck", "test", "ask", "fields", "picture", "wiring"}
+STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip", "stuck", "test", "ask", "fields", "picture", "wiring"}
+# MakeCode Blocks, written as text (6th grade). One block per line, 2 spaces of indent per level; a line ending in ":"
+# holds the indented lines under it (on start:, forever:, repeat 4 times:, if ... then:, else:).
+# [x] is a value you type or pick, (x) is a block snapped into a slot. {cat} at the start sets the color when
+# the first word doesn't make it clear (client/lesson.js guesses the rest).
+BLOCK_CATS = {"basic", "input", "music", "led", "radio", "loops", "logic", "variables", "math", "game", "functions", "ml", "text"}
 
 
 def words(text) -> int:
@@ -45,21 +50,55 @@ def standards_table() -> dict:
     return {s["code"]: {**s, "topic": t["topic"], "strand": t["strand"]} for t in data["topics"] for s in t["standards"]}
 
 
+def check_blocks(text: str) -> list[str]:
+    """Problems with a blocks listing (see BLOCK_CATS above)."""
+    errs, prev_indent, prev_opens = [], -1, True
+    for n, line in enumerate(str(text).rstrip("\n").split("\n"), 1):
+        if not line.strip():
+            errs.append(f"line {n} is empty")
+            continue
+        spaces = len(line) - len(line.lstrip(" "))
+        if spaces % 2:
+            errs.append(f"line {n}: indent with 2 spaces per level")
+        level = spaces // 2
+        if level > prev_indent + (1 if prev_opens else 0) or (n == 1 and level):
+            errs.append(f"line {n}: indented more than the line above allows (does that line end with ':'?)")
+        m = re.match(r"\{(\w+)\}", line.strip())
+        if m and m.group(1) not in BLOCK_CATS:
+            errs.append(f"line {n}: unknown block color {{{m.group(1)}}}")
+        if line.count("[") != line.count("]") or line.count("(") != line.count(")"):
+            errs.append(f"line {n}: unbalanced [ ] or ( )")
+        prev_indent, prev_opens = level, line.rstrip().endswith(":")
+    return errs
+
+
 def _check_code_block(item: dict, where: str) -> list[str]:
     errs = []
+    if item.get("code") and item.get("blocks"):
+        errs.append(f"{where}: use 'code' (Python) or 'blocks', not both")
+    if item.get("blocks"):
+        errs += [f"{where}: blocks {e}" for e in check_blocks(item["blocks"])]
+    body = item.get("code") or item.get("blocks")
     if item.get("new") is not None:
-        if not item.get("code"):
-            errs.append(f"{where}: 'new' needs 'code'")
-        elif line_set(item["new"], len(item["code"].rstrip("\n").split("\n"))) is None:
+        if not body:
+            errs.append(f"{where}: 'new' needs 'code' or 'blocks'")
+        elif line_set(item["new"], len(body.rstrip("\n").split("\n"))) is None:
             errs.append(f"{where}: 'new' must be line numbers like \"3-9\" inside the code")
     return errs
 
 
+def plan_by_id() -> dict:
+    """lesson id -> (course id, plan row) for every course in rules.PLANS."""
+    return {c[0]: (cid, c) for cid, (rows, _) in rules.PLANS.items() for c in rows}
+
+
 def validate(lesson: dict) -> list[str]:
     errs = []
-    plan = {c[0]: c for c in rules.COURSE}
+    plan = plan_by_id()
     if lesson.get("id") not in plan:
-        return [f"id {lesson.get('id')!r} isn't in rules.COURSE"]
+        return [f"id {lesson.get('id')!r} isn't in a course plan in rules.py (COURSE or COURSE_6)"]
+    if lesson.get("course") != plan[lesson["id"]][0]:
+        errs.append(f"the file is in the wrong folder for course {plan[lesson['id']][0]}")
     m = lesson.get("mission") or {}
     for key in ("big_question", "goal", "you_need", "talk"):
         if not m.get(key):
@@ -123,16 +162,19 @@ def validate(lesson: dict) -> list[str]:
 
 @lru_cache(maxsize=1)
 def _load() -> tuple:
-    plan = {c[0]: c for c in rules.COURSE}
+    plan = plan_by_id()
     out = []
-    for path in sorted((HERE / "lessons").glob("*.yaml")):
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        data["_file"] = path.name
-        c = plan.get(data.get("id"))
-        if c:
-            _, data["number"], data["title_plan"], data["icon"], data["color"], data["python"], data["hardware"], data["pos"] = c
-        out.append(data)
-    out.sort(key=lambda l: l.get("number", 99))
+    for cid, meta in rules.COURSES.items():
+        for path in sorted((HERE / meta["dir"]).glob("*.yaml")):
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            data["_file"] = meta["dir"].replace("lessons", "").strip("/") + ("/" if meta["dir"] != "lessons" else "") + path.name
+            data["course"] = cid
+            row = plan.get(data.get("id"))
+            if row:
+                _, data["number"], data["title_plan"], data["icon"], data["color"], data["python"], data["hardware"], data["pos"] = row[1]
+            out.append(data)
+    order = list(rules.COURSES)
+    out.sort(key=lambda l: (order.index(l["course"]), l.get("number", 99)))
     return tuple(out)
 
 

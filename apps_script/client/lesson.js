@@ -40,7 +40,13 @@
       });
       return out + (comment ? '<span class="py-com">' + E(comment) + '</span>' : '');
     }
-    function codeBox(code, newLines) {
+    function blocksBox(blocks, newLines) {
+      if (!blocks || !window.MLBlocks) return '';
+      return ((newLines || []).length ? '<p class="code-legend"><mark>Glowing blocks</mark> are the new ones to add.</p>' : '') +
+        `<div class="blocks-box"><p class="blocks-hint">🧩 Find each block in the drawer with the same color.</p>${window.MLBlocks.render(blocks, newLines)}</div>`;
+    }
+    function codeBox(code, newLines, blocks) {
+      if (blocks) return blocksBox(blocks, newLines);
       if (!code) return '';
       const fresh = new Set(newLines || []);
       const lines = code.split('\n').map((ln, i) => `<span class="ln${fresh.has(i + 1) ? ' new' : ''}" data-n="${i + 1}">${highlight(ln) || ' '}</span>`).join('');
@@ -82,7 +88,7 @@
     main.innerHTML =
       `<section class="banner ${E(L.color)}"><div class="banner-icon">${E(L.icon)}</div><div>` +
       `<h1>${E(L.title)}</h1><p>${E(L.tagline)}</p><div class="pills"><span class="pill">Lesson ${E(L.number)}</span>` +
-      `<span class="pill">🐍 ${E(L.python)}</span><span class="pill">🔌 ${E(L.hardware)}</span>` +
+      `<span class="pill">${L.editor === 'blocks' ? '🧩' : '🐍'} ${E(L.python)}</span><span class="pill">🔌 ${E(L.hardware)}</span>` +
       `<span class="pill" id="xp-chip">⭐ ${d.lesson_xp} / ${xpPossible} XP</span></div></div></section>` +
       `<nav class="stages" id="stages" aria-label="Lesson stages"></nav>` +
       `<div class="lesson-grid"><div id="stage-view"></div><aside class="lesson-side">` +
@@ -176,7 +182,7 @@
         (St.say ? `<div class="panel-soft box-new">${St.say}</div>` : '') + picture(St.picture) +
         (St.wiring.length ? `<div class="panel-soft box-what"><h3>🔌 Wire it</h3><ol class="do-list">${St.wiring.map((w) => `<li>${w.text || w}</li>`).join('')}</ol></div>` : '') +
         (St.do.length ? `<h3>Do this</h3><ol class="do-list">${St.do.map((x) => `<li>${x}</li>`).join('')}</ol>` : '') +
-        codeBox(St.code, St.new) +
+        codeBox(St.code, St.new, St.blocks) +
         (St.tip ? `<div class="panel-soft box-tip">${St.tip}</div>` : '') +
         (St.what ? `<div class="panel-soft box-what"><h3>💡 What it does</h3>${St.what}</div>` : '') +
         (St.stuck.length ? `<div class="panel-soft box-stuck"><h3>🧯 Not working? Check these</h3><ul>${St.stuck.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : '') +
@@ -287,7 +293,7 @@
         (ship.extensions.length ? `<h3>🧩 Make it yours: add at least one extension</h3><div class="ext-grid">${ship.extensions.map((e, k) =>
           `<details class="ext"${ext[k] ? ' open' : ''}><summary><input type="checkbox" data-ext="${k}" ${ext[k] ? 'checked' : ''} aria-label="I added ${E(e.title)}">` +
           `<span>${'ABCDEFG'[k]}. ${E(e.title)}</span><span class="ext-level ${E(e.level)}">${E(e.level)}</span></summary><div class="ext-body">` +
-          `<p><b>Goal:</b> ${e.goal}</p>${e.where ? `<p><b>Where it goes:</b> ${e.where}</p>` : ''}${codeBox(e.code, e.new)}` +
+          `<p><b>Goal:</b> ${e.goal}</p>${e.where ? `<p><b>Where it goes:</b> ${e.where}</p>` : ''}${codeBox(e.code, e.new, e.blocks)}` +
           (e.hints.length ? `<div class="panel-soft box-tip"><h3>💡 Hints</h3><ul>${e.hints.map((h) => `<li>${h}</li>`).join('')}</ul></div>` : '') +
           `<p class="muted small">Tick the box when you've added it and tested it three times.</p></div></details>`).join('')}</div>` : '') +
         `<h3>✏️ Reflect</h3>${ship.reflect.map((q, k) => `<label class="ask-box"><b>${E(q)}</b><textarea data-reflect="${k}" rows="3"></textarea></label>`).join('')}` +

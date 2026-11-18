@@ -1,0 +1,293 @@
+id: ai-fitness-coach
+title: AI Fitness Coach
+tagline: Train an AI to count your exercises, then test if it's fair
+minutes: 90          # about two class periods
+
+mission:
+  big_question: "How do we know if an AI works well for everyone?"
+  goal: |
+    Train an **AI coach** that knows when you do **jumping jacks**, **squats** or **rest**.
+    Your micro:bit counts every rep. Then you become the **tester**. Does it get it right?
+    Does it work for your partner too? Make it better and test again.
+  picture:
+    type: compare
+    items:
+      - {icon: "🏋️", title: "Train", text: "Show the AI lots of examples"}
+      - {icon: "🔢", title: "Count", text: "Add 1 every time it sees a rep"}
+      - {icon: "🔬", title: "Test", text: "Count how often it is right"}
+      - {icon: "🤝", title: "Make it fair", text: "Add data from more people"}
+  you_need:
+    - A partner
+    - A Chromebook with **micro:bit CreateAI** and MakeCode open
+    - A **micro:bit V2** with a battery pack
+    - Some space to move safely
+  learn:
+    - "AI makes **mistakes**, so we **test** it"
+    - "**accuracy**: how often the AI is right"
+    - "an AI only knows the people in its **training data**"
+  talk: Have you ever used an app or game that didn't understand you, but worked for a friend? What do you think went wrong?
+
+build:
+  - part: "Part 1: Train your coach"
+    title: Pick your exercises
+    say: |
+      You will teach the AI **three actions**. Two exercises and one **rest** action.
+      The rest action is important. It helps the AI tell when you are **not** exercising.
+    picture:
+      type: compare
+      items:
+        - {icon: "🙌", title: "Jumping jacks", text: "or arm circles"}
+        - {icon: "🦵", title: "Squats", text: "or arm raises"}
+        - {icon: "🪑", title: "Rest", text: "standing or sitting still"}
+    do:
+      - Choose two exercises with your partner. You can swap in the **arm** moves if you'd like to stay seated.
+      - Write your three action names below.
+    tip: "**Safety first:** stand an arm's length from everyone. Hold the micro:bit firmly or strap it to your wrist."
+    test:
+      - We picked two exercises and a rest action
+      - Everyone has space to move safely
+    fields: ["Exercise 1", "Exercise 2", "Rest action"]
+
+  - part: "Part 1: Train your coach"
+    title: Record training data
+    say: |
+      Open **micro:bit CreateAI** and start a new session. Connect your micro:bit like you did in How Machines Learn.
+      Each recording is one **data sample**. More good samples make a smarter coach.
+    do:
+      - Add your three actions and type their names.
+      - Hold the micro:bit the **same way** every time.
+      - Record **at least 5 samples** for each action. Take turns with your partner.
+      - Do the move **during the whole recording**, not just at the start.
+    tip: "**Who is in your data?** Write down whose movements you recorded. You'll need this later."
+    test:
+      - Each action has at least 5 samples
+      - Every sample shows the real move (we deleted any bad ones)
+    fields: ["Samples by me", "Samples by my partner"]
+
+  - part: "Part 1: Train your coach"
+    title: Train and try it
+    say: Click **Train model**. The AI looks for patterns in your samples. Then test it right in CreateAI.
+    do:
+      - Click **Train model** and wait.
+      - Do each exercise. Watch which action CreateAI shows and how sure it is.
+    test:
+      - CreateAI shows the right action most of the time
+    ask: Which action does the AI mix up the most? Why do you think that is?
+
+  - part: "Part 2: Count the reps"
+    title: Open it in MakeCode
+    say: |
+      Now you will code with your model. Click **Edit in MakeCode**.
+      You will see a new drawer called **ML**. It has blocks for the actions you trained.
+    do:
+      - Click **Edit in MakeCode** in CreateAI.
+      - Make sure you are in **Blocks**.
+      - Find the **ML** drawer. Look at the blocks inside.
+    tip: "Running the AI on the micro:bit needs a **micro:bit V2** (it has the sound logo on the back)."
+    test:
+      - MakeCode is open in Blocks
+      - I can see the ML drawer with my action names
+    fields: ["Name of one ML block"]
+
+  - part: "Part 2: Count the reps"
+    title: Count jumping jacks
+    say: A **variable** remembers a number. Every time the AI sees a new jumping jack, we add 1.
+    do:
+      - Make a variable called **reps**.
+      - Build these blocks. Use your own exercise name in the ML block.
+      - Download to your micro:bit and do 5 jumping jacks.
+    blocks: |
+      on start:
+        set [reps] to [0]
+        show number (reps)
+      {ml} on ML [jumping jacks] start:
+        change [reps] by [1]
+        show number (reps)
+    new: "4-6"
+    what: "`on ML [jumping jacks] start` runs **once** each time the AI decides a new jumping jack began. Then the count goes up by 1."
+    test:
+      - The number goes up when I do the exercise
+      - The number stays still when I rest
+    ask: You did 5 jumping jacks. What number did the micro:bit show? Was it right?
+
+  - part: "Part 2: Count the reps"
+    title: Count the other exercise too
+    say: Give your second exercise its **own** counter. Then each exercise keeps its own score.
+    do:
+      - Make a second variable called **squats**.
+      - Add the new blocks below.
+      - Press **button A** to see jumping jacks. Press **button B** to see squats.
+    blocks: |
+      on start:
+        set [reps] to [0]
+        set [squats] to [0]
+      {ml} on ML [jumping jacks] start:
+        change [reps] by [1]
+      {ml} on ML [squats] start:
+        change [squats] by [1]
+      on button [A] pressed:
+        show number (reps)
+      on button [B] pressed:
+        show number (squats)
+    new: "3, 6-11"
+    test:
+      - Each exercise adds to its own counter
+      - Buttons A and B show the right numbers
+    ask: Why do we need two different variables instead of one?
+
+  - part: "Part 3: Test your AI"
+    title: Test it 10 times
+    say: |
+      Scientists **test** before they trust. Do your first exercise **10 times**, slowly.
+      Count how many reps the AI caught. That number out of 10 is your **accuracy**.
+    do:
+      - Press the reset button on the back so the counts start at 0.
+      - Do exactly 10 jumping jacks. Your partner counts out loud.
+      - Press **A**. Write the number the micro:bit shows.
+      - "Accuracy: if it counted 8 out of 10, that's **80%**."
+    test:
+      - We tested with exactly 10 reps
+      - We worked out our accuracy
+    fields: ["AI counted (out of 10)", "Accuracy %"]
+
+  - part: "Part 3: Test your AI"
+    title: Test with someone new
+    say: |
+      Now test with a **different person**. Someone taller, shorter, faster or slower.
+      Did the AI do as well? An AI only knows the movements in its **training data**.
+    do:
+      - Ask someone who did **not** record any samples to do 10 reps.
+      - Write how many the AI counted.
+    test:
+      - We tested with a person who wasn't in our training data
+    fields: ["New tester counted (out of 10)", "Accuracy %"]
+    ask: Was the AI less accurate for the new person? Why might that happen?
+
+  - part: "Part 3: Test your AI"
+    title: Make it fairer
+    say: |
+      If the AI only learned from you, it works best for **you**. That's **bias**.
+      To fix it, add **more different examples**. Then train and test again.
+    do:
+      - In CreateAI, add 3 more samples of each exercise from your new tester.
+      - Train the model again. Click **Edit in MakeCode** and download again.
+      - Test with the new person for 10 more reps.
+    tip: "Real AI apps have this problem too. If the training data leaves people out, the app works worse for them."
+    test:
+      - We added data from a new person and trained again
+      - We tested again and wrote the new accuracy
+    fields: ["Accuracy before %", "Accuracy after %"]
+    ask: Did more different data help? What does this tell you about how AI should be trained?
+
+  - part: "Part 3: Test your AI"
+    title: "Checkpoint: your AI coach"
+    say: Your program should look like this. Your action names may be different.
+    blocks: |
+      on start:
+        set [reps] to [0]
+        set [squats] to [0]
+      {ml} on ML [jumping jacks] start:
+        change [reps] by [1]
+      {ml} on ML [squats] start:
+        change [squats] by [1]
+      on button [A] pressed:
+        show number (reps)
+      on button [B] pressed:
+        show number (squats)
+    stuck:
+      - "**No ML drawer?** Open the project from CreateAI with **Edit in MakeCode**, not a new project."
+      - "**Count doesn't change?** Check the ML block has the right action name, and that you downloaded to a **micro:bit V2**."
+      - "**Counts too many?** Add more **rest** samples, then train again."
+    test:
+      - My AI coach counts both exercises
+      - I tested it, made it fairer and tested again
+
+quiz:
+  - question: "What does `on ML [squats] start` do?"
+    choices: ["Runs once each time the AI decides a new squat started", "Runs every second", "Trains the AI", "Turns the micro:bit off"]
+    answer: 0
+    why: It runs when the AI's guess changes to squats. That's why it's perfect for counting reps.
+  - question: The AI counted 7 out of 10 jumping jacks. What is its accuracy?
+    choices: ["7%", "17%", "70%", "100%"]
+    answer: 2
+    why: 7 out of 10 is the same as 70 out of 100, so 70%.
+  - question: Your AI works great for you but badly for your friend. What is the best fix?
+    choices: ["Delete all the data", "Add training samples from your friend and other people", "Do the exercise faster", "Use a different micro:bit"]
+    answer: 1
+    why: The AI only knows the movements it was trained on. Data from more people makes it work for more people.
+  - question: Why did we train a "rest" action?
+    choices: ["So the micro:bit can sleep", "So the AI can tell when you are NOT exercising", "It makes the battery last longer", "MakeCode needs exactly three actions"]
+    answer: 1
+    why: Without rest, the AI has to pick an exercise even when you stand still, so it counts reps you never did.
+  - question: When an AI works better for some people than others, we call that...
+    choices: ["a bug in the battery", "bias", "a variable", "a loop"]
+    answer: 1
+    why: Bias often comes from training data that leaves some people out.
+
+ship:
+  extensions:
+    - title: Total workout score
+      level: Easier
+      goal: Press A and B together to show the total of both exercises.
+      where: Add a new event block.
+      blocks: |
+        on button [A+B] pressed:
+          show number ((reps) + (squats))
+      hints: ["The plus block is in the Math drawer.", "Drop each variable into one side of the plus block."]
+    - title: Cheer at 10
+      level: Easier
+      goal: Show a big heart and play a sound when you reach 10 jumping jacks.
+      where: Inside on ML [jumping jacks] start, after change reps.
+      blocks: |
+        {ml} on ML [jumping jacks] start:
+          change [reps] by [1]
+          if ((reps) = [10]) then:
+            show icon [heart]
+            {music} play sound [giggle] until done
+      new: "3-5"
+      hints: ["The = block is in the Logic drawer.", "Try a different sound or icon."]
+    - title: Rest timer
+      level: Medium
+      goal: When the AI sees you resting, count the seconds you rest.
+      where: Use the rest action's ML block and a new variable.
+      blocks: |
+        {ml} on ML [rest] start:
+          set [rest seconds] to [0]
+        forever:
+          if (is ML [rest] detected) then:
+            change [rest seconds] by [1]
+            pause (ms) [1000]
+      hints: ["Check the exact name of the detected block in your ML drawer.", "Show rest seconds with button A+B or on the screen."]
+    - title: Third exercise
+      level: Medium
+      goal: Train a third exercise and give it its own counter.
+      where: Add the action in CreateAI, train again, then add a new ML block in MakeCode.
+      hints: ["Record at least 5 samples from two different people.", "You'll need a new variable and a way to show it, like shaking the micro:bit."]
+    - title: Fairness report
+      level: Challenge
+      goal: Test your AI with 3 different people and make a table of their accuracy.
+      where: In a Google Doc or on paper, then share it with your teacher.
+      hints: ["Each person does 10 reps.", "Was the AI fair to everyone? What data would you add next?"]
+  reflect:
+    - Was your AI equally good for every tester? What made the difference?
+    - Why should the people who build AI test it with many different people?
+
+teacher_notes: |
+  * **Timing:** two class periods. Part 1 and Part 2 on day 1, Part 3 (testing and fairness) on day 2.
+  * **Hardware:** CreateAI can record and train with any micro:bit, but **running the model in MakeCode needs a
+    micro:bit V2**. Battery packs make exercising much easier. Chromebooks without Bluetooth need an extra V2 per pair.
+  * **Safety and inclusion:** clear space before Part 1. Every action has a seated alternative (arm circles, arm
+    raises, resting hands). No student has to exercise; any student can be the counter or tester instead.
+  * **Accuracy math:** with 10 reps, accuracy % is just the count times 10. Some AIs count *more* than 10; talk about
+    "false positives" and adding more rest samples.
+  * **Fairness talk:** the key idea is that an AI only knows the people in its training data. Connect it to real
+    apps (voice assistants, face filters) that work worse for some people.
+  * Students turn in their MakeCode **share link** in Ship it.
+
+standards:
+  - code: 6-8.CT.d.6
+    how: Students test their AI coach, measure accuracy, change the training data and test again.
+  - code: 6-8.CT.c.5
+    how: Students collect movement data with the micro:bit's sensors to train and test a machine learning model.
+  - code: 6-8.CAS.c.1
+    how: Students discuss how AI apps can work better for some people than others when training data leaves people out.

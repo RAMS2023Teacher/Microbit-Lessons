@@ -18,7 +18,14 @@ function badgeById_(id) {
   return null;
 }
 
-function lessonList_() { return DATA.order.filter(function (id) { return DATA.lessons[id]; }).map(function (id) { return DATA.lessons[id]; }); }
+// ---------------------------------------------------------------- courses (grades)
+// Each class is set to a course (cfg.classes[cid].grade: 'g6' or 'g7'). A student follows their first class's course.
+function courseOfClass_(cfg, cid) { var c = cfg.classes[cid]; return c && DATA.courses[c.grade] ? c.grade : DATA.default_course; }
+function courseOf_(rec, cfg) { var ids = studentClassIds_(rec, cfg); return ids.length ? courseOfClass_(cfg, ids[0]) : DATA.default_course; }
+/** The written lessons of a course in order, or of every course when cid is empty (the teacher's view). */
+function lessonList_(cid) {
+  return (cid ? DATA.courses[cid].order : DATA.order).filter(function (id) { return DATA.lessons[id]; }).map(function (id) { return DATA.lessons[id]; });
+}
 
 function complete_(L, p) { return !!p && percent_(p, L) === 100; }
 
@@ -54,6 +61,9 @@ function badgeChecks_(rec, cfg) {
         var p = (rec.progress || {})[a.lesson_id];
         return classes.indexOf(a.class_id) >= 0 && a.due && p && p.completed_at && p.completed_at.slice(0, 10) <= a.due;
       });
+    } else if (rule[0] === 'course_done') {
+      var list = lessonList_(courseOf_(rec, cfg));
+      ok = list.length > 0 && list.every(function (L) { return complete_(L, (rec.progress || {})[L.id]); });
     } else if (c[rule[0]] !== undefined) ok = c[rule[0]] >= rule[1];
     if (ok) earned[b[0]] = 1;
   });
@@ -124,8 +134,12 @@ function possibleXp_(L) {
     X.extension * ((L.ship || {}).extensions || []).length + X.ship + X.complete;
 }
 
-function badgeList_(rec) {
-  return DATA.badges.map(function (b) {
+/** Badges for a student's course: a badge for a lesson in another course is left out (unless they earned it). */
+function badgeList_(rec, cid) {
+  return DATA.badges.filter(function (b) {
+    var r = b[4] || [], plan = r[0] === 'lesson' ? DATA.course_by_id[r[1]] : null;
+    return !cid || !plan || plan.course === cid || (rec.badges || {})[b[0]];
+  }).map(function (b) {
     var at = (rec.badges || {})[b[0]];
     return { id: b[0], icon: b[1], name: b[2], desc: b[3], earned: !!at, earned_at: at || null };
   });
@@ -141,15 +155,16 @@ function assignedIds_(rec, cfg) {
 
 var COLOR_UNIT_ = { blue: 1, gold: 2, green: 3, red: 4, purple: 5, teal: 6, orange: 7, pink: 4 };
 
-function mapData_(rec, assigned) {
+function mapData_(rec, assigned, cid) {
+  var course = DATA.courses[cid || DATA.default_course], plan = course.plan, requires = course.requires;
   var prog = (rec && rec.progress) || {}, complete = {}, nodes = [], current = null;
-  DATA.course.forEach(function (c) { var L = DATA.lessons[c.id]; if (L && complete_(L, prog[c.id])) complete[c.id] = 1; });
-  var recent = Object.keys(prog).filter(function (l) { return DATA.lessons[l] && !complete[l]; })
+  plan.forEach(function (c) { var L = DATA.lessons[c.id]; if (L && complete_(L, prog[c.id])) complete[c.id] = 1; });
+  var recent = Object.keys(prog).filter(function (l) { return DATA.lessons[l] && DATA.lessons[l].course === course.id && !complete[l]; })
     .sort(function (a, b) { return String(prog[b].updated_at || '').localeCompare(String(prog[a].updated_at || '')); });
   if (recent.length) current = recent[0];
-  DATA.course.forEach(function (c, i) {
+  plan.forEach(function (c, i) {
     var L = DATA.lessons[c.id], p = prog[c.id], pct = L && p ? percent_(p, L) : 0;
-    var reqs = DATA.requires[c.id] || [];
+    var reqs = requires[c.id] || [];
     var unlocked = !reqs.length || reqs.some(function (r) { return complete[r]; }) || assigned[c.id] || pct > 0;
     var state = !L ? 'locked' : complete[c.id] ? 'complete' : pct > 0 ? 'progress' : unlocked ? 'open' : 'locked';
     nodes.push({ id: c.id, number: c.number, title: c.title, unit: COLOR_UNIT_[c.color] || 1, x: c.pos[0], y: c.pos[1],
@@ -163,7 +178,7 @@ function mapData_(rec, assigned) {
     var open = nodes.filter(function (n) { return n.state === 'open'; })[0];
     current = open ? open.id : (nodes.length ? nodes[0].id : null);
   }
-  return { nodes: nodes, current: current, units: {} };
+  return { nodes: nodes, current: current, units: {}, course: { id: course.id, name: course.name } };
 }
 
 // ---------------------------------------------------------------- avatars

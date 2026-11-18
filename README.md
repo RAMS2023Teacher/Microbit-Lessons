@@ -20,7 +20,30 @@ Around that: XP, levels, badges and a robot avatar; a skill tree; partners on on
 a teacher gradebook with each student's stage, quiz score and project link; a projector **Class display**;
 Google Classroom roster import and a grades package.
 
-## The course
+## The courses
+
+Each class is set to a course on its class page (or when you create it). Students see only their course's lessons,
+skill tree and badges; XP, levels, robots, the shop and Robot Rush are shared.
+
+### 6th grade: Games, Programming & AI (MakeCode Blocks)
+
+| # | Project | Coding idea | Hardware |
+|---|---|---|---|
+| 1 | Hello, micro:bit! | events: on start, on button pressed | just the micro:bit |
+| 2 | Animate It | forever loops and pause | just the micro:bit |
+| 3 | Rock, Paper, Scissors | variables, pick random, if / else | just the micro:bit |
+| 4 | Step Counter | counting with a variable · shake | micro:bit + battery pack |
+| 5 | Coin Catcher | sprites, score and game over | just the micro:bit |
+| 6 | Radio Hot Potato | radio: send and receive | two micro:bits |
+| 7 | How Machines Learn | AI learns from examples (data) | micro:bit + CreateAI |
+| 8 | AI Gesture Remote | using a machine learning model | micro:bit V2 + CreateAI |
+| 9 | AI Fitness Coach | testing AI: accuracy and fairness | micro:bit V2 + CreateAI |
+| 10 | Game Jam | put it all together | your choice |
+
+Lessons 7-9 use micro:bit CreateAI (createai.microbit.org). Any micro:bit can collect data and train a model;
+running the model in MakeCode needs a micro:bit V2.
+
+### 7th grade: Python & Circuits (MakeCode Python)
 
 | # | Project | Python idea | Hardware |
 |---|---|---|---|

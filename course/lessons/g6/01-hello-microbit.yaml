@@ -1,0 +1,266 @@
+id: hello-microbit
+title: Hello, micro:bit!
+tagline: Make a talking name badge with buttons
+minutes: 50
+
+mission:
+  big_question: How does a computer know what to do, and when?
+  goal: |
+    Make your first **micro:bit program**: a **name badge**. When it turns on, it shows a picture.
+    Press **A** to see your name. Press **B** to see your favorite thing. Then put it on a real micro:bit!
+  picture:
+    type: leds
+    frames: ["00000:01010:11111:01110:00100", "01010:01010:00000:10001:01110"]
+    caption: Your badge can show pictures and words.
+  you_need:
+    - A partner
+    - A Chromebook
+    - A micro:bit and USB cable (or just the simulator)
+  learn:
+    - "**blocks** snap together to make a program"
+    - "**events**: code that runs when something happens, like a button press"
+    - "**download**: send your program to the micro:bit"
+  talk: Name 3 things around you that wait for you to press a button. What happens when you press it?
+
+build:
+  - part: Set up
+    title: Open MakeCode
+    do:
+      - Click the green **Open MakeCode** button.
+      - Click **New Project**. Name it **Name Badge**. Click **Create**.
+      - Stay in **Blocks**. (You'll see Blocks and JavaScript at the top. Keep Blocks.)
+    picture:
+      type: compare
+      items:
+        - {icon: "📟", title: "Simulator", text: "The micro:bit picture on the left. It runs your code."}
+        - {icon: "🧰", title: "Drawers", text: "The colored list in the middle. Each drawer holds blocks."}
+        - {icon: "🧩", title: "Workspace", text: "The big space on the right. Build your code here."}
+    test:
+      - MakeCode is open with a project called Name Badge
+      - I can find the simulator, the drawers and the workspace
+
+  - part: "Part 1: Your first blocks"
+    title: Look in the drawers
+    say: Blocks live in **drawers**. Each drawer has its own color. The **Basic** drawer is blue.
+    do:
+      - Click the blue **Basic** drawer. Look at the blocks inside.
+      - Click the purple **Input** drawer. Look again.
+      - "You already have two blocks: **on start** and **forever**."
+    test:
+      - I opened the Basic drawer
+      - I opened the Input drawer
+    fields: ["One Basic block", "One Input block"]
+    ask: Write the name of one block you found in Basic and one you found in Input.
+
+  - part: "Part 1: Your first blocks"
+    title: Show a picture
+    say: "**on start** runs **one time**, when the micro:bit turns on."
+    do:
+      - From **Basic**, drag **show icon** into **on start**. It should click into place.
+      - Click the small arrow on the icon. Pick any picture you like.
+      - Watch the simulator. It runs your code right away!
+    blocks: |
+      on start:
+        show icon [heart]
+    new: "2"
+    tip: "**Snap it in.** If a block looks gray or faded, it isn't connected. Drag it until it clicks into **on start**."
+    test:
+      - My picture shows on the simulator
+    ask: Which picture did you pick? Why?
+
+  - part: "Part 1: Your first blocks"
+    title: Show your name
+    say: Blocks run **in order**, from top to bottom.
+    do:
+      - From **Basic**, drag **show string** under **show icon**.
+      - Click the word "Hello!" and type your first name.
+      - Watch the simulator. Which comes first?
+    blocks: |
+      on start:
+        show icon [heart]
+        show string ["Maya"]
+    new: "3"
+    what: First the picture shows. Then your name scrolls across. The micro:bit does one block, then the next.
+    test:
+      - The picture shows first, then my name scrolls
+    ask: Predict what happens if you drag show string ABOVE show icon. Try it. Were you right?
+
+  - part: "Part 2: Events"
+    title: Press A for your name
+    say: An **event** is something that happens, like a button press. **on button A pressed** waits for A, then runs the blocks inside it.
+    do:
+      - Open **Input**. Drag **on button A pressed** into an empty space.
+      - Move your **show string** block out of on start and into **on button A pressed**.
+      - In the simulator, click the **A** button.
+    blocks: |
+      on start:
+        show icon [heart]
+      on button [A] pressed:
+        show string ["Maya"]
+    new: "3-4"
+    what: Now your name only shows when you press A. The micro:bit waits for you.
+    test:
+      - My name does NOT show until I press A
+      - Pressing A again shows my name again
+    ask: How many times can you press A? Does the name show every time?
+
+  - part: "Part 2: Events"
+    title: Press B for a fun fact
+    say: You can have lots of events. Each one waits for its own button.
+    do:
+      - Drag another **on button A pressed** block onto the workspace.
+      - Click the **A** and change it to **B**.
+      - Put a **show string** inside. Type your favorite thing, like a food or a sport.
+    blocks: |
+      on start:
+        show icon [heart]
+      on button [A] pressed:
+        show string ["Maya"]
+      on button [B] pressed:
+        show string ["I love tacos"]
+    new: "5-6"
+    test:
+      - A shows my name
+      - B shows my favorite thing
+    ask: What is your favorite thing? Write what your B button shows.
+
+  - part: "Part 2: Events"
+    title: Press A and B together
+    say: The button dropdown also has **A+B**. That means both buttons at the same time.
+    do:
+      - Add one more **on button pressed** block and pick **A+B**.
+      - Put **show icon** inside. Pick a different picture.
+      - Test it. In the simulator, click the **A+B** button under the micro:bit.
+    blocks: |
+      on button [A+B] pressed:
+        show icon [happy]
+    tip: In the simulator, an extra **A+B** button appears when you use it. On a real micro:bit, press both at once.
+    test:
+      - Pressing A and B together shows my picture
+    fields: ["My A+B picture"]
+
+  - part: "Part 3: The real micro:bit"
+    title: Download to your micro:bit
+    say: So far your code runs in the simulator. Now send it to a **real** micro:bit.
+    do:
+      - Plug the micro:bit into the Chromebook with the USB cable.
+      - Click the **...** next to **Download** and pick **Connect device**. Follow the steps and pick your micro:bit.
+      - Click **Download**. Wait for the yellow light on the back to stop flashing.
+      - "No Connect device? Click **Download**, then drag the **.hex** file onto the **MICROBIT** drive."
+    stuck:
+      - Check the cable is pushed all the way in at both ends.
+      - Try a different USB port, or a different cable. Some cables only charge.
+      - Ask your teacher if the micro:bit needs new firmware.
+    test:
+      - My program runs on the real micro:bit
+    ask: What was different about the real micro:bit compared to the simulator?
+
+  - part: "Part 3: The real micro:bit"
+    title: "Checkpoint: your name badge"
+    say: Your program should look like this. Your picture and words will be your own.
+    blocks: |
+      on start:
+        show icon [heart]
+      on button [A] pressed:
+        show string ["Maya"]
+      on button [B] pressed:
+        show string ["I love tacos"]
+      on button [A+B] pressed:
+        show icon [happy]
+    stuck:
+      - "**Gray blocks** are not connected. Drag them into an event block."
+      - "**Nothing on A?** Check the dropdown says A, not B."
+      - "**Two blocks for the same button?** MakeCode turns one gray. Keep only one."
+    test:
+      - Every button does something
+      - I showed my badge to my partner
+
+quiz:
+  - question: When does the code inside **on start** run?
+    choices: ["Every time you press A", "One time, when the micro:bit turns on", "Forever", "Never"]
+    answer: 1
+    why: "**on start** runs one time, right when the micro:bit gets power or a new program."
+  - question: What is an **event**?
+    choices: ["A block that is broken", "Something that happens, like a button press", "A picture on the screen", "A kind of cable"]
+    answer: 1
+    why: Event blocks wait for something to happen, then run the blocks inside them.
+  - question: "You put **show icon** first and **show string** second. What happens?"
+    choices: ["The words show first", "Both show at the same time", "The icon shows first, then the words", "Nothing shows"]
+    answer: 2
+    why: Blocks run in order, from top to bottom.
+  - question: A block looks gray and faded. What is wrong?
+    choices: ["It is not connected to an event", "The micro:bit is off", "It is the wrong color", "Nothing is wrong"]
+    answer: 0
+    why: A block has to snap into an event block, like on start, to run.
+  - question: How do you get your program onto a real micro:bit?
+    choices: ["Press button A", "Download it with the USB cable", "Shake the micro:bit", "Print it"]
+    answer: 1
+    why: Download sends your program through the USB cable to the micro:bit.
+
+ship:
+  extensions:
+    - title: Shake to say hi
+      level: Easier
+      goal: Shaking the micro:bit shows a greeting.
+      where: A new event block from the Input drawer.
+      blocks: |
+        on [shake]:
+          show string ["Hi!"]
+      hints: ["**on shake** is in the purple Input drawer.", "In the simulator, click the SHAKE button."]
+    - title: Draw your own picture
+      level: Easier
+      goal: "Use **show leds** to draw your own picture, like your initial."
+      where: Inside on start, under show icon.
+      blocks: |
+        on start:
+          show icon [heart]
+          show leds [your drawing]
+      new: "3"
+      hints: ["**show leds** is in Basic.", "Click the squares to turn LEDs on and off."]
+    - title: A slower name
+      level: Medium
+      goal: Make the micro:bit pause after your name, then show a smiley.
+      where: Inside on button A pressed.
+      blocks: |
+        on button [A] pressed:
+          show string ["Maya"]
+          pause (ms) [1000]
+          show icon [happy]
+      new: "3-4"
+      hints: ["**pause** is in Basic. 1000 ms is 1 second."]
+    - title: Clear when done
+      level: Medium
+      goal: After the B message, the screen goes blank.
+      where: Inside on button B pressed.
+      blocks: |
+        on button [B] pressed:
+          show string ["I love tacos"]
+          clear screen
+      new: "3"
+      hints: ["**clear screen** is under **...more** in the Basic drawer."]
+    - title: Logo button (micro:bit V2)
+      level: Challenge
+      goal: On a micro:bit V2, touching the gold logo shows a secret message.
+      where: A new event from Input.
+      blocks: |
+        on logo [pressed]:
+          show string ["Secret!"]
+      hints: ["Look in Input for **on logo pressed**.", "This only works on the V2 micro:bit. The V2 has a gold logo on the front."]
+  reflect:
+    - What does an event block do? Give an example from your badge.
+    - What was the hardest part of today? How did you fix it?
+
+teacher_notes: |
+  * **First day.** Pair students and have them switch who drives the mouse at each Part.
+  * **Downloading:** the **Connect device** (WebUSB) route is easiest on Chromebooks. If it fails, students can download the .hex and drag it to the MICROBIT drive. Old micro:bits may need a firmware update.
+  * **Gray blocks** are the most common problem today. Model dragging a block until it clicks.
+  * **A+B:** in the simulator an extra A+B button appears once the block is used.
+  * The logo extension needs a micro:bit **V2** (gold logo on the front).
+
+standards:
+  - code: 6-8.CT.d.3
+    how: Students create a name badge program that responds to button presses.
+  - code: 6-8.CT.b.2
+    how: Students predict the order blocks will run in, then test it.
+  - code: 6-8.CS.a.7
+    how: Students troubleshoot downloading to the micro:bit (cables, ports, connections).

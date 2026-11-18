@@ -92,15 +92,23 @@
   };
 
   pages.catalog = function () {
-    var h = ['<h1>Lessons</h1><p class="muted">13 projects. Each one teaches a little Python and a little circuitry. You code in MakeCode.</p><div class="course-grid">'];
-    d.course.forEach(function (c) {
+    var cardHtml = function (c) {
       var inner = '<span class="num">' + E(c.number) + '</span><span class="icon-tile ' + E(c.color) + '">' + E(c.icon) + '</span><h3>' + E(c.title) + '</h3>' +
         (c.soon ? '<p class="muted">Coming soon</p>' : '<p>' + E(c.tagline) + '</p>' + (c.pct ? meter(c.pct) : '')) +
-        '<div class="tags"><span class="tag">🐍 ' + E(c.python) + '</span><span class="tag">🔌 ' + E(c.hardware) + '</span>' +
+        '<div class="tags"><span class="tag">' + (c.course === 'g6' ? '🧩 ' : '🐍 ') + E(c.python) + '</span><span class="tag">🔌 ' + E(c.hardware) + '</span>' +
         (c.stars ? '<span class="tag">' + '★'.repeat(c.stars) + '</span>' : '') + '</div>';
-      h.push(c.soon ? '<div class="card course-card soon">' + inner + '</div>' : '<a class="card course-card" href="/lessons/' + E(c.id) + '">' + inner + '</a>');
-    });
-    main.innerHTML = h.join('') + '</div>';
+      return c.soon ? '<div class="card course-card soon">' + inner + '</div>' : '<a class="card course-card" href="/lessons/' + E(c.id) + '">' + inner + '</a>';
+    };
+    var h = ['<h1>Lessons</h1>'];
+    if (d.courses) {                     // the teacher sees every grade
+      d.courses.forEach(function (co) {
+        h.push('<h2 class="course-head">' + E(co.name) + '</h2><div class="course-grid">' + co.cards.map(cardHtml).join('') + '</div>');
+      });
+    } else {
+      h.push('<p class="muted">' + E(d.course_name) + ' · ' + d.course.length + ' projects. You code in MakeCode' + (ML.data.editor === 'blocks' ? ' Blocks.' : ' Python.') + '</p>' +
+        '<div class="course-grid">' + d.course.map(cardHtml).join('') + '</div>');
+    }
+    main.innerHTML = h.join('');
   };
 
   pages.lesson = function () {
@@ -111,18 +119,21 @@
   pages.help = function () {
     main.innerHTML = '<div class="card" style="padding:22px;max-width:820px;margin:0 auto"><h1>🧰 Using MakeCode</h1>' +
       '<ol class="help-steps"><li>Click the green <b>Open MakeCode</b> button in any lesson (or go to <a href="' + E(d.makecode) + '" target="_blank" rel="noopener">makecode.microbit.org</a>).</li>' +
-      '<li>Click <b>New Project</b> and give it the lesson\'s name.</li><li>At the top, switch from <b>Blocks</b> to <b>Python</b>.</li>' +
+      '<li>Click <b>New Project</b> and give it the lesson\'s name.</li>' + (d.editor === 'blocks' ? '<li>Stay in <b>Blocks</b>. Drag blocks out of the colored drawers in the middle.</li>' : '<li>At the top, switch from <b>Blocks</b> to <b>Python</b>.</li>') +
       '<li>Test your code on the <b>simulator</b> (the micro:bit picture on the left).</li>' +
       '<li>To put it on a real micro:bit: plug it in with the USB cable and click <b>Download</b>. The first time, MakeCode asks to ' +
       '<b>connect</b> (pair) your micro:bit: pick it from the list. After that, Download sends your code straight to it.</li>' +
       '<li>If it saves a .hex file instead, drag the file onto the <b>MICROBIT</b> drive in the Files app.</li>' +
       '<li>When you finish a lesson: <b>Share</b> → <b>Share Project</b> → <b>Copy</b>, then paste the link in <b>Ship it</b>.</li></ol>' +
-      '<div class="panel-soft box-tip"><h3>Python cares about spaces</h3><p>Lines inside a loop or an <code>if</code> are pushed in (indented) the same amount. If something breaks, check the spaces first.</p></div></div>';
+      (d.editor === 'blocks' ? '<div class="panel-soft box-tip"><h3>Blocks snap together</h3><p>Drop a block until it clicks into place. A gray, see-through block isn\'t connected, so it won\'t run.</p></div></div>'
+        : '<div class="panel-soft box-tip"><h3>Python cares about spaces</h3><p>Lines inside a loop or an <code>if</code> are pushed in (indented) the same amount. If something breaks, check the spaces first.</p></div></div>');
   };
 
   pages.map = function () {
     main.className = 'container wide';
-    var lv = d.level, h = ['<div class="page-head"><div><h1>Skill tree</h1><p class="muted">Finish a lesson to send power down the paths after it. ' +
+    var lv = d.level, h = ['<div class="page-head"><div><h1>Skill tree' + (d.map.course ? ' <small class="muted">' + E(d.map.course.name) + '</small>' : '') + '</h1>' +
+      (d.map.courses ? '<p class="row">' + d.map.courses.map(function (co) { return '<a class="btn small' + (co.id === d.map.course.id ? '' : ' ghost') + '" href="/map/' + E(co.id) + '">' + E(co.name) + '</a>'; }).join(' ') + '</p>' : '') +
+      '<p class="muted">Finish a lesson to send power down the paths after it. ' +
       'Where the path splits, either lesson unlocks the next one.</p></div>'];
     if (!ML.teacher) h.push('<a class="level-chip card" href="/me"><span data-avatar="' + A(d.avatar) + '" data-size="52"></span><span><b>Level ' + lv.level + ' · ' +
       E(lv.title) + '</b><span class="xpbar"><i style="width:' + lv.pct + '%"></i></span><small class="muted">' + levelLine(lv) + '</small></span></a>');
@@ -300,11 +311,11 @@
   pages['teacher-home'] = function () {
     var h = ['<h1>My classes</h1><div class="class-cards">'];
     d.classes.forEach(function (c) {
-      h.push('<a class="card class-card" href="/teacher/classes/' + E(c.id) + '"><h2>' + E(c.name) + '</h2><div class="join-code small">Code <b>' + E(c.code) +
+      h.push('<a class="card class-card" href="/teacher/classes/' + E(c.id) + '"><span class="grade-tag ' + E(c.grade) + '">' + E(c.grade_name) + '</span><h2>' + E(c.name) + '</h2><div class="join-code small">Code <b>' + E(c.code) +
         '</b></div><p class="muted">' + c.students + ' students · ' + c.assignments + ' assignments' + (c.classroom ? '<br>🔗 Google Classroom' : '') + '</p></a>');
     });
     var linked = d.classes.filter(function (c) { return c.classroom; }).length;
-    h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><button class="btn" id="new-go" type="button">Create</button></div>' +
+    h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><select id="new-grade">' + (d.grades || []).map(function (g) { return '<option value="' + E(g.id) + '">' + E(g.name) + '</option>'; }).join('') + '</select><button class="btn" id="new-go" type="button">Create</button></div>' +
       '<div class="card class-card new"><h2>🔗 Google Classroom</h2><p class="muted small">Bring in your Classroom classes and their students. No join codes needed.</p>' +
       '<a class="btn" href="/teacher/google-import">Import classes</a>' + (linked ? ' <button class="btn ghost small" id="gc-sync-all" type="button">Update all rosters</button>' : '') + '</div></div>' +
       '<section class="card tab-icon-card"><h2>Tab icon</h2><p class="muted small">The little picture in the browser tab, for you and your students.</p>' +
@@ -319,7 +330,7 @@
       '<li>Assign lessons with due dates. The gradebook shows who\'s done what.</li><li>Open any lesson to see the <b>teacher answer key</b>. Add videos on the <a href="/teacher/videos">Videos</a> page.</li></ol></section>');
     main.innerHTML = h.join('');
     document.getElementById('new-go').addEventListener('click', function () {
-      act(this, 'createClass', [document.getElementById('new-class').value], function (c) { ML.go('/teacher/classes/' + c.id); });
+      act(this, 'createClass', [document.getElementById('new-class').value, document.getElementById('new-grade').value], function (c) { ML.go('/teacher/classes/' + c.id); });
     });
     var pick = document.getElementById('tab-icon-pick'), url = document.getElementById('tab-icon-url');
     document.getElementById('tab-icon-now').src = d.tab_icon_url;
@@ -390,7 +401,9 @@
     h.push('<div class="page-head"><div><a class="muted small" href="/">← My classes</a><h1>' + E(c.name) + '</h1></div>' +
       '<div class="row"><a class="btn" href="/teacher/classes/' + E(c.id) + '/screen">📺 Class display</a>' +
       '<a class="btn ghost" href="/teacher/classes/' + E(c.id) + '/google-classroom">Google Classroom grades</a></div>' +
-      '<div class="join-code">Join code <b>' + E(c.code) + '</b><small>' + E(d.url) + '</small></div></div>');
+      '<div class="join-code">Join code <b>' + E(c.code) + '</b><small>' + E(d.url) + '</small></div></div>' +
+      '<p class="grade-pick">Course: <select id="grade-pick">' + (d.grades || []).map(function (g) { return '<option value="' + E(g.id) + '"' + (g.id === d.grade ? ' selected' : '') + '>' + E(g.name) + '</option>'; }).join('') +
+      '</select> <small class="muted">Students in this class see only this course\'s lessons.</small></p>');
     if (c.classroom) {
       h.push('<section class="card tip gc-link"><b>🔗 Linked to Google Classroom:</b> ' + E(c.classroom.name) + (c.classroom.section ? ' (' + E(c.classroom.section) + ')' : '') +
         ' <small class="muted">roster updated ' + E(shortDate(c.classroom.synced_at)) + '</small> ' +
@@ -465,6 +478,11 @@
       if (confirm('Unlink from Google Classroom? Students who never joined with the code leave this class (their work is kept).')) act(this, 'unlinkClassroom', [c.id]);
     });
     $('del-go').addEventListener('click', function () { act(this, 'deleteClass', [c.id, $('del-name').value], function () { ML.go('/'); }); });
+    $('grade-pick').addEventListener('change', function () {
+      var sel = this;
+      if (!confirm('Switch this class to "' + sel.options[sel.selectedIndex].text + '"? Students keep all their work and XP.')) { sel.value = d.grade; return; }
+      act(sel, 'setClassGrade', [c.id, sel.value]);
+    });
     // Robot Rush: closed unless the teacher opens it for this class
     var arc = d.arcade, arcEnd = null, arcTick = null;
     function drawArcade() {
@@ -547,10 +565,10 @@
   pages.videos = function () {
     var h = ['<h1>Lesson videos</h1><p class="muted">Paste a link for any lesson: YouTube, Google Drive ("Anyone with the link" or your school), Vimeo, or a direct .mp4 link. ' +
       'It appears in the lesson\'s Mission.</p><div class="card" style="padding:18px">'];
-    d.course.filter(function (l) { return !l.soon; }).forEach(function (l) {
+    d.courses.forEach(function (co) { h.push('<h2 class="course-head">' + E(co.name) + '</h2>'); co.cards.filter(function (l) { return !l.soon; }).forEach(function (l) {
       h.push('<label class="field video-field"><span>' + E(l.icon) + ' ' + E(l.number) + '. ' + E(l.title) + '</span><input type="url" class="vid" data-lesson="' + E(l.id) + '" value="' +
         E((d.urls || {})[l.id] || '') + '" placeholder="https://youtu.be/…"></label>');
-    });
+    }); });
     h.push('<button class="btn" id="vid-go" type="button">Save videos</button></div>');
     main.innerHTML = h.join('');
     document.getElementById('vid-go').addEventListener('click', function () {
@@ -586,7 +604,7 @@
   pages.standards = function () {
     var h = ['<h1>MA DLCS standards</h1><p class="muted">What each lesson covers, and how.</p>'];
     d.lessons.forEach(function (l) {
-      h.push('<section class="card" style="padding:16px;margin-bottom:14px"><h2>' + E(l.number) + '. ' + E(l.title) + '</h2><ul>' +
+      h.push('<section class="card" style="padding:16px;margin-bottom:14px"><h2><span class="grade-tag">' + E(l.course || '') + '</span> ' + E(l.number) + '. ' + E(l.title) + '</h2><ul>' +
         l.standards.map(function (st) { return '<li><b>' + E(st.code) + '</b> ' + E(st.text) + '<br><small class="muted">In this lesson: ' + E(st.how) + '</small></li>'; }).join('') + '</ul></section>');
     });
     main.innerHTML = h.join('');

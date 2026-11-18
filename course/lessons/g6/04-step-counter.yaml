@@ -1,0 +1,257 @@
+id: step-counter
+title: Step Counter
+tagline: Turn your micro:bit into a pedometer
+minutes: 50
+
+mission:
+  big_question: "How can a computer count things that happen in the real world?"
+  goal: |
+    Build a **step counter**, like a fitness watch. Every time you take a step, the micro:bit
+    feels a **shake** and adds 1 to a number it remembers. Then go for a walk and see how
+    many steps it counts!
+  picture:
+    type: leds
+    frames: ["00000:00000:00000:00000:00000", "00000:00000:00900:00000:00000", "00000:09090:00900:09090:00000", "00000:09990:09090:09990:00000"]
+    caption: Every shake adds 1. The number on the screen keeps growing.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit, USB cable and a battery pack
+  learn:
+    - "**variables** remember a number"
+    - "**change by 1** counts up"
+    - "the **accelerometer** feels a shake"
+  talk: Fitness watches count steps. How do you think a watch knows you took a step?
+
+build:
+  - part: Set up
+    title: A new project
+    do:
+      - Open MakeCode and click **New Project**. Name it **Step Counter**.
+      - Make sure you are in **Blocks** (not Python or JavaScript).
+      - You start with an empty **on start** and **forever**. Leave them for now.
+    test:
+      - I have a new project called Step Counter in Blocks
+
+  - part: "Part 1: Count"
+    title: Make a variable
+    say: A **variable** is a box with a name that remembers a number. Our box is called **steps**.
+    do:
+      - Open the red **Variables** drawer. Click **Make a Variable...** and name it **steps**.
+      - Drag **set steps to 0** into **on start**.
+      - Add **show number** under it and drop the round **steps** block in its slot.
+    blocks: |
+      on start:
+        set [steps] to [0]
+        show number (steps)
+    new: "2-3"
+    what: When the micro:bit starts, the steps box holds 0, and the screen shows 0.
+    test:
+      - The simulator shows 0
+    ask: Why do we start the steps box at 0?
+
+  - part: "Part 1: Count"
+    title: Shake to count
+    say: The micro:bit has an **accelerometer**. It feels movement. Each step you take gives it a little **shake**.
+    do:
+      - From the pink **Input** drawer, drag out **on shake**.
+      - Inside it, put **change steps by 1** from **Variables**.
+      - Then add **show number (steps)**.
+      - In the simulator, click the **SHAKE** button a few times.
+    blocks: |
+      on start:
+        set [steps] to [0]
+        show number (steps)
+      on [shake]:
+        change [steps] by [1]
+        show number (steps)
+    new: "4-6"
+    what: Every shake adds 1 to the steps box. Then the screen shows the new number.
+    test:
+      - Each SHAKE click adds 1
+      - The number goes 1, 2, 3, ...
+    ask: What would happen if you changed it to change steps by 2?
+
+  - part: "Part 1: Count"
+    title: A reset button
+    say: You need a way to start over without unplugging. Button **A** will set steps back to 0.
+    do:
+      - Drag in **on button A pressed**.
+      - Put **set steps to 0** inside, then **show number (steps)**.
+      - Shake a few times, then press **A**.
+    blocks: |
+      on start:
+        set [steps] to [0]
+        show number (steps)
+      on [shake]:
+        change [steps] by [1]
+        show number (steps)
+      on button [A] pressed:
+        set [steps] to [0]
+        show number (steps)
+    new: "7-9"
+    what: "**set** puts in a new number. **change** adds to the number that's already there."
+    test:
+      - Pressing A puts the count back to 0
+    fields: ["set steps to 0 means...", "change steps by 1 means..."]
+
+  - part: "Part 2: Walk test"
+    title: Put it on the micro:bit
+    say: The simulator can't walk! Download your code to a real micro:bit and give it a battery pack.
+    do:
+      - Plug in the micro:bit. Click **Download** (or **Connect device** first if MakeCode asks).
+      - Unplug the USB cable. Plug in the **battery pack**.
+      - Shake it gently. Does the number go up?
+    tip: "**Battery pack:** the plug only goes in one way. Don't force it."
+    stuck:
+      - "No number? Press the **reset** button on the back of the micro:bit."
+      - "Still 0? Check the download finished (the yellow light on the back stops flashing)."
+    test:
+      - My micro:bit runs on the battery pack
+      - Shaking it counts up
+
+  - part: "Part 2: Walk test"
+    title: Take 20 steps
+    say: Let's test it like a scientist. You will walk **exactly 20 steps** and see what the micro:bit counts.
+    do:
+      - Hold the micro:bit in your hand, or put it in your pocket.
+      - Press **A** to reset to 0.
+      - Walk 20 steps while your partner counts out loud.
+      - Write down what the micro:bit shows. Swap and try again.
+    picture:
+      type: compare
+      items:
+        - {icon: "🚶", title: "Real steps", text: "Your partner counts out loud"}
+        - {icon: "📟", title: "micro:bit steps", text: "The number on the screen"}
+    test:
+      - We both did a 20-step walk test
+    fields: ["My count", "My partner's count"]
+    ask: Was the micro:bit count too high, too low, or just right? Why do you think so?
+
+  - part: "Part 2: Walk test"
+    title: Too many or too few?
+    say: A shake is a **guess** that you stepped. Swinging your arm can look like a step. A soft step might not shake it enough.
+    do:
+      - Try holding the micro:bit still in your hand while you walk. Then try swinging your arm.
+      - Try it in your pocket.
+      - Which way gave the closest count to 20?
+    picture:
+      type: compare
+      items:
+        - {icon: "✋", title: "In your hand", text: "Arm swings can add extra steps"}
+        - {icon: "👖", title: "In your pocket", text: "Moves with your leg"}
+        - {icon: "🦶", title: "Tied to your shoe", text: "Feels every step"}
+    test:
+      - We tried at least two places to hold it
+    fields: ["Best place to hold it"]
+    ask: Which place counted best? Why do you think it worked better?
+
+  - part: "Part 3: Show off"
+    title: "Checkpoint: the whole step counter"
+    say: Your program should match this. Check each block is inside the right event.
+    blocks: |
+      on start:
+        set [steps] to [0]
+        show number (steps)
+      on [shake]:
+        change [steps] by [1]
+        show number (steps)
+      on button [A] pressed:
+        set [steps] to [0]
+        show number (steps)
+    stuck:
+      - "**Count goes up by more than 1?** Check you only have one **on shake** block."
+      - "**Shows 0 all the time?** Make sure **change steps by 1** is inside **on shake**, not on start."
+      - "**Two variables?** If you made a variable by mistake (like steps2), use the one called steps everywhere."
+    test:
+      - My step counter counts shakes and resets with A
+      - I tested it on a real micro:bit
+
+quiz:
+  - question: What is a **variable**?
+    choices: ["A box with a name that remembers a value", "A type of LED", "A button", "A sound"]
+    answer: 0
+    why: Our variable is called steps. It remembers how many shakes happened.
+  - question: steps is 5. The code runs **change steps by 1**. What is steps now?
+    choices: ["1", "5", "6", "0"]
+    answer: 2
+    why: Change adds to the number that's already in the box. 5 + 1 = 6.
+  - question: steps is 5. The code runs **set steps to 0**. What is steps now?
+    choices: ["5", "0", "6", "1"]
+    answer: 1
+    why: Set throws away the old number and puts in the new one.
+  - question: Which part of the micro:bit feels a shake?
+    choices: ["The LED screen", "Button A", "The accelerometer", "The battery pack"]
+    answer: 2
+    why: The accelerometer senses movement, tilt and shakes.
+  - question: Your step counter says 27 after you walked 20 steps. What's the best next move?
+    choices: ["Give up", "Test again and try a different place to hold it", "Delete the variable", "Press B"]
+    answer: 1
+    why: Testing and changing one thing at a time is how engineers make things more accurate.
+
+ship:
+  extensions:
+    - title: Goal reached!
+      level: Easier
+      goal: When you reach 20 steps, show a happy face.
+      where: Inside on shake, after show number.
+      blocks: |
+        on [shake]:
+          change [steps] by [1]
+          show number (steps)
+          if ((steps) [=] [20]) then:
+            show icon [happy]
+      new: "4-5"
+      hints: ["The if block is in the Logic drawer.", "The = comparison block is in Logic too. Put steps in the left side."]
+    - title: Secret count
+      level: Easier
+      goal: Don't show the number after every step. Only show it when you press B.
+      where: Take show number out of on shake. Add a new on button B pressed.
+      blocks: |
+        on [shake]:
+          change [steps] by [1]
+        on button [B] pressed:
+          show number (steps)
+      new: "3-4"
+      hints: ["Showing a number on every step makes the micro:bit busy. This version is faster."]
+    - title: Step sound
+      level: Medium
+      goal: Play a short beep every step, so you can hear it counting.
+      where: Inside on shake.
+      blocks: |
+        on [shake]:
+          change [steps] by [1]
+          {music} play tone [High C] for [1/8] beat
+          show number (steps)
+      new: "3"
+      hints: ["Music blocks are orange.", "Keep the beep short, 1/8 beat."]
+    - title: Smarter steps
+      level: Challenge
+      goal: Count a step only when the shake is strong enough, so small wiggles don't count.
+      where: Use a forever loop instead of on shake.
+      blocks: |
+        forever:
+          if ((acceleration (mg) [strength]) [>] [1500]) then:
+            change [steps] by [1]
+            show number (steps)
+            pause (ms) [300]
+      hints: ["acceleration (mg) is in Input. Pick strength in its dropdown.", "1500 is a starting number. Try 1300 or 1800 and test with 20 steps.", "The pause stops one step from counting twice.", "Remove your on shake block so steps don't count twice."]
+  reflect:
+    - What is the difference between set steps to 0 and change steps by 1?
+    - How could you make your step counter more accurate?
+
+teacher_notes: |
+  * **Timing:** one class period. Part 2 (walk test) works best in a hallway.
+  * **Battery packs:** AAA packs need a micro:bit unplugged from USB. Have spares; the JST plug is fragile.
+  * **Accuracy is the point:** shake counting over- and under-counts. Push students to explain *why*
+    (arm swing, soft steps) instead of just reporting the number.
+  * **Common bug:** students drag a second **on shake** block in. MakeCode greys out the duplicate; point it out.
+  * The Smarter steps extension previews the threshold idea used again in the AI lessons.
+
+standards:
+  - code: 6-8.CS.a.4
+    how: Students use the micro:bit's accelerometer as a sensor to detect steps.
+  - code: 6-8.CT.d.4
+    how: Students use a variable, an event and changes to the variable to count steps.
+  - code: 6-8.CT.d.6
+    how: Students test their step counter against a real count and change how they hold it to improve accuracy.

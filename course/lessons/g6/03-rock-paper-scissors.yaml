@@ -1,0 +1,257 @@
+id: rock-paper-scissors
+title: Rock, Paper, Scissors
+tagline: Shake to pick a hand, then play your partner
+minutes: 50
+
+mission:
+  big_question: How can a program make a choice?
+  goal: |
+    Turn the micro:bit into a **Rock, Paper, Scissors** player. **Shake** it, and it picks rock, paper or
+    scissors at **random**. Then play against your partner and keep score!
+  picture:
+    type: leds
+    frames: ["00000:01110:01010:01110:00000", "11111:10001:10001:10001:11111", "11001:11010:00100:11010:11001"]
+    caption: Rock, paper, scissors on the micro:bit
+  you_need:
+    - A partner (with their own micro:bit, or take turns)
+    - A Chromebook with MakeCode open
+    - A micro:bit and USB cable (or just the simulator)
+  learn:
+    - "**variables** remember a value, like a box with a label"
+    - "**pick random** chooses a number by chance"
+    - "**if / else** makes a choice"
+  talk: When you play Rock, Paper, Scissors, how do you choose? Is it really random? Can people be predictable?
+
+build:
+  - part: Set up
+    title: A new project
+    do:
+      - Open MakeCode. Click **New Project**. Name it **Rock Paper Scissors**.
+      - Delete the **on start** and **forever** blocks. We won't need them.
+    test:
+      - I have a new, empty project
+
+  - part: "Part 1: Shake and pick"
+    title: Make a variable
+    say: A **variable** is a box with a name. It remembers a value. We'll make one called **hand**.
+    do:
+      - Open the red **Variables** drawer. Click **Make a Variable...**
+      - Type **hand** and click OK.
+      - New blocks appear, like **set hand to 0**.
+    test:
+      - I have a variable called hand
+    ask: In your own words, what is a variable?
+
+  - part: "Part 1: Shake and pick"
+    title: Pick a random number
+    say: "**pick random 0 to 2** gives 0, 1 or 2 by chance. We'll say 0 = rock, 1 = paper, 2 = scissors."
+    do:
+      - From **Input**, drag in **on shake**.
+      - Put **set hand to 0** inside it.
+      - From the purple **Math** drawer, drag **pick random 0 to 10** into the 0 spot. Change 10 to **2**.
+    blocks: |
+      on [shake]:
+        set [hand] to (pick random [0] to [2])
+    new: "2"
+    picture:
+      type: compare
+      items:
+        - {icon: "🪨", title: "0", text: "rock"}
+        - {icon: "📄", title: "1", text: "paper"}
+        - {icon: "✂️", title: "2", text: "scissors"}
+    test:
+      - My on shake block has set hand to pick random 0 to 2
+    ask: Why 0 to 2 and not 0 to 10?
+
+  - part: "Part 1: Shake and pick"
+    title: Peek at the number
+    say: Let's check it works. Show the number in **hand**.
+    do:
+      - From **Basic**, drag **show number** under the set block.
+      - From **Variables**, drag the round **hand** block into its slot.
+      - In the simulator, click **SHAKE** a few times.
+    blocks: |
+      on [shake]:
+        set [hand] to (pick random [0] to [2])
+        show number (hand)
+    new: "3"
+    test:
+      - Each shake shows 0, 1 or 2
+      - The numbers change by chance
+    fields: ["Shake 1", "Shake 2", "Shake 3", "Shake 4"]
+    ask: Write the first 4 numbers you got.
+
+  - part: "Part 2: Make a choice"
+    title: If it's 0, show rock
+    say: "**if** checks a question. If the answer is **true**, it runs the blocks inside."
+    do:
+      - Delete the **show number** block.
+      - From the teal **Logic** drawer, drag in **if true then** under the set block.
+      - From **Logic**, drag the **0 = 0** block into the **true** spot. Put **hand** in the first 0.
+      - Inside the if, add **show icon** and pick the small square (rock).
+    blocks: |
+      on [shake]:
+        set [hand] to (pick random [0] to [2])
+        if ((hand) = [0]) then:
+          show icon [small square]
+    new: "3-4"
+    tip: "**=** asks a question: is hand equal to 0? The answer is true or false."
+    test:
+      - Sometimes a shake shows the rock
+      - Sometimes it shows nothing (that's 1 or 2)
+    ask: Why does a shake sometimes show nothing right now?
+
+  - part: "Part 2: Make a choice"
+    title: Add paper and scissors
+    say: "**else if** asks a second question. **else** catches everything left over."
+    do:
+      - Click the **+** at the bottom of the if block. Click it again.
+      - In the **else if**, check **hand = 1** and show the big square (paper).
+      - In the **else**, show the scissors icon.
+    blocks: |
+      on [shake]:
+        set [hand] to (pick random [0] to [2])
+        if ((hand) = [0]) then:
+          show icon [small square]
+        else if ((hand) = [1]) then:
+          show icon [square]
+        else:
+          show icon [scissors]
+    new: "5-8"
+    picture:
+      type: flow
+      steps:
+        - {icon: "🫨", label: "shake"}
+        - {icon: "🎲", label: "pick 0, 1 or 2"}
+        - {icon: "❓", label: "which one?"}
+        - {icon: "🖼️", label: "show its picture"}
+    what: The micro:bit checks the questions in order. When one is true, it shows that picture and skips the rest.
+    test:
+      - I see rock, paper and scissors when I shake
+    ask: Why don't we need to check hand = 2 for scissors?
+
+  - part: "Part 3: Play!"
+    title: Download and play
+    do:
+      - Download your program to the real micro:bit.
+      - With your partner, say "Rock, paper, scissors, shoot!" and shake at the same time.
+      - Play 10 rounds. Tally who wins.
+    test:
+      - It works on the real micro:bit
+      - We played 10 rounds
+    fields: ["My wins", "Partner's wins", "Ties"]
+    ask: Was the game fair? How do you know?
+
+  - part: "Part 3: Play!"
+    title: "Checkpoint: the whole game"
+    say: Your program should match this.
+    blocks: |
+      on [shake]:
+        set [hand] to (pick random [0] to [2])
+        if ((hand) = [0]) then:
+          show icon [small square]
+        else if ((hand) = [1]) then:
+          show icon [square]
+        else:
+          show icon [scissors]
+    stuck:
+      - "**Always the same picture?** Check pick random says 0 to 2."
+      - "**Never scissors?** The scissors icon goes in the **else** part."
+      - "**hand block missing?** Drag the round hand block into the = block."
+    test:
+      - My program matches, and every shake shows a hand
+
+quiz:
+  - question: What is a **variable**?
+    choices: ["A named box that remembers a value", "A kind of button", "A picture", "A loop"]
+    answer: 0
+    why: A variable has a name, like hand, and it remembers a value, like 2.
+  - question: "What can **pick random [0] to [2]** give you?"
+    choices: ["Only 2", "0, 1 or 2", "Any number", "1 or 2"]
+    answer: 1
+    why: It picks a whole number from 0 up to 2, by chance.
+  - question: hand is 1. Which picture shows?
+    choices: ["Rock", "Paper", "Scissors", "Nothing"]
+    answer: 1
+    why: The first question (hand = 0) is false. The second (hand = 1) is true, so paper shows.
+  - question: When does the **else** part run?
+    choices: ["Always", "When every question above it is false", "When hand is 0", "Never"]
+    answer: 1
+    why: else catches everything the if and else if questions didn't.
+  - question: Why do we use **pick random**?
+    choices: ["To make the game fair and hard to guess", "To make it faster", "To save battery", "To show words"]
+    answer: 0
+    why: Random choices can't be predicted, so nobody knows what's coming.
+
+ship:
+  extensions:
+    - title: Keep score
+      level: Easier
+      goal: Press A each time you win. Press B to see your score.
+      where: Make a variable called score. Add two event blocks.
+      blocks: |
+        on button [A] pressed:
+          change [score] by [1]
+        on button [B] pressed:
+          show number (score)
+      hints: ["**change score by 1** is in Variables.", "score starts at 0."]
+    - title: Countdown first
+      level: Easier
+      goal: Show 3, 2, 1 before the hand appears.
+      where: At the top of on shake.
+      blocks: |
+        on [shake]:
+          show number [3]
+          show number [2]
+          show number [1]
+          set [hand] to (pick random [0] to [2])
+      new: "2-4"
+      hints: ["Put the numbers above the set block."]
+    - title: Best of 3
+      level: Medium
+      goal: When your score reaches 3, show a trophy.
+      where: Inside on button A pressed, after change score.
+      blocks: |
+        on button [A] pressed:
+          change [score] by [1]
+          if ((score) = [3]) then:
+            show icon [happy]
+            show string ["WINNER"]
+      new: "3-5"
+      hints: ["Use the same = block from Logic.", "Put score in the first slot and 3 in the second."]
+    - title: Rock, Paper, Scissors, Lizard, Spock
+      level: Challenge
+      goal: Add two more hands. Pick random 0 to 4 and draw a lizard and Spock with show leds.
+      where: Inside on shake.
+      blocks: |
+        on [shake]:
+          set [hand] to (pick random [0] to [4])
+          if ((hand) = [0]) then:
+            show icon [small square]
+          else if ((hand) = [1]) then:
+            show icon [square]
+          else if ((hand) = [2]) then:
+            show icon [scissors]
+          else if ((hand) = [3]) then:
+            show leds [lizard]
+          else:
+            show leds [spock hand]
+      new: "2, 7-10"
+      hints: ["Click + on the if block to add more else if parts.", "Look up the rules: lizard beats paper, Spock beats rock..."]
+  reflect:
+    - How does the micro:bit decide which picture to show? Use the words variable and if.
+    - Was your game fair? What would make it more fair or more fun?
+
+teacher_notes: |
+  * **Icons:** MakeCode's Rock Paper Scissors tutorial uses small square = rock, square = paper, scissors = scissors. Any icons are fine if students agree.
+  * **The = block** is in Logic (comparison). Students often grab the Math block by mistake.
+  * **Fairness talk:** collect class tallies on the board. Over many rounds each hand comes up about one third of the time.
+  * One micro:bit per pair works: partners take turns shaking against a human hand.
+
+standards:
+  - code: 6-8.CT.b.1
+    how: Students use if / else if / else (conditionals) to choose which hand to show.
+  - code: 6-8.CT.b.2
+    how: Students predict which picture shows for a given value of hand.
+  - code: 6-8.CT.a.1
+    how: Students represent rock, paper and scissors with the numbers 0, 1 and 2.

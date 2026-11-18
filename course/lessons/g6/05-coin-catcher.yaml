@@ -1,0 +1,289 @@
+id: coin-catcher
+title: Coin Catcher
+tagline: Catch the falling coins before they hit the ground
+minutes: 90          # about two class periods
+
+mission:
+  big_question: "How do games use rules to decide what happens next?"
+  goal: |
+    Make a real **game**! A coin falls from the top of the screen. You are the LED on the
+    bottom row. Press **A** and **B** to move. Catch the coin to score a point.
+    Miss one and it's **game over**!
+  picture:
+    type: leds
+    frames: ["00900:00000:00000:00000:09000", "00000:00900:00000:00000:00900", "00000:00000:00900:00000:00900", "00000:00000:00000:00900:00900"]
+    caption: The coin falls. You move along the bottom row to catch it.
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit and USB cable (or just the simulator)
+  learn:
+    - "**sprites**: game characters you can move"
+    - "**x and y** tell where something is on the screen"
+    - "**if** blocks check the game's rules"
+  talk: Every game has rules, like "if you touch the coin, you get a point." Pick a game you know. What's one of its rules?
+
+build:
+  - part: Set up
+    title: A new project
+    do:
+      - Open MakeCode and click **New Project**. Name it **Coin Catcher**.
+      - Make sure you are in **Blocks**.
+      - Find the green **Game** drawer. It's under **Advanced**. Click Advanced to see it.
+    test:
+      - I have a new project and I can see the Game drawer
+
+  - part: "Part 1: The game board"
+    title: Where is each LED?
+    say: |
+      Every LED has an **x** and a **y**. **x** goes 0 to 4 from left to right. **y** goes 0 to 4 from top to bottom.
+      The top-left LED is x 0, y 0.
+    picture:
+      type: leds
+      image: "00000:00000:00000:00000:00900"
+      caption: Where is this LED? Count from 0!
+    test:
+      - I know x goes left to right and y goes top to bottom
+    fields: ["x", "y"]
+    ask: What are the x and y of the LED in the picture?
+
+  - part: "Part 1: The game board"
+    title: Make the player
+    say: A **sprite** is a game character. On the micro:bit, a sprite is one glowing LED you can move.
+    do:
+      - Make a variable called **player** (Variables drawer, **Make a Variable...**).
+      - Drag **set player to** into **on start**.
+      - From **Game**, snap **create sprite at x 2 y 4** into it.
+    blocks: |
+      on start:
+        set [player] to (create sprite at x: [2] y: [4])
+    new: "2"
+    what: This makes the player sprite at x 2, y 4. That's the middle of the bottom row.
+    test:
+      - One LED lights up in the middle of the bottom row
+
+  - part: "Part 1: The game board"
+    title: Move with the buttons
+    say: Button **A** moves the player left. Button **B** moves it right.
+    do:
+      - Drag in **on button A pressed**. Put **player change x by -1** inside.
+      - Drag in **on button B pressed**. Put **player change x by 1** inside.
+      - Press A and B in the simulator.
+    blocks: |
+      on start:
+        set [player] to (create sprite at x: [2] y: [4])
+      on button [A] pressed:
+        {game} (player) change [x] by [-1]
+      on button [B] pressed:
+        {game} (player) change [x] by [1]
+    new: "3-6"
+    tip: "**-1** means one step left (x gets smaller). **1** means one step right."
+    test:
+      - A moves my player left
+      - B moves my player right
+      - The player stops at the edges
+    ask: What happens when you press A at the left edge? Why doesn't the player disappear?
+
+  - part: "Part 2: The coin"
+    title: Make the coin
+    say: The coin is a second sprite. It starts on the **top row**, in a **random** column.
+    do:
+      - Make a variable called **coin**.
+      - Add **set coin to create sprite** in on start.
+      - For x, use **pick random 0 to 4** from the **Math** drawer. For y, type **0**.
+    blocks: |
+      on start:
+        set [player] to (create sprite at x: [2] y: [4])
+        set [coin] to (create sprite at x: (pick random [0] to [4]) y: [0])
+    new: "3"
+    test:
+      - I see a second LED on the top row
+      - When I restart, the coin starts in a different place (sometimes)
+    ask: Why do we pick a random x for the coin?
+
+  - part: "Part 2: The coin"
+    title: Make the coin fall
+    say: A **forever** loop runs over and over. Each time, the coin moves **down** one row.
+    do:
+      - In **forever**, add **coin change y by 1**.
+      - Add **pause 300 ms** after it.
+      - Watch the coin.
+    blocks: |
+      forever:
+        {game} (coin) change [y] by [1]
+        pause (ms) [300]
+    new: "2-3"
+    what: "**y** goes down the screen. Adding 1 to y moves the coin one row lower."
+    test:
+      - The coin falls one row at a time
+    ask: The coin gets stuck at the bottom. What should happen when it reaches the bottom?
+
+  - part: "Part 3: The rules"
+    title: "Rule 1: catch it, score a point"
+    say: "Our first rule: **if** the coin is touching the player, add 1 to the score. Then send the coin back to the top."
+    do:
+      - Under the pause in **forever**, add an **if then** block from **Logic**.
+      - In its slot, put **coin touching player** (Game drawer).
+      - Inside the if, add **change score by 1**, **coin set y to 0**, and **coin set x to pick random 0 to 4**.
+    blocks: |
+      forever:
+        {game} (coin) change [y] by [1]
+        pause (ms) [300]
+        if ((coin) touching (player)) then:
+          change score by [1]
+          {game} (coin) set [y] to [0]
+          {game} (coin) set [x] to (pick random [0] to [4])
+    new: "4-7"
+    what: When you catch the coin, you score. Then the coin jumps back to the top in a new column.
+    test:
+      - Catching the coin sends it back to the top
+      - It comes back in different columns
+    ask: Why do we set y back to 0?
+
+  - part: "Part 3: The rules"
+    title: "Rule 2: miss it, game over"
+    say: "Our second rule: **else if** the coin reaches the bottom row (y = 4) and you didn't catch it, the game is over."
+    do:
+      - Click the **+** at the bottom of the if block. It adds an **else if**.
+      - In the else if slot, put **coin y = 4** (use the = block from **Logic**, and **coin x** from Game; change x to y).
+      - Inside, put **game over**.
+      - Play! Catch some coins, then miss one.
+    blocks: |
+      forever:
+        {game} (coin) change [y] by [1]
+        pause (ms) [300]
+        if ((coin) touching (player)) then:
+          change score by [1]
+          {game} (coin) set [y] to [0]
+          {game} (coin) set [x] to (pick random [0] to [4])
+        else if (((coin) [y]) [=] [4]) then:
+          game over
+    new: "8-9"
+    what: Game over shows your score at the end. We check for a catch first, so a catch on the bottom row still counts.
+    test:
+      - Missing a coin ends the game
+      - My score shows at the end
+    fields: ["My high score", "My partner's high score"]
+
+  - part: "Part 3: The rules"
+    title: "Checkpoint: the whole game"
+    say: Your game should match this. Check each block is in the right place.
+    blocks: |
+      on start:
+        set [player] to (create sprite at x: [2] y: [4])
+        set [coin] to (create sprite at x: (pick random [0] to [4]) y: [0])
+      on button [A] pressed:
+        {game} (player) change [x] by [-1]
+      on button [B] pressed:
+        {game} (player) change [x] by [1]
+      forever:
+        {game} (coin) change [y] by [1]
+        pause (ms) [300]
+        if ((coin) touching (player)) then:
+          change score by [1]
+          {game} (coin) set [y] to [0]
+          {game} (coin) set [x] to (pick random [0] to [4])
+        else if (((coin) [y]) [=] [4]) then:
+          game over
+    stuck:
+      - "**Game over right away?** Check the else if uses **coin y**, not coin x."
+      - "**Score never goes up?** Check the touching block says **coin** touching **player**."
+      - "**Player won't move?** Check **player** (not coin) is in the button blocks."
+    test:
+      - The whole game works
+      - I downloaded it to a real micro:bit (or played it in the simulator)
+
+quiz:
+  - question: Where is the LED at **x 0, y 0**?
+    choices: ["Top-left corner", "Bottom-right corner", "The middle", "Bottom-left corner"]
+    answer: 0
+    why: x and y both start at 0 in the top-left corner.
+  - question: What does **player change x by -1** do?
+    choices: ["Moves the player up", "Moves the player left", "Moves the player right", "Ends the game"]
+    answer: 1
+    why: x goes left to right, so a smaller x is further left.
+  - question: Why does the coin move down when we **change y by 1**?
+    choices: ["y goes from top to bottom", "y goes left to right", "y is the score", "It doesn't move"]
+    answer: 0
+    why: y is 0 on the top row and 4 on the bottom row. Adding 1 moves it down.
+  - question: What is a **sprite**?
+    choices: ["A drink", "A game character you can move", "A kind of loop", "A button"]
+    answer: 1
+    why: Our player and coin are both sprites. Each one is one LED.
+  - question: Why do we check **touching** before checking **y = 4**?
+    choices: ["It's faster", "So a catch on the bottom row still counts as a catch", "It doesn't matter", "So the coin falls faster"]
+    answer: 1
+    why: The coin is on row 4 when you catch it too. Checking the catch first means you get the point, not game over.
+
+ship:
+  extensions:
+    - title: Catch sound
+      level: Easier
+      goal: Play a happy note every time you catch a coin.
+      where: Inside the if, right after change score by 1.
+      blocks: |
+        if ((coin) touching (player)) then:
+          change score by [1]
+          {music} play tone [High C] for [1/8] beat
+      new: "3"
+      hints: ["Music blocks are orange.", "Keep the beep short so the game doesn't slow down."]
+    - title: Three lives
+      level: Easier
+      goal: Get 3 tries before game over.
+      where: Add set life to 3 in on start. Use remove life instead of game over.
+      blocks: |
+        on start:
+          set life to [3]
+        forever:
+          if ((coin) touching (player)) then:
+            change score by [1]
+          else if (((coin) [y]) [=] [4]) then:
+            remove life [1]
+            {game} (coin) set [y] to [0]
+      new: "2, 7-8"
+      hints: ["Life blocks are in the Game drawer.", "The game ends by itself when lives reach 0.", "After losing a life, send the coin back to the top."]
+    - title: Speed it up
+      level: Medium
+      goal: The coin falls faster as your score goes up.
+      where: Replace pause 300 with a pause that gets shorter.
+      blocks: |
+        forever:
+          {game} (coin) change [y] by [1]
+          pause (ms) ([300] [-] ((score) [×] [10]))
+      new: "3"
+      hints: ["The minus and times blocks are in Math.", "score is in the Game drawer.", "Watch out: at a score of 30 the pause is 0! Can you stop it from going below 100?"]
+    - title: A bad coin
+      level: Challenge
+      goal: Add a second falling sprite that you must NOT catch. Catching it is game over.
+      where: Make a variable called bomb in on start, and copy the coin's falling code for it.
+      blocks: |
+        on start:
+          set [bomb] to (create sprite at x: (pick random [0] to [4]) y: [0])
+        forever:
+          {game} (bomb) change [y] by [1]
+          if ((bomb) touching (player)) then:
+            game over
+          else if (((bomb) [y]) [=] [4]) then:
+            {game} (bomb) set [y] to [0]
+      hints: ["Put the bomb's code in a second forever block.", "Use a different pause for the bomb so it falls at a different speed.", "How will players tell the bomb from the coin? Try making it blink."]
+  reflect:
+    - Write one rule from your game as an if-then sentence.
+    - What would you change to make your game more fun? Why?
+
+teacher_notes: |
+  * **Timing:** two class periods. Parts 1-2 on day 1, Part 3 and an extension on day 2.
+  * **The Game drawer** is under **Advanced** in the toolbox. Show it on the projector.
+  * **Variables vs sprites:** students sometimes put a number in set player to. The create sprite block must
+    snap into the set block.
+  * **else if:** clicking the **+** on an if block adds an else; clicking again adds else if. Demo it once.
+  * **Common bug:** the = comparison needs the round **coin y** block (Game drawer, **coin x** then change the
+    dropdown to y).
+  * Ship it: students turn in their MakeCode **share link**.
+
+standards:
+  - code: 6-8.CT.b.1
+    how: Students design a game loop that uses repetition (forever) and conditionals (if / else if) to score and end the game.
+  - code: 6-8.CT.d.3
+    how: Students build a working game, step by step, with a partner.
+  - code: 6-8.CT.b.5
+    how: Students use the screen's edges and the bottom row (y = 4) as boundaries in the game's rules.

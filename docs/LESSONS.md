@@ -66,3 +66,37 @@ standards:
 
 MakeCode Python, not MicroPython: `basic.show_string`, `basic.pause`, `input.button_is_pressed(Button.A)`,
 `pins.digital_write_pin(DigitalPin.P0, 1)`, `game.create_sprite`, `music.play_tone`.
+
+## 6th grade: MakeCode Blocks
+
+6th grade lessons live in `course/lessons/g6/` (plan: `COURSE_6` in `course/rules.py`). Students build with
+**MakeCode Blocks** on the micro:bit, so steps use `blocks:` instead of `code:`. The site draws them as colored
+MakeCode-style blocks. Write the block text the way it reads in the editor:
+
+```yaml
+    blocks: |
+      on start:
+        show icon [heart]
+        set [score] to [0]
+      on button [A] pressed:
+        change [score] by [1]
+        show number (score)
+      forever:
+        if (button [B] is pressed) then:
+          {music} play tone [Middle C] for [1 beat]
+        else:
+          clear screen
+        pause (ms) [100]
+    new: "2-3"
+```
+
+- One block per line, **2 spaces** of indent per level. A line ending in `:` holds the indented lines below it
+  (`on start:`, `forever:`, `on button [A] pressed:`, `repeat [4] times:`, `if (…) then:`, `else:`, `while (…):`).
+- `[x]` is a value students type or pick from a dropdown (numbers, text, icons, notes). `(x)` is a round or
+  pointy block that snaps into a slot (`(pick random [1] to [3])`, `(acceleration (mg) [x])`, `(score)`).
+- The color comes from the first words (show/pause/clear → Basic, on button/on shake/acceleration → Input,
+  repeat/while → Loops, if/else → Logic, set/change → Variables, play/tone → Music, plot/unplot → Led,
+  radio → Radio, sprite/game over/score → Game, pick random → Math, ML → Machine learning). When it could be
+  wrong, start the line with the drawer name in braces: `{game} change [player] [x] by [1]`.
+  Drawers: basic, input, music, led, radio, loops, logic, variables, math, game, functions, ml, text.
+- `new:` highlights lines, like the Python lessons.

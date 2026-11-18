@@ -1,0 +1,242 @@
+id: game-jam
+title: Game Jam
+tagline: Design, build and share your own micro:bit game
+minutes: 135         # about three class periods
+
+mission:
+  big_question: "How do game designers turn an idea into a game people love?"
+  goal: |
+    It's a **game jam**! You and your partner design and build your **own** micro:bit game.
+    Use at least **3 ideas** from this course. Then other players test it, you make it better,
+    and you show it off in a 1-minute demo.
+  picture:
+    type: flow
+    steps: ["Pick an idea", "Plan it", "Build version 1", "Playtest", "Fix and improve", "Share it"]
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open (in **Blocks**)
+    - A micro:bit and USB cable (a second micro:bit for radio games, a V2 for AI games)
+    - Paper and a pencil for sketching
+  learn:
+    - "game designers **plan** before they build"
+    - "**playtesting**: watch real players to find problems"
+    - "**iterate**: build, test, fix, repeat"
+  talk: What is your favorite game? What makes it fun to play again and again?
+
+build:
+  - part: "Part 1: Design"
+    title: Pick your game idea
+    say: Start with an idea you can build in about two class periods. Small and fun beats big and broken.
+    picture:
+      type: compare
+      items:
+        - {icon: "🏃", title: "Dodge or catch", text: "Sprites, score, game over"}
+        - {icon: "⏱️", title: "Beat the clock", text: "Countdown, buttons, score"}
+        - {icon: "📡", title: "Two-player", text: "Radio between two micro:bits"}
+        - {icon: "🪄", title: "Gesture game", text: "Play with AI moves you trained"}
+    do:
+      - Look at the four kinds of games. Pick one, or invent your own.
+      - Give your game a name.
+    test:
+      - We picked a game idea we both like
+    fields: ["Game name", "Kind of game"]
+
+  - part: "Part 1: Design"
+    title: Plan the rules
+    say: Every game needs a **goal**, something the **player does**, and a way to **win or lose**.
+    do:
+      - Talk it through with your partner. Fill in the plan below.
+      - "Your game must use at least **3 ideas** from the course: events, loops, variables, random, if / else, sprites, radio or AI gestures."
+    test:
+      - Our plan has a goal, player actions and a way to win or lose
+      - We picked at least 3 course ideas
+    fields: ["The player does", "The goal is", "You win or lose when", "Ideas we'll use"]
+
+  - part: "Part 1: Design"
+    title: Sketch the screen
+    say: The micro:bit screen is only **5 by 5** lights. Plan what each light means.
+    do:
+      - On paper, draw a 5 by 5 grid.
+      - Mark where the player starts, where things appear, and what shows when the game ends.
+    test:
+      - We drew our game screen on paper
+    ask: What does the player see when they win or lose?
+
+  - part: "Part 2: Build"
+    title: Grab a starter pattern
+    say: |
+      You don't have to start from nothing. These **patterns** show up in lots of games.
+      Pick the ones that fit your plan. Change the numbers to make them yours.
+    blocks: |
+      on start:
+        set [score] to [0]
+        {game} set [player] to (create sprite at x: [2] y: [4])
+        {game} start countdown (ms) [30000]
+      on button [A] pressed:
+        {game} change [player] [x] by [-1]
+      on button [B] pressed:
+        {game} change [player] [x] by [1]
+      forever:
+        if (score > [9]) then:
+          {game} game over
+        pause (ms) [100]
+    what: "This has button movement, a **30-second countdown** and a score check. When the countdown ends, MakeCode shows the score."
+    do:
+      - Open MakeCode, make a **New Project** with your game's name, and choose **Blocks**.
+      - Build only the patterns your game needs.
+    tip: "Using the Game drawer's score? Use `change score by [1]` and skip the score variable."
+    test:
+      - My project has my game's name
+      - I built at least one starter pattern
+
+  - part: "Part 2: Build"
+    title: Build version 1
+    say: Build the **smallest game that works**. Add the extras later.
+    do:
+      - Build the main thing the player does first.
+      - Then add the goal, then the win or lose rule.
+      - Test in the simulator after **every** new block or two.
+    tip: "**Stuck?** Look back at the lesson where you first used that idea. Your old code is in MakeCode's home page."
+    test:
+      - I can play my game from start to finish
+      - The game has a way to win or lose
+    ask: Which course idea was the hardest to fit into your game? How did you solve it?
+
+  - part: "Part 2: Build"
+    title: Try it on the micro:bit
+    say: Games feel different on a real micro:bit. Download it and play it yourself.
+    do:
+      - Download your game and play it 3 times.
+      - "Write one thing that works and one thing to change."
+    test:
+      - My game runs on the real micro:bit
+    fields: ["Works great", "Needs to change"]
+
+  - part: "Part 3: Playtest"
+    title: Playtest with another pair
+    say: |
+      Swap games with another pair. **Don't help** while they play! Just watch.
+      Where do they get stuck? Where do they smile?
+    do:
+      - Give your micro:bit to another pair. Say only your game's name.
+      - Watch them play 2 times. Write what you see.
+      - Then ask what they would change.
+    test:
+      - Another pair played our game
+      - We wrote down what we saw
+    fields: ["They got stuck when", "They liked", "They would change"]
+
+  - part: "Part 3: Playtest"
+    title: Fix one bug
+    say: A **bug** is anything that doesn't work the way you planned. Fix the most important one first.
+    do:
+      - Pick one bug from playtesting or from your own play.
+      - Fix it. Test again to make sure it's really fixed.
+    test:
+      - I fixed a bug and tested the fix
+    fields: ["The bug was", "We fixed it by"]
+
+  - part: "Part 3: Playtest"
+    title: Add one improvement
+    say: Now make it **better**. This is called **iterating**. Real game studios do it many times.
+    do:
+      - "Pick one: a sound, a start screen, a harder level, a better ending, or an idea from your playtesters."
+      - Build it and test it.
+    test:
+      - I added one improvement and tested it
+    fields: ["Our improvement"]
+
+  - part: "Part 4: Share"
+    title: Share your game
+    say: Get ready for **demo day**! Players need a title and short instructions.
+    do:
+      - In MakeCode, click **Share** and copy the link. You'll paste it in Ship it.
+      - "Write 2 or 3 short sentences that tell a new player how to play."
+      - Practice a **1-minute demo**. Say the name, how to play, and the 3 ideas you used.
+    test:
+      - I copied my share link
+      - We practiced our 1-minute demo
+    fields: ["How to play"]
+
+quiz:
+  - question: Why do game designers plan before they build?
+    choices: ["Planning is faster than playing", "So they know the goal, rules and screen before coding", "MakeCode needs a plan to start", "Plans make the micro:bit faster"]
+    answer: 1
+    why: A plan helps you build the right thing and split the work with your partner.
+  - question: During playtesting, what should you do while the other pair plays?
+    choices: ["Tell them the answer", "Watch quietly and write what you see", "Play for them", "Turn the micro:bit off"]
+    answer: 1
+    why: If you help, you can't see where your game is confusing.
+  - question: Building, testing, fixing and then testing again is called...
+    choices: ["iterating", "downloading", "debugging only once", "sharing"]
+    answer: 0
+    why: Iterating means going around the build-test-improve loop again and again.
+  - question: "Which block makes the game end and show the score?"
+    choices: ["show icon", "game over", "pause (ms)", "on start"]
+    answer: 1
+    why: The game over block in the Game drawer ends the game and shows the score.
+  - question: Your game works, but it's too easy. What's a good first fix?
+    choices: ["Delete the score", "Make things faster or shorten the countdown", "Remove the player", "Unplug the micro:bit"]
+    answer: 1
+    why: Small changes to speed or time are an easy way to tune how hard a game is.
+
+ship:
+  extensions:
+    - title: Sound effects
+      level: Easier
+      goal: Play a sound when you score and a different one when the game ends.
+      where: Next to the blocks that change the score and call game over.
+      blocks: |
+        {game} change score by [1]
+        {music} play tone [High C] for [1/8 beat]
+      hints: ["The Music drawer has tones and sounds.", "Keep sounds short so the game doesn't slow down."]
+    - title: Start screen
+      level: Easier
+      goal: Show the game's name and wait for button A before the game begins.
+      where: At the top of on start.
+      blocks: |
+        on start:
+          show string ["DODGE"]
+          while (not (button [A] is pressed)):
+            pause (ms) [20]
+      hints: ["The not block is in the Logic drawer.", "Put the rest of your on start blocks underneath."]
+    - title: Levels
+      level: Medium
+      goal: Make the game get harder each time the score goes up by 5.
+      where: In your forever loop.
+      blocks: |
+        forever:
+          set [speed] to ([500] - ((score) * [20]))
+          pause (ms) (speed)
+      hints: ["A smaller pause makes things move faster.", "Add an if so speed never goes below 100."]
+    - title: High score
+      level: Medium
+      goal: Keep the best score and show it at the start of each game.
+      where: Use a new variable called best.
+      hints: ["When the game ends, check if score is bigger than best.", "Show best with show number at the start."]
+    - title: Two-player or gesture mode
+      level: Challenge
+      goal: Add radio so two micro:bits play together, or use AI gestures you trained as a control.
+      where: Look back at Radio Hot Potato or AI Gesture Remote.
+      hints: ["Both micro:bits need the same radio group.", "AI gestures need a micro:bit V2."]
+  reflect:
+    - What did playtesting show you that you didn't notice yourself?
+    - Which 3 course ideas did you use, and where are they in your game?
+
+teacher_notes: |
+  * **Timing:** about three class periods. Day 1: Part 1 and start version 1. Day 2: finish version 1 and playtest.
+    Day 3: fix, improve, share and demo.
+  * **Scope:** steer pairs toward small games. A working simple game beats an unfinished big one.
+  * **The 3 ideas:** the plan step's "Ideas we'll use" field makes this easy to check in the gradebook.
+  * **Playtesting:** pair up teams ahead of time. Remind testers to be kind and specific.
+  * **Hardware:** radio games need two micro:bits; AI gesture games need a micro:bit V2 and a model from CreateAI.
+  * **Demo day:** run demos from the share links on the projector, or let pairs walk around and play each other's games.
+  * Students turn in their MakeCode **share link** in Ship it.
+
+standards:
+  - code: 6-8.CT.b.3
+    how: Students break their game into parts (player, goal, win or lose) and build a solution for each part.
+  - code: 6-8.CT.d.3
+    how: Partners create a program that implements their own game design.
+  - code: 6-8.CT.d.6
+    how: Students playtest, fix bugs and add improvements in repeated build-test cycles.

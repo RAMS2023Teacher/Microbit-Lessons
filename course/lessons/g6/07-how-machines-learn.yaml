@@ -1,0 +1,231 @@
+id: how-machines-learn
+title: How Machines Learn
+tagline: Teach your micro:bit to know a wave from a shake
+minutes: 90          # about two class periods
+
+mission:
+  big_question: How can a computer learn from examples instead of rules?
+  goal: |
+    Teach the micro:bit to **recognize your moves**. You will show it examples of each move.
+    The computer finds the pattern by itself. That's called **machine learning**.
+    At the end, your micro:bit will guess what you are doing, live!
+  picture:
+    type: compare
+    items:
+      - {icon: "📜", title: "Rules", text: "A person writes every rule by hand"}
+      - {icon: "📊", title: "Examples", text: "You show lots of examples"}
+      - {icon: "🧠", title: "Model", text: "The computer finds the pattern"}
+  you_need:
+    - A partner
+    - A Chromebook with micro:bit CreateAI open
+    - A micro:bit, USB cable and battery pack
+  learn:
+    - "**training data**: the examples you give the computer"
+    - "**model**: what the computer builds from the examples"
+    - "**confidence**: how sure the model is about its guess"
+  talk: Your phone can unlock when it sees your face. Do you think a person wrote a rule for every face? How else could it work?
+
+build:
+  - part: "Part 1: Rules or examples?"
+    title: Try to write a rule
+    say: |
+      Computers follow **rules**. Let's try to write one.
+      Your job: write a rule that tells a computer when someone is **waving**.
+    do:
+      - Wave your hand a few times. Watch your partner wave too.
+      - Talk with your partner. What makes a wave a wave?
+      - Write your best rule in the blank below.
+    test:
+      - We wrote a rule for "waving"
+    fields: ["Our rule for waving"]
+    ask: Does your rule work for a slow wave AND a fast wave? For a big wave AND a tiny wave?
+
+  - part: "Part 1: Rules or examples?"
+    title: Examples are easier
+    say: |
+      Rules get hard fast. Every person moves a little differently.
+      **Machine learning** works another way. You show the computer lots of **examples**.
+      The computer finds the pattern by itself.
+    picture:
+      type: flow
+      steps: ["Collect examples", "Train a model", "Test it", "Add more examples"]
+      loop: true
+      caption: Machine learning is a loop. You keep testing and improving.
+    do:
+      - Read the four steps in the picture with your partner.
+      - Say each step out loud in your own words.
+    test:
+      - I can name the four steps
+    ask: Why are examples easier than writing rules for something like waving?
+
+  - part: "Part 2: Collect data"
+    title: Connect your micro:bit
+    say: "**micro:bit CreateAI** is a free website for machine learning. It reads the micro:bit's **accelerometer**: the sensor that feels movement."
+    do:
+      - Open **createai.microbit.org** in Chrome. Start a **new session**.
+      - Click **Connect**. Follow the steps on the screen.
+      - Plug the battery pack into the micro:bit, so you can move it freely.
+      - "If you can't connect: ask your teacher. Some Chromebooks need a second micro:bit plugged in by USB as a **radio bridge**."
+    tip: "**Strap it on!** Hold the micro:bit the same way every time, or wear it on your wrist. That makes your data cleaner."
+    test:
+      - CreateAI says my micro:bit is connected
+      - When I move the micro:bit, the graph on the screen moves
+    ask: What do you think the wiggly lines on the graph show?
+
+  - part: "Part 2: Collect data"
+    title: Name your actions
+    say: An **action** is one move you want the computer to learn. Each action is one group in your data.
+    do:
+      - "Make three actions: **wave**, **shake** and **still**."
+      - Type each name in an action box.
+      - "**still** is important. It teaches the model what NOT moving looks like."
+    picture:
+      type: compare
+      items:
+        - {icon: "👋", title: "wave", text: "Side to side"}
+        - {icon: "🫨", title: "shake", text: "Fast and jumpy"}
+        - {icon: "🧘", title: "still", text: "Not moving"}
+    test:
+      - I made 3 actions with names
+    ask: Why do you think we need a "still" action?
+
+  - part: "Part 2: Collect data"
+    title: Record your training data
+    say: |
+      Now record examples. Each recording is a **sample**.
+      All your samples together are your **training data**.
+    do:
+      - Click an action to pick it. Then click **Record**.
+      - Wait for the countdown. Then do the move until the recording stops.
+      - Record **at least 3 samples** for each action.
+      - Take turns. Let your partner record some samples too.
+    tip: "**Messed up a sample?** Delete it with the **X**. Bad examples teach the model bad habits."
+    test:
+      - Every action has at least 3 samples
+      - Both partners recorded samples
+    fields: ["Samples of wave", "Samples of shake", "Samples of still"]
+    ask: Look at the graphs for wave and shake. How are they different?
+
+  - part: "Part 3: Train and test"
+    title: Train the model
+    say: |
+      **Training** means the computer studies your examples and finds the pattern.
+      What it builds is called a **model**.
+    do:
+      - Click **Train model**.
+      - Wait a few seconds while it trains.
+    test:
+      - The model finished training
+    ask: In your own words, what is a model?
+
+  - part: "Part 3: Train and test"
+    title: Test it live
+    say: |
+      Now move the micro:bit. CreateAI shows its **estimated action**: its best guess.
+      It also shows its **confidence**. That's how sure it is, from 0% to 100%.
+    do:
+      - Do each move. Watch the guess and the confidence.
+      - Try each move 3 times.
+      - Fill in the blanks with how sure it was.
+    test:
+      - The model guessed wave when I waved
+      - The model guessed still when I held still
+    fields: ["Wave: how sure?", "Shake: how sure?", "Still: how sure?"]
+    ask: Which move did the model get wrong the most? Why do you think so?
+
+  - part: "Part 3: Train and test"
+    title: Make it better with more data
+    say: |
+      Is your model making mistakes? **More and better examples** usually help.
+      Try samples that are a little different: fast and slow, big and small, your partner's moves too.
+    do:
+      - Find the action with the most mistakes.
+      - Record **3 more samples** for it. Make them a little different from each other.
+      - Click **Train model** again. Test again.
+    test:
+      - I added more samples and trained again
+      - The model is better at my hardest move
+    ask: Did more data help? How do you know?
+
+  - part: "Part 3: Train and test"
+    title: "Checkpoint: does it work for everyone?"
+    say: A good model works for **lots of people**, not just the person who trained it.
+    do:
+      - Ask someone from another pair to try your model.
+      - Watch the guesses. Does it work for them?
+      - "Save your project: it saves in your browser. Ask your teacher if you should also download it."
+    stuck:
+      - "**Always guesses one action?** Record more samples for the other actions."
+      - "**Wave and shake get mixed up?** Make your waves slower and your shakes faster when you record."
+      - "**Lost connection?** Click Connect again. Check the battery pack."
+    test:
+      - Someone else tested our model
+      - Our project is saved
+    ask: Did the model work for the other person? What could you add to the training data so it works for more people?
+
+quiz:
+  - question: What is **training data**?
+    choices: ["The rules a person writes", "The examples you give the computer", "The battery for the micro:bit", "The code you download"]
+    answer: 1
+    why: Training data is all the examples (samples) the computer learns from.
+  - question: In machine learning, who finds the pattern?
+    choices: ["The person writes it as a rule", "The computer finds it from examples", "The battery pack", "Nobody"]
+    answer: 1
+    why: You give examples, and the computer finds the pattern itself. That's the big idea of machine learning.
+  - question: The model says "wave" with 95% **confidence**. What does that mean?
+    choices: ["It's very sure you are waving", "You waved 95 times", "It is 95% done training", "It's broken"]
+    answer: 0
+    why: Confidence is how sure the model is about its guess. 95% is very sure.
+  - question: Your model keeps mixing up wave and shake. What should you try first?
+    choices: ["Unplug the micro:bit", "Add more, clearer samples of both moves and train again", "Delete the still action", "Give up"]
+    answer: 1
+    why: Better and more varied training data is the main way to improve a model.
+  - question: Why test your model with another person?
+    choices: ["To make it train faster", "To check it works for people who didn't train it", "To use less battery", "It doesn't matter"]
+    answer: 1
+    why: A model can learn only one person's style. Testing with others shows if it's fair and works for everyone.
+
+ship:
+  extensions:
+    - title: A fourth move
+      level: Easier
+      goal: Add a new action, like **clap** or **jump**. Record samples, train and test.
+      hints: ["Pick a move that looks different from the others.", "Record at least 3 samples, then train again."]
+    - title: Data from the whole team
+      level: Easier
+      goal: Get 3 different people to record samples for every action. Does the model get better for everyone?
+      hints: ["Keep the micro:bit in the same position for everyone.", "Test with a 4th person who didn't record."]
+    - title: Trick the model
+      level: Medium
+      goal: Find a move the model gets wrong. Then fix it with better data.
+      hints: ["Try a wave that's very slow, or upside down.", "Record samples of the tricky move and train again."]
+    - title: Too much or too little?
+      level: Challenge
+      goal: Make a model with only 1 sample per action. Compare it with your model that has 6 or more. Write down what changed.
+      hints: ["Start a new session for the small model so you don't lose your good one.", "Test both models with the same 3 moves."]
+  reflect:
+    - In your own words, how is machine learning different from writing rules?
+    - How did adding more training data change your model?
+
+teacher_notes: |
+  * **Timing:** two periods. Part 1 (rules vs examples) can be a 10-minute whole-class discussion.
+  * **Hardware:** any micro:bit can collect data and train in CreateAI. Using the model in MakeCode on the micro:bit
+    (next lesson) needs a **micro:bit V2**, so hand out V2s now if you can.
+  * **Connecting:** CreateAI connects by Bluetooth, or with a second micro:bit plugged in by USB as a radio bridge
+    when Bluetooth isn't available. Plan for one extra micro:bit per pair if your Chromebooks can't use Bluetooth.
+    Follow the on-screen steps; they change between CreateAI versions, so try it yourself before class.
+  * **Battery packs** keep the micro:bit off the cable so students can move freely. Wrist straps help a lot.
+  * **Saving:** CreateAI keeps the session in the browser. Students on shared Chromebooks should save or download
+    their project so they can open it in the AI Gesture Remote lesson.
+  * **Big idea to push:** the model is only as good as its data. Use the "does it work for everyone?" checkpoint to
+    talk about fairness: AI trained on a few people can work badly for others.
+  * UI words used here: actions, samples (Record), Train model, estimated action, confidence. If your version uses
+    slightly different labels, tell students up front.
+
+standards:
+  - code: 6-8.CS.b.2
+    how: Students and the computer work together. Students choose and record examples, and the computer finds the pattern in them.
+  - code: 6-8.CT.c.5
+    how: Students use the micro:bit's accelerometer to collect, view and compare movement data for each action.
+  - code: 6-8.CT.e.1
+    how: Students build a model of their moves and explain why more varied examples make it work better.

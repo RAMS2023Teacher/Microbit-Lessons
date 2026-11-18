@@ -1,0 +1,275 @@
+id: animate-it
+title: Animate It
+tagline: Make pictures move with a forever loop
+minutes: 50
+
+mission:
+  big_question: How can a computer repeat something without us telling it again?
+  goal: |
+    Make an **animation** on the micro:bit, like a flip book. Pictures change fast, so they look like they move.
+    You'll make a **beating heart**, then design your **own** looping animation.
+  picture:
+    type: leds
+    frames: ["00000:01010:11111:01110:00100", "00000:00000:01010:00100:00000", "00000:01010:11111:01110:00100"]
+    caption: Big heart, small heart, big heart... it beats!
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - A micro:bit and USB cable (or just the simulator)
+  learn:
+    - "**forever** repeats the blocks inside it again and again"
+    - "**pause** waits, so you can see each picture"
+    - "**frames**: the pictures in an animation"
+  talk: Cartoons and flip books are just pictures shown fast. How many pictures do you think a cartoon shows in one second?
+
+build:
+  - part: Set up
+    title: A new project
+    do:
+      - Open MakeCode. Click **New Project**. Name it **Animate It**.
+      - Stay in **Blocks**.
+    test:
+      - I have a new project called Animate It
+
+  - part: "Part 1: The forever loop"
+    title: Meet forever
+    say: "**forever** runs the blocks inside it, then goes back to the top and runs them again. It never stops."
+    do:
+      - Drag **show icon** into **forever**. Pick the big heart.
+      - Drag another **show icon** under it. Pick the small heart.
+      - Watch the simulator.
+    blocks: |
+      forever:
+        show icon [heart]
+        show icon [small heart]
+    new: "2-3"
+    picture:
+      type: flow
+      loop: true
+      loop_label: forever
+      steps:
+        - {icon: "❤️", label: "big heart"}
+        - {icon: "💗", label: "small heart"}
+    test:
+      - The heart changes between big and small
+      - It keeps going and never stops
+    ask: How is forever different from on start?
+
+  - part: "Part 1: The forever loop"
+    title: Control the speed with pause
+    say: "**pause** waits before the next block. The number is in **ms** (milliseconds). 1000 ms is 1 second."
+    do:
+      - From **Basic**, drag **pause** under each **show icon**.
+      - Set both to **500**.
+      - Watch the heart beat.
+    blocks: |
+      forever:
+        show icon [heart]
+        pause (ms) [500]
+        show icon [small heart]
+        pause (ms) [500]
+    new: "3, 5"
+    test:
+      - The heart beats steadily
+    fields: ["Fast heart (ms)", "Slow heart (ms)"]
+    ask: Try two other numbers. Write a number that makes it fast and one that makes it slow.
+
+  - part: "Part 2: Draw your own frames"
+    title: Draw with show leds
+    say: "**show leds** lets you draw any picture. Click a square to turn that LED on or off."
+    do:
+      - Delete your forever blocks. Drag in a new **forever**.
+      - Drag **show leds** into it. Draw a dot in the top-left corner.
+      - Add **pause (ms) [200]** under it.
+    blocks: |
+      forever:
+        show leds [dot on the left]
+        pause (ms) [200]
+    picture:
+      type: leds
+      image: "00000:00000:10000:00000:00000"
+      caption: Frame 1 of a bouncing dot
+    test:
+      - I see my dot on the simulator
+    tip: "**Delete a block:** drag it back onto the drawers, or click it and press Delete."
+
+  - part: "Part 2: Draw your own frames"
+    title: Make the dot move
+    say: Each **show leds** is one **frame**. Move the dot a little in each frame.
+    do:
+      - Add 4 more **show leds** and **pause** blocks.
+      - In each frame, move the dot one step to the right.
+      - Watch it slide across the screen.
+    blocks: |
+      forever:
+        show leds [dot in column 1]
+        pause (ms) [200]
+        show leds [dot in column 2]
+        pause (ms) [200]
+        show leds [dot in column 3]
+        pause (ms) [200]
+        show leds [dot in column 4]
+        pause (ms) [200]
+        show leds [dot in column 5]
+        pause (ms) [200]
+    new: "4-11"
+    picture:
+      type: leds
+      frames: ["00000:00000:10000:00000:00000", "00000:00000:01000:00000:00000", "00000:00000:00100:00000:00000", "00000:00000:00010:00000:00000"]
+    tip: "**Shortcut:** right-click a block and pick **Duplicate** to copy it."
+    test:
+      - My dot slides from left to right
+      - Then it jumps back and slides again
+    ask: Why does the dot jump back to the left when it reaches the right side?
+
+  - part: "Part 2: Draw your own frames"
+    title: Make it bounce
+    say: To bounce, the dot has to come **back**. Add frames that go right to left.
+    do:
+      - Add 3 more frames after the last one. Put the dot in column 4, then 3, then 2.
+      - Run it. Now the dot goes back and forth!
+    test:
+      - My dot bounces back and forth without jumping
+    fields: ["How many frames?"]
+    ask: How many show leds blocks does your bounce need in total?
+
+  - part: "Part 3: Your animation"
+    title: Plan your own animation
+    say: Now it's your turn. Pick an idea and plan your frames first.
+    picture:
+      type: compare
+      items:
+        - {icon: "🌧️", title: "Rain", text: "Drops fall from top to bottom"}
+        - {icon: "👀", title: "Blinking eyes", text: "Eyes open, closed, open"}
+        - {icon: "🚀", title: "Rocket", text: "A rocket flies up and away"}
+        - {icon: "✨", title: "Your idea", text: "Anything you can draw"}
+    do:
+      - With your partner, pick an idea.
+      - Sketch at least 4 frames on paper or a whiteboard.
+    test:
+      - We picked an idea and sketched at least 4 frames
+    fields: ["Our animation", "Number of frames"]
+
+  - part: "Part 3: Your animation"
+    title: Build your animation
+    do:
+      - Make a new **forever** loop with your frames.
+      - Put a **pause** after each frame. Try different speeds.
+      - Download it to the real micro:bit.
+    blocks: |
+      forever:
+        show leds [frame 1]
+        pause (ms) [300]
+        show leds [frame 2]
+        pause (ms) [300]
+        show leds [frame 3]
+        pause (ms) [300]
+        show leds [frame 4]
+        pause (ms) [300]
+    stuck:
+      - "**Too fast to see?** Make the pause numbers bigger."
+      - "**Frames missing?** Check every block is snapped inside forever."
+      - "**Looks jumpy?** Change the dots a little at a time between frames."
+    test:
+      - My animation loops forever
+      - It runs on the real micro:bit
+    ask: What speed (pause) looked best for your animation? Why?
+
+quiz:
+  - question: What does **forever** do?
+    choices: ["Runs its blocks one time", "Runs its blocks again and again", "Turns the micro:bit off", "Waits for button A"]
+    answer: 1
+    why: When forever gets to the bottom, it goes back to the top and runs again.
+  - question: "How long is **pause (ms) [1000]**?"
+    choices: ["1 second", "10 seconds", "1 minute", "1000 seconds"]
+    answer: 0
+    why: ms means milliseconds. 1000 milliseconds is 1 second.
+  - question: You want your animation to go faster. What do you change?
+    choices: ["Make the pause numbers bigger", "Make the pause numbers smaller", "Add more forever blocks", "Unplug the micro:bit"]
+    answer: 1
+    why: A smaller pause means less waiting between frames, so it moves faster.
+  - question: In an animation, what is a **frame**?
+    choices: ["One picture", "The micro:bit's case", "A loop", "A button"]
+    answer: 0
+    why: Each show leds block is one frame, like one page of a flip book.
+  - question: "Your dot slides right, then jumps back to the left. Why?"
+    choices: ["The micro:bit is broken", "forever starts again from the first frame", "The pause is too short", "The dot fell off"]
+    answer: 1
+    why: After the last frame, forever goes back to the top, so the first frame shows again.
+
+ship:
+  extensions:
+    - title: Start with a title
+      level: Easier
+      goal: Show the name of your animation one time before it starts.
+      where: In an on start block.
+      blocks: |
+        on start:
+          show string ["Rocket!"]
+      hints: ["**on start** runs one time, before forever starts.", "show string is in Basic."]
+    - title: Pause with a button
+      level: Medium
+      goal: Press A to show a smiley for 2 seconds in the middle of the animation.
+      where: A new event block.
+      blocks: |
+        on button [A] pressed:
+          show icon [happy]
+          pause (ms) [2000]
+      hints: ["**on button A pressed** is in Input."]
+    - title: Repeat a part
+      level: Medium
+      goal: "Use **repeat** to make the heart beat 3 times fast, then rest."
+      where: Inside forever.
+      blocks: |
+        forever:
+          repeat [3] times:
+            show icon [heart]
+            pause (ms) [150]
+            show icon [small heart]
+            pause (ms) [150]
+          pause (ms) [1000]
+      new: "2-6"
+      hints: ["**repeat** is in the green Loops drawer.", "The blocks inside repeat run 3 times, then forever moves on."]
+    - title: Add a sound
+      level: Medium
+      goal: Play a short note with each frame. Use headphones or a micro:bit V2 speaker.
+      where: Under a show leds block.
+      blocks: |
+        forever:
+          show leds [frame 1]
+          {music} play tone [Middle C] for [1/4 beat]
+          show leds [frame 2]
+          {music} play tone [Middle G] for [1/4 beat]
+      new: "3, 5"
+      hints: ["**play tone** is in the orange Music drawer.", "Hold the micro:bit away from your ears at first."]
+    - title: Two animations
+      level: Challenge
+      goal: A shows one animation, B shows a different one.
+      where: Two event blocks. Use repeat so each one plays a few times.
+      blocks: |
+        on button [A] pressed:
+          repeat [3] times:
+            show leds [rain 1]
+            show leds [rain 2]
+        on button [B] pressed:
+          repeat [3] times:
+            show leds [rocket 1]
+            show leds [rocket 2]
+      hints: ["Copy your frames with Duplicate.", "Take forever away, or the two will fight for the screen."]
+  reflect:
+    - How did forever and pause help you make your animation?
+    - If you had more time, what would you add to your animation?
+
+teacher_notes: |
+  * **Flip book warm-up:** sticky-note flip books (4 frames) are a quick unplugged hook before Part 2.
+  * Students often forget a **pause** between frames, so frames flash by too fast to see. Point them back to the speed step.
+  * **Duplicate** (right-click) saves a lot of dragging when making frames.
+  * The repeat extension previews loops with a count, which comes back in later lessons.
+
+standards:
+  - code: 6-8.CT.b.1
+    how: Students use a forever loop (repetition) to play animation frames.
+  - code: 6-8.CT.b.2
+    how: Students predict how pause values and frame order change the animation, then test.
+  - code: 6-8.CT.d.3
+    how: Students plan and build their own animation program with a partner.

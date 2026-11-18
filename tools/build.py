@@ -49,7 +49,8 @@ def lesson_data(lesson: dict) -> dict:
     std = L.standards_table()
     m = lesson["mission"]
     out = {
-        "id": lesson["id"], "number": lesson["number"], "title": lesson["title"], "tagline": lesson.get("tagline", ""),
+        "id": lesson["id"], "course": lesson["course"], "number": lesson["number"], "title": lesson["title"], "tagline": lesson.get("tagline", ""),
+        "editor": rules.COURSES[lesson["course"]]["editor"], "idea_label": rules.COURSES[lesson["course"]]["idea_label"],
         "icon": lesson["icon"], "color": lesson["color"], "python": lesson["python"], "hardware": lesson["hardware"],
         "minutes": lesson.get("minutes", 45), "wired": L.wired(lesson),
         "mission": {"goal": md(m["goal"]), "picture": m.get("picture"), "you_need": [md_inline(x) for x in m["you_need"]],
@@ -63,18 +64,20 @@ def lesson_data(lesson: dict) -> dict:
     }
     for s in lesson["build"]:
         code = (s.get("code") or "").rstrip("\n")
+        blocks = (s.get("blocks") or "").rstrip("\n")
         out["build"].append({
             "part": s.get("part", ""), "title": plain(s["title"]), "say": md(s.get("say")), "do": [md_inline(x) for x in s.get("do") or []],
-            "code": code, "new": L.line_set(s["new"], len(code.split("\n"))) if s.get("new") else [],
+            "code": code, "blocks": blocks, "new": L.line_set(s["new"], len((code or blocks).split("\n"))) if s.get("new") else [],
             "what": md(s.get("what")), "tip": md(s.get("tip")), "stuck": [md_inline(x) for x in s.get("stuck") or []],
             "test": [md_inline(x) for x in s.get("test") or []], "ask": plain(s.get("ask")), "fields": s.get("fields") or [],
             "picture": s.get("picture"), "wiring": [md_inline(w.get("text", "") if isinstance(w, dict) else w) for w in s.get("wiring") or []],
         })
     for e in (lesson.get("ship") or {}).get("extensions") or []:
         code = (e.get("code") or "").rstrip("\n")
+        blocks = (e.get("blocks") or "").rstrip("\n")
         out["ship"]["extensions"].append({
             "title": plain(e["title"]), "level": e["level"], "goal": md_inline(e["goal"]), "where": md_inline(e.get("where")),
-            "code": code, "new": L.line_set(e["new"], len(code.split("\n"))) if e.get("new") else [],
+            "code": code, "blocks": blocks, "new": L.line_set(e["new"], len((code or blocks).split("\n"))) if e.get("new") else [],
             "hints": [md_inline(h) for h in e.get("hints") or []]})
     return out
 
@@ -84,14 +87,20 @@ def build_data() -> dict:
     if problems:
         raise SystemExit("Lesson problems:\n" + "\n".join(f"  {f}: {e}" for f, e in problems))
     lessons = {l["id"]: lesson_data(l) for l in L.all_lessons()}
-    course = [{"id": c[0], "number": c[1], "title": c[2], "icon": c[3], "color": c[4], "python": c[5], "hardware": c[6],
-               "pos": list(c[7])} for c in rules.COURSE]
-    for c in course:                     # a written lesson's own title wins over the plan's
-        if c["id"] in lessons:
-            c["title"] = lessons[c["id"]]["title"]
+    courses, by_id, order = {}, {}, []
+    for cid, (rows, requires) in rules.PLANS.items():
+        plan = [{"id": c[0], "course": cid, "number": c[1], "title": c[2], "icon": c[3], "color": c[4], "python": c[5], "hardware": c[6],
+                 "pos": list(c[7])} for c in rows]
+        for c in plan:                   # a written lesson's own title wins over the plan's
+            if c["id"] in lessons:
+                c["title"] = lessons[c["id"]]["title"]
+            by_id[c["id"]] = c
+        written = [c["id"] for c in plan if c["id"] in lessons]
+        order += written
+        courses[cid] = dict(rules.COURSES[cid], id=cid, plan=plan, order=written, requires=requires)
     return {
-        "lessons": lessons, "order": [c["id"] for c in course if c["id"] in lessons],
-        "course": course, "course_by_id": {c["id"]: c for c in course}, "requires": rules.REQUIRES,
+        "lessons": lessons, "order": order, "courses": courses, "course_ids": list(rules.COURSES), "default_course": rules.DEFAULT_COURSE,
+        "course_by_id": by_id,
         "xp": rules.XP, "labels": rules.LABELS, "quiz_pass": rules.QUIZ_PASS,
         "levels": [list(x) for x in rules.LEVELS], "badges": [list(b) for b in rules.BADGES],
         "avatar_options": {part: [[o[0], o[1], list(o[2]) if o[2] else None] for o in opts]
@@ -109,7 +118,7 @@ def read(path) -> str:
 def build_assets() -> dict:
     styles = read("css/base.css") + "\n" + read("css/theme.css")
     app = "\n".join([
-        read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"),
+        read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/blocks.js"),
         "window.__runMap = function () {\n" + read("lib/map.js") + "\n};",
         "window.__runProfile = function () {\n" + read("lib/profile.js") + "\n};",
         read("pages.js"), read("lesson.js"),

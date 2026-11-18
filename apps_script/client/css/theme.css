@@ -357,3 +357,27 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .screen-page .arcade-btn.on { background: linear-gradient(90deg, #db2777, #f97316); animation: arcade-glow 1.6s ease-in-out infinite; }
 .screen-wins .arcade-row { display: grid; grid-template-columns: 32px 38px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .arcade-score { font-family: var(--display); font-weight: 400; font-size: 1.3rem; }
+
+/* ---------------------------------------------------------------- MakeCode Blocks (6th grade), drawn by lib/blocks.js */
+.blocks-box { background: #f5f7fb; border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px 16px; margin: 10px 0; overflow-x: auto; }
+.blocks-hint { margin: 0 0 8px; font-size: .88rem; color: var(--muted); font-weight: 700; }
+.bk-canvas { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; font: 700 15px/1.2 Nunito, "Helvetica Neue", Arial, sans-serif; color: #fff; }
+.bk, .bk-head { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px; background: var(--c); border: 1px solid rgba(0, 0, 0, .25);
+  border-radius: 5px; padding: 7px 11px; min-height: 34px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18); white-space: nowrap; }
+.bk-c > .bk-body > .bk, .bk-c > .bk-body > .bk-c { margin-top: 2px; }
+.bk-c { display: inline-flex; flex-direction: column; align-items: flex-start; }
+.bk-c > .bk-head { border-radius: 5px 5px 5px 0; }
+.bk-hat > .bk-head:first-child { border-radius: 16px 16px 5px 0; padding-top: 11px; }
+.bk-body { border-left: 14px solid var(--c); padding: 3px 0 3px 4px; display: flex; flex-direction: column; gap: 2px; min-height: 26px; }
+.bk-mid { border-radius: 0 5px 5px 0; }
+.bk-foot { width: 90px; height: 14px; background: var(--c); border-radius: 0 0 5px 5px; border: 1px solid rgba(0, 0, 0, .25); border-top: 0; }
+.bk-empty { height: 22px; width: 60px; border: 2px dashed rgba(0, 0, 0, .15); border-radius: 5px; }
+.bk-slot { display: inline-block; background: #fff; color: #222; border-radius: 12px; padding: 2px 10px; min-width: 18px; text-align: center; font-weight: 800; }
+.bk-in { display: inline-flex; align-items: center; gap: 4px; background: var(--c); border: 1px solid rgba(0, 0, 0, .3); border-radius: 14px; padding: 3px 9px; }
+.bk.new, .bk-head.new { outline: 4px solid #ffd43b; outline-offset: 2px; box-shadow: 0 0 0 7px rgba(255, 212, 59, .35); }
+.course-head { margin: 22px 0 10px; font-family: var(--display); font-weight: 400; }
+.grade-tag { display: inline-block; font-size: .78rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: #e0e7ff; color: #3730a3; border: 2px solid #c7d2fe; vertical-align: middle; }
+.grade-tag.g6 { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.grade-pick { margin: 6px 0 14px; font-weight: 700; }
+.grade-pick select { width: auto; display: inline-block; }
+.class-card.new select { margin: 6px 0; }

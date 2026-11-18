@@ -284,7 +284,14 @@ function badgeById_(id) {
   return null;
 }
 
-function lessonList_() { return DATA.order.filter(function (id) { return DATA.lessons[id]; }).map(function (id) { return DATA.lessons[id]; }); }
+// ---------------------------------------------------------------- courses (grades)
+// Each class is set to a course (cfg.classes[cid].grade: 'g6' or 'g7'). A student follows their first class's course.
+function courseOfClass_(cfg, cid) { var c = cfg.classes[cid]; return c && DATA.courses[c.grade] ? c.grade : DATA.default_course; }
+function courseOf_(rec, cfg) { var ids = studentClassIds_(rec, cfg); return ids.length ? courseOfClass_(cfg, ids[0]) : DATA.default_course; }
+/** The written lessons of a course in order, or of every course when cid is empty (the teacher's view). */
+function lessonList_(cid) {
+  return (cid ? DATA.courses[cid].order : DATA.order).filter(function (id) { return DATA.lessons[id]; }).map(function (id) { return DATA.lessons[id]; });
+}
 
 function complete_(L, p) { return !!p && percent_(p, L) === 100; }
 
@@ -320,6 +327,9 @@ function badgeChecks_(rec, cfg) {
         var p = (rec.progress || {})[a.lesson_id];
         return classes.indexOf(a.class_id) >= 0 && a.due && p && p.completed_at && p.completed_at.slice(0, 10) <= a.due;
       });
+    } else if (rule[0] === 'course_done') {
+      var list = lessonList_(courseOf_(rec, cfg));
+      ok = list.length > 0 && list.every(function (L) { return complete_(L, (rec.progress || {})[L.id]); });
     } else if (c[rule[0]] !== undefined) ok = c[rule[0]] >= rule[1];
     if (ok) earned[b[0]] = 1;
   });
@@ -390,8 +400,12 @@ function possibleXp_(L) {
     X.extension * ((L.ship || {}).extensions || []).length + X.ship + X.complete;
 }
 
-function badgeList_(rec) {
-  return DATA.badges.map(function (b) {
+/** Badges for a student's course: a badge for a lesson in another course is left out (unless they earned it). */
+function badgeList_(rec, cid) {
+  return DATA.badges.filter(function (b) {
+    var r = b[4] || [], plan = r[0] === 'lesson' ? DATA.course_by_id[r[1]] : null;
+    return !cid || !plan || plan.course === cid || (rec.badges || {})[b[0]];
+  }).map(function (b) {
     var at = (rec.badges || {})[b[0]];
     return { id: b[0], icon: b[1], name: b[2], desc: b[3], earned: !!at, earned_at: at || null };
   });
@@ -407,15 +421,16 @@ function assignedIds_(rec, cfg) {
 
 var COLOR_UNIT_ = { blue: 1, gold: 2, green: 3, red: 4, purple: 5, teal: 6, orange: 7, pink: 4 };
 
-function mapData_(rec, assigned) {
+function mapData_(rec, assigned, cid) {
+  var course = DATA.courses[cid || DATA.default_course], plan = course.plan, requires = course.requires;
   var prog = (rec && rec.progress) || {}, complete = {}, nodes = [], current = null;
-  DATA.course.forEach(function (c) { var L = DATA.lessons[c.id]; if (L && complete_(L, prog[c.id])) complete[c.id] = 1; });
-  var recent = Object.keys(prog).filter(function (l) { return DATA.lessons[l] && !complete[l]; })
+  plan.forEach(function (c) { var L = DATA.lessons[c.id]; if (L && complete_(L, prog[c.id])) complete[c.id] = 1; });
+  var recent = Object.keys(prog).filter(function (l) { return DATA.lessons[l] && DATA.lessons[l].course === course.id && !complete[l]; })
     .sort(function (a, b) { return String(prog[b].updated_at || '').localeCompare(String(prog[a].updated_at || '')); });
   if (recent.length) current = recent[0];
-  DATA.course.forEach(function (c, i) {
+  plan.forEach(function (c, i) {
     var L = DATA.lessons[c.id], p = prog[c.id], pct = L && p ? percent_(p, L) : 0;
-    var reqs = DATA.requires[c.id] || [];
+    var reqs = requires[c.id] || [];
     var unlocked = !reqs.length || reqs.some(function (r) { return complete[r]; }) || assigned[c.id] || pct > 0;
     var state = !L ? 'locked' : complete[c.id] ? 'complete' : pct > 0 ? 'progress' : unlocked ? 'open' : 'locked';
     nodes.push({ id: c.id, number: c.number, title: c.title, unit: COLOR_UNIT_[c.color] || 1, x: c.pos[0], y: c.pos[1],
@@ -429,7 +444,7 @@ function mapData_(rec, assigned) {
     var open = nodes.filter(function (n) { return n.state === 'open'; })[0];
     current = open ? open.id : (nodes.length ? nodes[0].id : null);
   }
-  return { nodes: nodes, current: current, units: {} };
+  return { nodes: nodes, current: current, units: {}, course: { id: course.id, name: course.name } };
 }
 
 // ---------------------------------------------------------------- avatars
@@ -930,14 +945,24 @@ function dateOrEmpty_(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
 }
 
-function createClass(name) {
+function createClass(name, grade) {
   var cfg = teacher_();
   name = String(name || '').trim().slice(0, 80);
   if (!name) throw new Error('Give the class a name.');
   var id = String(nextId_(cfg));
-  cfg.classes[id] = { id: id, name: name, code: joinCode_(cfg), created_at: now_() };
+  cfg.classes[id] = { id: id, name: name, code: joinCode_(cfg), created_at: now_(), grade: DATA.courses[grade] ? grade : DATA.default_course };
   saveConfig_(cfg);
   return cfg.classes[id];
+}
+
+/** Which course (grade) a class follows: its students see only that course's lessons. Work is kept when it changes. */
+function setClassGrade(cid, grade) {
+  var cfg = teacher_(), c = cfg.classes[cid];
+  if (!c) throw new Error('No such class.');
+  if (!DATA.courses[grade]) throw new Error('Unknown grade.');
+  c.grade = grade;
+  saveConfig_(cfg);
+  return { ok: true, grade: grade };
 }
 
 function deleteClass(cid, typedName) {
@@ -1044,9 +1069,10 @@ function gradebookCell_(a, s) {
 
 function teacherHome() {
   var cfg = teacher_(), sum = summary_();
-  return { classes: Object.keys(cfg.classes).map(function (cid) {
+  return { grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }), classes: Object.keys(cfg.classes).map(function (cid) {
     var c = cfg.classes[cid];
     return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length, classroom: c.classroom || null,
+             grade: courseOfClass_(cfg, cid), grade_name: DATA.courses[courseOfClass_(cfg, cid)].short,
              assignments: cfg.assignments.filter(function (a) { return a.class_id === cid; }).length };
   }) };
 }
@@ -1191,7 +1217,7 @@ function screenPayload_(cfg, cid) {
     var mine = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; })
       .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
     var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
-    L = next ? DATA.lessons[next.lesson_id] : lessonList_()[0];
+    L = next ? DATA.lessons[next.lesson_id] : lessonList_(courseOfClass_(cfg, cid))[0];
   }
   var rows = students.map(function (s) {
     var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
@@ -1219,7 +1245,7 @@ function screenPayload_(cfg, cid) {
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
            goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
-           track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: 'Python idea: ' + L.python,
+           track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: L.idea_label + ': ' + L.python,
            standards: standardsInPlay_(working, L.id), arcade: arcadeTeacher_(cfg, cid) };
 }
 
@@ -1242,8 +1268,8 @@ function screenSave(cid, d) {
   return screenPayload_(cfg, cid);
 }
 
-function screenUnits_() {
-  return [{ title: 'Lessons', lessons: lessonList_().map(function (L) { return { id: L.id, number: L.number, title: L.title }; }) }];
+function screenUnits_(grade) {
+  return [{ title: DATA.courses[grade || DATA.default_course].name, lessons: lessonList_(grade || DATA.default_course).map(function (L) { return { id: L.id, number: L.number, title: L.title }; }) }];
 }
 
 // ---------------------------------------------------------------- the icon in the browser tab
@@ -1474,12 +1500,13 @@ function studentPage_(me, path) {
   var rewards = syncRewards_(rec, cfg);
   if (rewards.xp_gained) saveStudent_(rec);
   var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
-                                                arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec) };
+                                                arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec),
+                                                course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor };
   var m;
   if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Home', data: merge_(base, dashboardData_(rec, cfg)) };
-  if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec)) };
-  if (path === '/map') return { name: 'map', title: 'Skill tree', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg)) }) };
-  if (path === '/me') return { name: 'profile', title: 'My robot', data: merge_(base, profileData_(rec)) };
+  if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec, courseOf_(rec, cfg))) };
+  if (path === '/map') return { name: 'map', title: 'Skill tree', data: merge_(base, { map: mapData_(rec, assignedIds_(rec, cfg), courseOf_(rec, cfg)) }) };
+  if (path === '/me') return { name: 'profile', title: 'My robot', data: merge_(base, profileData_(rec, courseOf_(rec, cfg))) };
   if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, arcadeData_(rec, cfg, false)) };
   if (path === '/help') return { name: 'help', title: 'MakeCode help', data: merge_(base, { makecode: DATA.makecode_url }) };
   if ((m = /^\/lessons\/([\w-]+)$/.exec(path))) return lessonPage_(m[1], rec, cfg, base, false);
@@ -1491,22 +1518,24 @@ function teacherPage_(path) {
   if (path === '/' || path === '/teacher') return { name: 'teacher-home', title: 'My classes', data: merge_(base, merge_(teacherHome(), {
     tab_icons: TAB_ICONS_.map(function (t) { return { id: t[0], label: t[2] }; }), tab_icon: cfg.tab_icon || 'logo', tab_icon_url: faviconUrl_(),
     logo_refused: !!PropertiesService.getScriptProperties().getProperty('logo:refused') })) };
-  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null), arcade: arcadeTeacher_(cfg, m[1]) })) };
+  if ((m = /^\/teacher\/classes\/(\w+)$/.exec(path))) return { name: 'classroom', title: 'Class', data: merge_(base, merge_(gradebook(m[1]), { course: courseCards_(null, courseOfClass_(cfg, m[1])),
+    grade: courseOfClass_(cfg, m[1]), grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }), arcade: arcadeTeacher_(cfg, m[1]) })) };
   if ((m = /^\/teacher\/classes\/(\w+)\/students\/(.+)$/.exec(path))) return { name: 'student', title: 'Student', data: merge_(base, studentDetail(m[1], decodeURIComponent(m[2]))) };
   if (path === '/teacher/google-import') return { name: 'gc-import', title: 'Import from Google Classroom', data: merge_(base, classroomImportData_()) };
   if ((m = /^\/teacher\/classes\/(\w+)\/screen$/.exec(path))) {
     if (!cfg.classes[m[1]]) throw new Error('No such class.');
     return { name: 'screen', title: 'Class display', bodyClass: 'screen-page', mainClass: 'screen-main',
-             data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_() }) };
+             data: merge_(base, { cls: { id: m[1], name: cfg.classes[m[1]].name }, units: screenUnits_(courseOfClass_(cfg, m[1])) }) };
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
-  if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { course: courseCards_(null), urls: cfg.videos }) };
-  if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(null)) };
+  if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { courses: allCourses_(), urls: cfg.videos }) };
+  if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, { courses: allCourses_() }) };
   if (path === '/help') return { name: 'help', title: 'MakeCode help', data: merge_(base, { makecode: DATA.makecode_url }) };
-  if (path === '/map') {
-    var map = mapData_(null, {});
+  if ((m = /^\/map(?:\/(\w+))?$/.exec(path))) {
+    var map = mapData_(null, {}, DATA.courses[m[1]] ? m[1] : DATA.default_course);
+    map.courses = DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].short }; });
     map.nodes.forEach(function (n) { if (!n.soon) n.state = 'open'; });
     return { name: 'map', title: 'Skill tree', data: merge_(base, { map: map }) };
   }
@@ -1526,16 +1555,20 @@ function merge_(a, b) {
 }
 
 /** Every lesson in the course plan, written or not ("soon"), with the student's progress. */
-function courseCards_(rec) {
-  return DATA.course.map(function (c) {
+function courseCards_(rec, cid) {
+  return DATA.courses[cid || DATA.default_course].plan.map(function (c) {
     var L = DATA.lessons[c.id], p = rec && L ? rec.progress[c.id] : null;
-    return { id: c.id, number: c.number, title: c.title, icon: c.icon, color: c.color, python: c.python, hardware: c.hardware,
+    return { id: c.id, course: c.course, number: c.number, title: c.title, icon: c.icon, color: c.color, python: c.python, hardware: c.hardware,
              tagline: L ? L.tagline : '', minutes: L ? L.minutes : 0, soon: !L,
              pct: L && p ? percent_(p, L) : 0, stage: L ? currentStage_(L, p) : 'mission', stars: L ? lessonStars_(L, p) : 0 };
   });
 }
 
-function catalogData_(rec) { return { course: courseCards_(rec) }; }
+function catalogData_(rec, cid) { return { course: courseCards_(rec, cid), course_name: DATA.courses[cid].name }; }
+/** The teacher sees every course. */
+function allCourses_() {
+  return DATA.course_ids.map(function (cid) { return { id: cid, name: DATA.courses[cid].name, short: DATA.courses[cid].short, cards: courseCards_(null, cid) }; });
+}
 
 function stageName_(stage) {
   var st = STAGES_.filter(function (s) { return s[0] === stage; })[0];
@@ -1543,10 +1576,10 @@ function stageName_(stage) {
 }
 
 function dashboardData_(rec, cfg) {
-  var classes = studentClassIds_(rec, cfg), cards = courseCards_(rec), byId = {};
+  var classes = studentClassIds_(rec, cfg), cid = courseOf_(rec, cfg), cards = courseCards_(rec, cid), byId = {};
   cards.forEach(function (c) { byId[c.id] = c; });
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  var rows = cfg.assignments.filter(function (a) { return classes.indexOf(a.class_id) >= 0 && DATA.lessons[a.lesson_id]; })
+  var rows = cfg.assignments.filter(function (a) { return classes.indexOf(a.class_id) >= 0 && DATA.lessons[a.lesson_id] && byId[a.lesson_id]; })
     .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; })
     .map(function (a) {
       var c = byId[a.lesson_id];
@@ -1554,8 +1587,8 @@ function dashboardData_(rec, cfg) {
                overdue: !!(a.due && a.due < today && c.pct < 100), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
     });
   var done = cards.filter(function (c) { return !c.soon && c.pct === 100; }).length;
-  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec), done: done,
-           total: DATA.course.length, classes: classes.map(function (c) { return cfg.classes[c].name; }) };
+  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec, cid), done: done, course_name: DATA.courses[cid].name,
+           total: cards.length, classes: classes.map(function (c) { return cfg.classes[c].name; }) };
 }
 
 /** One clear thing to do: the lesson they were last working on, else the next assignment, else the next lesson. */
@@ -1565,14 +1598,14 @@ function nextUp_(rec, rows, cards) {
     .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); });
   var byId = {};
   cards.forEach(function (c) { byId[c.id] = c; });
-  for (var i = 0; i < started.length; i++) if (byId[started[i]].pct < 100) return pick('Keep going', byId[started[i]]);
+  for (var i = 0; i < started.length; i++) if (byId[started[i]] && byId[started[i]].pct < 100) return pick('Keep going', byId[started[i]]);
   for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return pick('Start', rows[j].lesson);
   for (var k = 0; k < cards.length; k++) if (!cards[k].soon && cards[k].pct < 100) return pick('Start', cards[k]);
   return null;
 }
 
-function profileData_(rec) {
-  return { badges: badgeList_(rec), history: rec.xp_log || [], catalog: avatarCatalog_(rec, false),
+function profileData_(rec, cid) {
+  return { badges: badgeList_(rec, cid), history: rec.xp_log || [], catalog: avatarCatalog_(rec, false),
            parts: DATA.avatar_parts, levels: DATA.levels, xp_table: DATA.xp, xp_labels: DATA.labels };
 }
 
@@ -1587,6 +1620,8 @@ function publicLesson_(L) {
 function lessonPage_(lid, rec, cfg, base, teacher) {
   var L = DATA.lessons[lid];
   var c = DATA.course_by_id[lid];
+  if (L && rec && !teacher && L.course !== courseOf_(rec, cfg))
+    return { name: 'error', title: 'Another grade', data: merge_(base, { message: '"' + L.title + '" is a lesson for another grade. Find your lessons on the Lessons page.' }) };
   if (!L) return { name: 'error', title: 'Coming soon', data: merge_(base, { message: c ? '"' + c.title + '" is coming soon.' : "We couldn't find that lesson." }) };
   var p = rec ? rec.progress[lid] || null : null;
   var state = p ? JSON.parse(JSON.stringify(p)) : newProgress_();
@@ -1601,7 +1636,7 @@ function lessonPage_(lid, rec, cfg, base, teacher) {
 }
 
 function standardsData_() {
-  return { lessons: lessonList_().map(function (L) { return { id: L.id, number: L.number, title: L.title, standards: L.standards_full || [] }; }) };
+  return { lessons: lessonList_().map(function (L) { return { id: L.id, number: L.number, title: L.title, course: DATA.courses[L.course].short, standards: L.standards_full || [] }; }) };
 }
 
 /** Same rules as before: YouTube, Google Drive, Vimeo, or a direct video file. */
@@ -1697,7 +1732,7 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
@@ -1715,6 +1750,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
-var BUILD_ID = "c1b6fd8a99";
-var BUILD_EXPECT = {"Assets": "f3ea2dcb81", "Data": "ad937276a1"};
+var BUILD_ID = "b7124e7532";
+var BUILD_EXPECT = {"Assets": "b4f8f3eb38", "Data": "4b5047d344"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

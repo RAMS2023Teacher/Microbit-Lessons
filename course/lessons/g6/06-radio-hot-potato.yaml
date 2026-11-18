@@ -1,0 +1,329 @@
+id: radio-hot-potato
+title: Radio Hot Potato
+tagline: Pass the potato by radio before it blows!
+minutes: 90          # about two class periods
+
+mission:
+  big_question: "How do devices send messages to each other without wires?"
+  goal: |
+    Play **hot potato** with two micro:bits! The micro:bit holding the potato counts down
+    a secret timer. Press **A** to send the potato to your partner by **radio**. Whoever is
+    holding it when the timer runs out... **BOOM!**
+  picture:
+    type: flow
+    steps:
+      - {icon: "🥔", label: "You have it"}
+      - {icon: "📡", label: "Press A: send"}
+      - {icon: "🥔", label: "Partner has it"}
+      - {icon: "📡", label: "They press A"}
+    loop: true
+    loop_label: until the timer hits 0 💥
+  you_need:
+    - A partner
+    - A Chromebook with MakeCode open
+    - Two micro:bits (one each), USB cables and battery packs
+  learn:
+    - "**radio** sends numbers and words between micro:bits"
+    - "a **group** number keeps your messages for your pair"
+    - "**events** run when a message arrives"
+  talk: How many ways can you think of that devices send messages without wires? Make a list with your partner.
+
+build:
+  - part: Set up
+    title: A new project
+    do:
+      - Open MakeCode and click **New Project**. Name it **Hot Potato**.
+      - Make sure you are in **Blocks**.
+      - You and your partner will build the **same program**. One of you builds, the other checks. Swap halfway.
+    tip: "**Two simulators:** once you add radio blocks, MakeCode shows **two** micro:bits on the left. They can talk to each other!"
+    test:
+      - We have a new project in Blocks
+
+  - part: "Part 1: Send a message"
+    title: Pick a group
+    say: Every micro:bit in the room can hear radio. A **group** number is like a channel. Only micro:bits on the **same group** hear each other.
+    do:
+      - Ask your teacher for your pair's group number (or pick 1 to 255 that no one near you is using).
+      - From the **Radio** drawer, drag **radio set group** into **on start**. Type your number.
+    blocks: |
+      on start:
+        radio set group [7]
+    new: "2"
+    what: Both micro:bits must use the same group number to hear each other.
+    test:
+      - My on start has radio set group with our number
+    fields: ["Our group number"]
+
+  - part: "Part 1: Send a message"
+    title: Send and receive
+    say: One micro:bit **sends** a number. The other one has an **event** that runs when the number arrives.
+    do:
+      - Drag in **on button A pressed**. Put **radio send number 1** inside.
+      - Drag in **on radio received receivedNumber**. Put **show icon** inside and pick the **diamond**. That's our potato!
+      - Press **A** on one simulator. Watch the other one.
+    blocks: |
+      on start:
+        radio set group [7]
+      on button [A] pressed:
+        radio send number [1]
+      on radio received [receivedNumber]:
+        show icon [diamond]
+    new: "3-6"
+    what: Pressing A sends the number 1 through the air. The other micro:bit gets it and shows the potato.
+    test:
+      - Pressing A on one micro:bit shows the potato on the other one
+    ask: Does the micro:bit that pressed A show the potato too? Why not?
+
+  - part: "Part 2: The potato"
+    title: Who has the potato?
+    say: Only the micro:bit **holding** the potato can pass it. A variable called **has potato** remembers 1 (yes) or 0 (no).
+    do:
+      - Make a variable called **has potato**. Set it to **0** in on start.
+      - When the potato arrives, **set has potato to 1**.
+      - Change button A so it only sends **if has potato = 1**. Then set it to 0 and **clear screen**.
+    blocks: |
+      on start:
+        radio set group [7]
+        set [has potato] to [0]
+      on button [A] pressed:
+        if ((has potato) [=] [1]) then:
+          radio send number [1]
+          set [has potato] to [0]
+          clear screen
+      on radio received [receivedNumber]:
+        set [has potato] to [1]
+        show icon [diamond]
+    new: "3, 5-8, 10"
+    what: Now you can't send a potato you don't have. When you pass it, it disappears from your screen.
+    test:
+      - Pressing A without the potato does nothing
+      - The potato goes back and forth when we take turns pressing A
+    ask: How do you start the game? Right now no one has the potato!
+
+  - part: "Part 2: The potato"
+    title: Start the game
+    say: Button **B** starts a round. It gives **you** the potato.
+    do:
+      - Drag in **on button B pressed**.
+      - Inside, **set has potato to 1** and **show icon diamond**.
+      - Press B on one simulator, then pass the potato with A.
+    blocks: |
+      on button [B] pressed:
+        set [has potato] to [1]
+        show icon [diamond]
+    new: "1-3"
+    test:
+      - Pressing B gives me the potato
+      - I can pass it to my partner
+    ask: Only one player should press B. What would happen if you both did?
+
+  - part: "Part 3: The timer"
+    title: A secret timer
+    say: The potato carries a **timer**. Button B picks a **random** number of seconds. When you pass the potato, you **send the time left** as the number.
+    do:
+      - Make a variable called **timer**.
+      - In **on button B pressed**, add **set timer to pick random 5 to 15**.
+      - In button A, change **radio send number 1** to **radio send number (timer)**.
+      - When the potato arrives, **set timer to receivedNumber**.
+    blocks: |
+      on button [B] pressed:
+        set [timer] to (pick random [5] to [15])
+        set [has potato] to [1]
+        show icon [diamond]
+      on button [A] pressed:
+        if ((has potato) [=] [1]) then:
+          radio send number (timer)
+          set [has potato] to [0]
+          clear screen
+      on radio received [receivedNumber]:
+        set [timer] to (receivedNumber)
+        set [has potato] to [1]
+        show icon [diamond]
+    new: "2, 7, 11"
+    what: The number that flies through the air is now the time left. The potato remembers its time as it travels.
+    tip: "**receivedNumber** is a round block. Drag it out of the event block's top."
+    test:
+      - Nothing looks different yet, and that's OK
+    ask: Why should the timer be random? What if it was always 10?
+
+  - part: "Part 3: The timer"
+    title: Tick, tock, BOOM!
+    say: Whoever holds the potato counts down 1 second at a time. At 0, they lose and tell the other micro:bit.
+    do:
+      - In **forever**, add **if has potato = 1 then**.
+      - Inside, **pause 1000 ms**, then **change timer by -1**.
+      - Add another **if timer = 0 then**. Inside, show the **skull**, **radio send string "BOOM"**, and **set has potato to 0**.
+      - Add **on radio received receivedString** and show a **happy** face. You won!
+    blocks: |
+      forever:
+        if ((has potato) [=] [1]) then:
+          pause (ms) [1000]
+          change [timer] by [-1]
+          if ((timer) [=] [0]) then:
+            show icon [skull]
+            radio send string ["BOOM"]
+            set [has potato] to [0]
+      on radio received [receivedString]:
+        show icon [happy]
+    new: "1-10"
+    what: The micro:bit holding the potato counts down. At 0 it shows a skull and sends BOOM. The other micro:bit gets BOOM and shows a happy face.
+    test:
+      - The holder loses when the timer runs out
+      - The other micro:bit shows a happy face
+    ask: Hold the potato and watch. Can you tell how much time is left? Is that a good thing for this game?
+
+  - part: "Part 4: Play"
+    title: Play on real micro:bits
+    do:
+      - Each partner downloads the program to their own micro:bit.
+      - Check both use the **same group number**.
+      - Plug in battery packs. One player presses **B** to start. Pass the potato with **A**!
+    stuck:
+      - "**Nothing arrives?** Check both micro:bits have the same group number, then download to both again."
+      - "**Someone else's potato shows up?** Another pair is using your group number. Pick a new one."
+    test:
+      - We played at least 3 rounds on real micro:bits
+    fields: ["Rounds I won", "Rounds my partner won"]
+
+  - part: "Part 4: Play"
+    title: Who else can hear?
+    say: Radio goes **everywhere** nearby. Any micro:bit on your group number can read your messages. Nothing is secret!
+    do:
+      - With the other pair's OK, set your group to **their** number for one round. Do you get their potato?
+      - Change it back to your own number.
+    picture:
+      type: compare
+      items:
+        - {icon: "📡", title: "Radio", text: "Anyone on your group can hear"}
+        - {icon: "🔒", title: "Private message", text: "Needs a password or code to stay secret"}
+    test:
+      - We tried it and changed back to our own group
+    ask: Your phone also sends messages by radio. How do apps keep your messages private?
+
+  - part: "Part 4: Play"
+    title: "Checkpoint: the whole game"
+    say: Both micro:bits run this same program.
+    blocks: |
+      on start:
+        radio set group [7]
+        set [has potato] to [0]
+      on button [B] pressed:
+        set [timer] to (pick random [5] to [15])
+        set [has potato] to [1]
+        show icon [diamond]
+      on button [A] pressed:
+        if ((has potato) [=] [1]) then:
+          radio send number (timer)
+          set [has potato] to [0]
+          clear screen
+      on radio received [receivedNumber]:
+        set [timer] to (receivedNumber)
+        set [has potato] to [1]
+        show icon [diamond]
+      forever:
+        if ((has potato) [=] [1]) then:
+          pause (ms) [1000]
+          change [timer] by [-1]
+          if ((timer) [=] [0]) then:
+            show icon [skull]
+            radio send string ["BOOM"]
+            set [has potato] to [0]
+      on radio received [receivedString]:
+        show icon [happy]
+    stuck:
+      - "**Potato disappears but never arrives?** The two micro:bits have different group numbers."
+      - "**Never goes BOOM?** Check **change timer by -1** (minus one) is inside the if."
+      - "**Both show the potato?** Check button A sets has potato to 0."
+    test:
+      - Our hot potato game works on two micro:bits
+
+quiz:
+  - question: What does **radio set group** do?
+    choices: ["Picks a channel so only micro:bits on the same group hear each other", "Makes the radio louder", "Turns off the screen", "Picks a random number"]
+    answer: 0
+    why: Micro:bits on the same group number can send and receive messages.
+  - question: Your micro:bit sends a number. Which block runs on your partner's micro:bit?
+    choices: ["on start", "on button A pressed", "on radio received", "forever"]
+    answer: 2
+    why: The on radio received event runs when a message arrives.
+  - question: The potato arrives with receivedNumber = 6. What does that 6 mean in our game?
+    choices: ["6 players", "6 seconds left on the timer", "Group 6", "6 points"]
+    answer: 1
+    why: Button A sends the timer, so the number that arrives is the time left.
+  - question: Why does our game use a variable called **has potato**?
+    choices: ["To count the score", "To remember if this micro:bit is holding the potato", "To pick the group", "To make sound"]
+    answer: 1
+    why: Only the micro:bit holding the potato can pass it or count down.
+  - question: Another pair uses your group number. What can they do?
+    choices: ["Nothing", "Read the messages your micro:bits send", "Only see your score", "Turn off your micro:bit"]
+    answer: 1
+    why: Radio goes to every micro:bit on that group. That's why private apps use secret codes.
+
+ship:
+  extensions:
+    - title: Hot potato sound
+      level: Easier
+      goal: Play a sound when the potato arrives, so you know it's your turn.
+      where: Inside on radio received receivedNumber.
+      blocks: |
+        on radio received [receivedNumber]:
+          set [timer] to (receivedNumber)
+          set [has potato] to [1]
+          show icon [diamond]
+          {music} play tone [High C] for [1/4] beat
+      new: "5"
+      hints: ["Music blocks are orange.", "Pick a different sound for BOOM too!"]
+    - title: Hurry up!
+      level: Medium
+      goal: Make the potato blink faster when only 3 seconds are left.
+      where: In forever, inside the has potato if, after change timer by -1.
+      blocks: |
+        if (((timer) [<] [4]) and ((timer) [>] [0])) then:
+          clear screen
+          pause (ms) [100]
+          show icon [diamond]
+      hints: ["The and block and the < > blocks are in Logic.", "Players can't see the exact time, but now they know it's close!"]
+    - title: Keep score
+      level: Medium
+      goal: Count how many rounds you won. Press A+B to see it.
+      where: Make a variable called wins. Add 1 to it when BOOM arrives.
+      blocks: |
+        on radio received [receivedString]:
+          show icon [happy]
+          change [wins] by [1]
+        on button [A+B] pressed:
+          show number (wins)
+      new: "3-5"
+      hints: ["Set wins to 0 in on start.", "Pick A+B in the button dropdown."]
+    - title: Three players
+      level: Challenge
+      goal: Play with three micro:bits. The potato goes to a random player each time.
+      where: Send the potato with the name of who gets it next.
+      blocks: |
+        on button [A] pressed:
+          if ((has potato) [=] [1]) then:
+            radio send value [next] = (pick random [1] to [3])
+            set [has potato] to [0]
+      hints: ["Give each micro:bit a player number (1, 2 or 3) in on start.", "Use on radio received name value. Only take the potato if value equals your player number.", "You'll also need to send the timer. Try a second value called time."]
+  reflect:
+    - Explain how the potato gets from your micro:bit to your partner's.
+    - Why can't you send a private secret with our radio game?
+
+teacher_notes: |
+  * **Timing:** two class periods. Parts 1-2 on day 1, Parts 3-4 on day 2.
+  * **Group numbers:** hand out a different number (1-255) to each pair before they start, or write them on
+    the board. Same group = cross-talk between pairs.
+  * **Two simulators:** MakeCode adds a second simulator when radio blocks are used, so pairs can build and
+    test before downloading.
+  * **receivedNumber / receivedString:** students drag these round blocks out of the top of the event block.
+  * **Privacy talking point:** radio broadcasts are readable by anyone on the group. Connect to apps that
+    encrypt messages and to not sharing personal information.
+  * Both partners turn in the same MakeCode **share link** in Ship it.
+
+standards:
+  - code: 6-8.CS.c.3
+    how: Students send numbers and text between two micro:bits by radio and explain how the message travels.
+  - code: 6-8.CT.b.1
+    how: Students use conditionals (if has potato, if timer = 0) and a forever loop to run the game.
+  - code: 6-8.CAS.a.4
+    how: Students test who can read their radio messages and discuss keeping messages private.

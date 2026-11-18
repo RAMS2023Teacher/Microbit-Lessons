@@ -46,7 +46,9 @@ assert.strictEqual(page.stage, 'mission');
 assert.ok(page.lesson.quiz.every((q) => !('answer' in q) && !('why' in q)));
 assert.ok(!lp.includes(L.quiz[0].why.slice(0, 30)), 'quiz explanation leaked');
 assert.strictEqual(page.key, null);
-for (const id of w.g.DATA.order) assert.ok(!/"page":"error"/.test(pageView(S, '/lessons/' + id)), 'lesson page failed: ' + id);
+for (const id of w.g.DATA.courses.g7.order) assert.ok(!/"page":"error"/.test(pageView(S, '/lessons/' + id)), 'lesson page failed: ' + id);
+assert.match(pageView(S, '/lessons/hello-microbit'), /another grade/);                          // a 6th grade lesson
+for (const id of w.g.DATA.order) assert.ok(!/"page":"error"/.test(pageView(T, '/lessons/' + id)), 'teacher lesson page failed: ' + id);
 
 // Mission
 let r = api(S, 'mission', { talk: 'ok' });
@@ -185,6 +187,28 @@ for (const p of ['/', '/lessons', '/map', '/help', '/teacher/standards', '/teach
   assert.ok(!/"page":"error"/.test(pageView(T, p)), 'teacher page failed: ' + p);
 }
 for (const p of ['/', '/lessons', '/map', '/me', '/help', '/lessons/' + LID]) assert.ok(!/"page":"error"/.test(pageView(S, p)), 'student page failed: ' + p);
+
+// a 6th grade class: its students see only the 6th grade course (MakeCode Blocks)
+const six = w.call(T, 'createClass', ['Period 1', 'g6']);
+const S6 = 'mia@students.school.org';
+w.call(S6, 'joinClass', [six.code, 'Mia L.']);
+const home6 = pageData(S6, '/');
+assert.ok(home6.total === 10 && home6.next_up.lesson.id === 'hello-microbit' && /6th grade/.test(home6.course_name), JSON.stringify(home6.next_up));
+assert.ok(!home6.badges.some((b) => b.id === 'robot-builder') && home6.badges.some((b) => b.id === 'ai-trainer'));
+assert.strictEqual(pageData(S6, '/map').map.nodes.length, 10);
+assert.ok(pageData(S6, '/lessons').course.every((c) => c.course === 'g6'));
+const hello = pageData(S6, '/lessons/hello-microbit');
+assert.ok(hello.lesson.editor === 'blocks' && hello.lesson.build.some((st) => st.blocks) && hello.lesson.idea_label === 'Coding idea');
+assert.match(pageView(S6, '/lessons/dodge-the-drop'), /another grade/);
+assert.ok(api(S6, 'mission', { talk: 'Buttons make things happen when you press them.' }, 'hello-microbit').body.stages.mission);
+assert.strictEqual(w.call(T, 'teacherHome').classes.find((c) => c.id === six.id).grade, 'g6');
+assert.strictEqual(pageData(T, '/lessons').courses.length, 2);
+assert.strictEqual(pageData(T, '/map/g6').map.nodes.length, 10);
+assert.ok(pageData(T, `/teacher/classes/${six.id}`).course.every((c) => c.course === 'g6'));
+assert.ok(pageData(T, `/teacher/classes/${six.id}/screen`).units[0].lessons.every((l) => w.g.DATA.lessons[l.id].course === 'g6'));
+w.call(T, 'setClassGrade', [six.id, 'g7']);                                                      // switching keeps work, changes the course
+assert.strictEqual(pageData(S6, '/').total, 13);
+w.call(T, 'setClassGrade', [six.id, 'g6']);
 
 // the install check, and broken installs get a plain message
 const report = w.call(T, 'checkInstall');

@@ -3,7 +3,18 @@
 The build (tools/build.py) copies these into Data.gs for the Apps Script app.
 """
 
-# ---------------------------------------------------------------- the course: 13 projects, in order
+# ---------------------------------------------------------------- the courses
+# Each class is set to one course (grade). Students see only their course's lessons, skill tree and badges;
+# XP, levels, robots, the shop and Robot Rush are shared. Lesson files: course/lessons/ (7th) and course/lessons/g6/.
+COURSES = {
+    "g7": {"name": "7th grade: Python & Circuits", "short": "7th grade", "editor": "python", "idea_label": "Python idea",
+           "dir": "lessons"},
+    "g6": {"name": "6th grade: Games, Programming & AI", "short": "6th grade", "editor": "blocks", "idea_label": "Coding idea",
+           "dir": "lessons/g6"},
+}
+DEFAULT_COURSE = "g7"
+
+# ---------------------------------------------------------------- 7th grade: 13 projects, in order
 # id, number, title, icon, banner color, Python idea, hardware, skill-tree position (column, row)
 COURSE = [
     ("name-badge",        1, "Name Badge",         "📛", "blue",   "Code runs in order · button events",   "Just the micro:bit",               (1, 0)),
@@ -29,6 +40,28 @@ REQUIRES = {
     "servo-robot": ["distance-detector"], "robot-eyes": ["servo-robot"],
     "radio-messenger": ["robot-eyes", "heartbeat-monitor"], "invent-it": ["radio-messenger"],
 }
+
+# ---------------------------------------------------------------- 6th grade: 10 projects in MakeCode Blocks
+COURSE_6 = [
+    ("hello-microbit",      1, "Hello, micro:bit!",    "👋", "blue",   "Events: on start, on button pressed",  "Just the micro:bit",          (1, 0)),
+    ("animate-it",          2, "Animate It",           "🎞️", "purple", "forever loops and pause",              "Just the micro:bit",          (1, 1)),
+    ("rock-paper-scissors", 3, "Rock, Paper, Scissors", "✂️", "orange", "Variables, pick random, if / else",    "Just the micro:bit",          (1, 2)),
+    ("step-counter",        4, "Step Counter",         "👟", "green",  "Counting with a variable · shake",     "micro:bit + battery pack",    (0, 3)),
+    ("coin-catcher",        5, "Coin Catcher",         "🪙", "gold",   "Sprites, score and game over",         "Just the micro:bit",          (2, 3)),
+    ("radio-hot-potato",    6, "Radio Hot Potato",     "📡", "pink",   "Radio: send and receive",              "Two micro:bits",              (1, 4)),
+    ("how-machines-learn",  7, "How Machines Learn",   "🧠", "teal",   "AI learns from examples (data)",       "micro:bit + CreateAI",        (1, 5)),
+    ("ai-gesture-remote",   8, "AI Gesture Remote",    "🪄", "purple", "Using a machine learning model",       "micro:bit V2 + CreateAI",     (1, 6)),
+    ("ai-fitness-coach",    9, "AI Fitness Coach",     "🏋️", "red",    "Testing AI: accuracy and fairness",    "micro:bit V2 + CreateAI",     (1, 7)),
+    ("game-jam",           10, "Game Jam",             "🕹️", "blue",   "Put it all together",                  "Your choice",                 (1, 8)),
+]
+REQUIRES_6 = {
+    "animate-it": ["hello-microbit"], "rock-paper-scissors": ["animate-it"],
+    "step-counter": ["rock-paper-scissors"], "coin-catcher": ["rock-paper-scissors"],
+    "radio-hot-potato": ["step-counter", "coin-catcher"], "how-machines-learn": ["step-counter", "coin-catcher"],
+    "ai-gesture-remote": ["how-machines-learn"], "ai-fitness-coach": ["ai-gesture-remote"],
+    "game-jam": ["radio-hot-potato", "ai-fitness-coach"],
+}
+PLANS = {"g7": (COURSE, REQUIRES), "g6": (COURSE_6, REQUIRES_6)}
 
 # ---------------------------------------------------------------- XP
 XP = {
@@ -61,6 +94,8 @@ LEVELS = [  # (XP needed, title)
 #   ["wired", n] lessons complete that have wiring · ["perfect", n] perfect quizzes · ["first_try", n]
 #   ["extensions", n] · ["shipped", n] · ["partner", n] lessons complete with a partner
 #   ["avatar"] customized the robot · ["early"] finished an assignment before it was due · ["teacher"] given by the teacher
+#   ["course_done"] every lesson in the student's course complete
+# A badge tied to one lesson only shows to students in that lesson's course.
 BADGES = [
     ("first-step", "⚡", "First Step", "Finish your first build step.", ["steps", 1]),
     ("finisher", "🏁", "Finisher", "Complete a whole lesson.", ["lessons", 1]),
@@ -77,7 +112,10 @@ BADGES = [
     ("remixer", "🎨", "Remixer", "Add 5 extensions to your projects.", ["extensions", 5]),
     ("teamwork", "🤝", "Teamwork", "Complete a lesson with a partner.", ["partner", 1]),
     ("halfway", "⭐", "Halfway There", "Complete 5 lessons.", ["lessons", 5]),
-    ("graduate", "🎓", "Graduate", "Complete all 13 lessons.", ["lessons", 13]),
+    ("graduate", "🎓", "Graduate", "Complete every lesson in your course.", ["course_done"]),
+    ("ai-trainer", "🧠", "AI Trainer", "Complete How Machines Learn.", ["lesson", "how-machines-learn"]),
+    ("ai-tester", "🔬", "AI Tester", "Complete AI Fitness Coach.", ["lesson", "ai-fitness-coach"]),
+    ("game-designer", "🕹️", "Game Designer", "Complete Game Jam.", ["lesson", "game-jam"]),
     ("early-bird", "🐦", "Early Bird", "Finish an assignment before it's due.", ["early"]),
     ("robot-stylist", "🤖", "Robot Stylist", "Customize your robot.", ["avatar"]),
     ("teachers-pick", "🍎", "Teacher's Pick", "Given by your teacher for great work.", ["teacher"]),

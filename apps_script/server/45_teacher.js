@@ -23,14 +23,24 @@ function dateOrEmpty_(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
 }
 
-function createClass(name) {
+function createClass(name, grade) {
   var cfg = teacher_();
   name = String(name || '').trim().slice(0, 80);
   if (!name) throw new Error('Give the class a name.');
   var id = String(nextId_(cfg));
-  cfg.classes[id] = { id: id, name: name, code: joinCode_(cfg), created_at: now_() };
+  cfg.classes[id] = { id: id, name: name, code: joinCode_(cfg), created_at: now_(), grade: DATA.courses[grade] ? grade : DATA.default_course };
   saveConfig_(cfg);
   return cfg.classes[id];
+}
+
+/** Which course (grade) a class follows: its students see only that course's lessons. Work is kept when it changes. */
+function setClassGrade(cid, grade) {
+  var cfg = teacher_(), c = cfg.classes[cid];
+  if (!c) throw new Error('No such class.');
+  if (!DATA.courses[grade]) throw new Error('Unknown grade.');
+  c.grade = grade;
+  saveConfig_(cfg);
+  return { ok: true, grade: grade };
 }
 
 function deleteClass(cid, typedName) {
@@ -137,9 +147,10 @@ function gradebookCell_(a, s) {
 
 function teacherHome() {
   var cfg = teacher_(), sum = summary_();
-  return { classes: Object.keys(cfg.classes).map(function (cid) {
+  return { grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }), classes: Object.keys(cfg.classes).map(function (cid) {
     var c = cfg.classes[cid];
     return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length, classroom: c.classroom || null,
+             grade: courseOfClass_(cfg, cid), grade_name: DATA.courses[courseOfClass_(cfg, cid)].short,
              assignments: cfg.assignments.filter(function (a) { return a.class_id === cid; }).length };
   }) };
 }
@@ -284,7 +295,7 @@ function screenPayload_(cfg, cid) {
     var mine = cfg.assignments.filter(function (a) { return a.class_id === cid && DATA.lessons[a.lesson_id]; })
       .sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
     var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
-    L = next ? DATA.lessons[next.lesson_id] : lessonList_()[0];
+    L = next ? DATA.lessons[next.lesson_id] : lessonList_(courseOfClass_(cfg, cid))[0];
   }
   var rows = students.map(function (s) {
     var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
@@ -312,7 +323,7 @@ function screenPayload_(cfg, cid) {
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
            goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
            lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
-           track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: 'Python idea: ' + L.python,
+           track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: L.idea_label + ': ' + L.python,
            standards: standardsInPlay_(working, L.id), arcade: arcadeTeacher_(cfg, cid) };
 }
 
@@ -335,8 +346,8 @@ function screenSave(cid, d) {
   return screenPayload_(cfg, cid);
 }
 
-function screenUnits_() {
-  return [{ title: 'Lessons', lessons: lessonList_().map(function (L) { return { id: L.id, number: L.number, title: L.title }; }) }];
+function screenUnits_(grade) {
+  return [{ title: DATA.courses[grade || DATA.default_course].name, lessons: lessonList_(grade || DATA.default_course).map(function (L) { return { id: L.id, number: L.number, title: L.title }; }) }];
 }
 
 // ---------------------------------------------------------------- the icon in the browser tab
