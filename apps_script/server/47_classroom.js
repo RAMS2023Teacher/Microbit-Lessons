@@ -49,10 +49,11 @@ function classroomCourses() {
   var courses = classroomCoursesRaw_().map(function (c) {
     return { id: c.id, name: c.name || 'Untitled class', section: c.section || '', link: c.alternateLink || '', linked: linked[c.id] || null };
   });
-  return { courses: courses, classes: Object.keys(cfg.classes).map(function (cid) { return { id: cid, name: cfg.classes[cid].name }; }) };
+  return { courses: courses, grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }),
+           classes: Object.keys(cfg.classes).map(function (cid) { return { id: cid, name: cfg.classes[cid].name, grade: courseOfClass_(cfg, cid) }; }) };
 }
 
-/** choices: [{ course_id, target: 'new' | a class id }]. Makes or links each class, then copies its roster. */
+/** choices: [{ course_id, target: 'new' | a class id, grade: 'g6' | 'g7' }]. Makes or links each class, then copies its roster. */
 function importClassroom(choices) {
   var cfg = teacher_(), byId = {}, results = [];
   classroomCoursesRaw_().forEach(function (c) { byId[c.id] = c; });
@@ -70,6 +71,7 @@ function importClassroom(choices) {
       var name = (c.name + (c.section ? ' (' + c.section + ')' : '')).slice(0, 80);
       cfg.classes[cid] = { id: cid, name: name, code: joinCode_(cfg), created_at: now_() };
     }
+    if (DATA.courses[ch.grade]) cfg.classes[cid].grade = ch.grade;      // 6th or 7th grade, picked on the import page
     cfg.classes[cid].classroom = { id: c.id, name: c.name || '', section: c.section || '', link: c.alternateLink || '' };
     results.push(syncInto_(cfg, cid));
   });

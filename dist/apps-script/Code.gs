@@ -717,6 +717,7 @@ function finish_(ctx, L, p, extra) {
 function api(path, bodyJson) {
   try {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
+    if (path === '/api/run') return runCall_(body);
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner)$/.exec(path);
@@ -732,6 +733,41 @@ function api(path, bodyJson) {
     if (e && e.status) return { status: e.status, body: { ok: false, error: e.message } };
     return { status: 400, body: { ok: false, error: (e && e.message) || 'Something went wrong.' } };
   }
+}
+
+// ---------------------------------------------------------------- every page action goes through api('/api/run')
+// The browser calls only api(); this picks the function. (A browser holding an older copy of the page can't
+// call a function google.script.run doesn't know about, so the pages never call the others directly.)
+// Each function checks for itself who may use it (teacher_() or the signed-in student).
+var RUN_ = {
+  joinClass: function (a) { return joinClass(a[0], a[1]); },
+  createClass: function (a) { return createClass(a[0], a[1]); },
+  setClassGrade: function (a) { return setClassGrade(a[0], a[1]); },
+  deleteClass: function (a) { return deleteClass(a[0], a[1]); },
+  assignLessons: function (a) { return assignLessons(a[0], a[1], a[2], a[3]); },
+  updateAssignment: function (a) { return updateAssignment(a[0], a[1], a[2], a[3]); },
+  removeStudent: function (a) { return removeStudent(a[0], a[1]); },
+  saveFeedback: function (a) { return saveFeedback(a[0], a[1], a[2]); },
+  giveBonus: function (a) { return giveBonus(a[0], a[1], a[2], a[3]); },
+  saveVideos: function (a) { return saveVideos(a[0]); },
+  teacherHome: function () { return teacherHome(); },
+  gradebook: function (a) { return gradebook(a[0]); },
+  studentDetail: function (a) { return studentDetail(a[0], a[1]); },
+  classroomPackage: function (a) { return classroomPackage(a[0], a[1], a[2]); },
+  screenData: function (a) { return screenData(a[0]); },
+  screenSave: function (a) { return screenSave(a[0], a[1]); },
+  setTabIcon: function (a) { return setTabIcon(a[0], a[1]); },
+  classroomCourses: function () { return classroomCourses(); },
+  importClassroom: function (a) { return importClassroom(a[0]); },
+  syncClassroom: function (a) { return syncClassroom(a[0]); },
+  syncAllClassroom: function () { return syncAllClassroom(); },
+  unlinkClassroom: function (a) { return unlinkClassroom(a[0]); },
+  arcadeClass: function (a) { return arcadeClass(a[0], a[1], a[2]); },
+};
+function runCall_(d) {
+  var fn = RUN_[d && d.fn];
+  if (!fn) return { status: 404, body: { ok: false, error: 'Maker Lab doesn\'t know "' + (d && d.fn) + '". Reload the page; if it keeps happening, the files may be from different versions.' } };
+  return { status: 200, body: { ok: true, value: fn((d.args || []).slice(0, 6)) } };
 }
 
 function badRequest_(msg) { var e = new Error(msg); e.status = 400; return e; }
@@ -949,6 +985,7 @@ function createClass(name, grade) {
   var cfg = teacher_();
   name = String(name || '').trim().slice(0, 80);
   if (!name) throw new Error('Give the class a name.');
+  if (!DATA.courses[grade]) throw new Error('Pick 6th or 7th grade for the class.');
   var id = String(nextId_(cfg));
   cfg.classes[id] = { id: id, name: name, code: joinCode_(cfg), created_at: now_(), grade: DATA.courses[grade] ? grade : DATA.default_course };
   saveConfig_(cfg);
@@ -1390,10 +1427,11 @@ function classroomCourses() {
   var courses = classroomCoursesRaw_().map(function (c) {
     return { id: c.id, name: c.name || 'Untitled class', section: c.section || '', link: c.alternateLink || '', linked: linked[c.id] || null };
   });
-  return { courses: courses, classes: Object.keys(cfg.classes).map(function (cid) { return { id: cid, name: cfg.classes[cid].name }; }) };
+  return { courses: courses, grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }),
+           classes: Object.keys(cfg.classes).map(function (cid) { return { id: cid, name: cfg.classes[cid].name, grade: courseOfClass_(cfg, cid) }; }) };
 }
 
-/** choices: [{ course_id, target: 'new' | a class id }]. Makes or links each class, then copies its roster. */
+/** choices: [{ course_id, target: 'new' | a class id, grade: 'g6' | 'g7' }]. Makes or links each class, then copies its roster. */
 function importClassroom(choices) {
   var cfg = teacher_(), byId = {}, results = [];
   classroomCoursesRaw_().forEach(function (c) { byId[c.id] = c; });
@@ -1411,6 +1449,7 @@ function importClassroom(choices) {
       var name = (c.name + (c.section ? ' (' + c.section + ')' : '')).slice(0, 80);
       cfg.classes[cid] = { id: cid, name: name, code: joinCode_(cfg), created_at: now_() };
     }
+    if (DATA.courses[ch.grade]) cfg.classes[cid].grade = ch.grade;      // 6th or 7th grade, picked on the import page
     cfg.classes[cid].classroom = { id: c.id, name: c.name || '', section: c.section || '', link: c.alternateLink || '' };
     results.push(syncInto_(cfg, cid));
   });
@@ -1750,6 +1789,6 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
-var BUILD_ID = "b7124e7532";
-var BUILD_EXPECT = {"Assets": "b4f8f3eb38", "Data": "4b5047d344"};
+var BUILD_ID = "e9d6d99c28";
+var BUILD_EXPECT = {"Assets": "827dada040", "Data": "4b5047d344"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

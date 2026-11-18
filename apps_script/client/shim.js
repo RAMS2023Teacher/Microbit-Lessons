@@ -7,11 +7,19 @@
   'use strict';
   var ML = window.ML || {};
 
+  // Every server call goes through the one function every version has: api(). ML.run('createClass', ...) becomes
+  // api('/api/run', {fn: 'createClass', args: [...]}) and the server picks the function (40_api.js, RUN_).
+  function callApi(path, body) {
+    return new Promise(function (ok, no) {
+      google.script.run.withSuccessHandler(ok).withFailureHandler(no).api(path, body);
+    });
+  }
   function run(name) {
     var args = Array.prototype.slice.call(arguments, 1);
-    return new Promise(function (ok, no) {
-      var r = google.script.run.withSuccessHandler(ok).withFailureHandler(no);
-      r[name].apply(r, args);
+    if (name === 'api') return callApi(args[0], args[1]);
+    return callApi('/api/run', JSON.stringify({ fn: name, args: args })).then(function (r) {
+      if (r && r.body && r.body.ok) return r.body.value;
+      throw new Error((r && r.body && r.body.error) || 'Something went wrong.');
     });
   }
   ML.run = run;

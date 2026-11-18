@@ -315,7 +315,7 @@
         '</b></div><p class="muted">' + c.students + ' students · ' + c.assignments + ' assignments' + (c.classroom ? '<br>🔗 Google Classroom' : '') + '</p></a>');
     });
     var linked = d.classes.filter(function (c) { return c.classroom; }).length;
-    h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><select id="new-grade">' + (d.grades || []).map(function (g) { return '<option value="' + E(g.id) + '">' + E(g.name) + '</option>'; }).join('') + '</select><button class="btn" id="new-go" type="button">Create</button></div>' +
+    h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><select id="new-grade"><option value="">Pick a grade…</option>' + (d.grades || []).map(function (g) { return '<option value="' + E(g.id) + '">' + E(g.name) + '</option>'; }).join('') + '</select><button class="btn" id="new-go" type="button">Create</button></div>' +
       '<div class="card class-card new"><h2>🔗 Google Classroom</h2><p class="muted small">Bring in your Classroom classes and their students. No join codes needed.</p>' +
       '<a class="btn" href="/teacher/google-import">Import classes</a>' + (linked ? ' <button class="btn ghost small" id="gc-sync-all" type="button">Update all rosters</button>' : '') + '</div></div>' +
       '<section class="card tab-icon-card"><h2>Tab icon</h2><p class="muted small">The little picture in the browser tab, for you and your students.</p>' +
@@ -378,19 +378,26 @@
     }
     h.push('<section class="card"><p class="muted">Pick what each Classroom class becomes in Maker Lab. Students on the roster are in the class ' +
       'the first time they open Maker Lab, with the name from Classroom. Nothing is changed in Google Classroom.</p>' +
-      '<div class="table-scroll"><table class="gradebook"><thead><tr><th>Google Classroom class</th><th>In Maker Lab</th></tr></thead><tbody>');
+      '<div class="table-scroll"><table class="gradebook"><thead><tr><th>Google Classroom class</th><th>In Maker Lab</th><th>Grade</th></tr></thead><tbody>');
+    var guessGrade = function (text) { var m = /\b(6|7)(?:th)?\b|\b(six|seven)/i.exec(text || ''); return !m ? '' : (m[1] || m[2].toLowerCase()) === '6' || /six/i.test(m[2] || '') ? 'g6' : 'g7'; };
     d.courses.forEach(function (c) {
       var opts = '<option value="">Skip</option><option value="new"' + (c.linked ? '' : '') + '>New Maker Lab class</option>';
       d.classes.forEach(function (k) { opts += '<option value="' + E(k.id) + '"' + (c.linked === k.id ? ' selected' : '') + '>Link to: ' + E(k.name) + '</option>'; });
       h.push('<tr><th class="who"><span><b>' + E(c.name) + '</b>' + (c.section ? '<small>' + E(c.section) + '</small>' : '') + '</span></th>' +
-        '<td><select class="gc-pick" data-id="' + E(c.id) + '">' + opts + '</select>' + (c.linked ? ' <small class="muted">already linked</small>' : '') + '</td></tr>');
+        '<td><select class="gc-pick" data-id="' + E(c.id) + '">' + opts + '</select>' + (c.linked ? ' <small class="muted">already linked</small>' : '') + '</td>' +
+        '<td><select class="gc-grade" data-id="' + E(c.id) + '"><option value="">Pick a grade…</option>' + (d.grades || []).map(function (g) {
+          var pre = c.linked ? (d.classes.filter(function (k) { return k.id === c.linked; })[0] || {}).grade : guessGrade(c.name + ' ' + c.section);
+          return '<option value="' + E(g.id) + '"' + (g.id === pre ? ' selected' : '') + '>' + E(g.name) + '</option>';
+        }).join('') + '</select></td></tr>');
     });
     h.push('</tbody></table></div><button class="btn" id="gc-go" type="button">Import</button></section>');
     main.innerHTML = h.join('');
     document.getElementById('gc-go').addEventListener('click', function () {
-      var choices = Array.prototype.map.call(document.querySelectorAll('.gc-pick'), function (x) { return { course_id: x.dataset.id, target: x.value }; })
-        .filter(function (c) { return c.target; });
+      var choices = Array.prototype.map.call(document.querySelectorAll('.gc-pick'), function (x) {
+        return { course_id: x.dataset.id, target: x.value, grade: document.querySelector('.gc-grade[data-id="' + x.dataset.id + '"]').value };
+      }).filter(function (c) { return c.target; });
       if (!choices.length) { flash('Pick at least one class to import.', 'error'); return; }
+      if (choices.some(function (c) { return !c.grade; })) { flash('Pick 6th or 7th grade for every class you import.', 'error'); return; }
       act(this, 'importClassroom', [choices], function (r) { alert(syncReport(r.classes)); ML.go('/'); });
     });
   };

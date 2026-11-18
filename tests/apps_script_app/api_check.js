@@ -26,7 +26,7 @@ const L = w.g.DATA.lessons[LID];
 
 // setup and a class
 assert.match(w.call(T, 'setup'), /Set up/);
-const cls = w.call(T, 'createClass', ['Period 3']);
+const cls = w.call(T, 'createClass', ['Period 3', 'g7']);
 assert.strictEqual(w.call(T, 'assignLessons', [cls.id, [LID, 'no-such-lesson'], '2030-01-01', 'Bring a micro:bit']).added, 1);
 assert.match(pageView(S), /"page":"join"/);
 w.call(S, 'joinClass', [cls.code, 'Sam K.']);
@@ -113,7 +113,7 @@ assert.ok(!b.ok && /more XP/.test(b.error), JSON.stringify(b));                 
 const arcade = (action, body, who) => w.call(who || S, 'api', ['/api/arcade/' + action, JSON.stringify(body || {})]).body;
 assert.ok(arcade('start').closed);                                                                 // closed until the teacher opens it
 // another class's arcade doesn't count
-const other = w.call(T, 'createClass', ['Period 5']);
+const other = w.call(T, 'createClass', ['Period 5', 'g7']);
 w.call(T, 'arcadeClass', [other.id, 'open', 45]);
 assert.ok(arcade('start').closed);
 w.call(T, 'arcadeClass', [other.id, 'close']);
@@ -209,6 +209,20 @@ assert.ok(pageData(T, `/teacher/classes/${six.id}/screen`).units[0].lessons.ever
 w.call(T, 'setClassGrade', [six.id, 'g7']);                                                      // switching keeps work, changes the course
 assert.strictEqual(pageData(S6, '/').total, 13);
 w.call(T, 'setClassGrade', [six.id, 'g6']);
+
+// creating or importing a class has to say which grade
+assert.throws(() => w.call(T, 'createClass', ['No grade']), /6th or 7th/);
+w.state.classroom.courses = [{ id: 'gc1', name: '6th Grade CS', section: 'Period 2' }];
+w.state.classroom.students = { gc1: [{ userId: 'u1', profile: { emailAddress: 'zed@students.school.org', name: { fullName: 'Zed Q' } } }] };
+const imp = w.call(T, 'importClassroom', [[{ course_id: 'gc1', target: 'new', grade: 'g6' }]]);
+assert.strictEqual(w.call(T, 'teacherHome').classes.find((c) => c.id === imp.classes[0].id).grade, 'g6');
+assert.ok(pageData(T, '/teacher/google-import').grades.length === 2);
+// every page action goes through api('/api/run'); unknown names get a plain message
+const viaApi = w.call(T, 'api', ['/api/run', JSON.stringify({ fn: 'setClassGrade', args: [six.id, 'g7'] })]);
+assert.ok(viaApi.body.ok && viaApi.body.value.grade === 'g7');
+w.call(T, 'setClassGrade', [six.id, 'g6']);
+assert.match(w.call(T, 'api', ['/api/run', JSON.stringify({ fn: 'nope', args: [] })]).body.error, /Reload the page/);
+assert.ok(!w.call(S, 'api', ['/api/run', JSON.stringify({ fn: 'setClassGrade', args: [six.id, 'g7'] })]).body.ok);   // students can't
 
 // the install check, and broken installs get a plain message
 const report = w.call(T, 'checkInstall');

@@ -27,6 +27,7 @@ function createClass(name, grade) {
   var cfg = teacher_();
   name = String(name || '').trim().slice(0, 80);
   if (!name) throw new Error('Give the class a name.');
+  if (!DATA.courses[grade]) throw new Error('Pick 6th or 7th grade for the class.');
   var id = String(nextId_(cfg));
   cfg.classes[id] = { id: id, name: name, code: joinCode_(cfg), created_at: now_(), grade: DATA.courses[grade] ? grade : DATA.default_course };
   saveConfig_(cfg);
