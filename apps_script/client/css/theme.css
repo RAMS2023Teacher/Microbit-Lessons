@@ -476,3 +476,15 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .fb-quotes q.change { background: #e6f6ee; }
 .panel .vz-coords svg { max-height: 330px; }
 .vz-coords .vz-label { font-size: 15px; }
+
+/* class display: names readable from the back of the room */
+.screen-stage .racer { width: calc(var(--bot) + 44px); }
+.screen-stage .racer b { max-width: calc(var(--bot) + 44px); font-size: calc(var(--bot) * .2 + 13px); font-weight: 900; line-height: 1.05; margin-top: 2px; }
+.screen-stage .racer small { font-size: calc(var(--bot) * .1 + 8px); font-weight: 800; }
+.screen-stage .screen-who b { font-size: 1.7rem; }
+.screen-stage .else-chip { font-size: 1.2rem; font-weight: 800; }
+.screen-stage .help-info b { font-size: 1.5rem; }
+.screen-stage .screen-wins li { font-size: 1.15rem; }
+.screen-stage .racer.idle { opacity: 1; }
+.screen-stage .racer.idle .racer-bot { opacity: .5; }
+.screen-stage .racer.idle b { color: #475569; }
