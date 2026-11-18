@@ -40,7 +40,8 @@
     const r = await fetch('/api/shop/buy', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
       body: JSON.stringify({ item: `part:${part}:${opt.id}` }) });
     const d = await r.json().catch(() => ({}));
-    if (!d.ok) { $('avatar-status').textContent = d.error || 'Could not buy that.'; $('avatar-status').className = 'save-status small bad'; return; }
+    if (!d.ok) { $('avatar-status').textContent = d.error || 'Could not buy that.'; $('avatar-status').className = 'save-status small bad'; if (window.Celebrate) window.Celebrate.nope(document.activeElement, $('avatar-status')); return; }
+    if (window.Celebrate) window.Celebrate.buy($('avatar-preview'));
     Object.keys(d.catalog || {}).forEach((k) => { C[k] = d.catalog[k]; });
     if ($('spend')) $('spend').innerHTML = `⚡ <b>${d.spendable}</b> XP to spend`;
     state[part] = opt.id;

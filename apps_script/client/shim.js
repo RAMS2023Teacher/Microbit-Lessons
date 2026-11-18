@@ -111,8 +111,11 @@
         '" data-size="30"></span><span class="nav-xp"><b id="nav-level">Lv ' + d.level.level + '</b><span class="nav-xp-bar"><i id="nav-xp-fill" style="width:' +
         d.level.pct + '%"></i></span></span> ' + ML.esc(d.name || '') + '</a>');
     }
-    h.push('</nav>');
+    h.push('<button type="button" class="sound-toggle" id="sound-toggle" title="Sound on or off"></button></nav>');
     bar.innerHTML = h.join('');
+    var st = document.getElementById('sound-toggle');
+    var drawSound = function () { var off = window.SFX && window.SFX.muted(); st.textContent = off ? '🔇' : '🔊'; st.setAttribute('aria-label', off ? 'Turn sound on' : 'Turn sound off'); };
+    if (window.SFX) { drawSound(); st.addEventListener('click', function () { window.SFX.toggle(); drawSound(); }); } else st.remove();
   }
   // "Arcade open" in the top bar, while the teacher has the arcade open and the student has play time (35_arcade.js)
   ML.arcadePill = function (st) {

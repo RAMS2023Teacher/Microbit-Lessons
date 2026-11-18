@@ -26,6 +26,18 @@
       return r;
     }
     const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+    // A button that isn't ready yet is grey (class "locked"), not disabled, so a click can explain what's missing.
+    const C = window.Celebrate || { nope() {}, sound() {}, confetti() {} };
+    function setLocked(btn, locked) {
+      const was = btn.classList.contains('locked');
+      btn.classList.toggle('locked', !!locked);
+      btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+      if (was && !locked) { C.sound('ready'); btn.classList.remove('unlocked-now'); void btn.offsetWidth; btn.classList.add('unlocked-now'); }
+    }
+    function flagTodo(els) {
+      els.forEach((x) => { x.classList.remove('todo'); void x.offsetWidth; x.classList.add('todo'); setTimeout(() => x.classList.remove('todo'), 2200); });
+      if (els[0] && els[0].scrollIntoView) els[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
 
     // ------------------------------------------------------------ Python code with line numbers and new lines highlighted
     const KW = /\b(while|if|elif|else|for|in|def|return|not|and|or|True|False|None|import|from|global|break|pass|lambda)\b/g;
@@ -147,8 +159,14 @@
       afterDraw(box);
       const save = debounce(async () => { const r = await api('mission', { talk: $('talk').value }); $('talk-saved').textContent = r.ok ? 'Saved ✓' : (r.error || ''); }, 700);
       $('talk').addEventListener('input', () => { S.talk = $('talk').value; $('talk-saved').textContent = 'Saving…'; save(); });
+      const talkReady = () => setLocked($('mission-go'), (S.talk || '').trim().length < 3 && !ML.teacher);
+      $('talk').addEventListener('input', talkReady);
+      talkReady();
       $('mission-go').addEventListener('click', async () => {
-        if (S.talk.trim().length < 3) { $('talk').focus(); $('talk-saved').textContent = 'Write a few words with your partner first.'; return; }
+        if ((S.talk || '').trim().length < 3 && !ML.teacher) {
+          $('talk-saved').textContent = 'Write a few words with your partner first.';
+          C.nope($('mission-go'), $('talk-saved')); flagTodo([$('talk').closest('.ask-box')]); $('talk').focus(); return;
+        }
         await api('mission', { talk: S.talk });
         show('build');
       });
@@ -199,7 +217,7 @@
       box.querySelectorAll('.step-dots button').forEach((b) => b.addEventListener('click', () => { stepAt = +b.dataset.step; drawBuild(); }));
       const sync = () => {
         const need = stepReady(i);
-        $('step-next').disabled = !!need.length && !ML.teacher;
+        setLocked($('step-next'), need.length && !ML.teacher);
         $('step-need').textContent = need.length ? 'To go on: ' + need.join(', ') + '.' : '';
       };
       const save = debounce(async () => {
@@ -209,6 +227,7 @@
       }, 600);
       const changed = () => { $('step-saved').textContent = 'Saving…'; sync(); save(); };
       box.querySelectorAll('[data-test]').forEach((c) => c.addEventListener('change', () => {
+        if (c.checked) C.sound('tick');
         row.tests = [...box.querySelectorAll('[data-test]:checked')].map((x) => +x.dataset.test);
         changed();
       }));
@@ -219,6 +238,13 @@
       if (St.ask) $('step-ask').addEventListener('input', () => { row.answer = $('step-ask').value; changed(); });
       $('step-back').addEventListener('click', () => { stepAt = Math.max(0, i - 1); drawBuild(); });
       $('step-next').addEventListener('click', async () => {
+        if ($('step-next').classList.contains('locked')) {
+          C.nope($('step-next'), $('step-need'));
+          flagTodo([...box.querySelectorAll('[data-test]:not(:checked)')].map((x) => x.closest('label'))
+            .concat(St.ask && !(row.answer || '').trim() ? [$('step-ask').closest('.ask-box')] : [])
+            .concat([...box.querySelectorAll('[data-field]')].some((x) => !x.value.trim()) ? [box.querySelector('.fields-row')] : []));
+          return;
+        }
         $('step-next').disabled = true;
         const r = await api('step', { i, tests: row.tests, answer: row.answer, fields: row.fields });
         row.done = !!r.step_done || !!r.teacher;
@@ -244,7 +270,7 @@
         q.choices.forEach((c, ci) => {
           const b = grid.appendChild(el('button', 'quiz-choice', `<span class="letter">${'ABCD'[ci]}</span><span>${c}</span>`));
           b.type = 'button';
-          b.addEventListener('click', () => { if (box.dataset.graded) return; picks[qi] = ci; mark(); });
+          b.addEventListener('click', () => { if (box.dataset.graded) return; picks[qi] = ci; C.sound('tick'); mark(); });
         });
         card.appendChild(el('p', 'quiz-why'));
       });
@@ -261,7 +287,7 @@
         });
         const left = L.quiz.length - picks.filter((p) => p != null).length;
         $('quiz-need').textContent = !res && left ? `${left} to go` : '';
-        $('quiz-go').disabled = !res && left > 0;
+        setLocked($('quiz-go'), !res && left > 0);
       }
       function graded(res) {
         box.dataset.graded = '1';
@@ -276,10 +302,17 @@
         };
       }
       $('quiz-go').onclick = async () => {
+        if ($('quiz-go').classList.contains('locked')) {
+          C.nope($('quiz-go'), $('quiz-need'));
+          flagTodo([...qs.querySelectorAll('.quiz-q')].filter((_, qi) => picks[qi] == null));
+          return;
+        }
         $('quiz-go').disabled = true;
         const r = await api('quiz', { answers: picks });
         if (!r.quiz) { $('quiz-need').textContent = r.error || 'Could not check that.'; $('quiz-go').disabled = false; return; }
         S.quiz_answers = picks.slice(); S.quiz_results = r.quiz;
+        if (!r.quiz.passed) C.nope($('quiz-go'), $('quiz-score'));
+        else if (!(r.rewards && r.rewards.xp_gained)) C.sound('pass');
         graded(r.quiz);
       };
       if (results) graded(results); else mark();
@@ -325,7 +358,7 @@
         const r = await api('ship', b);
         $('ship-go').disabled = false;
         if (r.teacher) { $('ship-missing').textContent = '(Teacher preview: nothing is saved.)'; return; }
-        if (r.missing && r.missing.length && !r.shipped) { $('ship-missing').textContent = 'Not yet: ' + r.missing.join(' '); return; }
+        if (r.missing && r.missing.length && !r.shipped) { $('ship-missing').textContent = 'Not yet: ' + r.missing.join(' '); C.nope($('ship-go'), $('ship-missing')); return; }
         Object.assign(S, b, { shipped_at: S.shipped_at || new Date().toISOString() });
         S.ext = {}; b.ext.forEach((k) => { S.ext[k] = true; });
         drawShip();
@@ -333,6 +366,7 @@
       });
     }
     function celebrate() {
+      C.confetti();
       const box = $('stage-view').querySelector('.panel');
       box.insertAdjacentHTML('afterbegin', `<div class="shipped" style="margin-bottom:14px">🏁 <b>Lesson complete!</b> ` +
         `<a href="/map">See what you unlocked on the skill tree →</a></div>` +

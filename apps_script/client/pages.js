@@ -228,16 +228,22 @@
         var pips = '';
         for (var i = 0; i < u.max; i++) pips += '<i class="' + (i < u.level ? 'on' : '') + '"></i>';
         var btn = u.next_cost == null ? '<span class="maxed">MAX</span>' :
-          '<button type="button" class="btn small' + (d.spendable >= u.next_cost && !d.practice ? ' go' : ' ghost') + '" data-buy="' + E(u.id) + '">' + (u.level ? 'Upgrade' : 'Buy') + ' · ' + u.next_cost + ' XP</button>';
+          '<button type="button" class="btn small' + (d.spendable >= u.next_cost && !d.practice ? ' go' : ' locked') + '" data-buy="' + E(u.id) + '">' + (u.level ? 'Upgrade' : 'Buy') + ' · ' + u.next_cost + ' XP</button>';
         return '<div class="power"><span class="power-icon">' + u.icon + '</span><div><b>' + E(u.name) + '</b><span class="pips">' + pips + '</span><small>' + E(u.desc) + '</small></div>' + btn + '</div>';
       }).join('');
       box.querySelectorAll('[data-buy]').forEach(function (b) {
         b.addEventListener('click', function () {
           var u = d.shop.filter(function (x) { return x.id === b.dataset.buy; })[0];
+          if (d.spendable < u.next_cost || d.practice) {
+            $('shop-msg').textContent = d.practice ? 'Students buy power-ups with XP they earn.' : 'You need ' + (u.next_cost - d.spendable) + ' more XP to spend. Finish more steps to earn it!';
+            if (window.Celebrate) window.Celebrate.nope(b, $('shop-msg'));
+            return;
+          }
           if (!confirm('Buy ' + u.name + ' level ' + (u.level + 1) + ' for ' + u.next_cost + ' XP?')) return;
           b.disabled = true;
           ML.api('/api/shop/buy', { item: 'power:' + u.id }).then(function (r) {
             $('shop-msg').textContent = r.ok ? '' : (r.error || 'Could not buy that.');
+            if (window.Celebrate) { if (r.ok) window.Celebrate.buy(b); else window.Celebrate.nope(b, $('shop-msg')); }
             if (r.ok) { d.shop = r.shop; d.spendable = r.spendable; d.powerups = r.powerups; d.race_seconds = r.race_seconds; $('spend').innerHTML = '⚡ <b>' + r.spendable + '</b> XP to spend'; }
             drawShop();
           });

@@ -381,3 +381,37 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .grade-pick { margin: 6px 0 14px; font-weight: 700; }
 .grade-pick select { width: auto; display: inline-block; }
 .class-card.new select { margin: 6px 0; }
+
+/* ---------------------------------------------------------------- game feel: locked buttons, XP coins, badge spotlight */
+.btn.locked, .btn.locked:hover { background: #cfd5e2 !important; color: #6b7487 !important; border-color: #9aa3b5 !important; box-shadow: 0 4px 0 #9aa3b5 !important;
+  cursor: not-allowed; transform: none; }
+.btn.unlocked-now { animation: btn-ready .5s cubic-bezier(.2,1.6,.4,1); }
+@keyframes btn-ready { 0% { transform: scale(.92); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.nope { animation: nope-shake .45s ease; }
+.btn.nope, .btn.nope:hover, .btn.locked.nope, .btn.locked.nope:hover { background: #ef4444 !important; color: #fff !important; border-color: #991b1b !important; box-shadow: 0 4px 0 #991b1b !important; }
+.need.nope, .missing.nope, .saved.nope { color: #dc2626 !important; font-weight: 800; }
+@keyframes nope-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }
+.tests label.todo, .quiz-q.todo, .ask-box.todo, .fields-row.todo { outline: 3px solid #ef4444; outline-offset: 3px; border-radius: 10px; animation: nope-shake .45s ease; }
+.xp-float { position: fixed; z-index: 120; pointer-events: none; transform: translate(-50%, -50%); font-family: var(--display); font-size: 2rem; color: var(--gold);
+  -webkit-text-stroke: 1.5px #1d2a5c; text-shadow: 0 3px 0 #1d2a5c; animation: xp-float 1.2s ease-out forwards; }
+@keyframes xp-float { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -80%) scale(1.25); } 100% { opacity: 0; transform: translate(-50%, -260%) scale(1); } }
+.fly-coin { position: fixed; z-index: 121; pointer-events: none; font-size: 1.5rem; transform: translate(-50%, -50%); }
+.xp-bump { animation: xp-bump .35s ease; }
+@keyframes xp-bump { 50% { transform: scale(1.12); filter: brightness(1.3); } }
+.badge-spot { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; background: rgba(13, 20, 51, .55); animation: spot-in .25s ease; cursor: pointer; }
+.badge-spot.out { opacity: 0; transition: opacity .3s; }
+.badge-spot-card { position: relative; text-align: center; color: #fff; padding: 30px 40px 24px; border-radius: 28px; background: linear-gradient(160deg, #4338ca, #7c3aed);
+  border: 4px solid #1d2a5c; box-shadow: 0 8px 0 #1d2a5c, 0 30px 80px rgba(0, 0, 0, .4); animation: badge-pop .6s cubic-bezier(.2,1.6,.4,1); overflow: hidden; min-width: 300px; }
+.badge-rays { position: absolute; left: 50%; top: 92px; width: 520px; height: 520px; margin: -260px 0 0 -260px; pointer-events: none;
+  background: repeating-conic-gradient(rgba(255, 230, 120, .28) 0 10deg, transparent 10deg 30deg); animation: rays 6s linear infinite; }
+.badge-spot-icon { position: relative; font-size: 5.5rem; line-height: 1; margin-bottom: 10px; animation: badge-bob 1.4s ease-in-out infinite; filter: drop-shadow(0 6px 0 rgba(0,0,0,.25)); }
+.badge-spot-card small { position: relative; display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .12em; font-weight: 800; }
+.badge-spot-card b { position: relative; display: block; font-family: var(--display); font-weight: 400; font-size: 2.2rem; margin: 2px 0 4px; }
+.badge-spot-card span { position: relative; display: block; opacity: .9; }
+.badge-spot-card em { position: relative; display: block; margin-top: 14px; font-size: .8rem; opacity: .6; font-style: normal; }
+@keyframes badge-pop { 0% { transform: scale(.2) rotate(-12deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes badge-bob { 50% { transform: translateY(-8px) rotate(4deg); } }
+@keyframes rays { to { transform: rotate(360deg); } }
+@keyframes spot-in { from { opacity: 0; } }
+.sound-toggle { background: rgba(255, 255, 255, .12); border: 0; color: #fff; border-radius: 12px; padding: 6px 10px; font-size: 1.1rem; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .nope, .badge-spot-card, .badge-spot-icon, .badge-rays, .xp-bump, .btn.unlocked-now { animation: none !important; } }
