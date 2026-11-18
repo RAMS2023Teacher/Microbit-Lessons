@@ -60,6 +60,8 @@
       '</aside></div></div>';
     const $ = (id) => document.getElementById(id);
     $('screen-class').textContent = C.className || 'Class';
+    const nameLen = (C.className || '').length;                  // long class names shrink instead of being cut off
+    if (nameLen > 22) $('screen-class').style.fontSize = Math.max(1.05, 2.1 - (nameLen - 22) * 0.045) + 'rem';
     $('screen-exit').setAttribute('href', C.backHref || '/');
     $('set-lesson').appendChild(el('option', '', 'Automatic: the lesson most students are on')).value = '';
     (C.units || []).forEach((u) => {
@@ -93,7 +95,8 @@
       r.dataset.who = st.who || '';
       const av = r.appendChild(el('div', 'racer-bot'));
       av.innerHTML = window.RobotAvatar.svg(st.avatar, 96);
-      r.appendChild(el('b', '', st.name));
+      const nm = r.appendChild(el('b', '', st.name));
+      if (st.name.length > 6) nm.style.fontSize = `calc((var(--bot) * .2 + 13px) * ${(6.5 / st.name.length).toFixed(3)})`;   // long names shrink to fit
       if (data.settings.xp === 'each') r.appendChild(el('small', '', `Lv ${st.level || 1}`));
       r.title = `${st.name}: ${st.where}`;
       return r;
@@ -134,7 +137,7 @@
       });
       lanes.forEach((lane) => { if (lane.children.length) lane.parentElement.classList.add('busy'); });
       // busy stops get more room, so a crowd of robots doesn't have to shrink
-      track.style.gridTemplateColumns = lanes.map((l) => `minmax(74px, ${Math.max(1, Math.sqrt(l.children.length)).toFixed(2)}fr)`).join(' ');
+      track.style.gridTemplateColumns = lanes.map((l) => `minmax(112px, ${Math.max(1, Math.sqrt(l.children.length)).toFixed(2)}fr)`).join(' ');
       fitRacers(wrap, track, lanes);
       const refit = () => { if (track.isConnected) fitRacers(wrap, track, lanes); };   // again once fonts and layout settle
       requestAnimationFrame(refit);

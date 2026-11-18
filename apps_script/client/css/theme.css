@@ -488,3 +488,18 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 .screen-stage .racer.idle { opacity: 1; }
 .screen-stage .racer.idle .racer-bot { opacity: .5; }
 .screen-stage .racer.idle b { color: #475569; }
+
+/* class display header: always one row, so long class names can't push the board down */
+.screen-stage .screen-head { flex-wrap: nowrap; height: 92px; gap: 14px; overflow: hidden; }
+.screen-stage .screen-head > div:first-child { min-width: 0; flex: 0 1 auto; max-width: 470px; }
+.screen-stage .screen-head h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: clamp(1.4rem, 2.2vw, 2.1rem); }
+.screen-stage .screen-head p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.screen-stage .screen-goal { flex: 1 1 340px; min-width: 300px; margin: 0; }
+.screen-stage .goal-top { white-space: nowrap; gap: 10px; }
+.screen-stage .goal-top span { font-size: 1.25rem; }
+.screen-stage .goal-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.screen-stage .screen-total { white-space: nowrap; flex: none; margin-left: 0; font-size: 1.4rem; }
+.screen-stage .screen-tools { flex: none; display: flex; gap: 6px; flex-wrap: nowrap; }
+.screen-stage .help-pill { flex: none; white-space: nowrap; }
+.screen-stage .racer { width: max(calc(var(--bot) + 44px), 104px); }
+.screen-stage .racer b { max-width: max(calc(var(--bot) + 44px), 104px); }
