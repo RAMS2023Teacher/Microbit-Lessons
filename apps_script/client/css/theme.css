@@ -415,3 +415,8 @@ body.screen-page { background: linear-gradient(180deg, #2b3a8f, #121a46); }
 @keyframes spot-in { from { opacity: 0; } }
 .sound-toggle { background: rgba(255, 255, 255, .12); border: 0; color: #fff; border-radius: 12px; padding: 6px 10px; font-size: 1.1rem; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .nope, .badge-spot-card, .badge-spot-icon, .badge-rays, .xp-bump, .btn.unlocked-now { animation: none !important; } }
+/* class display set-up panel: below the header buttons, with its own close button */
+.screen-stage .screen-setup { top: 96px !important; max-height: calc(900px - 120px); overflow: auto; }
+.setup-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.setup-head h2 { margin: 0; }
+.setup-x { border: 2px solid var(--outline); background: #fff; border-radius: 10px; width: 38px; height: 38px; font-size: 1.1rem; font-weight: 800; cursor: pointer; }

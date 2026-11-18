@@ -22,7 +22,8 @@
       '<a class="btn small ghost" id="screen-exit">Exit</a></div></header>' +
       '<p class="screen-offline" id="screen-offline" hidden>Can\'t reach Maker Lab. Retrying…</p>' +
       '<p class="screen-offline" id="screen-fullhint" hidden>Press your keyboard\'s full-screen key (or F11) to fill the screen.</p>' +
-      '<section class="card screen-setup" id="screen-setup" hidden>' +
+      '<section class="card screen-setup" id="screen-setup" hidden><div class="setup-head"><h2>⚙ Set up</h2>' +
+      '<button type="button" class="setup-x" id="set-close" aria-label="Close set up">✕</button></div>' +
       '<label class="field"><span>Today\'s lesson</span><select id="set-lesson"></select></label>' +
       '<label class="field"><span>Question of the day</span><textarea id="set-question" rows="2" maxlength="300" ' +
       'placeholder="Leave blank to use the lesson\'s essential question."></textarea></label>' +
@@ -36,7 +37,8 @@
       'placeholder="Auto: 60 per student"><small class="muted">0 turns the goal off</small></label>' +
       '<label class="field"><span>Show progress as</span><select id="set-view"><option value="track">Race track</option>' +
       '<option value="cards">Cards</option></select></label></div>' +
-      '<div class="row"><button type="button" class="btn" id="set-save">Save</button><span class="muted small" id="set-status"></span></div></section>' +
+      '<div class="row"><button type="button" class="btn" id="set-save">Save</button><button type="button" class="btn ghost" id="set-done">Done</button>' +
+      '<span class="muted small" id="set-status"></span></div></section>' +
       '<div class="screen-grid"><div class="screen-left"><section class="card screen-roster" aria-label="Where everyone is">' +
       '<div class="screen-roster-head"><h2 id="roster-title">Where everyone is</h2><span class="muted" id="screen-counts"></span></div>' +
       '<div class="screen-students" id="screen-students"></div><div class="track-wrap" id="screen-track"></div>' +
@@ -188,7 +190,6 @@
       const wins = $('screen-wins');
       wins.textContent = '';
       drawArcade();
-      if (arcadeOpen()) return;                       // while the arcade is open, this card shows its leaderboard
       if (!(data.wins || []).length) wins.appendChild(el('li', 'muted', 'Badges, finished lessons and perfect quizzes show up here.'));
       (data.wins || []).slice(0, 5).forEach((w) => {
         const li = wins.appendChild(el('li'));
@@ -209,19 +210,6 @@
       const btn = $('arcade-toggle');
       btn.classList.toggle('on', !!arcadeOpen());
       btn.textContent = arcadeOpen() ? '🎮 Arcade open · Close' : '🎮 Open arcade';
-      if (!arcadeOpen() || !a) { $('wins-title').textContent = '🏆 Recent wins'; return; }
-      $('wins-title').textContent = '🎮 Robot Rush · today';
-      const wins = $('screen-wins');
-      wins.textContent = '';
-      const rows = (a.board && a.board.today) || [];
-      if (!rows.length) wins.appendChild(el('li', 'muted', `The arcade is open! Finish a lesson to earn ${a.minutes} minutes of play time.`));
-      rows.slice(0, 5).forEach((r, i) => {
-        const li = wins.appendChild(el('li', 'arcade-row'));
-        li.appendChild(el('span', 'win-icon', ['🥇', '🥈', '🥉'][i] || String(i + 1)));
-        li.appendChild(el('span', 'else-bot')).innerHTML = window.RobotAvatar.svg(r.avatar, 34);
-        li.appendChild(el('span', 'win-text', r.name));
-        li.appendChild(el('b', 'arcade-score', String(r.score)));
-      });
     }
     $('arcade-toggle').addEventListener('click', async () => {
       const btn = $('arcade-toggle');
@@ -277,8 +265,15 @@
         $('set-status').textContent = 'Could not save: ' + ((e && e.message) || 'try again');
       }
     }
-    $('set-open').addEventListener('click', () => { $('screen-setup').hidden = !$('screen-setup').hidden; });
-    $('set-save').addEventListener('click', () => save());
+    const closeSetup = () => { $('screen-setup').hidden = true; };
+    $('set-open').addEventListener('click', (e) => { e.stopPropagation(); $('screen-setup').hidden = !$('screen-setup').hidden; });
+    $('set-close').addEventListener('click', closeSetup);
+    $('set-done').addEventListener('click', closeSetup);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSetup(); });
+    document.addEventListener('click', (e) => {            // a click anywhere else on the display closes it
+      if (!$('screen-setup').hidden && !$('screen-setup').contains(e.target) && e.target !== $('set-open')) closeSetup();
+    });
+    $('set-save').addEventListener('click', async () => { await save(); setTimeout(closeSetup, 700); });
     $('set-lesson').addEventListener('change', () => save());
     $('set-view').addEventListener('change', () => save());
     $('set-full').addEventListener('click', () => {
