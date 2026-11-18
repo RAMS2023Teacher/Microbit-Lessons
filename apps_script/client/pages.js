@@ -614,6 +614,89 @@
     });
   };
 
+  // ---------------------------------------------------------------- lesson feedback, and the report to paste to Claude
+  pages.feedback = function () {
+    main.className = 'container wide';
+    var R = d.reasons || {}, FACES = ['😣', '😕', '😐', '🙂', '🤩'];
+    var reasonText = function (rs) { return Object.keys(rs).sort(function (a, b) { return rs[b] - rs[a]; }).map(function (k) { return (R[k] || k).toLowerCase() + ' ' + rs[k]; }).join(', '); };
+    var pct = function (a, b) { return b ? Math.round(100 * a / b) + '%' : '–'; };
+    var hasData = function (l) { return l.rated || l.steps.some(function (x) { return x.flags || x.help; }) || l.quiz.some(function (q) { return q.answered || q.flags; }); };
+    var hotSteps = function (l) { return l.steps.filter(function (x) { return x.flags || x.help; }).sort(function (a, b) { return (b.flags * 2 + b.help) - (a.flags * 2 + a.help); }); };
+    var hotQuiz = function (l) { return l.quiz.filter(function (q) { return q.flags || (q.answered && q.missed / q.answered >= 0.3); }); };
+
+    function markdown(only) {
+      var out = ['# Maker Lab lesson feedback', '', d.grade_name + ' · ' + d.generated + ' · ' + d.students + ' students in Maker Lab · student names removed', '',
+        'Please use this to improve the lessons in the Maker Lab repository. Each lesson is a YAML file (path given). ' +
+        'Steps are numbered the way students see them (Step 1 = the first build step). Quiz "missed" counts first tries only.', ''];
+      d.lessons.filter(function (l) { return only ? l.id === only : hasData(l); }).forEach(function (l) {
+        out.push('## Lesson ' + l.number + ': ' + l.title, '', 'File: `' + l.file + '`', '');
+        out.push('- Students started: ' + l.started + ', finished: ' + l.finished);
+        out.push('- Rating: ' + (l.rated ? l.avg + ' / 5 from ' + l.rated + ' students (' + l.ratings.map(function (c, i) { return (i + 1) + '★ ' + c; }).join(', ') + ')' : 'no ratings yet'), '');
+        var hs = hotSteps(l);
+        if (hs.length) {
+          out.push('### Build steps students found confusing or needed help with', '', '| Step | Title | Confusing flags | Reasons | Help requests |', '|---|---|---|---|---|');
+          hs.forEach(function (x) { out.push('| ' + x.n + ' | ' + x.title + ' | ' + x.flags + ' | ' + (reasonText(x.reasons) || '–') + ' | ' + x.help + ' |'); });
+          out.push('');
+          hs.filter(function (x) { return x.notes.length; }).forEach(function (x) { x.notes.forEach(function (n) { out.push('- Step ' + x.n + ': "' + n + '"'); }); });
+          if (hs.some(function (x) { return x.notes.length; })) out.push('');
+        }
+        var hq = l.quiz.filter(function (q) { return q.answered || q.flags; });
+        if (hq.length) {
+          out.push('### Quiz', '', '| Q | Question | Missed on first try | Confusing flags |', '|---|---|---|---|');
+          hq.forEach(function (q) { out.push('| ' + q.n + ' | ' + q.question.replace(/\|/g, '/') + ' | ' + pct(q.missed, q.answered) + ' (' + q.missed + '/' + q.answered + ') | ' + q.flags + (q.flags ? ' (' + reasonText(q.reasons) + ')' : '') + ' |'); });
+          out.push('');
+          hq.forEach(function (q) { q.notes.forEach(function (n) { out.push('- Q' + q.n + ': "' + n + '"'); }); });
+          if (hq.some(function (q) { return q.notes.length; })) out.push('');
+        }
+        if (l.hardest.length) { out.push('### "What was the hardest part?"', ''); l.hardest.forEach(function (t) { out.push('- ' + t.replace(/\s+/g, ' ')); }); out.push(''); }
+        if (l.change.length) { out.push('### "What would make this lesson better?"', ''); l.change.forEach(function (t) { out.push('- ' + t.replace(/\s+/g, ' ')); }); out.push(''); }
+      });
+      return out.join('\n');
+    }
+
+    var h = ['<div class="page-head"><div><h1>Lesson feedback</h1><p class="muted">What students flagged as confusing, how they rated each lesson, ' +
+      'and which quiz questions they missed on the first try. No names are shown or copied.</p><p class="row">' +
+      (d.grades || []).map(function (g) { return '<a class="btn small' + (g.id === d.grade ? '' : ' ghost') + '" href="/teacher/feedback/' + E(g.id) + '">' + E(g.name) + '</a>'; }).join(' ') +
+      '</p></div><div class="row"><button class="btn go" id="fb-copy" type="button">📋 Copy report for Claude</button>' +
+      '<button class="btn ghost" id="fb-dl" type="button">⬇ Download .md</button></div></div>' +
+      '<p class="muted small">Paste the report into Claude and ask it to improve the lessons. Student notes are copied as they typed them, so skim them for names first.</p>'];
+    var any = false;
+    d.lessons.forEach(function (l) {
+      if (!hasData(l)) return;
+      any = true;
+      var hs = hotSteps(l).slice(0, 5), hq = hotQuiz(l);
+      h.push('<section class="card fb-card"><div class="fb-head"><h2>' + E(l.number) + '. ' + E(l.title) + '</h2><span class="fb-stars">' +
+        (l.rated ? FACES[Math.max(0, Math.round(l.avg) - 1)] + ' <b>' + l.avg + '</b> / 5 <small class="muted">(' + l.rated + ')</small>' : '<small class="muted">no ratings yet</small>') +
+        '</span><button class="btn small ghost fb-one" type="button" data-id="' + E(l.id) + '">📋 Copy this lesson</button></div>' +
+        '<p class="muted small">' + l.started + ' started · ' + l.finished + ' finished</p><div class="grid-2">');
+      h.push('<div><h3>🤔 Confusing steps</h3>' + (hs.length ? '<ul class="fb-list">' + hs.map(function (x) {
+        return '<li><b>Step ' + x.n + ':</b> ' + E(x.title) + ' <span class="fb-n">' + (x.flags ? x.flags + ' 🤔' : '') + (x.help ? ' ' + x.help + ' ✋' : '') + '</span>' +
+          (x.flags ? '<small>' + E(reasonText(x.reasons)) + '</small>' : '') + x.notes.slice(0, 3).map(function (n) { return '<q>' + E(n) + '</q>'; }).join('') + '</li>';
+      }).join('') + '</ul>' : '<p class="muted small">Nothing flagged.</p>') + '</div>');
+      h.push('<div><h3>🧠 Quiz trouble</h3>' + (hq.length ? '<ul class="fb-list">' + hq.map(function (q) {
+        return '<li><b>Q' + q.n + ':</b> ' + E(q.question) + ' <span class="fb-n">' + pct(q.missed, q.answered) + ' missed</span>' + (q.flags ? '<small>' + q.flags + ' 🤔 ' + E(reasonText(q.reasons)) + '</small>' : '') + '</li>';
+      }).join('') + '</ul>' : '<p class="muted small">No question missed by 30% or more.</p>') + '</div></div>');
+      var words = l.hardest.slice(0, 3).map(function (t) { return '<q>' + E(t) + '</q>'; }).concat(l.change.slice(0, 3).map(function (t) { return '<q class="change">' + E(t) + '</q>'; }));
+      if (words.length) h.push('<h3>💬 In their words</h3><div class="fb-quotes">' + words.join('') + '</div>');
+      h.push('</section>');
+    });
+    if (!any) h.push('<section class="card"><p class="muted">No feedback yet for this grade. Students flag confusing steps with 🤔 and rate each lesson at the end.</p></section>');
+    main.innerHTML = h.join('');
+    var copyText = function (text, btn) {
+      var done = function () { var t = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(function () { btn.textContent = t; }, 1600); };
+      var fallback = function () { var ta = document.body.appendChild(document.createElement('textarea')); ta.value = text; ta.select(); try { document.execCommand('copy'); done(); } catch (e) { /* select it */ } ta.remove(); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+    };
+    document.getElementById('fb-copy').addEventListener('click', function () { copyText(markdown(), this); });
+    document.querySelectorAll('.fb-one').forEach(function (b) { b.addEventListener('click', function () { copyText(markdown(b.dataset.id), b); }); });
+    document.getElementById('fb-dl').addEventListener('click', function () {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([markdown()], { type: 'text/markdown' }));
+      a.download = 'maker-lab-feedback-' + d.grade + '-' + d.generated + '.md';
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+  };
+
   pages.standards = function () {
     var h = ['<h1>MA DLCS standards</h1><p class="muted">What each lesson covers, and how.</p>'];
     d.lessons.forEach(function (l) {

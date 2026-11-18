@@ -32,6 +32,11 @@ function helpApi_(d) {
     var req = { who: helpWho_(email), email: email, name: ctx.rec.name, classes: studentClassIds_(ctx.rec, ctx.cfg), at: now_(),
                 where: where, note: text_(d.note, 140).replace(/\s+/g, ' ').trim(), avatar: avatarOf_(ctx.rec) };
     props.setProperty('help:' + email, JSON.stringify(req));
+    if (L && d.stage === 'build') {                           // the feedback report counts help requests per step
+      var fb = fbOf_(ctx.rec, L.id), k = String(Math.max(0, Number(d.step) || 0));
+      fb.help[k] = (fb.help[k] || 0) + 1;
+      saveStudent_(ctx.rec);
+    }
     return { ok: true, help: { at: req.at } };
   }
   var mine = helpGet_(email);

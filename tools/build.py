@@ -49,7 +49,7 @@ def lesson_data(lesson: dict) -> dict:
     std = L.standards_table()
     m = lesson["mission"]
     out = {
-        "id": lesson["id"], "course": lesson["course"], "number": lesson["number"], "title": lesson["title"], "tagline": lesson.get("tagline", ""),
+        "id": lesson["id"], "course": lesson["course"], "file": "course/lessons/" + lesson["_file"], "number": lesson["number"], "title": lesson["title"], "tagline": lesson.get("tagline", ""),
         "editor": rules.COURSES[lesson["course"]]["editor"], "idea_label": rules.COURSES[lesson["course"]]["idea_label"],
         "icon": lesson["icon"], "color": lesson["color"], "python": lesson["python"], "hardware": lesson["hardware"],
         "minutes": lesson.get("minutes", 45), "wired": L.wired(lesson),

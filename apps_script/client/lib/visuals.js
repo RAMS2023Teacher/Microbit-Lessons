@@ -47,6 +47,32 @@
     return svg(W, H, body, v.alt || `micro:bit display showing ${frames.join(', then ')}`);
   }
 
+  // ---------------------------------------------------------------- coords: the 5×5 screen with column (x) and row (y) numbers
+  // { type: coords, marks: [{ x, y, icon: '🙂', label: 'you', color: 'green' }], ask: true }  ask hides the numbers on the marks
+  function coords(v) {
+    const cell = 46, x0 = 70, y0 = 62, W = x0 + cell * 5 + 150, H = y0 + cell * 5 + 30;
+    const COL = { green: '#16a34a', blue: '#2563eb', red: '#dc2626', gold: '#ca8a04', purple: '#7c3aed' };
+    let b = t(x0 + cell * 2.5, 22, 'x = column  →', 'class="vz-label" text-anchor="middle" font-weight="800"');
+    b += t(18, y0 + cell * 2.5 - 30, 'y = row', `class="vz-label" text-anchor="middle" font-weight="800" transform="rotate(-90 18 ${y0 + cell * 2.5 - 30})"`);
+    b += t(18, y0 + cell * 2.5 + 30, '↓', 'class="vz-label" text-anchor="middle" font-weight="800"');
+    for (let i = 0; i < 5; i++) {
+      b += t(x0 + i * cell + cell / 2, y0 - 10, i, 'class="vz-big" text-anchor="middle"');
+      b += t(x0 - 14, y0 + i * cell + cell / 2 + 6, i, 'class="vz-big" text-anchor="middle"');
+    }
+    b += `<rect x="${x0 - 6}" y="${y0 - 6}" width="${cell * 5 + 12}" height="${cell * 5 + 12}" rx="12" fill="#1b2550"/>`;
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+      const m = (v.marks || []).find((k) => k.x === c && k.y === r);
+      b += `<rect x="${x0 + c * cell + 5}" y="${y0 + r * cell + 5}" width="${cell - 10}" height="${cell - 10}" rx="6" fill="${m ? COL[m.color] || RED : '#3b4366'}"/>`;
+      if (m && m.icon) b += t(x0 + c * cell + cell / 2, y0 + r * cell + cell / 2 + 8, m.icon, 'text-anchor="middle" font-size="22"');
+    }
+    (v.marks || []).forEach((m, i) => {
+      const ly = y0 + 18 + i * 34, lx = x0 + cell * 5 + 22;
+      b += `<rect x="${lx}" y="${ly - 16}" width="22" height="22" rx="5" fill="${COL[m.color] || RED}"/>` + t(lx + 11, ly + 1, m.icon || '', 'text-anchor="middle" font-size="14"');
+      b += t(lx + 30, ly, m.label + (v.ask || m.x == null ? '' : ` (${m.x}, ${m.y})`), 'class="vz-label"');
+    });
+    return svg(W, H, b, v.alt || 'the micro:bit screen as a 5 by 5 grid with column numbers x and row numbers y');
+  }
+
   // ---------------------------------------------------------------- part
   const BAND = ['#111', '#7b4a12', '#d32f2f', '#f57c00', '#fbc02d', '#2e7d32', '#1565c0', '#7b1fa2', '#9e9e9e', '#fafafa'];
   function bands(ohms) {
@@ -484,7 +510,7 @@
     return null;
   }
 
-  const R = { leds, part, circuit, flow, wave, scale, compare, bits, dial, graph, board, try: tryIt };
+  const R = { leds, coords, part, circuit, flow, wave, scale, compare, bits, dial, graph, board, try: tryIt };
 
   function render(el, v) {
     const fn = R[v.type];

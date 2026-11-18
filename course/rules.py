@@ -72,12 +72,13 @@ XP = {
     "quiz_first_try": 10,  # ...on the first try
     "extension": 25,      # each extension you add
     "ship": 50,           # turned in your MakeCode share link
+    "rating": 10,         # rated the lesson (the feedback report)
     "complete": 50,       # whole lesson finished
     "badge": 25,          # every badge is also worth XP
 }
 LABELS = {"mission": "Mission accepted", "step": "Step done", "quiz": "Quiz passed", "quiz_perfect": "Perfect quiz",
           "quiz_first_try": "Perfect on the first try", "extension": "Extension added", "ship": "Project shipped",
-          "complete": "Lesson complete!"}
+          "complete": "Lesson complete!", "rating": "Thanks for rating the lesson"}
 QUIZ_PASS = 0.75
 
 # ---------------------------------------------------------------- levels

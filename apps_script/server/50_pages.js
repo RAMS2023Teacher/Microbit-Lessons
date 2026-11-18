@@ -61,6 +61,7 @@ function teacherPage_(path) {
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
+  if ((m = /^\/teacher\/feedback(?:\/(\w+))?$/.exec(path))) return { name: 'feedback', title: 'Lesson feedback', data: merge_(base, feedbackReport(m[1])) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { courses: allCourses_(), urls: cfg.videos }) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, { courses: allCourses_() }) };
@@ -162,7 +163,7 @@ function lessonPage_(lid, rec, cfg, base, teacher) {
            data: merge_(base, { lesson: publicLesson_(L), state: state, stage: currentStage_(L, p), stages: stagesDone_(L, p),
                                 lesson_xp: rec ? lessonXp_(rec, lid) : 0, xp_possible: possibleXp_(L), stars: lessonStars_(L, p),
                                 pct: percent_(p, L), feedback: rec ? ((cfg.feedback[rec.email] || {})[lid] || '') : '',
-                                video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url, help: rec ? !!helpGet_(rec.email) : false,
+                                video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url, help: rec ? !!helpGet_(rec.email) : false, my_fb: myFeedback_(rec, lid),
                                 key: teacher ? { quiz: L.quiz.map(function (q) { return q.choices[q.answer]; }), notes: L.teacher_notes || '',
                                                  standards: L.standards_full || [] } : null }) };
 }
@@ -264,7 +265,7 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';

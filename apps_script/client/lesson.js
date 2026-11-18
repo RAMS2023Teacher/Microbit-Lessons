@@ -34,6 +34,74 @@
       btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
       if (was && !locked) { C.sound('ready'); btn.classList.remove('unlocked-now'); void btn.offsetWidth; btn.classList.add('unlocked-now'); }
     }
+    // ------------------------------------------------------------ 🤔 feedback: "this was confusing" and the lesson rating
+    const myFb = d.my_fb || { flags: [], rating: 0 }, flagged = new Set(myFb.flags || []);
+    const REASONS = [['unclear', '😵 Instructions unclear'], ['broken', "🐞 Code didn't work"], ['hard', '🧗 Too hard'], ['easy', '😴 Too easy'], ['other', '💬 Other']];
+    function flagWidget(kind, i) {
+      const key = kind + ':' + i, wrap = el('div', 'flag-wrap');
+      const draw = () => {
+        wrap.innerHTML = '';
+        if (flagged.has(key)) { wrap.appendChild(el('span', 'flag-done', '🤔 Thanks! Your teacher will see this.')); return; }
+        const b = wrap.appendChild(el('button', 'flag-btn', kind === 'step' ? '🤔 Confusing?' : '🤔 This question was confusing'));
+        b.type = 'button';
+        b.addEventListener('click', () => {
+          wrap.innerHTML = '';
+          const pop = wrap.appendChild(el('div', 'flag-pop'));
+          pop.appendChild(el('b', '', 'What was confusing?'));
+          const row = pop.appendChild(el('div', 'flag-reasons'));
+          let reason = '';
+          REASONS.forEach(([id, label]) => {
+            const r = row.appendChild(el('button', 'flag-reason', label));
+            r.type = 'button';
+            r.addEventListener('click', () => { reason = id; row.querySelectorAll('.flag-reason').forEach((x) => x.classList.toggle('on', x === r)); });
+          });
+          const note = pop.appendChild(document.createElement('input'));
+          note.placeholder = 'Tell us more (optional)'; note.maxLength = 200;
+          const btns = pop.appendChild(el('div', 'row'));
+          const go = btns.appendChild(el('button', 'btn small go', 'Send'));
+          go.type = 'button';
+          const no = btns.appendChild(el('button', 'btn small ghost', 'Cancel'));
+          no.type = 'button';
+          no.addEventListener('click', draw);
+          go.addEventListener('click', async () => {
+            if (!reason) { C.nope(go, row); return; }
+            go.disabled = true;
+            const r = await ML.api(base + '/feedback', { kind, i, reason, note: note.value });
+            if (r && (r.ok || r.teacher)) { flagged.add(key); C.sound('tick'); }
+            draw();
+          });
+        });
+      };
+      draw();
+      return wrap;
+    }
+    function ratingCard() {
+      const card = el('div', 'panel-soft rate-card');
+      const FACES = ['😣', '😕', '😐', '🙂', '🤩'];
+      let pick = myFb.rating || 0;
+      card.innerHTML = `<h3>⭐ Rate this lesson ${myFb.rating ? '<small class="muted">(you can change it)</small>' : '<small class="muted">+10 XP</small>'}</h3>` +
+        `<div class="rate-faces">${FACES.map((f, k) => `<button type="button" class="rate-face${pick === k + 1 ? ' on' : ''}" data-r="${k + 1}" aria-label="${k + 1} out of 5">${f}</button>`).join('')}</div>` +
+        `<label class="ask-box"><b>What was the hardest part?</b> <span class="muted small">(optional)</span><textarea id="rate-hard" rows="2" maxlength="400"></textarea></label>` +
+        `<label class="ask-box"><b>What would make this lesson better?</b> <span class="muted small">(optional)</span><textarea id="rate-change" rows="2" maxlength="400"></textarea></label>` +
+        `<div class="row"><button type="button" class="btn go" id="rate-go">Send my rating</button><span class="saved" id="rate-msg"></span></div>`;
+      card.querySelector('#rate-hard').value = myFb.hardest || '';
+      card.querySelector('#rate-change').value = myFb.change || '';
+      card.querySelectorAll('.rate-face').forEach((b) => b.addEventListener('click', () => {
+        pick = +b.dataset.r; C.sound('tick');
+        card.querySelectorAll('.rate-face').forEach((x) => x.classList.toggle('on', x === b));
+      }));
+      card.querySelector('#rate-go').addEventListener('click', async () => {
+        const msg = card.querySelector('#rate-msg');
+        if (!pick) { msg.textContent = 'Tap a face first.'; C.nope(card.querySelector('#rate-go'), card.querySelector('.rate-faces')); return; }
+        const r = await ML.api(base + '/feedback', { kind: 'rating', rating: pick, hardest: card.querySelector('#rate-hard').value, change: card.querySelector('#rate-change').value });
+        if (r.rewards && window.showRewards) window.showRewards(r.rewards);
+        if (r.level) ML.updateLevel(r.level);
+        if (r.ok || r.teacher) { myFb.rating = pick; myFb.hardest = card.querySelector('#rate-hard').value; myFb.change = card.querySelector('#rate-change').value; }
+        msg.textContent = r.ok ? 'Thanks! Saved ✓' : r.teacher ? '(Teacher preview: not saved)' : (r.error || 'Could not save');
+      });
+      return card;
+    }
+
     function flagTodo(els) {
       els.forEach((x) => { x.classList.remove('todo'); void x.offsetWidth; x.classList.add('todo'); setTimeout(() => x.classList.remove('todo'), 2200); });
       if (els[0] && els[0].scrollIntoView) els[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -212,6 +280,7 @@
         `<div class="step-nav"><button type="button" class="btn ghost" id="step-back" ${i ? '' : 'disabled'}>◀ Back</button>` +
         `<span class="need" id="step-need"></span><span class="saved" id="step-saved"></span>` +
         `<button type="button" class="btn go big" id="step-next">${last ? 'Got it! On to the quiz ▶' : 'Got it! Next ▶'}</button></div></section>`;
+      box.querySelector('.step-head').after(flagWidget('step', i));
       if (St.ask) $('step-ask').value = row.answer || '';
       box.querySelectorAll('[data-field]').forEach((inp) => { inp.value = (row.fields || [])[+inp.dataset.field] || ''; });
       afterDraw(box);
@@ -274,6 +343,7 @@
           b.addEventListener('click', () => { if (box.dataset.graded) return; picks[qi] = ci; C.sound('tick'); mark(); });
         });
         card.appendChild(el('p', 'quiz-why'));
+        card.appendChild(flagWidget('quiz', qi));
       });
       function mark(res) {
         qs.querySelectorAll('.quiz-q').forEach((card, qi) => {
@@ -336,6 +406,7 @@
         `<div class="share-row"><input id="share" placeholder="https://makecode.microbit.org/_…" aria-label="MakeCode share link"></div></div>` +
         `<div class="step-nav"><span class="saved" id="ship-saved"></span><span class="missing" id="ship-missing"></span>` +
         `<button type="button" class="btn go big" id="ship-go">Ship it! 🚀</button></div></section>`;
+      box.querySelector('.panel').appendChild(ratingCard());
       $('share').value = S.share || '';
       box.querySelectorAll('[data-reflect]').forEach((t) => { t.value = reflect[+t.dataset.reflect] || ''; });
       afterDraw(box);

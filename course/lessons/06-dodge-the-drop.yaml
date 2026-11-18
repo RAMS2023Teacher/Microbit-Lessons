@@ -131,26 +131,31 @@ build:
     ask: Change 300 to 600 (in both places). Is it more sensitive or less sensitive now? How do you know?
 
   - part: "Part 2: Build the game"
-    title: The game plan
+    title: "The game plan: every LED has an address"
     say: |
-      **You** are stuck on the bottom row. A **raindrop** falls from the top. Tilt to move left and right.
-      Dodge the drop to score a point. Get hit and it's game over.
+      **You are the 🙂 player** on the **bottom row**. A **💧 raindrop** falls from the top. Tilt to dodge it!
 
-      **Coordinates:** x goes 0 to 4, left to right. y goes 0 to 4, top to bottom. The top-left LED is (0, 0).
-
-      **New word: sprite.** A sprite is a game character. On the micro:bit, a sprite is one glowing LED you can move.
+      To move things, the game needs **addresses**. Each LED has two numbers, like a seat in a theater:
+      **x = the column** (count across from the left). **y = the row** (count down from the top).
+      Both start at **0**.
     picture:
-      type: leds
-      image: "00090:00000:00000:00000:09000"
-      caption: Which LED is the player on the bottom row? Which is the drop?
+      type: coords
+      marks:
+        - {x: 1, y: 4, icon: "🙂", label: "you, the player", color: green}
+        - {x: 3, y: 0, icon: "💧", label: "the raindrop", color: blue}
+      ask: true
+      caption: "On the real micro:bit both are red LEDs. The player is always the one on the bottom row."
     do:
-      - Go back to the MakeCode home page and make a **New Project** named **Dodge the Drop**.
-      - Switch to **Python** and delete the starter code.
-      - From now on you'll keep **adding** to the same program. Don't delete your code!
+      - Make a **New Project** named **Dodge the Drop**, switch to **Python**, and delete the starter code.
+      - "Try addresses: type `led.plot(0, 0)` and run it. The top-left LED lights up. Then try `led.plot(4, 0)` and `led.plot(2, 4)`."
+      - Point at each lit LED with your partner and say its column and row out loud.
+      - Delete the `led.plot` lines. From now on you'll keep **adding** to this program.
+    tip: "**Memory trick:** x is a cross, so it goes **across**. y has a tail that hangs **down**."
     test:
-      - I have a new, empty project called Dodge the Drop
-    fields: ["Player x", "Player y"]
-    ask: In the picture, where is the player? Write its x and y.
+      - led.plot(2, 4) lit the middle LED of the bottom row
+      - I have a Dodge the Drop project with the led.plot lines deleted
+    fields: ["🙂 Player column (x)", "🙂 Player row (y)", "💧 Drop column (x)", "💧 Drop row (y)"]
+    ask: The player always has the same row number (y). What is it, and why?
 
   - part: "Part 2: Build the game"
     title: Make the two sprites
@@ -161,7 +166,7 @@ build:
       player = game.create_sprite(2, 4)
       drop = game.create_sprite(randint(0, 4), 0)
     new: "1-2"
-    what: "`game.create_sprite(2, 4)` makes a sprite at x 2, y 4: the bottom middle. `randint(0, 4)` picks a random whole number from 0 to 4, so the drop starts in a random column on the top row."
+    what: "`game.create_sprite(2, 4)` makes the player at column 2, row 4: the middle of the bottom row. `randint(0, 4)` picks a random whole number from 0 to 4, so the drop starts in a random column on the top row."
     test:
       - I see one LED on the bottom row, in the middle
       - I see one LED somewhere on the top row
@@ -396,6 +401,9 @@ teacher_notes: |
   * **Timing:** two class periods. Part 1 (warm-ups) on day 1, Part 2 and an extension on day 2.
   * **Most common bugs:** indentation (lines inside `if` / `elif` are pushed in twice), lowercase `x` vs capital
     `X`/`Y` in `LedSpriteProperty`, and `=` instead of `==` in the scoring step.
+  * **x and y:** students found coordinates confusing, so the game plan step has them light LEDs with
+    `led.plot(x, y)` before the game uses x and y. Have partners point at the screen and say "column, row" out loud.
+    Quick check: "Where is (0, 4)?" (bottom-left).
   * **Tilt in the simulator:** move the mouse over the simulator picture. On a real micro:bit, students tilt it.
   * **Game over step:** remind students to change `if` to `elif`. Otherwise a hit on the bottom row can also score a point.
   * Students turn in their MakeCode **share link** in Ship it. Open it from the gradebook to see their code.

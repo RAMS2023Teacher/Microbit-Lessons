@@ -5,6 +5,7 @@
 //   /api/lessons/<id>/quiz     {answers}                      graded here, so answers never reach the browser
 //   /api/lessons/<id>/ship     {share, ext, reflect, submit}  save Ship it (submit: true turns it in)
 //   /api/lessons/<id>/partner  {action: pair|leave, partner_id}
+//   /api/lessons/<id>/feedback {kind: step|quiz|rating, ...}   (60_feedback.js)
 //   /api/avatar                {body, color, ...}
 //   /api/shop/buy              {item: 'part:eyes:star' | 'power:turbo'}      (35_arcade.js)
 //   /api/arcade/start, /api/arcade/finish {run_id, score}                    Robot Rush
@@ -51,10 +52,11 @@ function api(path, bodyJson) {
     if (path === '/api/help') return { status: 200, body: helpApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
-    var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner)$/.exec(path);
+    var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner|feedback)$/.exec(path);
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];
     if (!L) return { status: 404, body: { error: 'No such lesson' } };
+    if (whoIs_().teacher && m[2] === 'feedback') return { status: 200, body: { ok: true, teacher: true } };
     if (whoIs_().teacher && m[2] !== 'quiz') return { status: 200, body: { ok: true, teacher: true } };   // previews don't save
     if (whoIs_().teacher) return { status: 200, body: { ok: true, quiz: gradeQuiz_(L, (body.answers || []).slice(0, L.quiz.length)) } };
     var ctx = student_();
@@ -95,6 +97,7 @@ var RUN_ = {
   unlinkClassroom: function (a) { return unlinkClassroom(a[0]); },
   arcadeClass: function (a) { return arcadeClass(a[0], a[1], a[2]); },
   helpList: function (a) { return helpList(a[0]); },
+  feedbackReport: function (a) { return feedbackReport(a[0]); },
   helpResolve: function (a) { return helpResolve(a[0], a[1]); },
 };
 function runCall_(d) {
@@ -133,12 +136,15 @@ var API_ = {
     if (!Array.isArray(answers) || answers.length !== L.quiz.length) throw badRequest_('Answer every question first.');
     var g = gradeQuiz_(L, answers);
     p.quiz_answers = answers;
+    if (!p.quiz_first) p.quiz_first = answers.slice();       // first try: the feedback report shows which questions trip students up
     p.quiz_score = g.score;
     p.quiz_total = g.total;
     p.quiz_best = Math.max(p.quiz_best || 0, g.score);
     p.quiz_attempts = (p.quiz_attempts || 0) + 1;
     return finish_(ctx, L, p, { quiz: g });
   },
+
+  feedback: function (ctx, L, p, d) { return lessonFeedback_(ctx, L, d); },
 
   ship: function (ctx, L, p, d) {
     if (d.share !== undefined) p.share = text_(d.share, 300).trim();
@@ -221,6 +227,7 @@ function mergeProgress_(a, b) {
     a.quiz_best = b.quiz_best; a.quiz_total = b.quiz_total; a.quiz_answers = b.quiz_answers; a.quiz_score = b.quiz_score;
   }
   a.quiz_attempts = Math.max(a.quiz_attempts || 0, b.quiz_attempts || 0);
+  if (!a.quiz_first && b.quiz_first) a.quiz_first = b.quiz_first;
   a.ext = a.ext || {};
   Object.keys(b.ext || {}).forEach(function (k) { if (b.ext[k]) a.ext[k] = true; });
   if (!a.share && b.share) a.share = b.share;
@@ -238,6 +245,7 @@ function mirrorToPartner_(ctx, L, p) {
   if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; return null; }   // they paired with someone else
   var copy = JSON.parse(JSON.stringify(p));
   copy.partner = ctx.rec.email;
+  if (theirs && theirs.quiz_first) copy.quiz_first = theirs.quiz_first;      // each keeps their own first try (feedback report)
   mate.progress[L.id] = copy;
   syncRewards_(mate, ctx.cfg);
   saveStudent_(mate);

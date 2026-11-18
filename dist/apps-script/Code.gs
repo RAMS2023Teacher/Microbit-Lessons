@@ -167,7 +167,7 @@ function studentSummary_(rec) {
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
-           xp_recent: recentXp_(rec),
+           xp_recent: recentXp_(rec), fb: fbSummary_(rec),
            arcade: rec.arcade ? { best: rec.arcade.best || 0, day: rec.arcade.day || '', day_best: rec.arcade.day_best || 0 } : null };
 }
 
@@ -369,6 +369,10 @@ function syncRewards_(rec, cfg) {
       if (rec.xp_keys['complete:' + lid] === undefined) openArcade_(rec);     // a finished lesson opens Robot Rush for a few minutes
       award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
     }
+  });
+  Object.keys(rec.lesson_fb || {}).forEach(function (lid) {     // rating a lesson (60_feedback.js)
+    var L = DATA.lessons[lid];
+    if (L && rec.lesson_fb[lid].rating) award_(rec, 'rate:' + lid, X.rating, T.rating + ' · ' + L.title, gained);
   });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });
   var newBadges = [], earned = badgeChecks_(rec, cfg);
@@ -702,6 +706,11 @@ function helpApi_(d) {
     var req = { who: helpWho_(email), email: email, name: ctx.rec.name, classes: studentClassIds_(ctx.rec, ctx.cfg), at: now_(),
                 where: where, note: text_(d.note, 140).replace(/\s+/g, ' ').trim(), avatar: avatarOf_(ctx.rec) };
     props.setProperty('help:' + email, JSON.stringify(req));
+    if (L && d.stage === 'build') {                           // the feedback report counts help requests per step
+      var fb = fbOf_(ctx.rec, L.id), k = String(Math.max(0, Number(d.step) || 0));
+      fb.help[k] = (fb.help[k] || 0) + 1;
+      saveStudent_(ctx.rec);
+    }
     return { ok: true, help: { at: req.at } };
   }
   var mine = helpGet_(email);
@@ -745,6 +754,7 @@ function helpResolve(cid, who) {
 //   /api/lessons/<id>/quiz     {answers}                      graded here, so answers never reach the browser
 //   /api/lessons/<id>/ship     {share, ext, reflect, submit}  save Ship it (submit: true turns it in)
 //   /api/lessons/<id>/partner  {action: pair|leave, partner_id}
+//   /api/lessons/<id>/feedback {kind: step|quiz|rating, ...}   (60_feedback.js)
 //   /api/avatar                {body, color, ...}
 //   /api/shop/buy              {item: 'part:eyes:star' | 'power:turbo'}      (35_arcade.js)
 //   /api/arcade/start, /api/arcade/finish {run_id, score}                    Robot Rush
@@ -791,10 +801,11 @@ function api(path, bodyJson) {
     if (path === '/api/help') return { status: 200, body: helpApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
-    var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner)$/.exec(path);
+    var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner|feedback)$/.exec(path);
     if (!m) return { status: 404, body: { error: 'Not found' } };
     var L = DATA.lessons[m[1]];
     if (!L) return { status: 404, body: { error: 'No such lesson' } };
+    if (whoIs_().teacher && m[2] === 'feedback') return { status: 200, body: { ok: true, teacher: true } };
     if (whoIs_().teacher && m[2] !== 'quiz') return { status: 200, body: { ok: true, teacher: true } };   // previews don't save
     if (whoIs_().teacher) return { status: 200, body: { ok: true, quiz: gradeQuiz_(L, (body.answers || []).slice(0, L.quiz.length)) } };
     var ctx = student_();
@@ -835,6 +846,7 @@ var RUN_ = {
   unlinkClassroom: function (a) { return unlinkClassroom(a[0]); },
   arcadeClass: function (a) { return arcadeClass(a[0], a[1], a[2]); },
   helpList: function (a) { return helpList(a[0]); },
+  feedbackReport: function (a) { return feedbackReport(a[0]); },
   helpResolve: function (a) { return helpResolve(a[0], a[1]); },
 };
 function runCall_(d) {
@@ -873,12 +885,15 @@ var API_ = {
     if (!Array.isArray(answers) || answers.length !== L.quiz.length) throw badRequest_('Answer every question first.');
     var g = gradeQuiz_(L, answers);
     p.quiz_answers = answers;
+    if (!p.quiz_first) p.quiz_first = answers.slice();       // first try: the feedback report shows which questions trip students up
     p.quiz_score = g.score;
     p.quiz_total = g.total;
     p.quiz_best = Math.max(p.quiz_best || 0, g.score);
     p.quiz_attempts = (p.quiz_attempts || 0) + 1;
     return finish_(ctx, L, p, { quiz: g });
   },
+
+  feedback: function (ctx, L, p, d) { return lessonFeedback_(ctx, L, d); },
 
   ship: function (ctx, L, p, d) {
     if (d.share !== undefined) p.share = text_(d.share, 300).trim();
@@ -961,6 +976,7 @@ function mergeProgress_(a, b) {
     a.quiz_best = b.quiz_best; a.quiz_total = b.quiz_total; a.quiz_answers = b.quiz_answers; a.quiz_score = b.quiz_score;
   }
   a.quiz_attempts = Math.max(a.quiz_attempts || 0, b.quiz_attempts || 0);
+  if (!a.quiz_first && b.quiz_first) a.quiz_first = b.quiz_first;
   a.ext = a.ext || {};
   Object.keys(b.ext || {}).forEach(function (k) { if (b.ext[k]) a.ext[k] = true; });
   if (!a.share && b.share) a.share = b.share;
@@ -978,6 +994,7 @@ function mirrorToPartner_(ctx, L, p) {
   if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; return null; }   // they paired with someone else
   var copy = JSON.parse(JSON.stringify(p));
   copy.partner = ctx.rec.email;
+  if (theirs && theirs.quiz_first) copy.quiz_first = theirs.quiz_first;      // each keeps their own first try (feedback report)
   mate.progress[L.id] = copy;
   syncRewards_(mate, ctx.cfg);
   saveStudent_(mate);
@@ -1641,6 +1658,7 @@ function teacherPage_(path) {
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Robot Rush', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
+  if ((m = /^\/teacher\/feedback(?:\/(\w+))?$/.exec(path))) return { name: 'feedback', title: 'Lesson feedback', data: merge_(base, feedbackReport(m[1])) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
   if (path === '/teacher/videos') return { name: 'videos', title: 'Videos', data: merge_(base, { courses: allCourses_(), urls: cfg.videos }) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, { courses: allCourses_() }) };
@@ -1742,7 +1760,7 @@ function lessonPage_(lid, rec, cfg, base, teacher) {
            data: merge_(base, { lesson: publicLesson_(L), state: state, stage: currentStage_(L, p), stages: stagesDone_(L, p),
                                 lesson_xp: rec ? lessonXp_(rec, lid) : 0, xp_possible: possibleXp_(L), stars: lessonStars_(L, p),
                                 pct: percent_(p, L), feedback: rec ? ((cfg.feedback[rec.email] || {})[lid] || '') : '',
-                                video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url, help: rec ? !!helpGet_(rec.email) : false,
+                                video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url, help: rec ? !!helpGet_(rec.email) : false, my_fb: myFeedback_(rec, lid),
                                 key: teacher ? { quiz: L.quiz.map(function (q) { return q.choices[q.answer]; }), notes: L.teacher_notes || '',
                                                  standards: L.standards_full || [] } : null }) };
 }
@@ -1844,7 +1862,7 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher, nav: nav, data: page.data || {} };
   var globals = page.globals || {}, setup = 'window.ML=' + json_(ml) + ';';
@@ -1862,6 +1880,101 @@ function render_(me, page) {
     .setTitle((page.title ? page.title + ' · ' : '') + APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1'));
 }
-var BUILD_ID = "cdd76438f8";
-var BUILD_EXPECT = {"Assets": "db754c07ca", "Data": "4b5047d344"};
+
+// ---------------------------------------------------------------- lesson feedback and the report for improving lessons
+// Students flag a build step or quiz question as confusing, and rate the lesson at the end. Kept in the student's
+// record (rec.lesson_fb), not in lesson progress, so a partner's save never overwrites it. Help requests (37_help.js)
+// count up per step too. The teacher's Feedback page adds it all up, with first-try quiz misses, without names.
+
+var FB_REASONS_ = { unclear: 'The instructions were unclear', broken: "The code didn't work", hard: 'Too hard', easy: 'Too easy or boring', other: 'Something else' };
+
+function fbOf_(rec, lid) {
+  rec.lesson_fb = rec.lesson_fb || {};
+  return rec.lesson_fb[lid] || (rec.lesson_fb[lid] = { flags: {}, help: {} });
+}
+
+/** /api/lessons/<id>/feedback  {kind: 'step' | 'quiz', i, reason, note}  or  {kind: 'rating', rating 1-5, hardest, change} */
+function lessonFeedback_(ctx, L, d) {
+  var fb = fbOf_(ctx.rec, L.id), i = Math.floor(Number(d.i));
+  if (d.kind === 'step' || d.kind === 'quiz') {
+    var list = d.kind === 'step' ? L.build : L.quiz;
+    if (!(i >= 0 && i < list.length)) throw badRequest_('No such ' + d.kind + '.');
+    if (!FB_REASONS_[d.reason]) throw badRequest_('Pick a reason.');
+    fb.flags[d.kind + ':' + i] = { reason: d.reason, note: text_(d.note, 200).trim(), at: now_() };
+    saveStudent_(ctx.rec);
+    return { ok: true, flagged: d.kind + ':' + i };
+  }
+  if (d.kind === 'rating') {
+    var r = Math.round(Number(d.rating));
+    if (!(r >= 1 && r <= 5)) throw badRequest_('Pick how much you liked it.');
+    fb.rating = r;
+    fb.hardest = text_(d.hardest, 400).trim();
+    fb.change = text_(d.change, 400).trim();
+    fb.rated_at = now_();
+    var rewards = syncRewards_(ctx.rec, ctx.cfg);
+    saveStudent_(ctx.rec);
+    return { ok: true, rating: r, rewards: rewards, level: levelInfo_(ctx.rec.xp || 0) };
+  }
+  throw badRequest_('Unknown feedback.');
+}
+
+/** What the lesson page needs to show what this student already said. */
+function myFeedback_(rec, lid) {
+  var fb = (rec && rec.lesson_fb && rec.lesson_fb[lid]) || {};
+  return { flags: Object.keys(fb.flags || {}), rating: fb.rating || 0, hardest: fb.hardest || '', change: fb.change || '' };
+}
+
+/** Small copy for the summary file: the report reads every student from there. */
+function fbSummary_(rec) {
+  var out = {};
+  Object.keys(rec.lesson_fb || {}).forEach(function (lid) {
+    var f = rec.lesson_fb[lid];
+    out[lid] = { flags: f.flags || {}, help: f.help || {}, rating: f.rating || 0, hardest: f.hardest || '', change: f.change || '' };
+  });
+  Object.keys(rec.progress || {}).forEach(function (lid) {
+    var p = rec.progress[lid], first = p.quiz_first || p.quiz_answers;
+    if (first) (out[lid] = out[lid] || { flags: {}, help: {} }).quiz = first;
+  });
+  return out;
+}
+
+/** Teacher: everything students said about each lesson in a course. No names. */
+function feedbackReport(grade) {
+  var cfg = teacher_(), sum = summary_(true), cid = DATA.courses[grade] ? grade : DATA.default_course;
+  var lessons = lessonList_(cid).map(function (L) {
+    var x = { id: L.id, number: L.number, title: L.title, file: L.file, ratings: [0, 0, 0, 0, 0], hardest: [], change: [],
+              started: 0, finished: 0, steps: L.build.map(function (st, i) { return { n: i + 1, title: st.title, flags: 0, reasons: {}, notes: [], help: 0 }; }),
+              quiz: L.quiz.map(function (q, i) { return { n: i + 1, question: q.question.replace(/<[^>]+>/g, ''), answered: 0, missed: 0, flags: 0, reasons: {}, notes: [] }; }) };
+    Object.keys(sum.students).forEach(function (email) {
+      var s = sum.students[email], f = (s.fb || {})[L.id], prog = (s.lessons || {})[L.id];
+      if (prog) { x.started++; if (prog.pct === 100) x.finished++; }
+      if (!f) return;
+      if (f.rating) x.ratings[f.rating - 1]++;
+      if (f.hardest) x.hardest.push(f.hardest);
+      if (f.change) x.change.push(f.change);
+      Object.keys(f.flags || {}).forEach(function (k) {
+        var parts = k.split(':'), item = (parts[0] === 'step' ? x.steps : x.quiz)[+parts[1]], fl = f.flags[k];
+        if (!item) return;
+        item.flags++;
+        item.reasons[fl.reason] = (item.reasons[fl.reason] || 0) + 1;
+        if (fl.note) item.notes.push(fl.note);
+      });
+      Object.keys(f.help || {}).forEach(function (k) { if (x.steps[+k]) x.steps[+k].help += f.help[k]; });
+      (f.quiz || []).forEach(function (a, qi) {
+        if (!L.quiz[qi]) return;
+        x.quiz[qi].answered++;
+        if (a !== L.quiz[qi].answer) x.quiz[qi].missed++;
+      });
+    });
+    var n = x.ratings.reduce(function (t, c) { return t + c; }, 0);
+    x.rated = n;
+    x.avg = n ? Math.round(10 * x.ratings.reduce(function (t, c, i) { return t + c * (i + 1); }, 0) / n) / 10 : null;
+    return x;
+  });
+  return { grade: cid, grade_name: DATA.courses[cid].name, grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].short }; }),
+           students: Object.keys(sum.students).length, reasons: FB_REASONS_, lessons: lessons,
+           generated: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') };
+}
+var BUILD_ID = "5a9661c6a5";
+var BUILD_EXPECT = {"Assets": "0dffa4fdd4", "Data": "c391ebe738"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

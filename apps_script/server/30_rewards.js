@@ -104,6 +104,10 @@ function syncRewards_(rec, cfg) {
       award_(rec, 'complete:' + lid, X.complete, T.complete + t, gained);
     }
   });
+  Object.keys(rec.lesson_fb || {}).forEach(function (lid) {     // rating a lesson (60_feedback.js)
+    var L = DATA.lessons[lid];
+    if (L && rec.lesson_fb[lid].rating) award_(rec, 'rate:' + lid, X.rating, T.rating + ' · ' + L.title, gained);
+  });
   ((cfg.bonuses || {})[rec.email] || []).forEach(function (b) { award_(rec, b.key, b.amount, b.reason, gained); });
   var newBadges = [], earned = badgeChecks_(rec, cfg);
   Object.keys(earned).sort().forEach(function (bid) {

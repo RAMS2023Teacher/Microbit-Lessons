@@ -225,6 +225,26 @@ help(S, { action: 'ask', lesson: LID, stage: 'quiz' });
 assert.strictEqual(help(S, { action: 'cancel' }).help, null);
 assert.throws(() => w.call(S, 'helpList', [cls.id]), /Only the teacher/);
 
+// 🤔 feedback: flags, a rating (+XP), first-try quiz misses and help counts in the teacher's report, without names
+assert.ok(api(S, 'feedback', { kind: 'step', i: 3, reason: 'unclear', note: 'where does the line go' }).body.ok);
+assert.ok(api(S2, 'feedback', { kind: 'step', i: 3, reason: 'broken' }).body.ok);
+assert.ok(api(S, 'feedback', { kind: 'quiz', i: 1, reason: 'hard' }).body.ok);
+assert.strictEqual(api(S, 'feedback', { kind: 'step', i: 99, reason: 'unclear' }).status, 400);
+assert.strictEqual(api(S, 'feedback', { kind: 'step', i: 1, reason: 'nope' }).status, 400);
+const rate = api(S, 'feedback', { kind: 'rating', rating: 4, hardest: 'the game over part', change: 'more time' }).body;
+assert.ok(rate.ok && rate.rewards.items.some((x) => /rating/.test(x.reason)), JSON.stringify(rate));
+assert.ok(pageData(S, '/lessons/' + LID).my_fb.flags.includes('step:3') && pageData(S, '/lessons/' + LID).my_fb.rating === 4);
+const rep = w.call(T, 'feedbackReport', ['g7']);
+const fl = rep.lessons.find((l) => l.id === LID);
+assert.ok(fl.file === 'course/lessons/06-dodge-the-drop.yaml' && fl.avg === 4 && fl.rated === 1, JSON.stringify(fl.ratings));
+assert.ok(fl.steps[3].flags === 2 && fl.steps[3].reasons.unclear === 1 && fl.steps[3].notes[0] === 'where does the line go');
+assert.ok(fl.steps[3].help >= 1, 'help requests are counted per step');
+assert.ok(fl.quiz[0].answered >= 1 && fl.quiz[0].missed >= 1, JSON.stringify(fl.quiz[0]));         // Sam's first try was all wrong
+assert.ok(fl.hardest.includes('the game over part') && fl.change.includes('more time'));
+assert.ok(!JSON.stringify(rep).includes('@') && !JSON.stringify(rep).includes('Sam K'));
+assert.ok(/"page":"feedback"/.test(pageView(T, '/teacher/feedback')) && w.call(T, 'feedbackReport', ['g6']).lessons.length === 10);
+assert.throws(() => w.call(S, 'feedbackReport', ['g7']), /Only the teacher/);
+
 // creating or importing a class has to say which grade
 assert.throws(() => w.call(T, 'createClass', ['No grade']), /6th or 7th/);
 w.state.classroom.courses = [{ id: 'gc1', name: '6th Grade CS', section: 'Period 2' }];
