@@ -153,7 +153,14 @@
     });
   }
 
-  window.RobotAvatar = { svg, renderAll };
+  /** A student's calling card (the title under their name) as HTML, or '' if they wear none. */
+  function card(spec, cls) {
+    if (!spec || !spec.card_text) return '';
+    const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    return `<span class="call-card s-${esc(spec.card_style || 'plain')}${cls ? ' ' + cls : ''}">${esc(spec.card_text)}</span>`;
+  }
+
+  window.RobotAvatar = { svg, renderAll, card };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => renderAll());
   else renderAll();
 })();

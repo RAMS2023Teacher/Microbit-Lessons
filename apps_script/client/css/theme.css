@@ -594,3 +594,22 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .game-tab.is-locked { background: #e5e7eb; color: #6b7280; }
 .game-tab.is-locked .game-tab-icon { filter: grayscale(1); }
 .won-parts { margin-top: 8px; padding: 8px 12px; border-radius: 12px; background: #fff7d6; border: 2px solid #facc15; }
+
+/* calling cards: a title a student wears under their name */
+.call-card { display: inline-block; font-weight: 800; font-size: .9rem; line-height: 1.2; padding: 4px 12px; border-radius: 999px; border: 2px solid #1d2a5c; background: #eef2ff; color: #1d2a5c; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.call-card.s-earned { background: linear-gradient(135deg, #1d2a5c, #3730a3); color: #fde68a; border-color: #facc15; }
+.call-card.s-silly { background: linear-gradient(135deg, #fde047, #fb7185); color: #1d2a5c; border-color: #1d2a5c; transform: rotate(-1.5deg); }
+.call-card.s-arcade { background: #0b1229; color: #67e8f9; border-color: #f472b6; box-shadow: 0 0 0 2px rgba(244, 114, 182, .35), 0 0 12px rgba(103, 232, 249, .45); }
+.call-card.big { font-size: 1.1rem; padding: 6px 16px; }
+.call-card.tiny { font-size: .68rem; padding: 1px 8px; border-width: 1.5px; }
+.card-preview { text-align: center; margin: 6px 0 10px; min-height: 34px; }
+.card-line { margin: 2px 0 8px; } .card-line a { text-decoration: none; }
+.part-options.cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.part-opt.card-opt { min-height: 74px; justify-content: center; }
+.part-opt.card-opt .call-card { font-size: .8rem; padding: 4px 8px; }
+.part-opt.card-opt .call-card { white-space: normal; text-align: center; border-radius: 14px; }
+.part-opt.card-opt.locked .call-card { filter: grayscale(.9); opacity: .7; }
+.part-opt.card-opt.locked.for-sale .call-card { filter: none; opacity: 1; }
+.board li.has-card { grid-template-columns: 30px auto minmax(0, 1fr) auto; }
+.board li.has-card b { grid-column: 3; } .board li.has-card .call-card { grid-column: 3; justify-self: start; margin-top: -4px; }
+.board li.has-card .rank, .board li.has-card [data-avatar], .board li.has-card .score { grid-row: span 2; align-self: center; }

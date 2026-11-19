@@ -10,18 +10,21 @@
   function preview() {
     state.name = $('avatar-name').value;
     $('avatar-preview').innerHTML = RobotAvatar.svg(state, 220);
+    const mine = (C.card || []).filter((o) => o.id === state.card)[0];
+    if ($('card-preview')) $('card-preview').innerHTML = mine && mine.id !== 'none' ? RobotAvatar.card({ card_text: mine.label, card_style: mine.style }, 'big') : '<span class="muted small">No calling card yet</span>';
   }
 
   function options() {
     const box = $('part-options');
     box.innerHTML = '';
+    box.classList.toggle('cards', part === 'card');
     C[part].forEach((opt) => {
       const b = document.createElement('button');
       b.type = 'button';
       const forSale = !opt.unlocked && opt.cost > 0;
-      b.className = 'part-opt' + (state[part] === opt.id ? ' chosen' : '') + (opt.unlocked ? '' : ' locked') + (forSale ? ' for-sale' : '');
+      b.className = 'part-opt' + (part === 'card' ? ' card-opt' : '') + (state[part] === opt.id ? ' chosen' : '') + (opt.unlocked ? '' : ' locked') + (forSale ? ' for-sale' : '');
       const look = Object.assign({}, state, { [part]: opt.id });
-      b.innerHTML = RobotAvatar.svg(look, 64) + `<span>${opt.unlocked ? '' : forSale ? '🛒 ' : '🔒 '}${opt.label}</span>` +
+      b.innerHTML = (part === 'card' ? (opt.id === 'none' ? '<span class="call-card s-plain">—</span>' : RobotAvatar.card({ card_text: opt.label, card_style: opt.style })) : RobotAvatar.svg(look, 64)) + `<span>${opt.unlocked ? '' : forSale ? '🛒 ' : '🔒 '}${part === 'card' && opt.id !== 'none' ? (opt.unlocked ? 'Yours' : '') : opt.label}</span>` +
         (opt.unlocked ? '' : forSale ? `<small class="price">${opt.cost} XP</small>` : `<small>${opt.how}</small>`);
       b.title = opt.unlocked ? opt.label : `${opt.label} — ${opt.how}`;
       b.setAttribute('aria-pressed', state[part] === opt.id);

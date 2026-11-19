@@ -127,9 +127,9 @@ BADGES = [
 # or ("rush", n) / ("circuit", n): score n points in one race of that arcade game.
 # Spending never lowers a level: levels count all the XP ever earned; the shop spends from "XP to spend".
 AVATAR_PARTS = {"body": "Body", "color": "Color", "eyes": "Eyes", "mouth": "Mouth",
-                "antenna": "Antenna", "accessory": "Accessory", "bg": "Background"}
+                "antenna": "Antenna", "accessory": "Accessory", "bg": "Background", "card": "Calling card"}
 DEFAULT_AVATAR = {"body": "box", "color": "teal", "eyes": "round", "mouth": "smile",
-                  "antenna": "ball", "accessory": "none", "bg": "sky", "name": ""}
+                  "antenna": "ball", "accessory": "none", "bg": "sky", "card": "none", "name": ""}
 AVATAR_OPTIONS = {
     "body": [("box", "Boxy", None), ("round", "Dome", None), ("tall", "Tall", ("level", 3)),
              ("tank", "Tank treads", ("level", 6)), ("hover", "Hover jets", ("badge", "robot-builder"))],
@@ -167,7 +167,31 @@ AVATAR_OPTIONS = {
            ("ocean", "Ocean", ("cost", 150)), ("lava", "Volcano", ("cost", 150)), ("rainbow", "Rainbow", ("cost", 250)),
            ("dusk", "Sunset sky", ("cost", 150)), ("matrix", "Code rain", ("cost", 200)),
            ("arcade", "Arcade lights", ("rush", 3500)), ("pcb", "Race track", ("circuit", 3000))],
+    # Calling cards: a title shown under the student's name (home page, My robot, arcade leaderboards, class display).
+    # Earned ones are serious, bought ones are silly, and a few are won in the arcade. The look comes from CARD_STYLES.
+    "card": [("none", "No card", None), ("new-maker", "🔰 New Maker", None),
+             ("bug-squasher", "🐛 Bug Squasher", ("level", 2)), ("loop-master", "🔁 Loop Master", ("level", 4)),
+             ("expert-coder", "💻 Expert Coder", ("level", 6)), ("python-pro", "🐍 Python Pro", ("level", 8)),
+             ("lab-legend", "👑 Lab Legend", ("level", 10)),
+             ("circuit-builder", "🔌 Circuit Builder", ("badge", "circuit-builder")), ("wire-wizard", "🪄 Wire Wizard", ("badge", "wire-wizard")),
+             ("game-maker", "🎮 Game Maker", ("badge", "game-maker")), ("micro-maestro", "🎵 Micro Maestro", ("badge", "musician")),
+             ("sensor-specialist", "📡 Sensor Specialist", ("badge", "echo-hunter")), ("robot-engineer", "🤖 Robot Engineer", ("badge", "robot-builder")),
+             ("quiz-whiz", "🧠 Quiz Whiz", ("badge", "quiz-whiz")), ("sharpshooter", "🎯 Sharpshooter", ("badge", "sharpshooter")),
+             ("team-player", "🤝 Team Player", ("badge", "teamwork")), ("remix-artist", "🎨 Remix Artist", ("badge", "remixer")),
+             ("ai-trainer", "🧬 AI Trainer", ("badge", "ai-trainer")), ("game-designer", "🕹️ Game Designer", ("badge", "game-designer")),
+             ("master-maker", "🎓 Master Maker", ("badge", "graduate")), ("teachers-pick", "🍎 Teacher's Pick", ("badge", "teachers-pick")),
+             ("beep-boop", "📢 Beep Boop Beep", ("cost", 60)), ("snacks", "🍕 Powered by Snacks", ("cost", 60)),
+             ("button-masher", "🔘 Button Masher", ("cost", 70)), ("low-battery", "🪫 Low Battery", ("cost", 70)),
+             ("forgot-indent", "😱 Forgot the Indent", ("cost", 80)), ("napper", "😴 Professional Napper", ("cost", 80)),
+             ("banana", "🍌 Certified Banana", ("cost", 90)), ("my-chromebook", "🤷 It Worked on My Chromebook", ("cost", 100)),
+             ("spaghetti", "🍝 Spaghetti Wiring Expert", ("cost", 100)), ("not-found", "🔍 404: Title Not Found", ("cost", 110)),
+             ("chaos", "🌪️ Agent of (Organized) Chaos", ("cost", 120)), ("duck", "🦆 Rubber Duck Debugger", ("cost", 150)),
+             ("one-more-try", "🔂 Just One More Try", ("cost", 150)),
+             ("bug-dodger", "🏃 Bug Dodger", ("rush", 2000)), ("arcade-champ", "🏆 Arcade Champion", ("rush", 4000)),
+             ("pit-crew", "🛞 Pit Crew", ("circuit", 1500)), ("speed-demon", "🏎️ Speed Demon", ("circuit", 3000))],
 }
+# How a calling card looks: "earned" (navy and gold), "silly" (bright), "arcade" (neon). Free ones are "plain".
+CARD_STYLES = {"level": "earned", "badge": "earned", "cost": "silly", "rush": "arcade", "circuit": "arcade"}
 
 # ---------------------------------------------------------------- Robot Rush (the arcade game)
 # Closed unless the teacher opens the arcade for a class. Finishing a lesson earns "minutes" of play time;

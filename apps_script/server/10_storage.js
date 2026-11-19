@@ -198,7 +198,7 @@ function studentSummary_(rec) {
                      shipped: !!p.shipped_at, share: p.share || '', stars: lessonStars_(L, p),
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
-  return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
+  return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar ? avatarOf_(rec) : null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
            xp_recent: recentXp_(rec), fb: fbSummary_(rec),
            arcade: rec.arcade ? { best: rec.arcade.best || 0, day: rec.arcade.day || '', day_best: rec.arcade.day_best || 0, games: rec.arcade.games || null } : null };

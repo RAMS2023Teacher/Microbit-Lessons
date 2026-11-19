@@ -79,6 +79,7 @@
       av.innerHTML = window.RobotAvatar.svg(s.avatar, 76);   // drawn from known parts, not typed text
       const info = t.appendChild(el('div', 'screen-who'));
       info.appendChild(el('b', '', s.name));
+      if (window.RobotAvatar.card(s.avatar)) info.insertAdjacentHTML('beforeend', window.RobotAvatar.card(s.avatar, 'tiny'));
       info.appendChild(el('span', '', s.where));
       const meter = info.appendChild(el('span', 'meter'));
       meter.appendChild(el('i')).style.width = s.pct + '%';
@@ -99,7 +100,7 @@
       const nm = r.appendChild(el('b', '', st.name));
       if (st.name.length > 6) nm.style.fontSize = `calc((var(--bot) * .2 + 13px) * ${(6.5 / st.name.length).toFixed(3)})`;   // long names shrink to fit
       if (data.settings.xp === 'each') r.appendChild(el('small', '', `Lv ${st.level || 1}`));
-      r.title = `${st.name}: ${st.where}`;
+      r.title = `${st.name}${st.avatar && st.avatar.card_text ? ' (' + st.avatar.card_text + ')' : ''}: ${st.where}`;
       if (st.idle) { r.classList.add('zzz'); r.title += ` · no clicks or typing for ${st.idle} min`; }
       return r;
     }

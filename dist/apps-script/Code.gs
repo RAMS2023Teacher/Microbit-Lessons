@@ -220,7 +220,7 @@ function studentSummary_(rec) {
                      shipped: !!p.shipped_at, share: p.share || '', stars: lessonStars_(L, p),
                      completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
   });
-  return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
+  return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar ? avatarOf_(rec) : null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
            xp_recent: recentXp_(rec), fb: fbSummary_(rec),
            arcade: rec.arcade ? { best: rec.arcade.best || 0, day: rec.arcade.day || '', day_best: rec.arcade.day_best || 0, games: rec.arcade.games || null } : null };
@@ -510,8 +510,11 @@ function mapData_(rec, assigned, cid) {
 function avatarOf_(rec) {
   var a = JSON.parse(JSON.stringify(DATA.default_avatar));
   if (rec && rec.avatar) Object.keys(a).forEach(function (k) { if (rec.avatar[k] !== undefined) a[k] = rec.avatar[k]; });
+  var card = (DATA.avatar_options.card || []).filter(function (o) { return o[0] === a.card; })[0];     // the calling card's words travel with the robot
+  if (card && card[0] !== 'none') { a.card_text = card[1]; a.card_style = cardStyle_(card[2]); }
   return a;
 }
+function cardStyle_(u) { return u ? (DATA.card_styles || {})[u[0]] || 'plain' : 'plain'; }
 function unlockText_(u) {
   if (!u) return '';
   if (u[0] === 'cost') return 'Buy it for ' + u[1] + ' XP';
@@ -529,7 +532,7 @@ function avatarCatalog_(rec, teacher) {
   Object.keys(DATA.avatar_options).forEach(function (part) {
     out[part] = DATA.avatar_options[part].map(function (o) {
       return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges, owned, part, o[0], bests), how: unlockText_(o[2]),
-               cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0 };
+               cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0, style: part === 'card' ? cardStyle_(o[2]) : undefined };
     });
   });
   return out;
@@ -1164,7 +1167,7 @@ function apiAvatar_(d) {
   ctx.rec.avatar = r.avatar;
   var rewards = syncRewards_(ctx.rec, ctx.cfg);
   saveStudent_(ctx.rec);
-  return { status: 200, body: { ok: true, avatar: r.avatar, rewards: rewards } };
+  return { status: 200, body: { ok: true, avatar: avatarOf_(ctx.rec), rewards: rewards } };
 }
 
 // ---------------------------------------------------------------- joining a class
@@ -2401,6 +2404,6 @@ function bugUpdate(id, status) {
 function bugCountNew_() {
   try { return readNamed_('bugs', []).filter(function (b) { return b.status === 'new'; }).length; } catch (e) { return 0; }
 }
-var BUILD_ID = "a12d8177f9";
-var BUILD_EXPECT = {"Assets": "33fe2d4516", "Data": "fe017c5b72"};
+var BUILD_ID = "18d0075efa";
+var BUILD_EXPECT = {"Assets": "69f16aabed", "Data": "8bd4752235"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

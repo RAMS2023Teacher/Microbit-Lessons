@@ -55,3 +55,26 @@ assert.ok(api(B, '/api/avatar', Object.assign({}, me.avatar, { accessory: 'helme
 assert.ok(d.shop.find((u) => u.id === 'grip'));
 assert.strictEqual(opt('color', 'ice').cost, 120);
 console.log('arcade games checks passed');
+
+// calling cards: free, bought, earned by level, and won in the arcade; the words travel with the robot
+{
+  const me2 = page(A, '/me'), card = (id) => me2.catalog.card.find((o) => o.id === id);
+  assert.strictEqual(card('new-maker').unlocked, true); assert.strictEqual(card('new-maker').style, 'plain');
+  assert.strictEqual(card('bug-squasher').unlocked, true, 'level 2 card at level 3');
+  assert.strictEqual(card('expert-coder').unlocked, false); assert.match(card('expert-coder').how, /level 6/);
+  assert.strictEqual(card('duck').cost, 150); assert.strictEqual(card('duck').style, 'silly');
+  assert.strictEqual(card('speed-demon').unlocked, false); assert.strictEqual(card('speed-demon').style, 'arcade');
+  assert.ok(api(A, '/api/avatar', Object.assign({}, me2.avatar, { card: 'expert-coder' })).error, 'locked card refused');
+  assert.ok(api(A, '/api/avatar', Object.assign({}, me2.avatar, { card: 'snacks' })).error, 'unbought card refused');
+  const buy = api(A, '/api/shop/buy', { item: 'part:card:snacks' });
+  assert.strictEqual(buy.ok, true, buy.error);
+  const saved = api(A, '/api/avatar', Object.assign({}, me2.avatar, { card: 'snacks' }));
+  assert.strictEqual(saved.ok, true, saved.error);
+  assert.strictEqual(saved.avatar.card_text, '🍕 Powered by Snacks'); assert.strictEqual(saved.avatar.card_style, 'silly');
+  assert.strictEqual(page(A, '/').avatar.card_text, '🍕 Powered by Snacks');
+  w.advance(120000);
+  const row = w.call(T, 'screenData', [cls.id]).students.find((s) => /Ava/.test(s.name));
+  assert.strictEqual(row.avatar.card_text, '🍕 Powered by Snacks', 'shown on the class display');
+  assert.ok(!page(B, '/').avatar.card_text, 'no card by default');
+  console.log('calling card checks passed');
+}

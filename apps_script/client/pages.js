@@ -61,7 +61,7 @@
   pages.dashboard = function () {
     var lv = d.level, h = [], nu = d.next_up, earned = d.badges.filter(function (b) { return b.earned; }).length;
     h.push('<section class="card player-card"><a class="avatar-tile" href="/me" title="Customize your robot"><span data-avatar="' + A(d.avatar) + '" data-size="96"></span></a>' +
-      '<div style="flex:1"><h1>Hi ' + E(d.name) + '!</h1>' + (d.avatar && d.avatar.name ? '<p class="muted">…and your robot <b>' + E(d.avatar.name) + '</b></p>' : '') +
+      '<div style="flex:1"><h1>Hi ' + E(d.name) + '!</h1>' + (RobotAvatar.card(d.avatar) ? '<p class="card-line"><a href="/me" title="Change your calling card">' + RobotAvatar.card(d.avatar) + '</a></p>' : '<p class="card-line"><a class="small" href="/me">🪪 Pick a calling card</a></p>') + (d.avatar && d.avatar.name ? '<p class="muted">…and your robot <b>' + E(d.avatar.name) + '</b></p>' : '') +
       '<div class="level-row"><span class="level-badge">' + lv.level + '</span><div class="grow"><div class="level-title"><span>' + E(lv.title) + '</span>' +
       '<span>' + (lv.max ? 'max level!' : 'next: ' + lv.next) + '</span></div><div class="xpbar"><i style="width:' + lv.pct + '%"></i><b>⭐ ' + lv.xp + ' XP</b></div></div></div></div></section>');
     if (nu) h.push('<a class="banner mission-banner ' + E(nu.lesson.color) + '" href="/lessons/' + E(nu.lesson.id) + '"><div class="banner-icon">' + E(nu.lesson.icon) + '</div>' +
@@ -151,11 +151,11 @@
   pages.profile = function () {
     var lv = d.level, h = [];
     h.push('<h1>My robot &amp; badges</h1><div class="profile-grid"><section class="card builder-card"><h2>Build your robot</h2><div class="avatar-builder"><div class="avatar-stage">' +
-      '<div id="avatar-preview"></div><label class="field"><span>Robot name</span><input id="avatar-name" maxlength="20" placeholder="e.g. Sparky" value="' + E(d.avatar.name) + '"></label>' +
+      '<div id="avatar-preview"></div><div id="card-preview" class="card-preview"></div><label class="field"><span>Robot name</span><input id="avatar-name" maxlength="20" placeholder="e.g. Sparky" value="' + E(d.avatar.name) + '"></label>' +
       '<button type="button" class="btn wide" id="avatar-save">Save my robot</button><button type="button" class="btn ghost wide small" id="avatar-random">🎲 Surprise me</button>' +
       '<p class="save-status small" id="avatar-status" role="status"></p>' + (ML.teacher ? '' : '<p class="pill-xp" id="spend">⚡ <b>' + (d.spendable || 0) + '</b> XP to spend</p>') + '</div><div class="avatar-parts"><div class="part-tabs" role="tablist">');
     Object.keys(d.parts).forEach(function (k, i) { h.push('<button type="button" role="tab" class="part-tab' + (i ? '' : ' active') + '" data-part="' + E(k) + '">' + E(d.parts[k]) + '</button>'); });
-    h.push('</div><div class="part-options" id="part-options"></div><p class="muted small">🔒 Locked parts unlock as you level up and earn badges. 🛒 Some you can buy with XP to spend.</p></div></div></section>' +
+    h.push('</div><div class="part-options" id="part-options"></div><p class="muted small">🔒 Locked parts and calling cards unlock as you level up, earn badges and score in the arcade. 🛒 Some you can buy with XP to spend.</p></div></div></section>' +
       '<section class="card level-card"><h2>Level ' + lv.level + ': ' + E(lv.title) + '</h2><div class="xpbar big"><i style="width:' + lv.pct + '%"></i></div><p class="muted">' +
       lv.xp + ' XP' + (lv.max ? ' · max level!' : ' · ' + (lv.next - lv.xp) + ' XP to level ' + (lv.level + 1)) + '</p><ol class="level-ladder">');
     d.levels.forEach(function (l, i) {
@@ -233,6 +233,7 @@
         li.innerHTML = '<span class="rank">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span data-avatar="' + A(r.avatar || {}) + '" data-size="40"></span><b></b><span class="score">' + r.score + '</span>';
         li.querySelector('b').textContent = r.name + (r.me ? ' (you)' : '');
         li.querySelector('b').setAttribute('translate', 'no');
+        if (RobotAvatar.card(r.avatar)) { li.classList.add('has-card'); li.querySelector('b').insertAdjacentHTML('afterend', RobotAvatar.card(r.avatar, 'tiny')); }
         ol.appendChild(li);
       });
       RobotAvatar.renderAll(ol);

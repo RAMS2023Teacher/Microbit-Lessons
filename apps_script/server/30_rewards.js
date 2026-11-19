@@ -189,8 +189,11 @@ function mapData_(rec, assigned, cid) {
 function avatarOf_(rec) {
   var a = JSON.parse(JSON.stringify(DATA.default_avatar));
   if (rec && rec.avatar) Object.keys(a).forEach(function (k) { if (rec.avatar[k] !== undefined) a[k] = rec.avatar[k]; });
+  var card = (DATA.avatar_options.card || []).filter(function (o) { return o[0] === a.card; })[0];     // the calling card's words travel with the robot
+  if (card && card[0] !== 'none') { a.card_text = card[1]; a.card_style = cardStyle_(card[2]); }
   return a;
 }
+function cardStyle_(u) { return u ? (DATA.card_styles || {})[u[0]] || 'plain' : 'plain'; }
 function unlockText_(u) {
   if (!u) return '';
   if (u[0] === 'cost') return 'Buy it for ' + u[1] + ' XP';
@@ -208,7 +211,7 @@ function avatarCatalog_(rec, teacher) {
   Object.keys(DATA.avatar_options).forEach(function (part) {
     out[part] = DATA.avatar_options[part].map(function (o) {
       return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges, owned, part, o[0], bests), how: unlockText_(o[2]),
-               cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0 };
+               cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0, style: part === 'card' ? cardStyle_(o[2]) : undefined };
     });
   });
   return out;

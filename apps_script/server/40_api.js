@@ -282,7 +282,7 @@ function apiAvatar_(d) {
   ctx.rec.avatar = r.avatar;
   var rewards = syncRewards_(ctx.rec, ctx.cfg);
   saveStudent_(ctx.rec);
-  return { status: 200, body: { ok: true, avatar: r.avatar, rewards: rewards } };
+  return { status: 200, body: { ok: true, avatar: avatarOf_(ctx.rec), rewards: rewards } };
 }
 
 // ---------------------------------------------------------------- joining a class
