@@ -10,8 +10,9 @@
     purple: ['#a78bfa', '#6d28d9'], pink: ['#f472b6', '#be185d'], white: ['#f1f5f9', '#94a3b8'],
     chrome: ['url(#CHROME)', '#64748b'], gold: ['url(#GOLD)', '#a16207'],
     lime: ['#a3e635', '#4d7c0f'], galaxy: ['url(#GALAXY)', '#4c1d95'],
+    ice: ['#a5f3fc', '#0891b2'], midnight: ['#334155', '#0f172a'], sunset: ['url(#SUNSET)', '#9a3412'], copper: ['url(#COPPER)', '#7c4a1e'],
   };
-  const BG = { sky: '#bfe3ff', mint: '#c7f5df', sun: '#ffe9a8', lilac: '#e3d7ff', night: '#1e2a55', circuit: '#0f3d3a', stars: '#0b1026', ocean: '#0e7490', lava: '#431407', rainbow: '#fff' };
+  const BG = { sky: '#bfe3ff', mint: '#c7f5df', sun: '#ffe9a8', lilac: '#e3d7ff', night: '#1e2a55', circuit: '#0f3d3a', stars: '#0b1026', ocean: '#0e7490', lava: '#431407', rainbow: '#fff', dusk: '#fb923c', matrix: '#04130a', arcade: '#1e1b4b', pcb: '#0b5a3c' };
   const HEADS = {
     box: { x: 25, y: 20, w: 50, h: 40, r: 8 },
     round: { x: 24, y: 18, w: 52, h: 42, r: 21 },
@@ -27,7 +28,7 @@
     if (noBg) a.bg = 'none';
     const id = 'av' + (++uid);
     const [fill, dark] = COLORS[a.color] || COLORS.teal;
-    const F = fill.replace('CHROME', id + 'c').replace('GOLD', id + 'g').replace('GALAXY', id + 'x');
+    const F = fill.replace('CHROME', id + 'c').replace('GOLD', id + 'g').replace('GALAXY', id + 'x').replace('SUNSET', id + 's').replace('COPPER', id + 'k');
     const H = HEADS[a.body] || HEADS.box;
     const cx = H.x + H.w / 2;
     const eyeY = H.y + H.h * 0.42, mouthY = H.y + H.h * 0.74;
@@ -38,6 +39,8 @@
     o.push(`<defs><linearGradient id="${id}c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8fafc"/><stop offset=".5" stop-color="#94a3b8"/><stop offset="1" stop-color="#e2e8f0"/></linearGradient>` +
       `<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#eab308"/><stop offset="1" stop-color="#fef3c7"/></linearGradient>` +
       `<linearGradient id="${id}x" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#312e81"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient>` +
+      `<linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#facc15"/><stop offset=".5" stop-color="#f97316"/><stop offset="1" stop-color="#db2777"/></linearGradient>` +
+      `<linearGradient id="${id}k" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6c28b"/><stop offset=".5" stop-color="#b87333"/><stop offset="1" stop-color="#e8a866"/></linearGradient>` +
       `<clipPath id="${id}clip"><rect width="100" height="100" rx="22"/></clipPath></defs>`);
     o.push(noBg ? '<g>' : `<g clip-path="url(#${id}clip)"><rect width="100" height="100" fill="${BG[a.bg] || BG.sky}"/>`);
     if (a.bg === 'circuit') {
@@ -50,6 +53,14 @@
       o.push('<path d="M0 100 L28 46 L40 58 L52 40 L70 100z" fill="#7c2d12"/><path d="M44 47 l8 -9 l6 9 l-6 10z" fill="#f97316"/><path d="M0 88 q20 -8 40 0 t40 0 t40 0 V100 H0z" fill="#ea580c"/><g fill="#fdba74"><circle cx="54" cy="24" r="2.2"/><circle cx="62" cy="16" r="1.4"/><circle cx="46" cy="18" r="1.6"/></g>');
     } else if (a.bg === 'rainbow') {
       o.push(['#ef4444', '#f97316', '#facc15', '#4ade80', '#60a5fa', '#a78bfa'].map((c, i) => `<circle cx="50" cy="104" r="${92 - i * 9}" fill="${c}"/>`).join('') + '<circle cx="50" cy="104" r="38" fill="#fff"/>');
+    } else if (a.bg === 'dusk') {
+      o.push('<rect width="100" height="100" fill="#fdba74"/><rect y="0" width="100" height="34" fill="#7c3aed" opacity=".55"/><rect y="34" width="100" height="22" fill="#f472b6" opacity=".5"/><circle cx="50" cy="72" r="20" fill="#fde047"/><rect y="72" width="100" height="28" fill="#7c2d12"/><path d="M0 72 h100" stroke="#fed7aa" stroke-width="1.5"/>');
+    } else if (a.bg === 'matrix') {
+      o.push('<g font-family="monospace" font-size="9" fill="#22c55e">' + [6, 18, 30, 42, 54, 66, 78, 90].map((x, i) => [0, 1, 2, 3, 4].map((k) => `<text x="${x}" y="${((i * 23 + k * 21) % 105) + 6}" opacity="${0.25 + ((i + k) % 4) * 0.2}">${'10'[(i + k) % 2]}</text>`).join('')).join('') + '</g>');
+    } else if (a.bg === 'arcade') {
+      o.push('<g>' + [[10, 12, '#f472b6'], [30, 6, '#facc15'], [52, 14, '#22d3ee'], [74, 7, '#4ade80'], [92, 16, '#f472b6'], [8, 86, '#22d3ee'], [90, 84, '#facc15'], [6, 48, '#4ade80'], [94, 50, '#f472b6']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="4" fill="${c}" opacity=".9"/><circle cx="${x}" cy="${y}" r="7" fill="${c}" opacity=".25"/>`).join('') + '</g><path d="M0 96 h100" stroke="#f472b6" stroke-width="3"/>');
+    } else if (a.bg === 'pcb') {
+      o.push('<rect x="-10" y="60" width="120" height="26" fill="#063d29"/><rect x="-10" y="63" width="120" height="20" fill="#b87333"/><path d="M0 73 h100" stroke="#fde6c0" stroke-width="1.5" stroke-dasharray="7 6" opacity=".7"/><g fill="#4ade80"><circle cx="14" cy="50" r="3.5"/><circle cx="86" cy="50" r="3.5"/></g><g>' + [0, 1, 2, 3].map((i) => `<rect x="${44 + (i % 2) * 6}" y="${63 + Math.floor(i / 2) * 5}" width="6" height="5" fill="${(i + Math.floor(i / 2)) % 2 ? '#fff' : '#111827'}"/>`).join('') + '</g>');
     } else if (a.bg === 'night') {
       o.push('<circle cx="82" cy="16" r="7" fill="#fef3c7"/><circle cx="85" cy="14" r="6" fill="#1e2a55"/>');
     }
@@ -77,6 +88,9 @@
       case 'bolt': o.push(`<path d="M${cx + 1} ${top - 16} l-6 9 h5 l-3 8 l8 -10 h-5 l3 -7 z" fill="#facc15" stroke="#a16207" stroke-width="1"/>`); break;
       case 'dish': o.push(`<line x1="${cx}" y1="${top}" x2="${cx}" y2="${top - 6}" stroke="${ink}" stroke-width="2"/><path d="M${cx - 9} ${top - 13} a9 6 0 0 0 18 0 z" fill="#e2e8f0" stroke="${ink}" stroke-width="1.5"/><circle cx="${cx}" cy="${top - 12}" r="1.5" fill="${ink}"/>`); break;
       case 'flower': o.push(`<line x1="${cx}" y1="${top}" x2="${cx}" y2="${top - 10}" stroke="#15803d" stroke-width="2"/>` + [0, 72, 144, 216, 288].map((d) => `<circle cx="${cx + 4.5 * Math.cos(d * Math.PI / 180)}" cy="${top - 13 + 4.5 * Math.sin(d * Math.PI / 180)}" r="3.2" fill="#f472b6"/>`).join('') + `<circle cx="${cx}" cy="${top - 13}" r="2.6" fill="#facc15"/>`); break;
+      case 'wifi': o.push(`<circle cx="${cx}" cy="${top - 3}" r="2.2" fill="${ink}"/><path d="M${cx - 6} ${top - 7} a8 8 0 0 1 12 0 M${cx - 10} ${top - 11} a14 14 0 0 1 20 0" fill="none" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round"/>`); break;
+      case 'led': o.push(`<line x1="${cx - 2}" y1="${top}" x2="${cx - 2}" y2="${top - 6}" stroke="#94a3b8" stroke-width="1.6"/><line x1="${cx + 2}" y1="${top}" x2="${cx + 2}" y2="${top - 6}" stroke="#94a3b8" stroke-width="1.6"/><circle cx="${cx}" cy="${top - 11}" r="8" fill="#ef4444" opacity=".25"/><path d="M${cx - 5} ${top - 6} v-6 a5 5 0 0 1 10 0 v6 z" fill="#ef4444" stroke="#991b1b" stroke-width="1.2"/><circle cx="${cx - 1.5}" cy="${top - 12}" r="1.4" fill="#fff" opacity=".8"/>`); break;
+      case 'flag': o.push(`<line x1="${cx}" y1="${top}" x2="${cx}" y2="${top - 17}" stroke="${ink}" stroke-width="2"/>` + [0, 1, 2, 3, 4, 5].map((i) => `<rect x="${cx + 1 + (i % 3) * 4.5}" y="${top - 17 + Math.floor(i / 3) * 4.5}" width="4.5" height="4.5" fill="${(i + Math.floor(i / 3)) % 2 ? '#fff' : '#111827'}" stroke="#111827" stroke-width=".4"/>`).join('')); break;
       case 'halo': o.push(`<ellipse cx="${cx}" cy="${top - 8}" rx="15" ry="4" fill="none" stroke="#facc15" stroke-width="3"/><ellipse cx="${cx}" cy="${top - 8}" rx="15" ry="4" fill="none" stroke="#fef9c3" stroke-width="1"/>`); break;
       case 'propeller': o.push(`<line x1="${cx}" y1="${top}" x2="${cx}" y2="${top - 8}" stroke="${ink}" stroke-width="2"/><ellipse cx="${cx - 8}" cy="${top - 9}" rx="8" ry="2.4" fill="#38bdf8"/><ellipse cx="${cx + 8}" cy="${top - 9}" rx="8" ry="2.4" fill="#f472b6"/><circle cx="${cx}" cy="${top - 9}" r="2" fill="${ink}"/>`); break;
     }
@@ -95,6 +109,9 @@
       case 'leds': [L, R].forEach((x) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) o.push(`<rect x="${x + i * 3.2 - 1.2}" y="${eyeY + j * 3.2 - 1.2}" width="2.4" height="2.4" fill="${(i + j) % 2 ? '#7f1d1d' : '#ef4444'}"/>`); }); break;
       case 'happy': [L, R].forEach((x) => o.push(`<path d="M${x - 4} ${eyeY + 1.5} q4 -6 8 0" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>`)); break;
       case 'shades': o.push(`<path d="M${L - 7} ${eyeY - 4} h14 v4 a6 6 0 0 1 -14 0 z M${R - 7} ${eyeY - 4} h14 v4 a6 6 0 0 1 -14 0 z" fill="#0f172a"/><line x1="${L + 7}" y1="${eyeY - 3}" x2="${R - 7}" y2="${eyeY - 3}" stroke="#0f172a" stroke-width="2"/><path d="M${L - 4} ${eyeY - 2} l3 0" stroke="#fff" stroke-width="1.2"/><path d="M${R - 4} ${eyeY - 2} l3 0" stroke="#fff" stroke-width="1.2"/>`); break;
+      case 'sleepy': [L, R].forEach((x) => o.push(`<circle cx="${x}" cy="${eyeY}" r="5" fill="#fff" stroke="${ink}" stroke-width="1.8"/><circle cx="${x}" cy="${eyeY + 1.5}" r="2.2" fill="${ink}"/><path d="M${x - 5.6} ${eyeY} a5.6 5.6 0 0 1 11.2 0 z" fill="#cbd5e1" stroke="${ink}" stroke-width="1.4"/>`)); o.push(`<text x="${H.x + H.w - 3}" y="${H.y + 1}" font-size="8" font-weight="800" fill="${ink}" font-family="sans-serif">z</text>`); break;
+      case 'angry': [L, R].forEach((x, i) => o.push(`<circle cx="${x}" cy="${eyeY + 1}" r="4.6" fill="#fff" stroke="${ink}" stroke-width="1.8"/><circle cx="${x}" cy="${eyeY + 1.5}" r="2.3" fill="${ink}"/><path d="M${x - 6} ${eyeY - (i ? 2 : 7)} L${x + 6} ${eyeY - (i ? 7 : 2)}" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`)); break;
+      case 'laser': [L, R].forEach((x) => o.push(`<circle cx="${x}" cy="${eyeY}" r="7" fill="#ef4444" opacity=".3"/><circle cx="${x}" cy="${eyeY}" r="4.4" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.2"/><circle cx="${x}" cy="${eyeY}" r="1.6" fill="#fff"/><path d="M${x + 4} ${eyeY} L${x + 46} ${eyeY + 16}" stroke="#ef4444" stroke-width="1.6" opacity=".75"/>`)); break;
       case 'star': [L, R].forEach((x) => o.push(`<path d="M${x} ${eyeY - 6} l1.8 4 4.2 .4 -3.2 2.8 1 4.2 -3.8 -2.2 -3.8 2.2 1 -4.2 -3.2 -2.8 4.2 -.4z" fill="#facc15" stroke="#a16207" stroke-width=".8"/>`)); break;
       default: [L, R].forEach((x) => o.push(`<circle cx="${x}" cy="${eyeY}" r="5" fill="#fff" stroke="${ink}" stroke-width="1.8"/><circle cx="${x + 1}" cy="${eyeY + 0.5}" r="2.5" fill="${ink}"/>`));
     }
@@ -108,6 +125,9 @@
       case 'grille': o.push(`<rect x="${cx - mw}" y="${mouthY - 3.5}" width="${mw * 2}" height="7" rx="2" fill="${ink}"/>` + [-0.5, 0, 0.5].map((k) => `<line x1="${cx + k * mw}" y1="${mouthY - 3.5}" x2="${cx + k * mw}" y2="${mouthY + 3.5}" stroke="#94a3b8" stroke-width="1"/>`).join('')); break;
       case 'zigzag': o.push(`<path d="M${cx - mw} ${mouthY} l${mw / 2} -3 l${mw / 2} 3 l${mw / 2} -3 l${mw / 2} 3" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/>`); break;
       case 'fangs': o.push(`<path d="M${cx - mw} ${mouthY - 2} q${mw} 7 ${mw * 2} 0" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/><path d="M${cx - mw * 0.6} ${mouthY} l1.6 4 1.6 -3.4 z M${cx + mw * 0.6} ${mouthY} l-1.6 4 -1.6 -3.4 z" fill="#fff" stroke="${ink}" stroke-width=".8"/>`); break;
+      case 'tongue': o.push(`<path d="M${cx - mw} ${mouthY - 2} q${mw} 7 ${mw * 2} 0" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/><path d="M${cx - 1} ${mouthY + 1.2} h7 v4 a3.5 3.5 0 0 1 -7 0 z" fill="#fb7185" stroke="#9f1239" stroke-width=".9"/>`); break;
+      case 'braces': o.push(`<path d="M${cx - mw} ${mouthY - 3} q${mw} 9 ${mw * 2} 0 z" fill="#fff" stroke="${ink}" stroke-width="2"/><path d="M${cx - mw * 0.8} ${mouthY - 0.6} h${mw * 1.6}" stroke="#64748b" stroke-width="1.2"/>` + [-0.5, 0, 0.5].map((k) => `<rect x="${cx + k * mw - 1.2}" y="${mouthY - 1.9}" width="2.4" height="2.6" fill="#38bdf8" stroke="#0369a1" stroke-width=".5"/>`).join('')); break;
+      case 'speaker': o.push(`<rect x="${cx - mw}" y="${mouthY - 4}" width="${mw * 2}" height="8" rx="4" fill="${ink}"/>` + [-0.6, -0.2, 0.2, 0.6].map((k) => `<circle cx="${cx + k * mw}" cy="${mouthY}" r="1.3" fill="#94a3b8"/>`).join('')); break;
       case 'mustache': o.push(`<path d="M${cx} ${mouthY - 3} c-3 -3 -9 -3 -12 1 c3 0 5 2 7 2 c2 0 4 -1 5 -3 c1 2 3 3 5 3 c2 0 4 -2 7 -2 c-3 -4 -9 -4 -12 -1z" fill="#3f2a14"/>`); break;
       default: o.push(`<path d="M${cx - mw} ${mouthY - 2} q${mw} 7 ${mw * 2} 0" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>`);
     }
@@ -115,6 +135,10 @@
     if (a.accessory === 'bowtie') o.push(`<path d="M50 ${H.y + H.h + 5} l-8 -5 v10 z M50 ${H.y + H.h + 5} l8 -5 v10 z" fill="#ef4444" stroke="#7f1d1d" stroke-width="1"/><circle cx="50" cy="${H.y + H.h + 5}" r="2.2" fill="#b91c1c"/>`);
     if (a.accessory === 'cap') o.push(`<path d="M${H.x + 4} ${H.y + 3} a${H.w / 2 - 4} 13 0 0 1 ${H.w - 8} 0 z" fill="#2563eb"/><rect x="${cx}" y="${H.y}" width="${H.w / 2 + 6}" height="4" rx="2" fill="#1d4ed8"/><circle cx="${cx}" cy="${H.y - 9}" r="1.8" fill="#facc15"/>`);
     if (a.accessory === 'crown') o.push(`<path d="M${cx - 14} ${H.y + 2} l0 -12 l7 6 l7 -10 l7 10 l7 -6 l0 12 z" fill="#facc15" stroke="#a16207" stroke-width="1.4"/><circle cx="${cx}" cy="${H.y - 4}" r="1.8" fill="#ef4444"/>`);
+    if (a.accessory === 'tie') o.push(`<path d="M50 ${H.y + H.h + 2} l-3.5 3.5 l3.5 3.5 l3.5 -3.5 z" fill="#1d4ed8"/><path d="M50 ${H.y + H.h + 9} l-4 14 l4 5 l4 -5 z" fill="#2563eb" stroke="#1e3a8a" stroke-width=".8"/>`);
+    if (a.accessory === 'tophat') o.push(`<ellipse cx="${cx}" cy="${H.y + 2}" rx="20" ry="3.6" fill="#111827"/><rect x="${cx - 12}" y="${H.y - 19}" width="24" height="21" rx="2" fill="#1f2937"/><rect x="${cx - 12}" y="${H.y - 5}" width="24" height="4" fill="#dc2626"/>`);
+    if (a.accessory === 'medal') o.push(`<path d="M44 ${H.y + H.h + 1} l6 12 l6 -12" fill="none" stroke="#2563eb" stroke-width="3"/><circle cx="50" cy="${H.y + H.h + 17}" r="6" fill="#facc15" stroke="#a16207" stroke-width="1.4"/><text x="50" y="${H.y + H.h + 19.6}" text-anchor="middle" font-size="7" font-weight="800" fill="#a16207" font-family="sans-serif">1</text>`);
+    if (a.accessory === 'helmet') o.push(`<path d="M${H.x - 3} ${H.y + H.h * 0.3} a${H.w / 2 + 3} ${H.h * 0.55} 0 0 1 ${H.w + 6} 0 v-2 z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.6"/><path d="M${cx - 3} ${H.y - H.h * 0.22} h6 v${H.h * 0.5} h-6 z" fill="#fff"/><rect x="${H.x - 3}" y="${H.y + H.h * 0.26}" width="${H.w + 6}" height="4" rx="2" fill="#111827"/>`);
     if (a.accessory === 'scarf') o.push(`<rect x="${50 - 21}" y="${H.y + H.h - 1}" width="42" height="8" rx="4" fill="#dc2626"/><rect x="58" y="${H.y + H.h + 4}" width="7" height="16" rx="2" fill="#b91c1c"/><path d="M${50 - 15} ${H.y + H.h + 3} h30" stroke="#fef2f2" stroke-width="1.2" stroke-dasharray="3 3"/>`);
     if (a.accessory === 'wizard') o.push(`<path d="M${cx - 16} ${H.y + 3} L${cx + 2} ${H.y - 26} L${cx + 16} ${H.y + 3} z" fill="#4338ca" stroke="#312e81" stroke-width="1.4"/><ellipse cx="${cx}" cy="${H.y + 3}" rx="19" ry="3.6" fill="#3730a3"/><path d="M${cx - 4} ${H.y - 10} l1.4 3 3.2 .3 -2.4 2 .8 3 -3 -1.6 -3 1.6 .8 -3 -2.4 -2 3.2 -.3z" fill="#facc15"/>`);
     o.push('</g></svg>');

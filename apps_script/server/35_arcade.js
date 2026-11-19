@@ -1,4 +1,4 @@
-// ---------------------------------------------------------------- the shop and Robot Rush
+// ---------------------------------------------------------------- the shop and the arcade games (Robot Rush, Circuit Driver)
 // XP to spend = all the XP a student ever earned minus what they spent. Levels count all earned XP, so
 // shopping never lowers a level. Robot Rush (client/lib/game.js) is closed unless the teacher opens the arcade
 // for a class (class display or class page). Finishing a lesson banks DATA.arcade.minutes of play time; each race
@@ -12,6 +12,27 @@ function powerLevels_(rec) {
   var out = {};
   DATA.powerups.forEach(function (u) { out[u.id] = Math.min(u.costs.length, ((rec && rec.powerups) || {})[u.id] || 0); });
   return out;
+}
+
+// Games are listed in DATA.games (course/rules.py). Robot Rush keeps its scores where they always were
+// (rec.arcade.best, .day, .day_best); every other game has the same three under rec.arcade.games[id].
+function gameById_(id) { return (DATA.games || []).filter(function (g) { return g.id === id; })[0] || null; }
+function gameStats_(a, id, make) {
+  if (id === 'rush') return a;
+  if (make) { a.games = a.games || {}; a.games[id] = a.games[id] || {}; }
+  return (a.games || {})[id] || {};
+}
+function gameBests_(rec) {
+  var out = {}, a = (rec && rec.arcade) || {};
+  (DATA.games || []).forEach(function (g) { out[g.id] = gameStats_(a, g.id).best || 0; });
+  return out;
+}
+function gameOpen_(g, rec) { return !g.unlock || levelInfo_((rec && rec.xp) || 0).level >= g.unlock[1]; }
+function gameList_(rec, teacher) {
+  var bests = gameBests_(rec);
+  return (DATA.games || []).map(function (g) {
+    return { id: g.id, icon: g.icon, name: g.name, desc: g.desc, unlocked: teacher || gameOpen_(g, rec), how: g.unlock ? 'Reach level ' + g.unlock[1] : '', best: bests[g.id] };
+  });
 }
 
 function raceSeconds_(levels) { return DATA.arcade.race_seconds + 5 * (levels.time || 0); }
@@ -34,12 +55,19 @@ function arcadeState_(rec, cfg) {
   return { open: left > 0, seconds_left: Math.max(0, left), bank: bank, can_play: left > 0 && bank > 0, minutes: DATA.arcade.minutes };
 }
 
-/** The class leaderboard: top 10 today and of all time. `fresh` is a student record newer than the summary. */
-function arcadeBoard_(cfg, cid, fresh) {
+function arcadeBoards_(cfg, cid, fresh) {
+  var out = {};
+  (DATA.games || []).forEach(function (g) { out[g.id] = arcadeBoard_(cfg, cid, fresh, g.id); });
+  return out;
+}
+
+/** The class leaderboard for one game: top 10 today and of all time. `fresh` is a student record newer than the summary. */
+function arcadeBoard_(cfg, cid, fresh, game) {
+  game = game || 'rush';
   if (!cid || !cfg.classes[cid]) return { today: [], all: [] };
   var sum = summary_(), day = arcadeDay_(), students = classStudents_(cfg, sum, cid), names = shownNames_(students, 'first');
   var rows = students.map(function (s) {
-    var me = !!fresh && fresh.email === s.email, a = me ? (fresh.arcade || {}) : ((sum.students[s.email] || {}).arcade || {});
+    var me = !!fresh && fresh.email === s.email, a = gameStats_(me ? (fresh.arcade || {}) : ((sum.students[s.email] || {}).arcade || {}), game);
     return { name: names[s.email], avatar: me ? avatarOf_(fresh) : (s.avatar || null), best: a.best || 0,
              today: a.day === day ? (a.day_best || 0) : 0, me: me };
   });
@@ -62,24 +90,25 @@ function shopCatalog_(rec) {
 function arcadeData_(rec, cfg, teacher) {
   if (teacher) {
     return { practice: true, state: { open: true, can_play: true, bank: 0 }, spendable: 0, shop: shopCatalog_(null), powerups: powerLevels_(null),
-             race_seconds: DATA.arcade.race_seconds, best: 0, board: { today: [], all: [] }, minutes: DATA.arcade.minutes };
+             race_seconds: DATA.arcade.race_seconds, best: 0, board: { today: [], all: [] }, boards: {}, games: gameList_(null, true), minutes: DATA.arcade.minutes };
   }
   var a = rec.arcade || {};
   return { state: arcadeState_(rec, cfg), spendable: spendable_(rec), shop: shopCatalog_(rec), powerups: powerLevels_(rec),
            race_seconds: raceSeconds_(powerLevels_(rec)), best: a.best || 0, plays: a.plays || 0, minutes: DATA.arcade.minutes,
-           board: arcadeBoard_(cfg, studentClassIds_(rec, cfg)[0], rec) };
+           board: arcadeBoard_(cfg, studentClassIds_(rec, cfg)[0], rec), boards: arcadeBoards_(cfg, studentClassIds_(rec, cfg)[0], rec),
+           games: gameList_(rec, false) };
 }
 
 // ---------------------------------------------------------------- student API: /api/shop/buy, /api/arcade/start, /api/arcade/finish
 function shopApi_(path, d) {
   if (whoIs_().teacher) {          // the teacher's preview: nothing is saved
-    if (path === '/api/arcade/start') return { ok: true, practice: true, run_id: 'practice', seconds: DATA.arcade.race_seconds, powerups: powerLevels_(null) };
+    if (path === '/api/arcade/start') return { ok: true, practice: true, run_id: 'practice', seconds: DATA.arcade.race_seconds, powerups: powerLevels_(null), game: String(d.game || 'rush') };
     if (path === '/api/arcade/finish') return { ok: true, practice: true, score: Math.round(Number(d.score) || 0) };
     return { ok: false, error: 'This is the student shop. Students buy items with the XP they earn.' };
   }
   var ctx = student_();
   if (path === '/api/shop/buy') return shopBuy_(ctx, d);
-  if (path === '/api/arcade/start') return arcadeStart_(ctx);
+  if (path === '/api/arcade/start') return arcadeStart_(ctx, d);
   return arcadeFinish_(ctx, d);
 }
 
@@ -110,17 +139,19 @@ function shopBuy_(ctx, d) {
            race_seconds: raceSeconds_(powerLevels_(rec)) };
 }
 
-function arcadeStart_(ctx) {
-  var rec = ctx.rec, st = arcadeState_(rec, ctx.cfg);
+function arcadeStart_(ctx, d) {
+  var rec = ctx.rec, st = arcadeState_(rec, ctx.cfg), game = gameById_(String((d || {}).game || 'rush'));
+  if (!game) throw badRequest_('No such game.');
+  if (!gameOpen_(game, rec)) return { ok: false, error: game.name + ' unlocks at level ' + game.unlock[1] + '. Keep building!' };
   if (!st.open) return { ok: false, closed: true, error: 'The arcade is closed. Your teacher opens it in class.' };
   if (!st.bank) return { ok: false, error: 'You need play time: finish a lesson to earn ' + DATA.arcade.minutes + ' minutes.' };
   var a = rec.arcade = rec.arcade || {}, levels = powerLevels_(rec), id = Math.random().toString(36).slice(2, 10), secs = raceSeconds_(levels);
   a.runs = (a.runs || []).filter(function (r) { return Date.now() - new Date(r.at).getTime() < 15 * 60000; }).slice(-4);
-  a.runs.push({ id: id, at: now_() });
+  a.runs.push({ id: id, at: now_(), game: game.id });
   a.plays = (a.plays || 0) + 1;
   a.bank = Math.max(0, (a.bank || 0) - secs);         // a race uses its length from the bank
   saveStudent_(rec);
-  return { ok: true, run_id: id, seconds: secs, powerups: levels, bank: a.bank };
+  return { ok: true, run_id: id, seconds: secs, powerups: levels, bank: a.bank, game: game.id };
 }
 
 function arcadeFinish_(ctx, d) {
@@ -129,20 +160,34 @@ function arcadeFinish_(ctx, d) {
   if (!run) return { ok: false, error: "That race wasn't found. Start a new one." };
   a.runs = a.runs.filter(function (r) { return r !== run; });
   var secs = raceSeconds_(powerLevels_(rec)), took = (Date.now() - new Date(run.at).getTime()) / 1000;
-  var score = Math.max(0, Math.round(Number(d.score) || 0));
-  if (took < secs - 3 || took > secs + 600 || score > secs * 250) {
+  var game = gameById_(run.game || 'rush') || gameById_('rush'), score = Math.max(0, Math.round(Number(d.score) || 0));
+  if (took < secs - 3 || took > secs + 600 || score > secs * game.max_per_second) {
     saveStudent_(rec);
     return { ok: false, error: "That score couldn't be counted. Try another race!" };
   }
-  var day = arcadeDay_(), newBest = score > (a.best || 0);
-  if (newBest) { a.best = score; a.best_at = now_(); }
-  if (a.day !== day) { a.day = day; a.day_best = 0; }
-  var dayBest = score > (a.day_best || 0);
-  if (dayBest) a.day_best = score;
-  a.last = score;
+  var g = gameStats_(a, game.id, true), day = arcadeDay_(), newBest = score > (g.best || 0), before = avatarUnlockCount_(rec);
+  if (newBest) { g.best = score; g.best_at = now_(); }
+  if (g.day !== day) { g.day = day; g.day_best = 0; }
+  var dayBest = score > (g.day_best || 0);
+  if (dayBest) g.day_best = score;
+  g.last = score;
   saveStudent_(rec);
-  return { ok: true, score: score, best: a.best, new_best: newBest, day_best: a.day_best, new_day_best: dayBest,
-           board: arcadeBoard_(ctx.cfg, studentClassIds_(rec, ctx.cfg)[0], rec), state: arcadeState_(rec, ctx.cfg) };
+  return { ok: true, score: score, best: g.best, new_best: newBest, day_best: g.day_best, new_day_best: dayBest, game: game.id,
+           unlocked: wonParts_(rec, game.id, score, newBest ? before : null),
+           board: arcadeBoard_(ctx.cfg, studentClassIds_(rec, ctx.cfg)[0], rec, game.id), state: arcadeState_(rec, ctx.cfg) };
+}
+
+/** Robot parts this score just won (parts with a ("rush" | "circuit", n) unlock that n now reaches for the first time). */
+function avatarUnlockCount_(rec) { return gameBests_(rec); }
+function wonParts_(rec, gameId, score, before) {
+  if (!before) return [];
+  var out = [];
+  Object.keys(DATA.avatar_options).forEach(function (part) {
+    DATA.avatar_options[part].forEach(function (o) {
+      if (o[2] && o[2][0] === gameId && score >= o[2][1] && (before[gameId] || 0) < o[2][1]) out.push(o[1]);
+    });
+  });
+  return out;
 }
 
 // ---------------------------------------------------------------- teacher: open and close the arcade for a class

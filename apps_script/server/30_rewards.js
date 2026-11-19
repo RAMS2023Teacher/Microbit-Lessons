@@ -194,18 +194,20 @@ function avatarOf_(rec) {
 function unlockText_(u) {
   if (!u) return '';
   if (u[0] === 'cost') return 'Buy it for ' + u[1] + ' XP';
+  if (gameById_(u[0])) return 'Score ' + u[1] + ' in ' + gameById_(u[0]).name;
   return u[0] === 'level' ? 'Reach level ' + u[1] : 'Earn the ' + badgeById_(u[1]).name + ' badge';
 }
-function isUnlocked_(u, level, badges, owned, part, id) {
+function isUnlocked_(u, level, badges, owned, part, id, bests) {
   if (!u) return true;
   if (u[0] === 'cost') return !!(owned || {})['part:' + part + ':' + id];
+  if (gameById_(u[0])) return ((bests || {})[u[0]] || 0) >= u[1];          // won in the arcade: a best score in that game
   return u[0] === 'level' ? level >= u[1] : !!badges[u[1]];
 }
 function avatarCatalog_(rec, teacher) {
-  var level = levelInfo_((rec && rec.xp) || 0).level, badges = (rec && rec.badges) || {}, owned = (rec && rec.owned) || {}, out = {};
+  var level = levelInfo_((rec && rec.xp) || 0).level, badges = (rec && rec.badges) || {}, owned = (rec && rec.owned) || {}, out = {}, bests = gameBests_(rec);
   Object.keys(DATA.avatar_options).forEach(function (part) {
     out[part] = DATA.avatar_options[part].map(function (o) {
-      return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges, owned, part, o[0]), how: unlockText_(o[2]),
+      return { id: o[0], label: o[1], unlocked: teacher || isUnlocked_(o[2], level, badges, owned, part, o[0], bests), how: unlockText_(o[2]),
                cost: o[2] && o[2][0] === 'cost' ? o[2][1] : 0 };
     });
   });
@@ -218,7 +220,7 @@ function cleanAvatar_(rec, data, teacher) {
     var part = parts[i], choice = data[part] === undefined ? DATA.default_avatar[part] : data[part];
     var match = DATA.avatar_options[part].filter(function (o) { return o[0] === choice; })[0];
     if (!match) return { error: 'Unknown ' + part };
-    if (!teacher && !isUnlocked_(match[2], level, rec.badges || {}, rec.owned, part, choice)) return { error: match[1] + ' is still locked: ' + unlockText_(match[2]) + '.' };
+    if (!teacher && !isUnlocked_(match[2], level, rec.badges || {}, rec.owned, part, choice, gameBests_(rec))) return { error: match[1] + ' is still locked: ' + unlockText_(match[2]) + '.' };
     out[part] = choice;
   }
   var name = String(data.name || '').trim();

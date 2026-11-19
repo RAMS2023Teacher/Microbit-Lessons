@@ -201,7 +201,7 @@ function studentSummary_(rec) {
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar || null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
            xp_recent: recentXp_(rec), fb: fbSummary_(rec),
-           arcade: rec.arcade ? { best: rec.arcade.best || 0, day: rec.arcade.day || '', day_best: rec.arcade.day_best || 0 } : null };
+           arcade: rec.arcade ? { best: rec.arcade.best || 0, day: rec.arcade.day || '', day_best: rec.arcade.day_best || 0, games: rec.arcade.games || null } : null };
 }
 
 /** XP earned in the last day and a half, as [time, amount] pairs: the class display adds up today's for the class goal. */

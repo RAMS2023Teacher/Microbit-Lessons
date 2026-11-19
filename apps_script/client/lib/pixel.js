@@ -103,6 +103,7 @@
   // ---------------------------------------------------------------- the lab scene
   const COLORS = { teal: ['#14b8a6', '#0d8f82'], red: ['#ef4444', '#b91c1c'], orange: ['#fb923c', '#c2410c'], yellow: ['#facc15', '#ca8a04'],
     green: ['#4ade80', '#15803d'], blue: ['#60a5fa', '#1d4ed8'], purple: ['#a78bfa', '#6d28d9'], pink: ['#f472b6', '#be185d'], white: ['#e2e8f0', '#94a3b8'],
+    ice: ['#a5f3fc', '#0891b2'], midnight: ['#334155', '#0f172a'], sunset: ['#f97316', '#9a3412'], copper: ['#b87333', '#7c4a1e'],
     chrome: ['#cbd5e1', '#64748b'], gold: ['#facc15', '#a16207'], lime: ['#a3e635', '#4d7c0f'], galaxy: ['#8b5cf6', '#4c1d95'] };
 
   function lab(o) {

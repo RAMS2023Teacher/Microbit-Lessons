@@ -581,3 +581,16 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 @media (prefers-reduced-motion: reduce) { .racer.zzz::after, .screen-tile.zzz::after { animation: none; } }
 .partner-note { background: #fff7d6; border: 2px solid #facc15; border-radius: 10px; padding: 6px 10px; }
 .side-panel.partner-new { outline: 4px solid #facc15; outline-offset: 3px; animation: btn-ready .5s cubic-bezier(.2,1.6,.4,1) 3; }
+
+/* arcade: pick a game */
+.game-tabs { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.game-tab { display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; cursor: pointer; padding: 10px 16px; border-radius: 16px; background: #fff;
+  border: 3px solid var(--outline); box-shadow: 0 4px 0 var(--outline); color: var(--ink); min-width: 230px; }
+.game-tab b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.2rem; }
+.game-tab small { display: block; color: var(--muted); max-width: 260px; }
+.game-tab-icon { font-size: 2rem; }
+.game-tab.here { background: linear-gradient(135deg, #312e81, #6d28d9); color: #fff; transform: translateY(2px); box-shadow: 0 2px 0 var(--outline); }
+.game-tab.here small { color: #ddd6fe; }
+.game-tab.is-locked { background: #e5e7eb; color: #6b7280; }
+.game-tab.is-locked .game-tab-icon { filter: grayscale(1); }
+.won-parts { margin-top: 8px; padding: 8px 12px; border-radius: 12px; background: #fff7d6; border: 2px solid #facc15; }
