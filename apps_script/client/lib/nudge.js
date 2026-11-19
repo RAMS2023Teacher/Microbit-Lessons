@@ -14,6 +14,23 @@
   const shown = (el) => !!el && el.getClientRects().length > 0 && !el.disabled;
   const empty = (el) => !String(el.value || '').trim();
   let stage = 0, glowing = [], bubble = null, idleTimer = null, fadeTimer = null, hiddenAt = 0;
+  // 💤 The class display shows who has been idle: say so at the second hint, keep saying so, and say when they're back.
+  let told = false, tellTimer = null, idleFrom = 0;
+  const FLAG = 'ml-idle-told';
+  function tell(on) {
+    if (ML.teacher || ML.preview || !ML.api) return;
+    clearInterval(tellTimer);
+    if (on) {
+      const send = () => { if (!document.hidden) ML.api('/api/idle', { on: true, secs: Math.round((Date.now() - idleFrom) / 1000) }).catch(() => {}); };
+      told = true; send(); tellTimer = setInterval(send, 120000);
+      try { sessionStorage.setItem(FLAG, '1'); } catch (e) { /* fine */ }
+    } else if (told) {
+      told = false;
+      ML.api('/api/idle', { on: false }).catch(() => {});
+      try { sessionStorage.removeItem(FLAG); } catch (e) { /* fine */ }
+    }
+  }
+  try { if (sessionStorage.getItem(FLAG)) { told = true; tell(false); } } catch (e) { /* fine */ }    // moved to a new page: they're back
 
   /** The one thing this student should do next on this page. */
   function next() {
@@ -128,13 +145,14 @@
     idleTimer = setTimeout(function tick() {
       if (document.hidden) return;
       if (stage === 0) { show(1); idleTimer = setTimeout(tick, Math.max(1000, T.second - T.first)); }
-      else if (stage === 1) show(2);
+      else if (stage === 1) { show(2); if (!told) tell(true); }
     }, T.first);
   }
   // Really doing something (a click, a key) clears the hint at once; just moving the mouse lets it fade a little later.
   function acted(e) {
     if (bubble && e && e.target && bubble.contains(e.target)) return;
     if (stage) clear();
+    idleFrom = Date.now(); tell(false);
     arm();
   }
   let lastMove = 0;
@@ -143,18 +161,21 @@
     if (now - lastMove < 400) return;
     lastMove = now;
     if (stage && !fadeTimer) fadeTimer = setTimeout(clear, 7000);
+    idleFrom = now; tell(false);
     arm();
   }
   ['pointerdown', 'keydown', 'input', 'change'].forEach((ev) => document.addEventListener(ev, acted, true));
   ['pointermove', 'wheel', 'touchmove'].forEach((ev) => document.addEventListener(ev, moved, { capture: true, passive: true }));
   document.addEventListener('scroll', moved, { capture: true, passive: true });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { hiddenAt = Date.now(); clearTimeout(idleTimer); return; }
+    if (document.hidden) { hiddenAt = Date.now(); clearTimeout(idleTimer); tell(false); return; }    // in MakeCode: not idle
+    idleFrom = Date.now();
     const away = hiddenAt && Date.now() - hiddenAt >= T.away;   // back from MakeCode: point at what's next straight away
     clear();
     arm();
     if (away) { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!document.hidden && !stage) { show(1, true); idleTimer = setTimeout(() => { if (stage === 1) show(2); }, T.second); } }, T.back); }
   });
+  idleFrom = Date.now();
   arm();
 
   window.MLNudge = { next, show, clear, times: (t) => { Object.assign(T, t || {}); arm(); return Object.assign({}, T); } };

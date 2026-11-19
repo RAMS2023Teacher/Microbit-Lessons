@@ -802,6 +802,37 @@ function helpResolve(cid, who) {
   return helpList_(cfg, cid);
 }
 
+// ---------------------------------------------------------------- 💤 idle students (client/lib/nudge.js)
+// After two minutes without touching the Chromebook (with the Maker Lab tab in front), the page says so here, and
+// says so again when the student is back. It's kept in the cache only (no files, no lock) and forgets itself after
+// five minutes, so a closed Chromebook doesn't stay marked. The class display shows 💤 on those robots.
+var IDLE_TTL_ = 300;
+
+/** Student API: /api/idle {on: true|false, secs: how long they've been idle}. */
+function idleApi_(d) {
+  var me = whoIs_();
+  if (me.teacher || !me.email) return { ok: true };
+  var cache = CacheService.getScriptCache(), key = 'idle:' + me.email;
+  if (d && d.on) {
+    var secs = Math.max(0, Math.min(3600, Number(d.secs) || 0));
+    cache.put(key, String(Date.now() - secs * 1000), IDLE_TTL_);
+  } else cache.remove(key);
+  return { ok: true };
+}
+
+/** email -> minutes idle, for the students who are idle right now. One cache read for the whole class. */
+function idleMinutes_(emails) {
+  var out = {};
+  if (!emails.length) return out;
+  var got = {};
+  try { got = CacheService.getScriptCache().getAll(emails.map(function (e) { return 'idle:' + e; })) || {}; } catch (e) { return out; }
+  emails.forEach(function (e) {
+    var since = Number(got['idle:' + e]);
+    if (since) out[e] = Math.max(2, Math.round((Date.now() - since) / 60000));
+  });
+  return out;
+}
+
 // ---------------------------------------------------------------- student API
 // The lesson page calls api(path, body) through google.script.run (client/shim.js):
 //   /api/lessons/<id>/mission  {talk}                         finish the Mission stage
@@ -854,6 +885,7 @@ function api(path, bodyJson) {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
     if (path === '/api/run') return runCall_(body);
     if (path === '/api/help') return { status: 200, body: helpApi_(body) };
+    if (path === '/api/idle') return { status: 200, body: idleApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner|feedback)$/.exec(path);
@@ -988,14 +1020,17 @@ var API_ = {
       if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) throw badRequest_('That classmate already has a partner for this lesson.');
       mergeProgress_(p, theirs);
       p.partner = email;
+      p.partner_by = ctx.rec.email;                // who picked whom: the other student is told, and either can undo it
       finish_(ctx, L, p);                          // saves both files and gives XP to both
     } else if (d.action === 'leave' && p.partner) {
       var other = loadStudent_(p.partner);
       if (other && other.progress[L.id] && other.progress[L.id].partner === ctx.rec.email) {
         delete other.progress[L.id].partner;
+        delete other.progress[L.id].partner_by;
         saveStudent_(other);
       }
       delete p.partner;
+      delete p.partner_by;
       saveStudent_(ctx.rec);
     }
     return partnerState_(ctx, L, p);
@@ -1058,7 +1093,7 @@ function mergeProgress_(a, b) {
 function mirrorToPartner_(ctx, L, p) {
   if (!p.partner) return null;
   var mate = partnerRecord_(ctx.cfg, p.partner), theirs = mate.progress[L.id];
-  if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; return null; }   // they paired with someone else
+  if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; delete p.partner_by; return null; }   // they paired with someone else
   var copy = JSON.parse(JSON.stringify(p));
   copy.partner = ctx.rec.email;
   if (theirs && theirs.quiz_first) copy.quiz_first = theirs.quiz_first;      // each keeps their own first try (feedback report)
@@ -1069,7 +1104,7 @@ function mirrorToPartner_(ctx, L, p) {
 }
 
 function partnerState_(ctx, L, p) {
-  if (p.partner) return { status: 'paired', name: partnerName_(ctx.cfg, p.partner) };
+  if (p.partner) return { status: 'paired', name: partnerName_(ctx.cfg, p.partner), by_me: !p.partner_by || p.partner_by === ctx.rec.email };
   return { status: 'none', classmates: classmates_(ctx) };
 }
 
@@ -1413,12 +1448,14 @@ function screenPayload_(cfg, cid) {
     var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
     L = next ? DATA.lessons[next.lesson_id] : lessonList_(courseOfClass_(cfg, cid))[0];
   }
+  var idle = idleMinutes_(students.map(function (s) { return s.email; }));
   var rows = students.map(function (s) {
     var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
     var row = { who: helpWho_(s.email), name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
                 // race track: stages done in today's lesson (null = busy with a different lesson, or not started)
                 done: here ? (sd ? STAGES_.filter(function (st) { return sd[st[0]]; }).length : 0) : null };
     if (!here && w.status === 'working') row.elsewhere = w.where;
+    if (idle[s.email]) row.idle = idle[s.email];           // 💤 minutes without touching the Chromebook
     if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
     ((sum.students[s.email] || {}).wins || []).forEach(function (x) {
       wins.push({ icon: WIN_ICONS_[x.kind] || '⭐', text: winText_(names[s.email], x), at: x.at });
@@ -2317,6 +2354,6 @@ function bugUpdate(id, status) {
 function bugCountNew_() {
   try { return readNamed_('bugs', []).filter(function (b) { return b.status === 'new'; }).length; } catch (e) { return 0; }
 }
-var BUILD_ID = "d4a2513ca2";
-var BUILD_EXPECT = {"Assets": "c91c631ea2", "Data": "c391ebe738"};
+var BUILD_ID = "16d39d670e";
+var BUILD_EXPECT = {"Assets": "15ef925b01", "Data": "c391ebe738"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

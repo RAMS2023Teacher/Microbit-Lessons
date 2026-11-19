@@ -50,3 +50,11 @@ def test_pasted_files_are_up_to_date(built):
     assert sorted(p.name for p in dist.iterdir()) == names, "run: python tools/build.py"
     _, mismatch, errors = filecmp.cmpfiles(built, dist, names, shallow=False)
     assert not mismatch and not errors, f"out of date: {mismatch}. Run: python tools/build.py"
+
+
+@needs_node
+def test_idle_and_partner(built):
+    """Idle students show on the class display and expire; partners see who picked them and either can remove it."""
+    r = subprocess.run(["node", str(ROOT / "tests/apps_script_app/idle_partner_check.js"), str(built)],
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout + r.stderr

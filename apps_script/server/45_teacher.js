@@ -298,12 +298,14 @@ function screenPayload_(cfg, cid) {
     var next = mine.filter(function (a) { return !a.due || a.due >= today; })[0] || mine[0];
     L = next ? DATA.lessons[next.lesson_id] : lessonList_(courseOfClass_(cfg, cid))[0];
   }
+  var idle = idleMinutes_(students.map(function (s) { return s.email; }));
   var rows = students.map(function (s) {
     var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
     var row = { who: helpWho_(s.email), name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
                 // race track: stages done in today's lesson (null = busy with a different lesson, or not started)
                 done: here ? (sd ? STAGES_.filter(function (st) { return sd[st[0]]; }).length : 0) : null };
     if (!here && w.status === 'working') row.elsewhere = w.where;
+    if (idle[s.email]) row.idle = idle[s.email];           // 💤 minutes without touching the Chromebook
     if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
     ((sum.students[s.email] || {}).wins || []).forEach(function (x) {
       wins.push({ icon: WIN_ICONS_[x.kind] || '⭐', text: winText_(names[s.email], x), at: x.at });

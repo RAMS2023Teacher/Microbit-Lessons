@@ -148,7 +148,7 @@ assert.ok(w.call(T, 'api', ['/api/arcade/start', '{}']).body.practice);
 w.advance(120000);
 assert.ok(api(S2, 'partner').body.classmates.some((m) => m.id === S));
 r = api(S2, 'partner', { action: 'pair', partner_id: S });
-assert.deepStrictEqual(r.body, { status: 'paired', name: 'Sam K.' });
+assert.deepStrictEqual(r.body, { status: 'paired', name: 'Sam K.', by_me: true });
 const ava = w.g.loadStudent_(S2);
 assert.ok(ava.progress[LID].shipped_at && w.g.percent_(ava.progress[LID], L) === 100);
 assert.ok(ava.badges['finisher'] && ava.badges['teamwork']);

@@ -74,6 +74,7 @@
     function tile(s, showXp) {
       const t = el('div', `screen-tile ${s.status}${helpWho.has(s.who) ? ' needs-help' : ''}`);
       t.dataset.who = s.who || '';
+      if (s.idle) { t.classList.add('zzz'); t.title = `No clicks or typing for ${s.idle} min`; }
       const av = t.appendChild(el('div', 'screen-avatar'));
       av.innerHTML = window.RobotAvatar.svg(s.avatar, 76);   // drawn from known parts, not typed text
       const info = t.appendChild(el('div', 'screen-who'));
@@ -99,6 +100,7 @@
       if (st.name.length > 6) nm.style.fontSize = `calc((var(--bot) * .2 + 13px) * ${(6.5 / st.name.length).toFixed(3)})`;   // long names shrink to fit
       if (data.settings.xp === 'each') r.appendChild(el('small', '', `Lv ${st.level || 1}`));
       r.title = `${st.name}: ${st.where}`;
+      if (st.idle) { r.classList.add('zzz'); r.title += ` · no clicks or typing for ${st.idle} min`; }
       return r;
     }
     // Robots are as big as they can be while the busiest stop still fits on the screen.
@@ -168,7 +170,7 @@
       else if (data.students.length) renderTrack();
       $('roster-title').textContent = cards ? 'Where everyone is' : `🏎️ Race to the finish: ${data.lesson.number}. ${data.lesson.title}`;
       const n = (st) => data.students.filter((s) => s.status === st).length;
-      $('screen-counts').textContent = data.students.length ? `${n('working')} working · ${n('done')} done · ${n('waiting')} not started` : '';
+      $('screen-counts').textContent = data.students.length ? `${n('working')} working · ${n('done')} done · ${n('waiting')} not started` + (data.students.some((x) => x.idle) ? ` · 💤 ${data.students.filter((x) => x.idle).length} idle` : '') : '';
       $('screen-total').hidden = data.settings.xp === 'hide';
       $('screen-total').textContent = `⚡ ${data.total_xp} class XP`;
       const g = data.goal;

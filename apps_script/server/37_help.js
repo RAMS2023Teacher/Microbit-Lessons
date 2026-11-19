@@ -72,3 +72,34 @@ function helpResolve(cid, who) {
   });
   return helpList_(cfg, cid);
 }
+
+// ---------------------------------------------------------------- 💤 idle students (client/lib/nudge.js)
+// After two minutes without touching the Chromebook (with the Maker Lab tab in front), the page says so here, and
+// says so again when the student is back. It's kept in the cache only (no files, no lock) and forgets itself after
+// five minutes, so a closed Chromebook doesn't stay marked. The class display shows 💤 on those robots.
+var IDLE_TTL_ = 300;
+
+/** Student API: /api/idle {on: true|false, secs: how long they've been idle}. */
+function idleApi_(d) {
+  var me = whoIs_();
+  if (me.teacher || !me.email) return { ok: true };
+  var cache = CacheService.getScriptCache(), key = 'idle:' + me.email;
+  if (d && d.on) {
+    var secs = Math.max(0, Math.min(3600, Number(d.secs) || 0));
+    cache.put(key, String(Date.now() - secs * 1000), IDLE_TTL_);
+  } else cache.remove(key);
+  return { ok: true };
+}
+
+/** email -> minutes idle, for the students who are idle right now. One cache read for the whole class. */
+function idleMinutes_(emails) {
+  var out = {};
+  if (!emails.length) return out;
+  var got = {};
+  try { got = CacheService.getScriptCache().getAll(emails.map(function (e) { return 'idle:' + e; })) || {}; } catch (e) { return out; }
+  emails.forEach(function (e) {
+    var since = Number(got['idle:' + e]);
+    if (since) out[e] = Math.max(2, Math.round((Date.now() - since) / 60000));
+  });
+  return out;
+}

@@ -571,3 +571,13 @@ html.mo-less *, html.mo-less *::before, html.mo-less *::after { animation: none 
 @keyframes nudge-bob { 50% { transform: translateY(5px); } }
 @media (prefers-reduced-motion: reduce) { .nudge-glow, .nudge-hand, .nudge-bubble { animation: none !important; } }
 html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble { animation: none !important; }
+
+/* class display: 💤 on students who haven't touched their Chromebook for a few minutes */
+.racer.zzz, .screen-tile.zzz { position: relative; }
+.racer.zzz .racer-bot, .screen-tile.zzz .screen-avatar { filter: grayscale(.8); opacity: .6; }
+.racer.zzz::after, .screen-tile.zzz::after { content: "💤"; position: absolute; top: -12px; right: -6px; font-size: 1.6rem; z-index: 2; animation: zzz-float 2s ease-in-out infinite; }
+.screen-tile.zzz::after { top: 2px; right: 6px; }
+@keyframes zzz-float { 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .racer.zzz::after, .screen-tile.zzz::after { animation: none; } }
+.partner-note { background: #fff7d6; border: 2px solid #facc15; border-radius: 10px; padding: 6px 10px; }
+.side-panel.partner-new { outline: 4px solid #facc15; outline-offset: 3px; animation: btn-ready .5s cubic-bezier(.2,1.6,.4,1) 3; }

@@ -456,17 +456,21 @@
       const r = await window.fetch(base + '/partner', { method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined }).then((x) => x.json());
       drawPartner(r);
     }
+    let partnerToasted = false;
     function drawPartner(p) {
       const box = $('partner-box');
       box.textContent = '';
       if (p.status === 'paired') {
-        const t = box.appendChild(el('p', ''));
-        t.append('You and ');
-        const nb = t.appendChild(el('b', '')); nb.textContent = p.name; nb.setAttribute('translate', 'no');
-        t.append(' are partners. Everything saves for both of you.');
-        const stop = box.appendChild(el('button', 'linklike small', 'Stop working together'));
+        const t = box.appendChild(el('p', p.by_me ? '' : 'partner-note'));
+        const nb = el('b', ''); nb.textContent = p.name; nb.setAttribute('translate', 'no');
+        if (p.by_me) { t.append('You picked '); t.appendChild(nb); t.append(' as your partner.'); }
+        else { t.append('👋 '); t.appendChild(nb); t.append(' picked you as their partner for this lesson.'); }
+        box.appendChild(el('p', 'small', 'Everything in this lesson saves for both of you.'));
+        const stop = box.appendChild(el('button', 'btn small ghost', p.by_me ? 'Remove partner' : "Not my partner: remove"));
         stop.type = 'button';
+        stop.id = 'partner-remove';
         stop.addEventListener('click', () => { if (confirm(`Stop working with ${p.name}? Work you already did stays with both of you.`)) partner({ action: 'leave' }); });
+        if (!p.by_me && !partnerToasted) { partnerToasted = true; $('partner-panel').classList.add('partner-new'); }
       } else if ((p.classmates || []).length) {
         box.appendChild(el('p', 'small', 'Sharing this Chromebook? Pick your partner so you both get the work and the XP.'));
         const pick = box.appendChild(el('select'));

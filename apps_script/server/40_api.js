@@ -50,6 +50,7 @@ function api(path, bodyJson) {
     var body = bodyJson ? JSON.parse(bodyJson) : {};
     if (path === '/api/run') return runCall_(body);
     if (path === '/api/help') return { status: 200, body: helpApi_(body) };
+    if (path === '/api/idle') return { status: 200, body: idleApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner|feedback)$/.exec(path);
@@ -184,14 +185,17 @@ var API_ = {
       if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) throw badRequest_('That classmate already has a partner for this lesson.');
       mergeProgress_(p, theirs);
       p.partner = email;
+      p.partner_by = ctx.rec.email;                // who picked whom: the other student is told, and either can undo it
       finish_(ctx, L, p);                          // saves both files and gives XP to both
     } else if (d.action === 'leave' && p.partner) {
       var other = loadStudent_(p.partner);
       if (other && other.progress[L.id] && other.progress[L.id].partner === ctx.rec.email) {
         delete other.progress[L.id].partner;
+        delete other.progress[L.id].partner_by;
         saveStudent_(other);
       }
       delete p.partner;
+      delete p.partner_by;
       saveStudent_(ctx.rec);
     }
     return partnerState_(ctx, L, p);
@@ -254,7 +258,7 @@ function mergeProgress_(a, b) {
 function mirrorToPartner_(ctx, L, p) {
   if (!p.partner) return null;
   var mate = partnerRecord_(ctx.cfg, p.partner), theirs = mate.progress[L.id];
-  if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; return null; }   // they paired with someone else
+  if (theirs && theirs.partner && theirs.partner !== ctx.rec.email) { delete p.partner; delete p.partner_by; return null; }   // they paired with someone else
   var copy = JSON.parse(JSON.stringify(p));
   copy.partner = ctx.rec.email;
   if (theirs && theirs.quiz_first) copy.quiz_first = theirs.quiz_first;      // each keeps their own first try (feedback report)
@@ -265,7 +269,7 @@ function mirrorToPartner_(ctx, L, p) {
 }
 
 function partnerState_(ctx, L, p) {
-  if (p.partner) return { status: 'paired', name: partnerName_(ctx.cfg, p.partner) };
+  if (p.partner) return { status: 'paired', name: partnerName_(ctx.cfg, p.partner), by_me: !p.partner_by || p.partner_by === ctx.rec.email };
   return { status: 'none', classmates: classmates_(ctx) };
 }
 
