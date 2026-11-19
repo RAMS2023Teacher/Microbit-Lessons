@@ -26,7 +26,7 @@ def test_course_plan_is_consistent():
             assert b[4][1] in all_ids, b[0]
     for opts in rules.AVATAR_OPTIONS.values():
         for _, _, unlock in opts:
-            assert unlock is None or unlock[0] in ("level", "cost") or unlock[1] in badge_ids, unlock
+            assert unlock is None or unlock[0] in ("level", "cost") or unlock[0] in {g["id"] for g in rules.GAMES} or unlock[1] in badge_ids, unlock
 
 
 def test_every_course_has_its_lessons():
