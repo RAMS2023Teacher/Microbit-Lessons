@@ -97,9 +97,15 @@
       r.dataset.who = st.who || '';
       const av = r.appendChild(el('div', 'racer-bot'));
       av.innerHTML = window.RobotAvatar.svg(st.avatar, 96);
-      const nm = r.appendChild(el('b', '', st.name));
-      if (st.name.length > 6) nm.style.fontSize = `calc((var(--bot) * .2 + 13px) * ${(6.5 / st.name.length).toFixed(3)})`;   // long names shrink to fit
-      if (data.settings.xp === 'each') r.appendChild(el('small', '', `Lv ${st.level || 1}`));
+      const info = r.appendChild(el('div', 'racer-info'));
+      const nm = info.appendChild(el('b', '', st.name));
+      nm.style.setProperty('--fit', st.name.length > 6 ? (6.5 / st.name.length).toFixed(3) : 1);   // long names shrink to fit
+      if (window.RobotAvatar.card(st.avatar)) {
+        info.insertAdjacentHTML('beforeend', window.RobotAvatar.card(st.avatar, 'racer-card'));
+        const badge = av.appendChild(el('span', 'card-badge s-' + (st.avatar.card_style || 'plain'), String(st.avatar.card_text).split(' ')[0]));   // the card's emoji, for when the words don't fit
+        badge.title = st.avatar.card_text;
+      }
+      if (data.settings.xp === 'each') info.appendChild(el('small', '', `Lv ${st.level || 1}`));
       r.title = `${st.name}${st.avatar && st.avatar.card_text ? ' (' + st.avatar.card_text + ')' : ''}: ${st.where}`;
       if (st.idle) { r.classList.add('zzz'); r.title += ` · no clicks or typing for ${st.idle} min`; }
       return r;
@@ -119,30 +125,71 @@
     function renderTrack() {
       const wrap = $('screen-track'), stops = data.track || [], n = stops.length;
       wrap.textContent = '';
-      const cols = [{ icon: '🚦', name: 'Start' }].concat(stops, [{ icon: '🏁', name: 'Finish!' }]);
+      // The Build stop is split into one stop per step, so the class spreads out along the track instead of piling up.
+      const bi = stops.findIndex((x) => x.key === 'build'), steps = bi >= 0 ? Math.max(1, (data.lesson || {}).steps || 1) : 0;
+      const cols = [{ icon: '🚦', name: 'Start' }];
+      const first = {};                                        // stage index -> its first column
+      stops.forEach((x, k) => {
+        first[k] = cols.length;
+        if (k === bi && steps > 1) for (let i = 0; i < steps; i++) cols.push({ step: i + 1, name: 'Step ' + (i + 1), icon: x.icon });
+        else cols.push(x);
+      });
+      first[n] = cols.length;
+      cols.push({ icon: '🏁', name: 'Finish!' });
       const track = wrap.appendChild(el('div', 'track'));
       track.style.setProperty('--cols', cols.length);
       const lanes = cols.map((c, i) => {
-        const col = track.appendChild(el('div', 'track-col' + (i === 0 ? ' start' : i === cols.length - 1 ? ' finish' : '')));
+        const col = track.appendChild(el('div', 'track-col' + (i === 0 ? ' start' : i === cols.length - 1 ? ' finish' : '') + (c.step ? ' step' : '')));
         const head = col.appendChild(el('div', 'track-stop'));
-        head.appendChild(el('span', 'track-icon', c.icon));
+        head.appendChild(el('span', 'track-icon', c.step ? String(c.step) : c.icon));
         head.appendChild(el('span', 'track-name', c.name));
         return col.appendChild(el('div', 'track-lane'));
       });
       const elsewhere = [];
       data.students.forEach((st) => {
         if (st.done == null && st.elsewhere) { elsewhere.push(st); return; }
-        // on stop k = working on section k; all n done = finish line
-        const pos = st.done == null ? 0 : st.done >= n ? n + 1 : st.done + 1;
+        // on a stage's stop = working on that stage; in Build, on the stop of the step they're on; all done = finish line
+        let pos = st.done == null ? 0 : st.done >= n ? first[n] : first[st.done];
+        if (st.done === bi && steps > 1) pos += Math.max(0, Math.min(steps - 1, st.step || 0));
         const moved = lastPos[st.name] != null && pos > lastPos[st.name];
         lastPos[st.name] = pos;
         lanes[pos].appendChild(racer(st, moved));
       });
       lanes.forEach((lane) => { if (lane.children.length) lane.parentElement.classList.add('busy'); });
-      // busy stops get more room, so a crowd of robots doesn't have to shrink
-      track.style.gridTemplateColumns = lanes.map((l) => `minmax(112px, ${Math.max(1, Math.sqrt(l.children.length)).toFixed(2)}fr)`).join(' ');
-      fitRacers(wrap, track, lanes);
-      const refit = () => { if (track.isConnected) fitRacers(wrap, track, lanes); };   // again once fonts and layout settle
+      // busy stops get more room; empty Build steps are just a narrow tick on the track
+      track.style.minWidth = '0';
+      // Stops with students share the width (up to 190px each before any extra goes to the crowded ones, more for a crowd); empty stops are
+      // just their icon, and empty Build steps a small tick. A stop that is wide enough shows each student as a row
+      // (robot, then name and calling card beside it), two rows across if it's very wide; narrow stops stack them.
+      const layout = () => {
+        if (!track.isConnected) return;
+        const total = track.clientWidth, count = lanes.map((l) => l.children.length), busyN = count.filter(Boolean).length;
+        const fixed = count.map((c, i) => (c ? 0 : cols[i].step ? 14 : 50)), free = total - fixed.reduce((x, y) => x + y, 0);
+        const base = Math.min(190, free / Math.max(1, busyN)), extra = Math.max(0, free - base * busyN), kids = count.reduce((x, y) => x + y, 0) || 1;
+        const px = count.map((c, i) => (c ? base + extra * c / kids : fixed[i]));
+        track.style.gridTemplateColumns = px.map((w) => w.toFixed(1) + 'px').join(' ');
+        // Three ways to draw the class, best first: (1) robots with the name and the whole calling card underneath,
+        // when there's room for good-sized robots; (2) one student per row, robot then name and card beside it;
+        // (3) rows with each card shown as its emoji on the robot, when the words would be cut off.
+        const bot = () => parseFloat(track.style.getPropertyValue('--bot')) || 0, hasCards = !!track.querySelector('.racer-card');
+        const cut = () => [...track.querySelectorAll('.racer-card')].some((c) => c.scrollWidth > c.clientWidth + 1 || c.scrollHeight > c.clientHeight + 1);
+        const rows = (on) => lanes.forEach((l, i) => l.parentElement.classList.toggle('rows', on && count[i] > 0 && px[i] >= 114));
+        track.classList.remove('card-icons');
+        rows(false); fitRacers(wrap, track, lanes);
+        if (bot() < 56 || (hasCards && cut())) {
+          rows(true); fitRacers(wrap, track, lanes);
+          if (hasCards && (cut() || bot() < 34)) { track.classList.add('card-icons'); fitRacers(wrap, track, lanes); }
+        }
+        track.querySelectorAll('.racer b').forEach((nm) => {     // names shrink until they fit their stop, instead of being cut off
+          let f = parseFloat(nm.style.getPropertyValue('--fit')) || 1;
+          nm.dataset.fit = nm.dataset.fit || f;
+          f = parseFloat(nm.dataset.fit);
+          nm.style.setProperty('--fit', f);
+          while (nm.scrollWidth > nm.clientWidth && f > 0.42) { f -= 0.06; nm.style.setProperty('--fit', f.toFixed(2)); }
+        });
+      };
+      layout();
+      const refit = layout;                                    // again once fonts and layout settle
       requestAnimationFrame(refit);
       setTimeout(refit, 600);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);

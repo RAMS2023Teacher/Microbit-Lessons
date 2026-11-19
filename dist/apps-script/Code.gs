@@ -1504,6 +1504,7 @@ function screenPayload_(cfg, cid) {
     var row = { who: helpWho_(s.email), name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
                 // race track: stages done in today's lesson (null = busy with a different lesson, or not started)
                 done: here ? (sd ? STAGES_.filter(function (st) { return sd[st[0]]; }).length : 0) : null };
+    if (here && sd && sd.mission && !sd.build) row.step = Math.min(L.build.length - 1, here.steps_done || 0);   // which Build step they're on (0 = step 1)
     if (!here && w.status === 'working') row.elsewhere = w.where;
     if (idle[s.email]) row.idle = idle[s.email];           // 💤 minutes without touching the Chromebook
     if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser
@@ -1525,7 +1526,7 @@ function screenPayload_(cfg, cid) {
   return { settings: settings, students: rows, wins: wins,
            total_xp: settings.xp === 'hide' ? 0 : students.reduce(function (t, s) { return t + (s.xp || 0); }, 0),
            goal: settings.xp === 'hide' || !goal ? null : { target: goal, today: todayXp, auto: settings.goal === '' },
-           lesson: { id: L.id, number: L.number, title: L.title }, auto_lesson: !DATA.lessons[settings.lesson_id],
+           lesson: { id: L.id, number: L.number, title: L.title, steps: L.build.length }, auto_lesson: !DATA.lessons[settings.lesson_id],
            track: trackStops_(), question: settings.question || L.mission.big_question || '', big_idea: L.idea_label + ': ' + L.python,
            standards: standardsInPlay_(working, L.id), arcade: arcadeTeacher_(cfg, cid), help: helpList_(cfg, cid) };
 }
@@ -2404,6 +2405,6 @@ function bugUpdate(id, status) {
 function bugCountNew_() {
   try { return readNamed_('bugs', []).filter(function (b) { return b.status === 'new'; }).length; } catch (e) { return 0; }
 }
-var BUILD_ID = "18d0075efa";
-var BUILD_EXPECT = {"Assets": "69f16aabed", "Data": "8bd4752235"};
+var BUILD_ID = "658e8add40";
+var BUILD_EXPECT = {"Assets": "778439750b", "Data": "8bd4752235"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];
