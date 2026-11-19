@@ -552,3 +552,22 @@ html.mo-less *, html.mo-less *::before, html.mo-less *::after { animation: none 
 .bug-panel textarea { width: 100%; }
 .preview-bar { position: sticky; top: 0; z-index: 60; display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap;
   background: repeating-linear-gradient(135deg, #fde68a 0 18px, #fcd34d 18px 36px); color: #1f2937; padding: 8px 16px; font-weight: 700; border-bottom: 3px solid var(--outline); }
+
+/* ---------------------------------------------------------------- idle hints (lib/nudge.js): the next thing to do glows */
+.nudge-glow { position: relative; z-index: 3; border-radius: 12px; outline: 4px solid #facc15; outline-offset: 5px;
+  box-shadow: 0 0 0 10px rgba(250, 204, 21, .28), 0 0 26px 8px rgba(250, 204, 21, .55); animation: nudge-pulse 1.4s ease-in-out infinite; }
+.nudge-glow.nudge-strong { outline-color: #fb923c; animation-duration: .9s; }
+@keyframes nudge-pulse { 50% { outline-offset: 10px; box-shadow: 0 0 0 16px rgba(250, 204, 21, .12), 0 0 34px 12px rgba(250, 204, 21, .75); } }
+.nudge-bubble { position: absolute; z-index: 90; display: flex; align-items: center; gap: 10px; max-width: min(420px, calc(100vw - 16px)); text-align: left;
+  font: inherit; font-weight: 700; color: #1d2a5c; background: #fff7d6; border: 3px solid #1d2a5c; border-radius: 16px; padding: 10px 14px;
+  box-shadow: 0 4px 0 #1d2a5c, 0 12px 30px rgba(13, 20, 51, .25); cursor: pointer; animation: nudge-in .35s cubic-bezier(.2, 1.6, .4, 1); }
+.nudge-bubble.strong { background: #ffedd5; }
+.nudge-bubble.docked { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); animation: none; }
+.nudge-hand { font-size: 1.9rem; line-height: 1; animation: nudge-point 1s ease-in-out infinite; }
+.nudge-more { display: block; margin-top: 4px; font-weight: 600; font-size: .9em; color: #9a3412; }
+@keyframes nudge-in { from { opacity: 0; transform: scale(.7); } }
+@keyframes nudge-point { 50% { transform: translateX(6px); } }
+.nudge-bubble.docked .nudge-hand { animation-name: nudge-bob; }
+@keyframes nudge-bob { 50% { transform: translateY(5px); } }
+@media (prefers-reduced-motion: reduce) { .nudge-glow, .nudge-hand, .nudge-bubble { animation: none !important; } }
+html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble { animation: none !important; }

@@ -2318,5 +2318,5 @@ function bugCountNew_() {
   try { return readNamed_('bugs', []).filter(function (b) { return b.status === 'new'; }).length; } catch (e) { return 0; }
 }
 var BUILD_ID = "d4a2513ca2";
-var BUILD_EXPECT = {"Assets": "67d507da55", "Data": "c391ebe738"};
+var BUILD_EXPECT = {"Assets": "c91c631ea2", "Data": "c391ebe738"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];
