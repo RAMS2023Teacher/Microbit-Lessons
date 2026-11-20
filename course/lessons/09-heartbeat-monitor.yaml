@@ -58,6 +58,15 @@ build:
       - "**Purple** (signal) → pin **0**"
       - "**Red** (power) → **3V**"
       - "**Black** (ground) → **GND**"
+    breadboard:
+      board: false
+      add:
+        - {type: module, id: pulse, label: "Pulse sensor", terminals: [signal, power, ground]}
+        - {type: wire, color: purple, from: mb.P0, to: pulse.signal}
+        - {type: wire, color: red, from: mb.3V, to: pulse.power}
+        - {type: wire, color: black, from: mb.GND, to: pulse.ground}
+      check: [[mb.P0, pulse.signal], [mb.3V, pulse.power], [mb.GND, pulse.ground]]
+      caption: "Match the wire colors: purple to pin 0, red to 3V, black to GND."
     tip: "**Stop:** have your partner check every clip before you plug in the USB. No clips should touch each other."
     test:
       - Purple goes to 0, red to 3V, black to GND

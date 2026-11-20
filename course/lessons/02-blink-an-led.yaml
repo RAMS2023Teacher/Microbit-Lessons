@@ -111,6 +111,14 @@ build:
       - "Put one leg of the **resistor** in row A and the other leg in a new row a few rows away. Call it **row B**."
       - "Put the LED's **long (+) leg** in row B, next to the resistor."
       - "Put the LED's **short (–) leg** in the **blue (–) rail**."
+    breadboard:
+      add:
+        - {type: wire, color: black, from: mb.GND, to: T-1}
+        - {type: wire, color: green, from: mb.P0, to: e5}
+        - {type: resistor, id: r1, ohms: 220, a: c5, b: c9}
+        - {type: led, id: led1, color: red, anode: a9, cathode: T-10}
+      check: [[mb.P0, r1.a], [r1.b, led1.anode], [led1.cathode, mb.GND]]
+      caption: "The numbers on the picture match the numbers printed on your breadboard. Any free rows work."
     picture:
       type: flow
       steps:

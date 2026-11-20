@@ -39,6 +39,14 @@ build:
       - "Run a jumper wire from **P0** to an empty row. Put a **resistor** from that row to a new row."
       - "Put the **red** LED's **long (+) leg** in the resistor's new row."
       - "Put the red LED's **short (–) leg** in the **blue (–) rail**."
+    breadboard:
+      add:
+        - {type: wire, color: black, from: mb.GND, to: T-1}
+        - {type: wire, color: green, from: mb.P0, to: e5}
+        - {type: resistor, id: r1, ohms: 220, a: c5, b: c9}
+        - {type: led, id: led1, color: red, anode: a9, cathode: T-10}
+      check: [[mb.P0, r1.a], [r1.b, led1.anode], [led1.cathode, mb.GND]]
+      caption: "Red on P0. Leave room for two more lights."
     picture:
       type: part
       part: led
@@ -56,6 +64,21 @@ build:
       - "Run a jumper wire from **P2** to an empty row. Add a **resistor** and the **green** LED."
       - "Put both short (–) legs in the **blue (–) rail**."
       - "Line them up from top to bottom: red, yellow, green, like a real traffic light."
+    breadboard:
+      before:
+        - {type: wire, color: black, from: mb.GND, to: T-1}
+        - {type: wire, color: green, from: mb.P0, to: e5}
+        - {type: resistor, id: r1, ohms: 220, a: c5, b: c9}
+        - {type: led, id: led1, color: red, anode: a9, cathode: T-10}
+      add:
+        - {type: wire, color: yellow, from: mb.P1, to: e13}
+        - {type: resistor, id: r2, ohms: 220, a: c13, b: c17}
+        - {type: led, id: led2, color: yellow, anode: a17, cathode: T-18}
+        - {type: wire, color: blue, from: mb.P2, to: e21}
+        - {type: resistor, id: r3, ohms: 220, a: c21, b: c25}
+        - {type: led, id: led3, color: green, anode: a25, cathode: T-26}
+      check: [[mb.P0, r1.a], [r1.b, led1.anode], [led1.cathode, mb.GND], [mb.P1, r2.a], [r2.b, led2.anode], [led2.cathode, mb.GND], [mb.P2, r3.a], [r3.b, led3.anode], [led3.cathode, mb.GND]]
+      caption: "The new parts glow. Every short leg goes in the same blue (–) rail."
     picture:
       type: compare
       items:

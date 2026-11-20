@@ -25,6 +25,8 @@ build:                          # 3-16 steps, one per screen
     title: A loop that counts
     say: The one idea for this step (≤ 80 words)
     wiring: [{text: "Clip **3V** to the VCC row"}]   # optional: wiring steps (marks the lesson as a circuit lesson)
+    breadboard:                                      # optional: a wiring picture under the wiring steps (see "Wiring pictures")
+      add: [...]
     do: [Type this code exactly., Run it and check the boxes.]
     code: |
       count = 0
@@ -100,3 +102,34 @@ MakeCode-style blocks. Write the block text the way it reads in the editor:
   wrong, start the line with the drawer name in braces: `{game} change [player] [x] by [1]`.
   Drawers: basic, input, music, led, radio, loops, logic, variables, math, game, functions, ml, text.
 - `new:` highlights lines, like the Python lessons.
+
+
+## Wiring pictures (`breadboard:` on a build step)
+
+Any step with `wiring:` can have a picture of the breadboard, drawn by `apps_script/client/lib/breadboard.js`.
+Every picture is checked when the site is built (`course/circuits.py`): parts must sit in real holes, nothing may be
+shorted, and each group in `check` must really be connected. A wrong picture stops the build.
+
+```yaml
+    breadboard:
+      before:                      # optional: parts built in an earlier step (drawn dimmed)
+        - {type: wire, color: black, from: mb.GND, to: T-1}
+      add:                         # this step's parts (they glow when there is a `before`)
+        - {type: wire, color: green, from: mb.P0, to: e5}
+        - {type: resistor, id: r1, ohms: 220, a: c5, b: c9}
+        - {type: led, id: led1, color: red, anode: a9, cathode: T-10}
+      check: [[mb.P0, r1.a], [r1.b, led1.anode], [led1.cathode, mb.GND]]   # groups that must be connected
+      caption: "A sentence under the picture."
+      board: false                 # optional: no breadboard (clips or wires straight to the pins)
+      mb_title: "micro:bit pins"   # optional: the label on the pin block
+```
+
+Addresses: holes `a1`..`j30` (the number is the row number printed on the breadboard; `a`-`e` in a row are joined, and
+`f`-`j`), rails `T+1`, `T-1`, `B+1`, `B-1` (each rail is one long strip), micro:bit pins `mb.3V`, `mb.GND`, `mb.P0`,
+`mb.P1`, `mb.P2`, `mb.P8`, `mb.P12`..`mb.P16`, `mb.P19`, `mb.P20`, and a part's legs as `id.leg`.
+
+Parts on the board: `led` (anode, cathode, color), `resistor` (a, b, ohms), `button` (a, b), `ldr`, `diode`,
+`capacitor`, `buzzer` (plus, minus), `potentiometer` (left, wiper, right), `transistor`, `hcsr04` (vcc, trig, echo,
+gnd: the distance sensor). Parts beside the board: `servo` (sig, vcc, gnd), `dcmotor`, `battery` (plus, minus) and
+`module` (give a `label` and a `terminals` list). Wire colors: red, black, blue, green, yellow, orange, white, purple,
+brown, gray.

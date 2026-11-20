@@ -62,6 +62,22 @@ build:
       - "Both servos' **red** wires → the battery pack **+** row on the breadboard."
       - "Both servos' **brown/black** wires → the battery pack **–** row."
       - "One wire from the battery **–** row → **GND** on the breakout board. This joins the grounds so the signal works."
+    breadboard:
+      add:
+        - {type: battery, id: batt, label: "Battery pack"}
+        - {type: servo, id: left, label: "Left servo"}
+        - {type: servo, id: right, label: "Right servo"}
+        - {type: wire, color: red, from: batt.plus, to: a26}
+        - {type: wire, color: black, from: batt.minus, to: a29}
+        - {type: wire, color: red, from: left.vcc, to: c26}
+        - {type: wire, color: red, from: right.vcc, to: d26}
+        - {type: wire, color: brown, from: left.gnd, to: c29}
+        - {type: wire, color: brown, from: right.gnd, to: d29}
+        - {type: wire, color: orange, from: left.sig, to: mb.P1}
+        - {type: wire, color: orange, from: right.sig, to: mb.P2}
+        - {type: wire, color: black, from: e29, to: mb.GND}
+      check: [[left.sig, mb.P1], [right.sig, mb.P2], [batt.plus, left.vcc, right.vcc], [batt.minus, left.gnd, right.gnd, mb.GND]]
+      caption: "Red wires share the battery + row. Brown wires share the battery – row, which also joins GND."
     tip: "**Check with your teacher** that these pins match your robot. If your robot is wired differently, write your pins below and use them everywhere this lesson says P1 or P2."
     stuck:
       - "**Left and right** are as if you were sitting on the robot, facing forward."

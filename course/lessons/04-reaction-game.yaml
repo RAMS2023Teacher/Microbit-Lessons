@@ -51,6 +51,13 @@ build:
       - "Push the button into the breadboard so it **straddles the middle gap**."
       - "Jumper wire from the breakout's **P1** pin to the button's **top-left** leg row."
       - "Jumper wire from the breakout's **GND** pin to the button's **bottom-right** leg row (diagonal from the first)."
+    breadboard:
+      add:
+        - {type: button, id: btn, a: e18, b: f20}
+        - {type: wire, color: yellow, from: mb.P1, to: a18}
+        - {type: wire, color: black, from: mb.GND, to: j20}
+      check: [[mb.P1, btn.a], [mb.GND, btn.b]]
+      caption: "The button sits across the middle gap. The two wires go to opposite corners."
     test:
       - The button sits across the middle gap
       - One wire goes to P1 and the other to GND, on diagonal legs

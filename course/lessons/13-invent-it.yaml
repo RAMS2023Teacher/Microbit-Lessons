@@ -160,6 +160,15 @@ build:
       - "**Unplug the USB** (or battery) before you change any wires."
       - "Wire one part at a time. Test it, then add the next part."
       - "Check: **GND** to GND, **3V** to the power pin, signal to the pin your code uses."
+    breadboard:
+      board: false
+      add:
+        - {type: module, id: part, label: "Your part", terminals: [power, signal, ground]}
+        - {type: wire, color: red, from: mb.3V, to: part.power}
+        - {type: wire, color: green, from: mb.P0, to: part.signal}
+        - {type: wire, color: black, from: mb.GND, to: part.ground}
+      check: [[mb.3V, part.power], [mb.P0, part.signal], [mb.GND, part.ground]]
+      caption: "An example: most parts need power, ground and one signal wire. Use the pin your code uses for the signal."
     do:
       - "No circuit in your idea? Skip the wiring and just build the code."
       - Build version 1. Test it in the simulator, then on the real micro:bit.

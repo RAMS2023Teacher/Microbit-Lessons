@@ -271,7 +271,8 @@
         `<div class="step-head"><div><div class="step-part">${E(St.part || 'Build')}</div><h2 class="step-title">${E(St.title)}</h2></div>` +
         `<div><span class="step-count">Step ${i + 1} of ${L.build.length}</span> <button type="button" class="read-aloud" data-read title="Read to me">🔊</button></div></div>` +
         (St.say ? `<div class="panel-soft box-new">${St.say}</div>` : '') + picture(St.picture) +
-        (St.wiring.length ? `<div class="panel-soft box-what"><h3>🔌 Wire it</h3><ol class="do-list">${St.wiring.map((w) => `<li>${w.text || w}</li>`).join('')}</ol></div>` : '') +
+        (St.wiring.length ? `<div class="panel-soft box-what"><h3>🔌 Wire it</h3><ol class="do-list">${St.wiring.map((w) => `<li>${w.text || w}</li>`).join('')}</ol>` +
+          (St.breadboard ? `<figure class="wire-pic"><div class="bb" id="wire-bb" translate="no"></div><figcaption>${St.breadboard.caption || ''}</figcaption></figure>` : '') + `</div>` : '') +
         (St.do.length ? `<h3>Do this</h3><ol class="do-list">${St.do.map((x) => `<li>${x}</li>`).join('')}</ol>` : '') +
         codeBox(St.code, St.new, St.blocks) +
         (St.tip ? `<div class="panel-soft box-tip">${St.tip}</div>` : '') +
@@ -285,6 +286,11 @@
         `<span class="need" id="step-need"></span><span class="saved" id="step-saved"></span>` +
         `<button type="button" class="btn go big" id="step-next">${last ? 'Got it! On to the quiz ▶' : 'Got it! Next ▶'}</button></div></section>`;
       box.querySelector('.step-head').after(flagWidget('step', i));
+      if (St.breadboard && $('wire-bb') && window.Breadboard) {       // the wiring picture: this step's parts glow, earlier ones are dimmed
+        const bb = St.breadboard;
+        window.Breadboard.render($('wire-bb'), bb, bb.steps.length - 1, { crop: true, plain: bb.steps.length < 2 });
+        $('wire-bb').querySelector('svg').setAttribute('aria-label', 'Wiring picture: ' + St.wiring.map((w) => String(w.text || w).replace(/<[^>]+>/g, '')).join(' '));
+      }
       if (St.ask) $('step-ask').value = row.answer || '';
       box.querySelectorAll('[data-field]').forEach((inp) => { inp.value = (row.fields || [])[+inp.dataset.field] || ''; });
       afterDraw(box);

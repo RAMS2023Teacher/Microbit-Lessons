@@ -79,6 +79,15 @@ build:
       - "Clip **pin 0** to the **tip** (the very end of the plug)."
       - "Clip **GND** to the **sleeve** (the long base)."
       - "Leave the ring alone. **Never use 3V.**"
+    breadboard:
+      board: false
+      mb_title: "micro:bit pins"
+      add:
+        - {type: module, id: plug, label: "Headphone plug", terminals: [tip, ring, sleeve]}
+        - {type: wire, color: yellow, from: mb.P0, to: plug.tip}
+        - {type: wire, color: black, from: mb.GND, to: plug.sleeve}
+      check: [[mb.P0, plug.tip], [mb.GND, plug.sleeve]]
+      caption: "Two clips only: pin 0 to the tip, GND to the sleeve. Nothing on the ring or on 3V."
     tip: "**Ears first!** Hold the headphones away from your ears for the first test. It can be loud."
     do:
       - Download your Step 2 code to the real micro:bit and listen.

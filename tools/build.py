@@ -70,7 +70,7 @@ def lesson_data(lesson: dict) -> dict:
             "code": code, "blocks": blocks, "new": L.line_set(s["new"], len((code or blocks).split("\n"))) if s.get("new") else [],
             "what": md(s.get("what")), "tip": md(s.get("tip")), "stuck": [md_inline(x) for x in s.get("stuck") or []],
             "test": [md_inline(x) for x in s.get("test") or []], "ask": plain(s.get("ask")), "fields": s.get("fields") or [],
-            "picture": s.get("picture"), "wiring": [md_inline(w.get("text", "") if isinstance(w, dict) else w) for w in s.get("wiring") or []],
+            "picture": s.get("picture"), "breadboard": breadboard_data(s.get("breadboard")), "wiring": [md_inline(w.get("text", "") if isinstance(w, dict) else w) for w in s.get("wiring") or []],
         })
     for e in (lesson.get("ship") or {}).get("extensions") or []:
         code = (e.get("code") or "").rstrip("\n")
@@ -111,6 +111,18 @@ def build_data() -> dict:
     }
 
 
+def breadboard_data(b):
+    """A step's wiring picture, ready for client/lib/breadboard.js (the checks stay behind)."""
+    if not b:
+        return None
+    out = {"steps": L.breadboard_steps(b), "caption": md_inline(b.get("caption", ""))}
+    if b.get("board") is False:
+        out["board"] = False
+    if b.get("mb_title"):
+        out["mb_title"] = b["mb_title"]
+    return out
+
+
 # ---------------------------------------------------------------- CSS and JavaScript
 def read(path) -> str:
     return (CLIENT / path).read_text(encoding="utf-8")
@@ -119,7 +131,7 @@ def read(path) -> str:
 def build_assets() -> dict:
     styles = read("css/base.css") + "\n" + read("css/theme.css")
     app = "\n".join([
-        read("lib/sfx.js"), read("lib/prefs.js"), read("lib/bugs.js"), read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/circuit.js"), read("lib/blocks.js"), read("lib/translate.js"), read("lib/pixel.js"), read("lib/nudge.js"),
+        read("lib/sfx.js"), read("lib/prefs.js"), read("lib/bugs.js"), read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/breadboard.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/circuit.js"), read("lib/blocks.js"), read("lib/translate.js"), read("lib/pixel.js"), read("lib/nudge.js"),
         "window.__runMap = function () {\n" + read("lib/map.js") + "\n};",
         "window.__runProfile = function () {\n" + read("lib/profile.js") + "\n};",
         read("pages.js"), read("lesson.js"),

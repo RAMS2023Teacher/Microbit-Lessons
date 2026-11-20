@@ -108,6 +108,14 @@ build:
       - "Put the **220 Ω resistor** from that row to a new row."
       - "Put the LED's **long leg** in the resistor's new row. Put the **short leg** in the next row."
       - "Jumper wire from the short leg's row to **GND**."
+    breadboard:
+      add:
+        - {type: wire, color: green, from: mb.P0, to: e5}
+        - {type: resistor, id: r1, ohms: 220, a: c5, b: c9}
+        - {type: led, id: led1, color: red, anode: b9, cathode: b10}
+        - {type: wire, color: black, from: a10, to: mb.GND}
+      check: [[mb.P0, r1.a], [r1.b, led1.anode], [led1.cathode, mb.GND]]
+      caption: "P0, then the resistor, then the LED's long leg. The short leg's row goes back to GND."
     test:
       - P0 → resistor → long leg; short leg → GND
     ask: What does the resistor do in this circuit?

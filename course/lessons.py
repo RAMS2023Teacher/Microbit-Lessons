@@ -19,7 +19,7 @@ from . import rules
 
 HERE = Path(__file__).resolve().parent
 LEVELS = ("Easier", "Medium", "Challenge")
-STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip", "stuck", "test", "ask", "fields", "picture", "wiring"}
+STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip", "stuck", "test", "ask", "fields", "picture", "wiring", "breadboard"}
 # MakeCode Blocks, written as text (6th grade). One block per line, 2 spaces of indent per level; a line ending in ":"
 # holds the indented lines under it (on start:, forever:, repeat 4 times:, if ... then:, else:).
 # [x] is a value you type or pick, (x) is a block snapped into a slot. {cat} at the start sets the color when
@@ -129,6 +129,8 @@ def validate(lesson: dict) -> list[str]:
         if s.get("fields") and (not isinstance(s["fields"], list) or len(s["fields"]) > 4):
             errs.append(f"{where}: 'fields' is a list of up to 4 short labels")
         errs += _check_code_block(s, where)
+        if s.get("breadboard"):
+            errs += [f"{where}: breadboard: {e}" for e in check_breadboard(s["breadboard"])]
     quiz = lesson.get("quiz") or []
     if not 3 <= len(quiz) <= 6:
         errs.append("quiz: use 3-6 questions")
@@ -184,6 +186,23 @@ def all_lessons() -> list[dict]:
 
 def get(lesson_id: str) -> dict | None:
     return next((l for l in _load() if l["id"] == lesson_id), None)
+
+
+BREADBOARD_KEYS = {"add", "before", "check", "caption", "board", "mb_title"}
+
+
+def breadboard_steps(b: dict) -> list[dict]:
+    """The picture's parts as drawing steps: what was built earlier, then what this step adds (drawn glowing)."""
+    return ([{"add": b["before"]}] if b.get("before") else []) + [{"add": b.get("add") or []}]
+
+
+def check_breadboard(b: dict) -> list[str]:
+    """A wiring picture must be a real circuit: parts in real holes, nothing shorted, and every `check` group joined."""
+    from . import circuits
+    if not isinstance(b, dict) or not b.get("add"):
+        return ["give an 'add' list of parts and wires"]
+    errs = [f"unknown keys {sorted(set(b) - BREADBOARD_KEYS)}"] if set(b) - BREADBOARD_KEYS else []
+    return errs + circuits.check_circuit({"steps": breadboard_steps(b), "verify": {"connected": b.get("check") or []}})
 
 
 def wired(lesson: dict) -> bool:

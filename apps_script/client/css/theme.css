@@ -648,3 +648,12 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .screen-stage .track-col.rows .racer-card { text-align: left; -webkit-line-clamp: 2; margin-top: 2px; font-size: 13px; padding: 2px 7px; }
 .screen-stage .track-col:not(.busy) .track-name { font-size: .7rem; }
 .screen-stage .track-col.step:not(.busy) .track-icon { width: 13px; height: 13px; font-size: 0; margin-top: 18px; margin-bottom: 18px; border-width: 2px; }
+
+/* the wiring picture in a step's 🔌 Wire it box (lib/breadboard.js) */
+.wire-pic { margin: 12px 0 2px; }
+.wire-pic .bb { background: #eef1f7; border: 2px solid var(--line); border-radius: 12px; padding: 8px; }
+.wire-pic .bb-svg { max-height: 380px; }
+.wire-pic figcaption { margin-top: 6px; font-size: .9rem; color: var(--muted); text-align: center; }
+.wire-pic figcaption:empty { display: none; }
+.part-label { font: 700 8px var(--mono); fill: #fff; }
+.wire-pic .has-old .part:not(.new) { opacity: .8; }
