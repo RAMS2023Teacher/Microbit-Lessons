@@ -657,3 +657,5 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .wire-pic figcaption:empty { display: none; }
 .part-label { font: 700 8px var(--mono); fill: #fff; }
 .wire-pic .has-old .part:not(.new) { opacity: .8; }
+.fields-box .fields-row { margin: 6px 0 0; }
+.fields-box .fields-row input { width: 120px; font-size: 1.1rem; text-align: center; }

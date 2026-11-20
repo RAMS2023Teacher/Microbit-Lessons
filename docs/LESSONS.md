@@ -133,3 +133,5 @@ Parts on the board: `led` (anode, cathode, color), `resistor` (a, b, ohms), `but
 gnd: the distance sensor). Parts beside the board: `servo` (sig, vcc, gnd), `dcmotor`, `battery` (plus, minus) and
 `module` (give a `label` and a `terminals` list). Wire colors: red, black, blue, green, yellow, orange, white, purple,
 brown, gray.
+
+`fields_prompt: "Look at the picture. Write…"` on a step with a `picture` and `fields` puts the blanks in a box right under the picture, with that sentence as its heading (otherwise blanks go after the tests).

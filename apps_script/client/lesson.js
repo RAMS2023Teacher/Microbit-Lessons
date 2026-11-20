@@ -259,6 +259,11 @@
       if (St.fields.some((f, k) => !String((row.fields || [])[k] || '').trim())) missing.push('fill in the blanks');
       return missing;
     }
+    // The blanks a step asks students to fill in. With a `fields_prompt` they sit right under the picture they're about.
+    function fieldsHtml(St, underPicture) {
+      const row = `<div class="fields-row">${St.fields.map((f, k) => `<label>${E(f)}<input data-field="${k}"></label>`).join('')}</div>`;
+      return underPicture ? `<div class="panel-soft box-ask fields-box"><h3>✏️ ${St.fields_prompt}</h3>${row}</div>` : row;
+    }
     function drawBuild() {
       ML.ctx = { lesson: L.id, stage: 'build', step: stepAt };
       const i = stepAt, St = L.build[i], row = stepRow(i), box = $('stage-view'), last = i === L.build.length - 1;
@@ -271,6 +276,7 @@
         `<div class="step-head"><div><div class="step-part">${E(St.part || 'Build')}</div><h2 class="step-title">${E(St.title)}</h2></div>` +
         `<div><span class="step-count">Step ${i + 1} of ${L.build.length}</span> <button type="button" class="read-aloud" data-read title="Read to me">🔊</button></div></div>` +
         (St.say ? `<div class="panel-soft box-new">${St.say}</div>` : '') + picture(St.picture) +
+        (St.fields_prompt ? fieldsHtml(St, true) : '') +
         (St.wiring.length ? `<div class="panel-soft box-what"><h3>🔌 Wire it</h3><ol class="do-list">${St.wiring.map((w) => `<li>${w.text || w}</li>`).join('')}</ol>` +
           (St.breadboard ? `<figure class="wire-pic"><div class="bb" id="wire-bb" translate="no"></div><figcaption>${St.breadboard.caption || ''}</figcaption></figure>` : '') + `</div>` : '') +
         (St.do.length ? `<h3>Do this</h3><ol class="do-list">${St.do.map((x) => `<li>${x}</li>`).join('')}</ol>` : '') +
@@ -280,7 +286,7 @@
         (St.stuck.length ? `<div class="panel-soft box-stuck"><h3>🧯 Not working? Check these</h3><ul>${St.stuck.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : '') +
         `<div class="panel-soft box-test"><h3>✅ Test it</h3><div class="tests">${St.test.map((t, k) =>
           `<label><input type="checkbox" data-test="${k}" ${(row.tests || []).includes(k) ? 'checked' : ''}><span>${t}</span></label>`).join('')}</div></div>` +
-        (St.fields.length ? `<div class="fields-row">${St.fields.map((f, k) => `<label>${E(f)}<input data-field="${k}"></label>`).join('')}</div>` : '') +
+        (St.fields.length && !St.fields_prompt ? fieldsHtml(St, false) : '') +
         (St.ask ? `<div class="panel-soft box-ask ask-box"><h3>✏️ ${E(St.ask)}</h3><textarea id="step-ask" rows="3"></textarea></div>` : '') +
         `<div class="step-nav"><button type="button" class="btn ghost" id="step-back" ${i ? '' : 'disabled'}>◀ Back</button>` +
         `<span class="need" id="step-need"></span><span class="saved" id="step-saved"></span>` +

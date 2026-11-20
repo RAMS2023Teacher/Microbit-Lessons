@@ -144,17 +144,24 @@ build:
         - {x: 1, y: 4, icon: "🙂", label: "you, the player", color: green}
         - {x: 3, y: 0, icon: "💧", label: "the raindrop", color: blue}
       ask: true
-      caption: "On the real micro:bit both are red LEDs. The player is always the one on the bottom row."
+      caption: "Count across the top for x and down the side for y. Start at 0!"
+    fields_prompt: "Look at the picture. Write the address of the 🙂 player and the 💧 raindrop:"
+    fields: ["🙂 Player x (column)", "🙂 Player y (row)", "💧 Drop x (column)", "💧 Drop y (row)"]
     do:
       - Make a **New Project** named **Dodge the Drop**, switch to **Python**, and delete the starter code.
-      - "Try addresses: type `led.plot(0, 0)` and run it. The top-left LED lights up. Then try `led.plot(4, 0)` and `led.plot(2, 4)`."
-      - Point at each lit LED with your partner and say its column and row out loud.
-      - Delete the `led.plot` lines. From now on you'll keep **adding** to this program.
+      - Type the code below. Use **your numbers** from the boxes above. Ours are in the code so you can check.
+      - Run it. Two LEDs light up. Do they sit where the 🙂 and the 💧 are in the picture?
+      - Change the player's **x** to `3` and run it again. Which way did the player move?
+      - Delete all the code. From the next step on you'll keep **adding** to this program.
+    code: |
+      led.plot(1, 4)
+      led.plot(3, 0)
+    what: "`led.plot(x, y)` lights **one** LED. The first number is **x** (the column) and the second is **y** (the row). Line 1 is the player: column 1, row 4. Line 2 is the raindrop: column 3, row 0."
     tip: "**Memory trick:** x is a cross, so it goes **across**. y has a tail that hangs **down**."
     test:
-      - led.plot(2, 4) lit the middle LED of the bottom row
-      - I have a Dodge the Drop project with the led.plot lines deleted
-    fields: ["🙂 Player column (x)", "🙂 Player row (y)", "💧 Drop column (x)", "💧 Drop row (y)"]
+      - My two LEDs lit up in the same places as the 🙂 and the 💧 in the picture
+      - I changed the player's x to 3 and the LED moved to the right
+      - I deleted the code, and my project is named Dodge the Drop
     ask: The player always has the same row number (y). What is it, and why?
 
   - part: "Part 2: Build the game"

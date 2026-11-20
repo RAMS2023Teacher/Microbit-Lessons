@@ -69,7 +69,7 @@ def lesson_data(lesson: dict) -> dict:
             "part": s.get("part", ""), "title": plain(s["title"]), "say": md(s.get("say")), "do": [md_inline(x) for x in s.get("do") or []],
             "code": code, "blocks": blocks, "new": L.line_set(s["new"], len((code or blocks).split("\n"))) if s.get("new") else [],
             "what": md(s.get("what")), "tip": md(s.get("tip")), "stuck": [md_inline(x) for x in s.get("stuck") or []],
-            "test": [md_inline(x) for x in s.get("test") or []], "ask": plain(s.get("ask")), "fields": s.get("fields") or [],
+            "test": [md_inline(x) for x in s.get("test") or []], "ask": plain(s.get("ask")), "fields": s.get("fields") or [], "fields_prompt": md_inline(s.get("fields_prompt", "")) if s.get("fields_prompt") and s.get("picture") else "",
             "picture": s.get("picture"), "breadboard": breadboard_data(s.get("breadboard")), "wiring": [md_inline(w.get("text", "") if isinstance(w, dict) else w) for w in s.get("wiring") or []],
         })
     for e in (lesson.get("ship") or {}).get("extensions") or []:

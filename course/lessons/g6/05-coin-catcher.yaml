@@ -44,6 +44,7 @@ build:
       caption: Where is this LED? Count from 0!
     test:
       - I know x goes left to right and y goes top to bottom
+    fields_prompt: "Look at the picture. Where is the lit LED?"
     fields: ["x", "y"]
     ask: What are the x and y of the LED in the picture?
 

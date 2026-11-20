@@ -19,7 +19,7 @@ from . import rules
 
 HERE = Path(__file__).resolve().parent
 LEVELS = ("Easier", "Medium", "Challenge")
-STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip", "stuck", "test", "ask", "fields", "picture", "wiring", "breadboard"}
+STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip", "stuck", "test", "ask", "fields", "picture", "wiring", "breadboard", "fields_prompt"}
 # MakeCode Blocks, written as text (6th grade). One block per line, 2 spaces of indent per level; a line ending in ":"
 # holds the indented lines under it (on start:, forever:, repeat 4 times:, if ... then:, else:).
 # [x] is a value you type or pick, (x) is a block snapped into a slot. {cat} at the start sets the color when
