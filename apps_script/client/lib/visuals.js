@@ -1,6 +1,6 @@
 /* Visual aids for lesson cards, quiz questions and challenges.
  * Lesson YAML:  visual: {type: leds, image: HEART, caption: "..."}
- * Types: leds, part, circuit, flow, wave, scale, compare, bits, dial, graph
+ * Types: leds, coords, tilt, part, circuit, flow, wave, scale, compare, bits, dial, graph
  * (validated by app/visuals.py — keep the two in sync; see docs/LESSON_FORMAT.md). */
 (function () {
   'use strict';
@@ -239,6 +239,32 @@
     });
     b += t(20, H - 4, v.axis || 'time →   (each bump = on, flat = off)', 'class="vz-label"');
     return svg(W, H, b, v.alt || `on/off signal with ${duty.join('%, ')}% on-time; more on-time looks brighter`);
+  }
+
+  // ---------------------------------------------------------------- tilt: what the accelerometer's left-right number means
+  // { type: tilt, threshold: 300, zones: ['left arrow', 'nothing', 'right arrow'] }   threshold and zones are optional
+  function tilt(v) {
+    const W = 460, x0 = 50, x1 = 410, X = (n) => x0 + (x1 - x0) * (n + 1023) / 2046, yLine = 150;
+    let b = '';
+    const bit = (cx, deg, label) => {                       // a little micro:bit seen from the front, leaning
+      let g = `<g transform="rotate(${deg} ${cx} 62)"><rect x="${cx - 38}" y="34" width="76" height="56" rx="8" fill="#1b2550"/>`;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) g += `<rect x="${cx - 17 + c * 8}" y="${48 + r * 8}" width="4" height="4" rx="1" fill="#ff5a4f"/>`;
+      g += `<circle cx="${cx - 29}" cy="62" r="5" fill="#3b4366"/><circle cx="${cx + 29}" cy="62" r="5" fill="#3b4366"/>` +
+        `<rect x="${cx - 32}" y="84" width="64" height="6" fill="#d9b36a"/></g>`;
+      return g + t(cx, 122, label, 'class="vz-label" text-anchor="middle" font-weight="800"');
+    };
+    b += bit(X(-1023) + 30, -32, 'tilt left') + bit(X(0), 0, 'flat') + bit(X(1023) - 30, 32, 'tilt right');
+    if (v.threshold) {
+      const th = v.threshold, z = v.zones || ['', '', ''];
+      [[-1023, -th, '#dbeafe', z[0]], [-th, th, '#f1f5f9', z[1]], [th, 1023, '#dcfce7', z[2]]].forEach(([a, c, col, label]) => {
+        b += `<rect x="${X(a)}" y="${yLine - 26}" width="${X(c) - X(a)}" height="24" fill="${col}"/>` + t((X(a) + X(c)) / 2, yLine - 9, label, 'class="vz-label" text-anchor="middle"');
+      });
+    }
+    b += `<line x1="${x0}" y1="${yLine}" x2="${x1}" y2="${yLine}" stroke="${INK}" stroke-width="3"/>`;
+    const marks = [[-1023, '−1023'], [0, '0'], [1023, '1023']].concat(v.threshold ? [[-v.threshold, '−' + v.threshold], [v.threshold, String(v.threshold)]] : []);
+    marks.forEach(([n, label]) => { b += `<line x1="${X(n)}" y1="${yLine - 7}" x2="${X(n)}" y2="${yLine + 7}" stroke="${INK}" stroke-width="3"/>` + t(X(n), yLine + 26, label, 'class="vz-big" text-anchor="middle" font-size="17"'); });
+    b += t(X(-560), yLine + 48, '← negative numbers', 'class="vz-label" text-anchor="middle" fill="#1d4ed8"') + t(X(560), yLine + 48, 'positive numbers →', 'class="vz-label" text-anchor="middle" fill="#15803d"');
+    return svg(W, yLine + 58, b, v.alt || 'a micro:bit tilted left reads about minus 1000, flat reads 0, tilted right reads about plus 1000');
   }
 
   // ---------------------------------------------------------------- scale (number line, zones, mapping)
@@ -510,7 +536,7 @@
     return null;
   }
 
-  const R = { leds, coords, part, circuit, flow, wave, scale, compare, bits, dial, graph, board, try: tryIt };
+  const R = { leds, coords, tilt, part, circuit, flow, wave, scale, compare, bits, dial, graph, board, try: tryIt };
 
   function render(el, v) {
     const fn = R[v.type];

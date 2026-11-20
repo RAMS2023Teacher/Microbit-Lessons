@@ -135,3 +135,5 @@ gnd: the distance sensor). Parts beside the board: `servo` (sig, vcc, gnd), `dcm
 brown, gray.
 
 `fields_prompt: "Look at the picture. Write…"` on a step with a `picture` and `fields` puts the blanks in a box right under the picture, with that sentence as its heading (otherwise blanks go after the tests).
+
+Picture type `tilt` draws a micro:bit leaning left, flat and right over a number line from -1023 to 1023 (for the accelerometer). Add `threshold: 300` and `zones: [left, middle, right]` to show the zones an `if` uses.

@@ -93,22 +93,47 @@ build:
 
   - part: "Part 1: Warm-ups"
     title: Read the tilt
-    say: "The **accelerometer** senses tilt. `input.acceleration(Dimension.X)` gives a number for how far the micro:bit tilts left or right."
+    say: |
+      The **accelerometer** is a sensor that feels which way the micro:bit is **leaning**.
+      It gives one number for left and right: **0** when flat, a **negative** number when it leans left,
+      a **positive** number when it leans right. The more it leans, the bigger the number (up to about 1023).
+    picture:
+      type: tilt
+      caption: "Lean it more and the number moves further from 0."
     do:
       - Delete your button code.
       - Type this code and run it.
-      - Tilt the micro:bit left, hold it flat, then tilt right. Write the numbers below.
+      - "Hold the micro:bit **flat** and wait for a number. Then lean it **left** and **hold it still** until the next number. Then lean it **right**."
+      - Write the three numbers below. They won't be exact, and that's fine.
     code: |
       while True:
-          basic.show_number(input.acceleration(Dimension.X))
+          x = input.acceleration(Dimension.X)
+          basic.show_number(Math.round(x / 100) * 100)
+          basic.pause(1000)
+          basic.clear_screen()
+          basic.pause(300)
+    what: "Line 2 reads the tilt and keeps it in `x`. Line 3 rounds it to the nearest hundred, so it's easier to read, and shows it. The pauses give you time: you get **one** number about every two seconds."
+    tip: "**In the simulator:** move your mouse left and right over the micro:bit picture to lean it. Keep the mouse still while a number scrolls past."
+    stuck:
+      - "A long number like -1000 **scrolls** across the screen. Wait for it to finish before you move."
+      - "Capital **M** in `Math.round`, and capital **X** in `Dimension.X`."
     test:
-      - The number changes when I tilt
-    fields: ["Tilt left", "Flat", "Tilt right"]
+      - Flat shows a number close to 0
+      - Leaning left and leaning right show different numbers
+    fields: ["Lean left", "Flat", "Lean right"]
     ask: Which direction gives negative numbers? Which gives positive numbers?
 
   - part: "Part 1: Warm-ups"
     title: Build a tilt sensor
-    say: Now use the tilt number to make a **decision**. Every trip through the loop reads the tilt again.
+    say: |
+      Now use the tilt number to make a **decision**. Every trip through the loop reads the tilt again.
+      A small lean shouldn't count, so we pick two **thresholds**: further left than **-300** means left,
+      further right than **300** means right.
+    picture:
+      type: tilt
+      threshold: 300
+      zones: ["x < -300: ⬅", "do nothing", "x > 300: ➡"]
+      caption: "The grey zone in the middle is 'flat enough'. Only a real lean gets past -300 or 300."
     do:
       - Delete your tilt-number code.
       - Type this code. There are three levels of indentation.
