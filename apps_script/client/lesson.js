@@ -278,7 +278,7 @@
         (St.say ? `<div class="panel-soft box-new">${St.say}</div>` : '') + picture(St.picture) +
         (St.fields_prompt ? fieldsHtml(St, true) : '') +
         (St.wiring.length ? `<div class="panel-soft box-what"><h3>🔌 Wire it</h3><ol class="do-list">${St.wiring.map((w) => `<li>${w.text || w}</li>`).join('')}</ol>` +
-          (St.breadboard ? `<figure class="wire-pic"><div class="kit-pick" id="kit-pick" hidden><span>My kit:</span><button type="button" data-kit="breakout">🟥 Breakout board</button><button type="button" data-kit="clips">🐊 Alligator clips</button></div>` +
+          (St.breadboard ? `<figure class="wire-pic"><div class="kit-pick" id="kit-pick" hidden><span>My kit:</span><button type="button" data-kit="breakout">🟥 Breakout board</button><button type="button" data-kit="clips">🐊 Alligator clips</button><button type="button" data-kit="diagram">📐 Circuit diagram</button></div>` +
             `<div class="bb" id="wire-bb" translate="no"></div><p class="kit-note" id="kit-note"></p><figcaption>${St.breadboard.caption || ''}</figcaption></figure>` : '') + `</div>` : '') +
         (St.do.length ? `<h3>Do this</h3><ol class="do-list">${St.do.map((x) => `<li>${x}</li>`).join('')}</ol>` : '') +
         codeBox(St.code, St.new, St.blocks) +
@@ -300,17 +300,23 @@
         const clipsOk = [...pins].every((x) => ['P0', 'P1', 'P2', '3V', 'GND'].includes(x)), both = bb.board !== false && clipsOk && pins.size > 0;
         let kit = 'breakout';
         try { kit = localStorage.getItem('ml-kit') || 'breakout'; } catch (e) { /* default */ }
+        const can = { breakout: bb.board !== false, clips: clipsOk && (pins.size > 0 || bb.board === false), diagram: pins.size > 0 && !!window.Schematic };
         const drawWire = () => {
-          const mode = bb.board === false ? 'clips' : both ? kit : 'breakout';
-          window.Breadboard.render($('wire-bb'), Object.assign({}, bb, { mb: mode }), bb.steps.length - 1, { crop: true, plain: bb.steps.length < 2 });
+          const mode = can[kit] ? kit : can.breakout ? 'breakout' : 'clips';
+          if (mode === 'diagram') window.Schematic.render($('wire-bb'), bb);
+          else window.Breadboard.render($('wire-bb'), Object.assign({}, bb, { mb: mode }), bb.steps.length - 1, { crop: true, plain: bb.steps.length < 2 });
+          $('wire-bb').classList.toggle('is-diagram', mode === 'diagram');
           $('wire-bb').querySelector('svg').setAttribute('aria-label', 'Wiring picture: ' + St.wiring.map((w) => String(w.text || w).replace(/<[^>]+>/g, '')).join(' '));
-          $('kit-note').textContent = !pins.size ? '' : mode === 'clips'
+          $('kit-note').textContent = !pins.size ? '' : mode === 'diagram'
+            ? '📐 A circuit diagram shows what is joined to what, not where things sit. Every line is a wire or a breadboard row. Follow a line from a pin, through the parts, and back to GND.'
+            : mode === 'clips'
             ? '🐊 Clip one end of each wire onto the big pin on the micro:bit' + (bb.board === false ? '.' : '. Push its other end into the hole shown.')
             : "🟥 The breakout board's pins are plugged into the breadboard. Every hole in a pin's row is joined to that pin, so wires start in the same row." +
               (clipsOk ? '' : ' (This step uses pins that alligator clips can\'t reach.)');
           $('kit-pick').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.kit === mode));
         };
-        $('kit-pick').hidden = !both;
+        $('kit-pick').hidden = Object.keys(can).filter((k) => can[k]).length < 2;
+        $('kit-pick').querySelectorAll('button').forEach((x) => { x.hidden = !can[x.dataset.kit]; });
         $('kit-pick').querySelectorAll('button').forEach((x) => x.addEventListener('click', () => { kit = x.dataset.kit; try { localStorage.setItem('ml-kit', kit); } catch (e) { /* fine */ } drawWire(); }));
         drawWire();
       }

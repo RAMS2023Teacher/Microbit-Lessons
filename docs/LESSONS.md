@@ -151,3 +151,7 @@ Students pick **My kit** above a wiring picture (remembered on their device):
 
 A different breakout board? Change `BREAKOUT_ORDER` in `apps_script/client/lib/breadboard.js` and `BREAKOUT_ROWS` in
 `course/circuits.py`.
+
+**Circuit diagram** is the third "My kit" view. `apps_script/client/lib/schematic.js` draws it from the same
+`breadboard:` parts list: two-leg parts (resistor, LED, button) in a line from their pin and back to GND, and parts with
+named pins (sensor, servo, battery, module) as boxes wired to the micro:bit pins they join. Nothing extra to write.

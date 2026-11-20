@@ -131,7 +131,7 @@ def read(path) -> str:
 def build_assets() -> dict:
     styles = read("css/base.css") + "\n" + read("css/theme.css")
     app = "\n".join([
-        read("lib/sfx.js"), read("lib/prefs.js"), read("lib/bugs.js"), read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/breadboard.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/circuit.js"), read("lib/blocks.js"), read("lib/translate.js"), read("lib/pixel.js"), read("lib/nudge.js"),
+        read("lib/sfx.js"), read("lib/prefs.js"), read("lib/bugs.js"), read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/breadboard.js"), read("lib/schematic.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/circuit.js"), read("lib/blocks.js"), read("lib/translate.js"), read("lib/pixel.js"), read("lib/nudge.js"),
         "window.__runMap = function () {\n" + read("lib/map.js") + "\n};",
         "window.__runProfile = function () {\n" + read("lib/profile.js") + "\n};",
         read("pages.js"), read("lesson.js"),

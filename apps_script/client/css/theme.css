@@ -671,3 +671,6 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .kit-pick button { font: inherit; font-weight: 800; cursor: pointer; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--outline, #1d2a5c); background: #fff; color: var(--ink); }
 .kit-pick button.on { background: #1d2a5c; color: #fff; }
 .kit-note { margin: 6px 0 0; font-size: .9rem; }
+.wire-pic .bb.is-diagram { background: #fff; }
+.wire-pic .schematic { max-height: 460px; }
+.kit-pick button[hidden] { display: none; }
