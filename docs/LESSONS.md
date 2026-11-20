@@ -137,3 +137,17 @@ brown, gray.
 `fields_prompt: "Look at the picture. Write…"` on a step with a `picture` and `fields` puts the blanks in a box right under the picture, with that sentence as its heading (otherwise blanks go after the tests).
 
 Picture type `tilt` draws a micro:bit leaning left, flat and right over a number line from -1023 to 1023 (for the accelerometer). Add `threshold: 300` and `zones: [left, middle, right]` to show the zones an `if` uses.
+
+### Two kits on every wiring picture
+
+Students pick **My kit** above a wiring picture (remembered on their device):
+
+- **Breakout board**: the SparkFun micro:bit Breakout (BOB-13989) plugged into the breadboard. It is one row of 22 pins
+  in holes `j1`-`j22`, in this order: GND, GND, 3V3, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20
+  (taken from SparkFun's board files). A wire written `from: mb.P0` is drawn starting in another hole of P0's row.
+  Because of this, a picture may not put parts or wires in holes `f`-`j` of rows 1-22; the build stops if one does.
+- **Alligator clips**: clips on the micro:bit's five big pins (0, 1, 2, 3V, GND). Offered when the step only uses
+  those pins. Pictures with `board: false` always use clips.
+
+A different breakout board? Change `BREAKOUT_ORDER` in `apps_script/client/lib/breadboard.js` and `BREAKOUT_ROWS` in
+`course/circuits.py`.

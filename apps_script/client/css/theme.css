@@ -652,7 +652,7 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 /* the wiring picture in a step's 🔌 Wire it box (lib/breadboard.js) */
 .wire-pic { margin: 12px 0 2px; }
 .wire-pic .bb { background: #eef1f7; border: 2px solid var(--line); border-radius: 12px; padding: 8px; }
-.wire-pic .bb-svg { max-height: 380px; }
+.wire-pic .bb-svg { max-height: 560px; }
 .wire-pic figcaption { margin-top: 6px; font-size: .9rem; color: var(--muted); text-align: center; }
 .wire-pic figcaption:empty { display: none; }
 .part-label { font: 700 8px var(--mono); fill: #fff; }
@@ -660,3 +660,14 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .fields-box .fields-row { margin: 6px 0 0; }
 .fields-box .fields-row input { width: 120px; font-size: 1.1rem; text-align: center; }
 .panel .vz-tilt svg { max-height: 300px; }
+
+/* wiring pictures: the SparkFun breakout plugged into the breadboard, or alligator clips on the micro:bit */
+.bk-pin { font: 700 6.5px var(--mono); fill: #fff; } .bk-pin.on { fill: #1d2a5c; font-size: 7.5px; }
+.bk-title { font: 700 7px var(--mono); fill: #ffcdd2; letter-spacing: 1px; }
+.mb-name { font: 800 13px system-ui; fill: #1d2a5c; } .mb-name.small { font-size: 9px; }
+.mb-ab { font: 700 8px system-ui; fill: #cfd8dc; }
+.mb-pad { font: 800 10px system-ui; fill: #aab4d4; } .mb-pad.on { fill: #facc15; font-size: 12px; }
+.kit-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-weight: 800; font-size: .92rem; }
+.kit-pick button { font: inherit; font-weight: 800; cursor: pointer; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--outline, #1d2a5c); background: #fff; color: var(--ink); }
+.kit-pick button.on { background: #1d2a5c; color: #fff; }
+.kit-note { margin: 6px 0 0; font-size: .9rem; }

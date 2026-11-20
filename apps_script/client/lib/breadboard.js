@@ -12,6 +12,11 @@
   const COLX = (c) => BX + 20 + (c - 1) * P;
   const ROWY = { a: 82, b: 98, c: 114, d: 130, e: 146, f: 186, g: 202, h: 218, i: 234, j: 250 };
   const RAILY = { 'T+': 30, 'T-': 46, 'B+': 286, 'B-': 302 };
+  // SparkFun micro:bit Breakout (BOB-13989): which breadboard row each of its 22 pins sits in, from SparkFun's board files
+  const BREAKOUT_ORDER = ['GND', 'GND', '3V3', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '19', '20'];
+  const BREAKOUT = { GND: [1, 2], '3V': [3] };
+  BREAKOUT_ORDER.forEach((n, i) => { if (/^\d+$/.test(n)) BREAKOUT['P' + n] = [i + 1]; });
+  const CLIP_PINS = ['P0', 'P1', 'P2', '3V', 'GND'];
   const MB_PINS = ['3V', 'GND', 'P0', 'P1', 'P2', 'P8', 'P12', 'P13', 'P14', 'P15', 'P16', 'P19', 'P20'];
   const MBY = (i) => 38 + i * 22;
   let OFF_X = BX + BW + 50;                       // where off-board parts start; moved left when there is no breadboard
@@ -66,7 +71,7 @@
     OFF_X = noBoard ? 250 : BX + BW + 50;
     const { boxes, height } = layoutOffboard(steps);
     const W = Object.keys(boxes).length ? OFF_X + 190 : BX + BW + 20;
-    const H = Math.max(noBoard ? 0 : 330, height + 10, MBY(MB_PINS.length - 1) + 50);
+    const H = Math.max(noBoard ? 0 : 330, height + 10, circuit.mb === 'breakout' && !noBoard ? 384 : circuit.mb === 'clips' ? 260 : MBY(MB_PINS.length - 1) + 50);
     container.innerHTML = '';
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bb-svg', role: 'img' }, container);
     const defs = el('defs', {}, svg);
@@ -76,18 +81,47 @@
     el('feMergeNode', { in: 'b' }, fm);
     el('feMergeNode', { in: 'SourceGraphic' }, fm);
 
-    // micro:bit breakout
-    const mb = el('g', { class: 'bb-mb' }, svg);
-    el('rect', { x: 8, y: 14, width: 130, height: MBY(MB_PINS.length - 1) + 22, rx: 8, class: 'mb-board' }, mb);
-    text(mb, 20, 30, circuit.mb_title || 'micro:bit breakout', { class: 'mb-title' });
-    const pinXY = {};
-    MB_PINS.forEach((pin, i) => {
-      const y = MBY(i) + 10;
-      pinXY['mb.' + pin] = [128, y];
-      el('rect', { x: 20, y: y - 7, width: 86, height: 14, rx: 3, class: 'mb-pin' + (pin === '3V' ? ' pwr' : pin === 'GND' ? ' gnd' : '') }, mb);
-      text(mb, 26, y + 4, pin, { class: 'mb-pin-label' });
-      el('circle', { cx: 128, cy: y, r: 4, class: 'term' }, mb);
-    });
+    // How the micro:bit joins in (circuit.mb):
+    //   'breakout'  the SparkFun micro:bit Breakout plugged into the breadboard: one row of 22 pins in holes j1-j22
+    //               (GND GND 3V3 0 1 2 ... 16 19 20), so a wire "from mb.P0" starts in another hole of P0's row
+    //   'clips'     alligator clips on the micro:bit's five big pins (0, 1, 2, 3V, GND)
+    //   (nothing)   the old side panel of pins
+    const mode = circuit.mb === 'breakout' || circuit.mb === 'clips' ? circuit.mb : 'panel';
+    const pinXY = {}, clipAt = {}, usedPins = new Set();
+    steps.forEach((st) => (st.add || []).forEach((p) => { if (p.type === 'wire') [p.from, p.to].forEach((x) => { if (/^mb\./.test(x || '')) usedPins.add(x.slice(3)); }); }));
+    const taken = {};
+    function breakoutHole(pin) {                       // the next free hole in that pin's row (i, h, g, f; GND has two rows)
+      const rows = BREAKOUT[pin];
+      if (!rows) return null;
+      const k = taken[pin] = (taken[pin] || 0) + 1, col = rows[(k - 1) % rows.length], row = 'ihgf'[Math.min(3, Math.floor((k - 1) / rows.length))];
+      return [COLX(col), ROWY[row]];
+    }
+    if (mode === 'panel') {
+      const mb = el('g', { class: 'bb-mb' }, svg);
+      el('rect', { x: 8, y: 14, width: 130, height: MBY(MB_PINS.length - 1) + 22, rx: 8, class: 'mb-board' }, mb);
+      text(mb, 20, 30, circuit.mb_title || 'micro:bit breakout', { class: 'mb-title' });
+      MB_PINS.forEach((pin, i) => {
+        const y = MBY(i) + 10;
+        pinXY['mb.' + pin] = [128, y];
+        el('rect', { x: 20, y: y - 7, width: 86, height: 14, rx: 3, class: 'mb-pin' + (pin === '3V' ? ' pwr' : pin === 'GND' ? ' gnd' : '') }, mb);
+        text(mb, 26, y + 4, pin, { class: 'mb-pin-label' });
+        el('circle', { cx: 128, cy: y, r: 4, class: 'term' }, mb);
+      });
+    } else if (mode === 'clips') {                     // the micro:bit itself, with its five big pins along the bottom edge
+      const mb = el('g', { class: 'bb-mb' }, svg);
+      text(mb, 76, 58, 'micro:bit', { class: 'mb-name', 'text-anchor': 'middle' });
+      el('rect', { x: 6, y: 66, width: 140, height: 128, rx: 12, fill: '#1b2550' }, mb);
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) el('rect', { x: 54 + c * 10, y: 76 + r * 10, width: 5, height: 7, rx: 1.5, fill: '#ff5a4f' }, mb);
+      [22, 130].forEach((x, i) => { el('circle', { cx: x, cy: 96, r: 8, fill: '#3b4366' }, mb); text(mb, x, 116, 'AB'[i], { class: 'mb-ab', 'text-anchor': 'middle' }); });
+      el('rect', { x: 6, y: 166, width: 140, height: 28, rx: 0, fill: '#d9b36a' }, mb);
+      CLIP_PINS.forEach((pin, i) => {
+        const x = 20 + i * 27, on = usedPins.has(pin);
+        pinXY['mb.' + pin] = [x, 182]; clipAt[x + ',182'] = true;
+        el('circle', { cx: x, cy: 178, r: 9, fill: on ? '#facc15' : '#f1dca6', stroke: '#8a6d1f', 'stroke-width': 1.5 }, mb);
+        el('circle', { cx: x, cy: 178, r: 3.5, fill: '#1b2550' }, mb);
+        text(mb, x, 161, pin.replace('P', ''), { class: 'mb-pad' + (on ? ' on' : ''), 'text-anchor': 'middle' });   // above the pin, clear of the clips and wires
+      });
+    }
 
     // breadboard
     const bb = el('g', { class: 'bb-board' }, svg);
@@ -112,6 +146,21 @@
       text(bb, BX + BW - 12, ROWY[r] + 4, r, { class: 'row-label' });
     }
 
+    if (mode === 'breakout' && !noBoard) {
+      const g = el('g', { class: 'bb-breakout' }, svg), xa = COLX(1) - 14, xb = COLX(22) + 14, cx = (xa + xb) / 2;
+      el('rect', { x: cx - 78, y: 292, width: 156, height: 84, rx: 10, fill: '#1b2550' }, g);                 // the micro:bit standing in the slot
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) el('rect', { x: cx - 22 + c * 10, y: 312 + r * 10, width: 5, height: 7, rx: 1.5, fill: '#ff5a4f' }, g);
+      text(g, cx, 368, 'micro:bit', { class: 'mb-name small', 'text-anchor': 'middle', fill: '#cfd8dc' });
+      el('rect', { x: xa, y: 240, width: xb - xa, height: 58, rx: 5, fill: '#c62828', stroke: '#7f1d1d', 'stroke-width': 1.5 }, g);
+      text(g, cx, 292, 'breakout board', { class: 'bk-title', 'text-anchor': 'middle' });
+      BREAKOUT_ORDER.forEach((n, i) => {
+        const x = COLX(i + 1), pin = n === 'GND' ? 'GND' : n === '3V3' ? '3V' : 'P' + n, on = usedPins.has(pin);
+        el('rect', { x: x - 3.5, y: 246.5, width: 7, height: 7, rx: 1, fill: '#ffd54f', stroke: '#8a6d1f', 'stroke-width': 0.8 }, g);
+        if (on) el('rect', { x: x - 7.5, y: 258, width: 15, height: 12, rx: 3, fill: '#facc15' }, g);
+        text(g, x, 267, n, { class: 'bk-pin' + (on ? ' on' : ''), 'text-anchor': 'middle' });
+      });
+    }
+
     // off-board boxes
     const termXY = {};
     const offLayer = el('g', {}, svg);
@@ -128,6 +177,7 @@
 
     const used = [];
     function pos(addr) {
+      if (mode === 'breakout' && !noBoard && /^mb\./.test(addr)) return breakoutHole(addr.slice(3));
       return holeXY(addr) || pinXY[addr] || termXY[addr] || boardTermXY[addr] || null;
     }
     const boardTermXY = {};
@@ -156,10 +206,18 @@
             const k = 22 + Math.abs(dy) * 0.12;
             d = `M${a[0]},${a[1]} C${a[0] - k},${a[1]} ${b[0] - k},${b[1]} ${b[0]},${b[1]}`;
           }
+          const clipA = clipAt[a.join(',')], clipB = clipAt[b.join(',')];
+          if (clipA || clipB) {                               // from a big pin: hang down from the micro:bit's edge, then over to the part
+            const pad = clipA ? a : b, far = clipA ? b : a, drop = 46 + CLIP_PINS.indexOf(Object.keys(pinXY).find((k) => pinXY[k] === pad).slice(3)) * 9;
+            d = noBoard ? `M${pad[0]},${pad[1]} C${pad[0]},${pad[1] + drop + 50} ${far[0] - 80},${far[1] + 120} ${far[0]},${far[1]}`
+              : `M${pad[0]},${pad[1]} C${pad[0]},${pad[1] + drop + 40} ${far[0] - 70},${far[1] + 60} ${far[0]},${far[1]}`;
+          }
           el('path', { d, class: 'wire-shadow' }, g);
           el('path', { d, class: 'wire', stroke: WIRE[p.color] || WIRE.red }, g);
-          el('circle', { cx: a[0], cy: a[1], r: 3.2, class: 'wire-end' }, g);
-          el('circle', { cx: b[0], cy: b[1], r: 3.2, class: 'wire-end' }, g);
+          [[a, clipA], [b, clipB]].forEach(([q, clip]) => {
+            if (clip) el('rect', { x: q[0] - 5, y: q[1] - 12, width: 10, height: 22, rx: 3, fill: WIRE[p.color] || WIRE.red, stroke: '#0b1229', 'stroke-width': 1.2, class: 'clip' }, g);   // the alligator clip
+            else el('circle', { cx: q[0], cy: q[1], r: 3.2, class: 'wire-end' }, g);
+          });
         } else if (BOARD_TERMS[p.type]) {
           BOARD_TERMS[p.type].forEach((t) => { const xy = holeXY(p[t] || ''); if (xy) used.push(xy); });
           if (p.type === 'hcsr04') { const a = holeXY(p.vcc), z = holeXY(p.gnd); if (a && z) { const dn = a[1] > 160 ? 1 : -1; used.push([a[0] - 40, a[1] + dn * 52], [z[0] + 40, a[1] + dn * 52]); } }   // room for the sensor's body
@@ -171,6 +229,8 @@
         }
       });
     });
+    if (mode === 'breakout' && !noBoard && usedPins.size) used.push([COLX(1) - 18, 238], [COLX(22) + 18, 372]);
+    if (mode === 'clips') used.push([0, 44], [158, noBoard ? 262 : 214]);
     if (opts.crop && used.length) {
       const xs = used.map((q) => q[0]), ys = used.map((q) => q[1]);
       let x0 = Math.min(...xs) - 34, x1 = Math.max(...xs) + 34, y0 = Math.min(...ys) - 44, y1 = Math.max(...ys) + 30;

@@ -27,6 +27,7 @@ MICROBIT_PINS = ["3V", "GND", "P0", "P1", "P2", "P8", "P12", "P13", "P14",
                  "P15", "P16", "P19", "P20"]
 
 COLUMNS = 30
+BREAKOUT_ROWS = 22      # the SparkFun micro:bit Breakout is one row of 22 pins, plugged into holes j1-j22
 ROWS_TOP = "abcde"
 ROWS_BOTTOM = "fghij"
 RAILS = ["T+", "T-", "B+", "B-"]

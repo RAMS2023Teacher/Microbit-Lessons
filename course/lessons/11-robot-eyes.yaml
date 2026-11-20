@@ -64,11 +64,11 @@ build:
       - "**GND** row → **GND** on the breakout board."
     breadboard:
       add:
-        - {type: hcsr04, id: sonar, vcc: j10, trig: j11, echo: j12, gnd: j13}
-        - {type: wire, color: red, from: f10, to: mb.3V}
-        - {type: wire, color: yellow, from: f11, to: mb.P8}
-        - {type: wire, color: blue, from: f12, to: mb.P12}
-        - {type: wire, color: black, from: f13, to: mb.GND}
+        - {type: hcsr04, id: sonar, vcc: j26, trig: j27, echo: j28, gnd: j29}
+        - {type: wire, color: red, from: f26, to: mb.3V}
+        - {type: wire, color: yellow, from: f27, to: mb.P8}
+        - {type: wire, color: blue, from: f28, to: mb.P12}
+        - {type: wire, color: black, from: f29, to: mb.GND}
       check: [[mb.3V, sonar.vcc], [mb.P8, sonar.trig], [mb.P12, sonar.echo], [mb.GND, sonar.gnd]]
       caption: "Trig on P8 and Echo on P12 this time, so the servos keep P1 and P2. Your sensor may sit the other way round. Always go by the labels printed on it."
     stuck:

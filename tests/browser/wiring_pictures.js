@@ -1,4 +1,4 @@
-// Screenshots of every wiring picture: node tests/browser/wiring_pictures.js <folder>   (serve.js running with IFRAME=1)
+// Screenshots of every wiring picture, in both kits: node tests/browser/wiring_pictures.js <folder>   (serve.js running with IFRAME=1)
 const { chromium } = require('playwright');
 const { makeWorld } = require('../apps_script_app/fake_google');
 const D = makeWorld(require('path').join(__dirname, '../../dist/apps-script')).g.DATA;
@@ -18,8 +18,10 @@ const D = makeWorld(require('path').join(__dirname, '../../dist/apps-script')).g
       await fr().click(`.step-dots button[data-step="${i}"]`); await p.waitForTimeout(1300);
       const fig = await fr().$('.wire-pic');
       if (!fig) { console.log('MISSING', L.id, i); continue; }
-      await (await fr().$('.box-what:has(.wire-pic)')).screenshot({ path: `${out}/${String(L.number).padStart(2, '0')}-${i + 1}.png` });
+      const base = `${out}/${String(L.number).padStart(2, '0')}-${i + 1}`;
+      await (await fr().$('.wire-pic')).screenshot({ path: base + '-a.png' });
       n++;
+      if (await fr().isVisible('#kit-pick')) { await fr().click('#kit-pick [data-kit="clips"]'); await p.waitForTimeout(900); await (await fr().$('.wire-pic')).screenshot({ path: base + '-b.png' }); await fr().click('#kit-pick [data-kit="breakout"]'); await p.waitForTimeout(300); n++; }
     }
   }
   console.log('pictures', n, 'errors', errs);

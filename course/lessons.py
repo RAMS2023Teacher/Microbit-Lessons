@@ -202,6 +202,12 @@ def check_breadboard(b: dict) -> list[str]:
     if not isinstance(b, dict) or not b.get("add"):
         return ["give an 'add' list of parts and wires"]
     errs = [f"unknown keys {sorted(set(b) - BREADBOARD_KEYS)}"] if set(b) - BREADBOARD_KEYS else []
+    if b.get("board") is not False:               # the breakout board is plugged into holes j1-j22, so f-j of rows 1-22 belong to its pins
+        for part in (b.get("before") or []) + (b.get("add") or []):
+            for key, val in part.items():
+                m = re.match(r"^([f-j])(\d+)$", str(val)) if key not in ("type", "id", "color", "label", "ohms") else None
+                if m and int(m.group(2)) <= circuits.BREAKOUT_ROWS:
+                    errs.append(f"hole {val} is in a row the breakout board's pins use (f-j of rows 1-{circuits.BREAKOUT_ROWS}); use rows {circuits.BREAKOUT_ROWS + 1}-30 or holes a-e")
     return errs + circuits.check_circuit({"steps": breadboard_steps(b), "verify": {"connected": b.get("check") or []}})
 
 

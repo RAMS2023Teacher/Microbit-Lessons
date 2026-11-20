@@ -278,7 +278,8 @@
         (St.say ? `<div class="panel-soft box-new">${St.say}</div>` : '') + picture(St.picture) +
         (St.fields_prompt ? fieldsHtml(St, true) : '') +
         (St.wiring.length ? `<div class="panel-soft box-what"><h3>🔌 Wire it</h3><ol class="do-list">${St.wiring.map((w) => `<li>${w.text || w}</li>`).join('')}</ol>` +
-          (St.breadboard ? `<figure class="wire-pic"><div class="bb" id="wire-bb" translate="no"></div><figcaption>${St.breadboard.caption || ''}</figcaption></figure>` : '') + `</div>` : '') +
+          (St.breadboard ? `<figure class="wire-pic"><div class="kit-pick" id="kit-pick" hidden><span>My kit:</span><button type="button" data-kit="breakout">🟥 Breakout board</button><button type="button" data-kit="clips">🐊 Alligator clips</button></div>` +
+            `<div class="bb" id="wire-bb" translate="no"></div><p class="kit-note" id="kit-note"></p><figcaption>${St.breadboard.caption || ''}</figcaption></figure>` : '') + `</div>` : '') +
         (St.do.length ? `<h3>Do this</h3><ol class="do-list">${St.do.map((x) => `<li>${x}</li>`).join('')}</ol>` : '') +
         codeBox(St.code, St.new, St.blocks) +
         (St.tip ? `<div class="panel-soft box-tip">${St.tip}</div>` : '') +
@@ -293,9 +294,25 @@
         `<button type="button" class="btn go big" id="step-next">${last ? 'Got it! On to the quiz ▶' : 'Got it! Next ▶'}</button></div></section>`;
       box.querySelector('.step-head').after(flagWidget('step', i));
       if (St.breadboard && $('wire-bb') && window.Breadboard) {       // the wiring picture: this step's parts glow, earlier ones are dimmed
-        const bb = St.breadboard;
-        window.Breadboard.render($('wire-bb'), bb, bb.steps.length - 1, { crop: true, plain: bb.steps.length < 2 });
-        $('wire-bb').querySelector('svg').setAttribute('aria-label', 'Wiring picture: ' + St.wiring.map((w) => String(w.text || w).replace(/<[^>]+>/g, '')).join(' '));
+        const bb = St.breadboard, pins = new Set();
+        bb.steps.forEach((x) => (x.add || []).forEach((q) => { if (q.type === 'wire') [q.from, q.to].forEach((e) => { if (/^mb\./.test(e || '')) pins.add(e.slice(3)); }); }));
+        // Two kits: the breakout board plugged into the breadboard, or alligator clips on the big pins (0, 1, 2, 3V, GND only).
+        const clipsOk = [...pins].every((x) => ['P0', 'P1', 'P2', '3V', 'GND'].includes(x)), both = bb.board !== false && clipsOk && pins.size > 0;
+        let kit = 'breakout';
+        try { kit = localStorage.getItem('ml-kit') || 'breakout'; } catch (e) { /* default */ }
+        const drawWire = () => {
+          const mode = bb.board === false ? 'clips' : both ? kit : 'breakout';
+          window.Breadboard.render($('wire-bb'), Object.assign({}, bb, { mb: mode }), bb.steps.length - 1, { crop: true, plain: bb.steps.length < 2 });
+          $('wire-bb').querySelector('svg').setAttribute('aria-label', 'Wiring picture: ' + St.wiring.map((w) => String(w.text || w).replace(/<[^>]+>/g, '')).join(' '));
+          $('kit-note').textContent = !pins.size ? '' : mode === 'clips'
+            ? '🐊 Clip one end of each wire onto the big pin on the micro:bit' + (bb.board === false ? '.' : '. Push its other end into the hole shown.')
+            : "🟥 The breakout board's pins are plugged into the breadboard. Every hole in a pin's row is joined to that pin, so wires start in the same row." +
+              (clipsOk ? '' : ' (This step uses pins that alligator clips can\'t reach.)');
+          $('kit-pick').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.kit === mode));
+        };
+        $('kit-pick').hidden = !both;
+        $('kit-pick').querySelectorAll('button').forEach((x) => x.addEventListener('click', () => { kit = x.dataset.kit; try { localStorage.setItem('ml-kit', kit); } catch (e) { /* fine */ } drawWire(); }));
+        drawWire();
       }
       if (St.ask) $('step-ask').value = row.answer || '';
       box.querySelectorAll('[data-field]').forEach((inp) => { inp.value = (row.fields || [])[+inp.dataset.field] || ''; });

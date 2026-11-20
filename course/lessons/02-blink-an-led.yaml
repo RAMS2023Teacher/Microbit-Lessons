@@ -96,9 +96,10 @@ build:
         - {icon: "➖", title: "The blue rail", text: "we use it for GND (–)"}
     do:
       - Look at your breadboard. Find a row of 5 holes, the middle gap and the blue (–) rail.
-      - Push the micro:bit into the breakout board, logo facing up.
+      - "Using the breakout board? Push its pins into **column j**, rows **1 to 22**, with the two **GND** pins in rows 1 and 2. Then push the micro:bit into it, logo facing up."
+      - "Using alligator clips? Skip that: you'll clip straight onto the micro:bit's big pins."
     test:
-      - The micro:bit is in the breakout board, on the breadboard
+      - My micro:bit is ready (in the breakout board on the breadboard, or with alligator clips nearby)
       - I can point to one row, the middle gap and the blue rail
     ask: Two legs are in the same row. Are they connected? What if they are on opposite sides of the middle gap?
 

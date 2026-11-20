@@ -58,11 +58,11 @@ build:
     wiring:
       - Make sure the USB cable is **unplugged**.
       - Hold the sensor so the two eyes point **away** from the breadboard.
-      - Push its four pins into **column j**, rows **1, 2, 3 and 4**. One pin in each row.
+      - Push its four pins into **column j**, rows **26, 27, 28 and 29**. One pin in each row.
       - Read the labels on your sensor and write which pin is in each row below.
     breadboard:
       add:
-        - {type: hcsr04, id: sonar, vcc: j1, trig: j2, echo: j3, gnd: j4}
+        - {type: hcsr04, id: sonar, vcc: j26, trig: j27, echo: j28, gnd: j29}
       check: []
       caption: "One pin in each row, eyes pointing away from the board. Your sensor may sit the other way round. Always go by the labels printed on it."
     tip: "**Why one pin per row?** If two pins shared a row, they'd be joined together and the sensor couldn't work. Most sensors go VCC, Trig, Echo, GND. If yours is different, use **your** rows in the next step."
@@ -70,7 +70,7 @@ build:
       - The sensor stands up straight and feels snug
       - Each pin is in its own row
       - The eyes point away from the board
-    fields: ["Row 1", "Row 2", "Row 3", "Row 4"]
+    fields: ["Row 26", "Row 27", "Row 28", "Row 29"]
 
   - part: "Part 1: Build the circuit"
     title: Wire it to the micro:bit
@@ -82,12 +82,12 @@ build:
       - "**GND** → the **GND** row"
     breadboard:
       before:
-        - {type: hcsr04, id: sonar, vcc: j1, trig: j2, echo: j3, gnd: j4}
+        - {type: hcsr04, id: sonar, vcc: j26, trig: j27, echo: j28, gnd: j29}
       add:
-        - {type: wire, color: red, from: mb.3V, to: f1}
-        - {type: wire, color: yellow, from: mb.P1, to: f2}
-        - {type: wire, color: blue, from: mb.P2, to: f3}
-        - {type: wire, color: black, from: mb.GND, to: f4}
+        - {type: wire, color: red, from: mb.3V, to: f26}
+        - {type: wire, color: yellow, from: mb.P1, to: f27}
+        - {type: wire, color: blue, from: mb.P2, to: f28}
+        - {type: wire, color: black, from: mb.GND, to: f29}
       check: [[mb.3V, sonar.vcc], [mb.P1, sonar.trig], [mb.P2, sonar.echo], [mb.GND, sonar.gnd]]
       caption: "Each wire goes in the same row as its sensor pin. Your sensor may sit the other way round. Always go by the labels printed on it."
     tip: "**Stop:** have your partner check every wire against the list before you plug in the USB cable. Unplug the USB before you move any wire."

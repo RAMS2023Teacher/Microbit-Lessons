@@ -64,3 +64,7 @@ def test_every_wiring_step_has_a_checked_picture():
                     assert step["breadboard"].get("check"), f"{lesson['_file']} step {i}: add a 'check' list"
     bad = {"add": [{"type": "led", "id": "x", "color": "red", "anode": "a5", "cathode": "b5"}], "check": [["mb.P0", "x.anode"]]}
     assert len(lessons.check_breadboard(bad)) == 2          # shorted LED, and not connected to P0
+
+    # the breakout board's pins use holes f-j of rows 1-22
+    clash = {"add": [{"type": "wire", "color": "red", "from": "mb.P0", "to": "f5"}], "check": []}
+    assert any("breakout" in e for e in lessons.check_breadboard(clash))
