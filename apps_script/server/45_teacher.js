@@ -276,6 +276,18 @@ function standardsInPlay_(counts, focusId) {
   return order.map(function (k) { return out[k]; }).sort(function (a, b) { return b.students - a.students; }).slice(0, 4);
 }
 
+/** Where a student is in a lesson, by how far they really got: 0 Mission, 1 Build, 2 Quiz, 3 Ship it, 4 finished.
+ *  The stage tabs can be clicked in any order, so a student who skipped "Mission accepted" but is on Build step 5
+ *  is on Build, not on Mission. */
+function raceStage_(here) {
+  var sd = here.stages || {};
+  if (sd.ship && sd.quiz && sd.build) return 4;
+  if (sd.ship || sd.quiz) return 3;
+  if (sd.build || here.quiz_best != null) return 2;
+  if (sd.mission || (here.steps_done || 0) > 0) return 1;
+  return 0;
+}
+
 function screenPayload_(cfg, cid) {
   var c = cfg.classes[cid], saved = c.screen || {};
   var settings = { lesson_id: saved.lesson_id || '', question: saved.question || '', names: saved.names || 'first',
@@ -302,9 +314,9 @@ function screenPayload_(cfg, cid) {
   var rows = students.map(function (s) {
     var w = wheres[s.email], here = (s.lessons || {})[L.id], sd = here && here.stages;
     var row = { who: helpWho_(s.email), name: names[s.email], avatar: s.avatar || null, level: s.level, where: w.where, pct: w.pct, status: w.status,
-                // race track: stages done in today's lesson (null = busy with a different lesson, or not started)
-                done: here ? (sd ? STAGES_.filter(function (st) { return sd[st[0]]; }).length : 0) : null };
-    if (here && sd && sd.mission && !sd.build) row.step = Math.min(L.build.length - 1, here.steps_done || 0);   // which Build step they're on (0 = step 1)
+                // race track: which stage they're on in today's lesson (0 mission .. 4 finished; null = other lesson or not started)
+                done: here ? raceStage_(here) : null };
+    if (row.done === 1) row.step = Math.min(L.build.length - 1, here.steps_done || 0);   // which Build step they're on (0 = step 1)
     if (!here && w.status === 'working') row.elsewhere = w.where;
     if (idle[s.email]) row.idle = idle[s.email];           // 💤 minutes without touching the Chromebook
     if (settings.xp === 'each') row.xp = s.xp || 0;      // hidden XP never reaches the browser

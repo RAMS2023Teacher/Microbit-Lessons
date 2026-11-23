@@ -35,3 +35,18 @@ assert.strictEqual(api(A, P, {}).body.status, 'none', 'removed for both');
 r = api(B, P, { action: 'pair', partner_id: A }).body;      // and can pick the other way round
 assert.strictEqual(r.by_me, true); assert.strictEqual(api(A, P, {}).body.by_me, false);
 console.log('idle + partner checks passed');
+
+// the class display: a student who clicked straight to Build (never pressed "Mission accepted") is shown on their
+// Build step, not stuck on Mission (problem report, 23 Nov)
+{
+  const C = 'cara@students.school.org';
+  w.call(C, 'joinClass', [cls.code, 'Cara L.']);
+  const L = w.g.DATA.lessons['dodge-the-drop'];
+  w.call(T, 'screenSave', [cls.id, { lesson_id: 'dodge-the-drop' }]);
+  for (let i = 0; i < 4; i++) api(C, `/api/lessons/dodge-the-drop/step`, { i, tests: L.build[i].test.map((_, k) => k), answer: 'my answer', fields: L.build[i].fields.map(() => '7') });
+  w.advance(120000);
+  const row = w.call(T, 'screenData', [cls.id]).students.find((s) => s.name.startsWith('Cara'));
+  assert.strictEqual(row.done, 1, 'on Build');
+  assert.strictEqual(row.step, 4, 'on step 5 (4 steps done)');
+  console.log('class display race position checks passed');
+}

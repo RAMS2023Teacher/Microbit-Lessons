@@ -104,9 +104,23 @@
     if (i >= 0) { hash = path.slice(i); path = path.slice(0, i); }
     return ML.base + '?p=' + encodeURIComponent(path) + hash;
   };
-  ML.go = function (path) { window.top.location.href = ML.href(path); };
+  // The page lives in a sandboxed frame that may only move the whole tab right after a click. After a slow save the
+  // click is "too old" and Chrome refuses (problem reports: "does not have permission to navigate the target frame").
+  // Then we show a button instead: tapping it is a fresh click, so the link always works.
+  ML.go = function (path, note) {
+    var url = ML.href(path);
+    try { window.top.location.href = url; } catch (e) { goButton(url, note); }
+  };
+  function goButton(url, note) {
+    var box = document.getElementById('go-box');
+    if (!box) { box = document.createElement('div'); box.id = 'go-box'; box.className = 'go-box'; box.setAttribute('role', 'dialog'); document.body.appendChild(box); }
+    box.innerHTML = '<div class="go-card"><p></p><a class="btn go big" target="_top">Continue ▶</a></div>';
+    box.querySelector('p').textContent = note || 'All saved. Tap Continue to load the page.';
+    box.querySelector('a').setAttribute('href', url);
+    box.querySelector('a').focus();
+  }
   // A sandboxed frame on another origin may set top.location.href but can't call top.location.reload().
-  ML.reload = function () { ML.go(ML.path || '/'); };
+  ML.reload = function (note) { ML.go(ML.path || '/', typeof note === 'string' ? note : ''); };
   function fixLinks(root) {
     var links = (root || document).querySelectorAll('a[href^="/"]:not([href^="//"])');
     for (var i = 0; i < links.length; i++) {

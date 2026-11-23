@@ -25,6 +25,7 @@
       if (r.arcade) { ML.arcadePill(r.arcade); arcadeOpen = r.arcade; }
       return r;
     }
+    const put = (id, t) => { const e = $(id); if (e) e.textContent = t; };   // a save can finish after the student moved on
     const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
     // A button that isn't ready yet is grey (class "locked"), not disabled, so a click can explain what's missing.
     const C = window.Celebrate || { nope() {}, sound() {}, confetti() {} };
@@ -229,7 +230,7 @@
       $('talk').value = S.talk || '';
       if (d.video) drawVideo($('video'), d.video);
       afterDraw(box);
-      const save = debounce(async () => { const r = await api('mission', { talk: $('talk').value }); $('talk-saved').textContent = r.ok ? 'Saved ✓' : (r.error || ''); }, 700);
+      const save = debounce(async () => { const r = await api('mission', { talk: S.talk || '' }); put('talk-saved', r.ok ? 'Saved ✓' : (r.error || '')); }, 700);
       $('talk').addEventListener('input', () => { S.talk = $('talk').value; $('talk-saved').textContent = 'Saving…'; save(); });
       const talkReady = () => setLocked($('mission-go'), (S.talk || '').trim().length < 3 && !ML.teacher);
       $('talk').addEventListener('input', talkReady);
@@ -332,7 +333,7 @@
       const save = debounce(async () => {
         const r = await api('step', { i, tests: row.tests, answer: row.answer, fields: row.fields });
         if (r.ok) row.done = r.step_done;
-        $('step-saved').textContent = r.ok ? 'Saved ✓' : (r.error || 'Could not save');
+        put('step-saved', r.ok ? 'Saved ✓' : (r.error || 'Could not save'));
       }, 600);
       const changed = () => { $('step-saved').textContent = 'Saving…'; sync(); save(); };
       box.querySelectorAll('[data-test]').forEach((c) => c.addEventListener('change', () => {
@@ -454,15 +455,16 @@
         ext: [...box.querySelectorAll('[data-ext]:checked')].map((c) => +c.dataset.ext),
         reflect: [...box.querySelectorAll('[data-reflect]')].map((t) => t.value),
       });
+      let latest = null;                     // read when they type, so a save after they've left the page still has it
       const save = debounce(async () => {
-        const r = await api('ship', body());
-        $('ship-saved').textContent = r.ok !== false ? 'Saved ✓' : '';
+        const r = await api('ship', latest);
+        put('ship-saved', r.ok !== false ? 'Saved ✓' : '');
       }, 800);
       box.querySelectorAll('[data-ext]').forEach((c) => {
         c.addEventListener('click', (e) => e.stopPropagation());
-        c.addEventListener('change', () => { $('ship-saved').textContent = 'Saving…'; save(); });
+        c.addEventListener('change', () => { latest = body(); $('ship-saved').textContent = 'Saving…'; save(); });
       });
-      box.querySelectorAll('textarea, #share').forEach((t) => t.addEventListener('input', () => { $('ship-saved').textContent = 'Saving…'; save(); }));
+      box.querySelectorAll('textarea, #share').forEach((t) => t.addEventListener('input', () => { latest = body(); $('ship-saved').textContent = 'Saving…'; save(); }));
       $('ship-go').addEventListener('click', async () => {
         $('ship-go').disabled = true;
         const b = body(); b.submit = true;
@@ -518,7 +520,8 @@
           const name = pick.options[pick.selectedIndex].textContent;
           if (!confirm(`Work with ${name}? Your work on this lesson will save for both of you.`)) return;
           const r = await window.fetch(base + '/partner', { method: 'POST', body: JSON.stringify({ action: 'pair', partner_id: pick.value }) }).then((x) => x.json());
-          if (r.status === 'paired') ML.reload(); else drawPartner(r);
+          drawPartner(r);
+          if (r.status === 'paired') ML.reload(`You and ${r.name} are partners now! Tap Continue to load your shared work.`);   // both students' work, merged
         });
       } else box.appendChild(el('p', 'muted small', 'No classmates to pick yet.'));
       if (p.error) box.appendChild(el('p', 'missing small')).textContent = p.error;

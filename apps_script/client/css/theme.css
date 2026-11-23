@@ -674,3 +674,6 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .wire-pic .bb.is-diagram { background: #fff; }
 .wire-pic .schematic { max-height: 460px; }
 .kit-pick button[hidden] { display: none; }
+.go-box { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: rgba(13, 20, 51, .45); }
+.go-card { background: #fff; border: 3px solid #1d2a5c; border-radius: 18px; box-shadow: 0 6px 0 #1d2a5c; padding: 22px 26px; max-width: 420px; text-align: center; }
+.go-card p { font-weight: 700; margin: 0 0 14px; }
