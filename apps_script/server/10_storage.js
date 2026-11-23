@@ -196,7 +196,8 @@ function studentSummary_(rec) {
                      steps_done: stepsDone_(L, p), steps_total: L.build.length,
                      quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: p.quiz_total || 0,
                      shipped: !!p.shipped_at, share: p.share || '', stars: lessonStars_(L, p),
-                     completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
+                     completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null,
+                     review: reviewStatus_(p), submitted_at: (p.review && p.review.submitted_at) || p.shipped_at || null, round: (p.review && p.review.round) || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar ? avatarOf_(rec) : null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),

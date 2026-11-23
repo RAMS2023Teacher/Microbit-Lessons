@@ -26,6 +26,7 @@ function student_() {
   if (!me.email) throw new Error('Sign in with your school Google account.');
   var rec = loadStudent_(me.email);
   if (!rec) throw new Error('Join your class first: open Maker Lab and enter your class code.');
+  applyGrades_(rec);                              // the teacher's review decisions (62_review.js); saved with this request
   return { me: me, rec: rec, cfg: config_() };
 }
 
@@ -51,6 +52,7 @@ function api(path, bodyJson) {
     if (path === '/api/run') return runCall_(body);
     if (path === '/api/help') return { status: 200, body: helpApi_(body) };
     if (path === '/api/idle') return { status: 200, body: idleApi_(body) };
+    if (path === '/api/review') return { status: 200, body: reviewApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner|feedback)$/.exec(path);
@@ -79,6 +81,9 @@ var RUN_ = {
   setClassGrade: function (a) { return setClassGrade(a[0], a[1]); },
   deleteClass: function (a) { return deleteClass(a[0], a[1]); },
   assignLessons: function (a) { return assignLessons(a[0], a[1], a[2], a[3]); },
+  reviewQueue: function (a) { return reviewQueue(a[0]); },
+  reviewWork: function (a) { return reviewWork(a[0], a[1]); },
+  gradeWork: function (a) { return gradeWork(a[0], a[1], a[2]); },
   updateAssignment: function (a) { return updateAssignment(a[0], a[1], a[2], a[3]); },
   removeStudent: function (a) { return removeStudent(a[0], a[1]); },
   saveFeedback: function (a) { return saveFeedback(a[0], a[1], a[2]); },
@@ -160,6 +165,8 @@ var API_ = {
   feedback: function (ctx, L, p, d) { return lessonFeedback_(ctx, L, d); },
 
   ship: function (ctx, L, p, d) {
+    var status = reviewStatus_(p);
+    if (status === 'approved') return finish_(ctx, L, p, { missing: [], shipped: true, locked: true, review: p.review || null });   // approved work is finished
     if (d.share !== undefined) p.share = text_(d.share, 300).trim();
     if (d.ext !== undefined) {
       p.ext = {};
@@ -169,11 +176,15 @@ var API_ = {
     var missing = shipMissing_(L, p);
     if (d.submit) {
       if (missing.length) return finish_(ctx, L, p, { ok: false, missing: missing });
-      if (!p.shipped_at) p.shipped_at = now_();
-    } else if (missing.length && p.shipped_at) {
+      var old = p.review || {}, again = status === 'returned' || status === 'draft';
+      p.shipped_at = now_();
+      // shipping sends it to the teacher; shipping again after "sent back" is a new round
+      p.review = { status: 'submitted', round: (old.round || 0) + (again || !old.round ? 1 : 0), submitted_at: p.shipped_at, history: old.history || [] };
+    } else if (missing.length && p.shipped_at && status === 'submitted') {
       delete p.shipped_at;           // they changed something it needs: turn it in again
+      p.review.status = 'draft';
     }
-    return finish_(ctx, L, p, { missing: missing, shipped: !!p.shipped_at });
+    return finish_(ctx, L, p, { missing: missing, shipped: !!p.shipped_at, review: p.review || null });
   },
 
   partner: function (ctx, L, p, d) {
@@ -247,6 +258,7 @@ function mergeProgress_(a, b) {
   a.ext = a.ext || {};
   Object.keys(b.ext || {}).forEach(function (k) { if (b.ext[k]) a.ext[k] = true; });
   if (!a.share && b.share) a.share = b.share;
+  if (!a.review && b.review) a.review = JSON.parse(JSON.stringify(b.review));
   if (!(a.reflect || []).join('') && (b.reflect || []).join('')) a.reflect = b.reflect;
   ['shipped_at', 'completed_at', 'started_at'].forEach(function (f) {
     if (b[f] && (!a[f] || b[f] < a[f])) a[f] = b[f];

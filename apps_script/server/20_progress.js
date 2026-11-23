@@ -4,7 +4,7 @@
 //   mission_done, talk                      the mission's partner question
 //   steps: { "0": {tests: [0, 1], answer, fields: [...], done} }, step_at
 //   quiz_answers, quiz_score, quiz_best, quiz_total, quiz_attempts
-//   ext: { "0": true }, reflect: [...], share, shipped_at
+//   ext: { "0": true }, reflect: [...], share, shipped_at (sent to the teacher), review (62_review.js)
 //   partner, started_at, updated_at, completed_at
 
 var STAGES_ = [['mission', 'Mission', '🎯'], ['build', 'Build', '🛠️'], ['quiz', 'Quiz', '🧠'], ['ship', 'Ship it', '🚀']];
@@ -15,9 +15,10 @@ function stepsDone_(L, p) { var n = 0; for (var i = 0; i < L.build.length; i++) 
 function quizPassed_(L, p) { return !!(p && p.quiz_total && p.quiz_best / p.quiz_total >= DATA.quiz_pass); }
 function quizPerfect_(p) { return !!(p && p.quiz_total && p.quiz_best === p.quiz_total); }
 
-/** Which stages are finished: {mission, build, quiz, ship}. */
+/** Which stages are finished: {mission, build, quiz, ship}. Ship it is finished when the teacher approves the project. */
 function stagesDone_(L, p) {
-  return { mission: !!(p && p.mission_done), build: stepsDone_(L, p) === L.build.length, quiz: quizPassed_(L, p), ship: !!(p && p.shipped_at) };
+  return { mission: !!(p && p.mission_done), build: stepsDone_(L, p) === L.build.length, quiz: quizPassed_(L, p),
+           ship: !!(p && p.shipped_at) && reviewStatus_(p) === 'approved' };
 }
 
 /** The first stage that isn't finished, or 'done'. */
@@ -54,6 +55,7 @@ function stepComplete_(S, row) {
 function shipMissing_(L, p) {
   var out = [], ship = L.ship || {};
   if (!SHARE_RE_.test(String(p.share || ''))) out.push('Paste your MakeCode share link (it starts with https://makecode.microbit.org/).');
+  else if (!makecodeId_(p.share)) out.push('That is the editor\'s address, not a share link. In MakeCode click Share, then Share Project, and copy the link it gives you (like https://makecode.microbit.org/_Ab12Cd34Ef56).');
   if ((ship.extensions || []).length && !Object.keys(p.ext || {}).some(function (k) { return p.ext[k]; })) out.push('Check at least one extension you added.');
   (ship.reflect || []).forEach(function (q, i) {
     if (String((p.reflect || [])[i] || '').trim().length < 3) out.push('Answer: ' + q);

@@ -64,6 +64,10 @@ teacher_notes: |
 standards:
   - code: 6-8.CT.b.1            # MA DLCS codes from course/standards.yaml
     how: What in the lesson meets it
+rubric:                         # optional: the teacher's review rubric (default: It works / Uses <python> / Made it their own)
+  - id: works
+    label: It works
+    levels: ["Doesn't run", "Runs, parts missing", "Does what the mission asks", "Works smoothly"]   # exactly 4, from 1 to 4
 ```
 
 MakeCode Python, not MicroPython: `basic.show_string`, `basic.pause`, `input.button_is_pressed(Button.A)`,

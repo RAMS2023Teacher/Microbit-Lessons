@@ -27,6 +27,25 @@ STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip
 BLOCK_CATS = {"basic", "input", "music", "led", "radio", "loops", "logic", "variables", "math", "game", "functions", "ml", "text"}
 
 
+def check_rubric(rows) -> list[str]:
+    """An optional `rubric:` replaces the three default review rows: a list of {id, label, levels: [4 descriptions, 1-4]}."""
+    if rows is None:
+        return []
+    if not isinstance(rows, list) or not 1 <= len(rows) <= 6:
+        return ["rubric: give 1-6 rows, each {id, label, levels: [four descriptions]}"]
+    errs, ids = [], set()
+    for i, r in enumerate(rows, 1):
+        if not isinstance(r, dict) or not r.get("id") or not r.get("label"):
+            errs.append(f"rubric row {i}: needs an 'id' and a 'label'")
+            continue
+        if r["id"] in ids:
+            errs.append(f"rubric row {i}: id {r['id']!r} is used twice")
+        ids.add(r["id"])
+        if len(r.get("levels") or []) != 4:
+            errs.append(f"rubric row {i} ({r['label']}): give exactly 4 'levels', from 1 (not yet) to 4 (beyond)")
+    return errs
+
+
 def words(text) -> int:
     return len(re.findall(r"[A-Za-z0-9][\w'’.-]*", re.sub(r"`[^`]*`", " x ", str(text or ""))))
 
@@ -159,6 +178,7 @@ def validate(lesson: dict) -> list[str]:
             errs.append(f"standards: unknown code {st.get('code')!r}")
         elif not st.get("how"):
             errs.append(f"standards: {st['code']} needs a 'how'")
+    errs += check_rubric(lesson.get("rubric"))
     return errs
 
 

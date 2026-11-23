@@ -14,7 +14,23 @@ in the teacher's school Google account, and student work stays in the teacher's 
 | 🎯 **Mission** | See what they'll build and what they need, and talk a question over with their partner |
 | 🛠️ **Build** | One step per screen, like the build-guide slideshows: code with the **new lines highlighted**, *What it does*, a green **Test it** box to tick, and one question. **Got it! Next ▶** unlocks when the step is done |
 | 🧠 **Quiz** | 3-6 questions as colored answer tiles, graded on the server (pass at 75%) |
-| 🚀 **Ship it** | Pick at least one extension, answer the reflection questions, paste the **MakeCode share link** |
+| 🚀 **Ship it** | Pick at least one extension, answer the reflection questions, paste the **MakeCode share link**, and ship it to the teacher |
+| 📨 **Review** | The teacher opens the project in MakeCode beside a rubric and approves it or sends it back. The lesson is complete (100%, XP, play time, the next lesson) only once it is approved |
+
+### Teacher review (like Pixel Trail)
+
+- **📨 Review** in the teacher's top bar lists shipped projects, oldest first (a partner pair's project shows once).
+  The gradebook marks them 📨 and links each one; the home page shows how many are waiting.
+- The review page shows the student's **shared MakeCode project embedded in the page** (Code + simulator, or the
+  simulator alone, plus *Open in MakeCode ↗*), what Maker Lab checked (build steps, quiz, extensions they ticked),
+  their reflection, the lesson's standards, and earlier reviews.
+- The **rubric** has three rows scored 1-4: *It works*, *Uses* the lesson's big idea, and *Made it their own*. A lesson
+  can set its own rows with `rubric:` (see docs/LESSONS.md). XP never comes from rubric scores.
+- **Approve** needs every row scored. **Send back for changes** needs feedback. Both partners get the same review.
+- The student sees a **pop-up** the next time they open Maker Lab: sent back shows your feedback and *Fix it now*
+  (they fix it in MakeCode, Share again for a new link, and ship again: round 2); approved shows the score, feedback
+  and the XP and badges they earned. While they wait they can start the next lesson. Approved work is locked.
+- Work shipped before reviews existed stays complete. The code: `apps_script/server/62_review.js`, `lib/review.js`.
 
 Around that: XP, levels, badges and a robot avatar; a skill tree; partners on one Chromebook (work saves to both);
 a teacher gradebook with each student's stage, quiz score and project link; a projector **Class display**;

@@ -66,3 +66,11 @@ def test_arcade_games(built):
     r = subprocess.run(["node", str(ROOT / "tests/apps_script_app/arcade_games_check.js"), str(built)],
                        capture_output=True, text=True, timeout=120)
     assert r.returncode == 0, r.stdout + r.stderr
+
+
+@needs_node
+def test_teacher_review(built):
+    """Shipping sends the project to the teacher; approval completes the lesson; sent back shows the feedback."""
+    r = subprocess.run(["node", str(ROOT / "tests/apps_script_app/review_check.js"), str(built)],
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout + r.stderr

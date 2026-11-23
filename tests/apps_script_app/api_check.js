@@ -86,12 +86,19 @@ r = api(S, 'ship', { share: 'https://example.com/x', ext: [], reflect: [], submi
 assert.strictEqual(r.body.ok, false);
 assert.strictEqual(r.body.missing.length, 2 + L.ship.reflect.length);
 r = api(S, 'ship', { share: 'https://makecode.microbit.org/_Abc123XyZ', ext: [0, 3], reflect: L.ship.reflect.map(() => 'A for loop counts; a while loop waits.'), submit: true });
-assert.ok(r.body.shipped && r.body.percent === 100 && r.body.stage === 'done');
-const names = r.body.rewards.badges.map((b) => b.id);
-assert.ok(['finisher', 'shipper', 'game-maker'].every((b) => names.includes(b)), names.join());
+// shipping sends it to the teacher: it isn't complete until they approve it (the full flow is in review_check.js)
+assert.ok(r.body.shipped && r.body.review.status === 'submitted' && r.body.percent < 100 && r.body.stage === 'ship', JSON.stringify(r.body.review));
 assert.strictEqual(r.body.stars, 3);                               // perfect quiz (second try counts) + extension + shipped
+assert.ok(!w.g.loadStudent_(S).xp_keys['complete:' + LID]);
+assert.ok(!r.body.arcade.bank);
+w.advance(61000);
+const graded = w.call(T, 'gradeWork', [S, LID, { status: 'approved', scores: { works: 4, concept: 3, own: 4 }, feedback: 'Smooth game!' }]);
+assert.ok(graded.ok && graded.total === 11 && graded.max === 12, JSON.stringify(graded));
+r = api(S, 'ship', {});
+assert.ok(r.body.locked && r.body.percent === 100 && r.body.stage === 'done');
 const sam = w.g.loadStudent_(S);
 assert.ok(sam.xp_keys['ext_3:' + LID] && sam.xp_keys['complete:' + LID]);
+assert.ok(['finisher', 'shipper', 'game-maker'].every((b) => sam.badges[b]), Object.keys(sam.badges).join());
 
 // finishing the lesson banks 5 minutes of Robot Rush; the arcade itself stays closed until the teacher opens it
 assert.ok(r.body.arcade && !r.body.arcade.open && r.body.arcade.bank === 300 && !r.body.arcade.can_play, JSON.stringify(r.body.arcade));
@@ -152,8 +159,9 @@ assert.deepStrictEqual(r.body, { status: 'paired', name: 'Sam K.', by_me: true }
 const ava = w.g.loadStudent_(S2);
 assert.ok(ava.progress[LID].shipped_at && w.g.percent_(ava.progress[LID], L) === 100);
 assert.ok(ava.badges['finisher'] && ava.badges['teamwork']);
-api(S2, 'ship', { reflect: ['Changed by Ava', 'still here'] });
-assert.strictEqual(w.g.loadStudent_(S).progress[LID].reflect[0], 'Changed by Ava');
+assert.ok(api(S2, 'ship', { reflect: ['Changed by Ava', 'still here'] }).body.locked);           // approved work is finished
+api(S2, 'mission', { talk: 'Changed by Ava: blocks reach the top.' });
+assert.strictEqual(w.g.loadStudent_(S).progress[LID].talk, 'Changed by Ava: blocks reach the top.');
 assert.strictEqual(api(S, 'partner', { action: 'leave' }).body.status, 'none');
 
 // teacher: gradebook with the share link, student detail, class display, map, previews don't save

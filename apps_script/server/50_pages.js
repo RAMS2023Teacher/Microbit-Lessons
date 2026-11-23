@@ -55,11 +55,13 @@ function studentPage_(me, path, preview) {
     saveStudent_(rec);
   }
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
+  var graded = !preview && applyGrades_(rec);
   var rewards = syncRewards_(rec, cfg);
-  if (rewards.xp_gained && !preview) saveStudent_(rec);
+  if ((rewards.xp_gained || graded) && !preview) saveStudent_(rec);
   var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
                                                 arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec),
-                                                course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor };
+                                                course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor,
+                                                review_news: preview ? [] : reviewNews_(rec) };
   var m;
   if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Home', data: merge_(base, dashboardData_(rec, cfg)) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec, courseOf_(rec, cfg))) };
@@ -88,6 +90,8 @@ function teacherPage_(path) {
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Arcade', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
+  if ((m = /^\/teacher\/review(?:\/(\w+))?$/.exec(path))) return { name: 'review-queue', title: 'Review', data: merge_(base, merge_(reviewQueue(m[1] || ''), { classes: Object.keys(cfg.classes).map(function (c) { return { id: c, name: cfg.classes[c].name }; }), cid: m[1] || '' })) };
+  if ((m = /^\/teacher\/review\/([\w-]+)\/(.+)$/.exec(path))) return { name: 'review', title: 'Review', mainClass: 'container wide', data: merge_(base, reviewWork(decodeURIComponent(m[2]), m[1])) };
   if (path === '/teacher/reports') return { name: 'reports', title: 'Problem reports', data: merge_(base, bugList()) };
   if ((m = /^\/teacher\/feedback(?:\/(\w+))?$/.exec(path))) return { name: 'feedback', title: 'Lesson feedback', data: merge_(base, feedbackReport(m[1])) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
@@ -145,10 +149,12 @@ function dashboardData_(rec, cfg) {
     .map(function (a) {
       var c = byId[a.lesson_id];
       return { lesson: c, class_name: cfg.classes[a.class_id].name, due: a.due, note: a.note, pct: c.pct,
-               overdue: !!(a.due && a.due < today && c.pct < 100), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
+               overdue: !!(a.due && a.due < today && c.pct < 100 && reviewStatus_(rec.progress[a.lesson_id]) !== 'submitted'), review: reviewStatus_(rec.progress[a.lesson_id]), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
     });
   var done = cards.filter(function (c) { return !c.soon && c.pct === 100; }).length;
-  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec, cid), done: done, course_name: DATA.courses[cid].name,
+  var reviews = Object.keys(rec.progress).filter(function (l) { return DATA.lessons[l] && ['submitted', 'returned'].indexOf(reviewStatus_(rec.progress[l])) >= 0; })
+    .map(function (l) { var L = DATA.lessons[l], r = rec.progress[l].review || {}; return { lesson_id: l, title: L.number + '. ' + L.title, icon: L.icon, status: r.status, feedback: r.feedback || '' }; });
+  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec, cid), done: done, course_name: DATA.courses[cid].name, reviews: reviews,
            total: cards.length, classes: classes.map(function (c) { return cfg.classes[c].name; }) };
 }
 
@@ -159,9 +165,10 @@ function nextUp_(rec, rows, cards) {
     .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); });
   var byId = {};
   cards.forEach(function (c) { byId[c.id] = c; });
-  for (var i = 0; i < started.length; i++) if (byId[started[i]] && byId[started[i]].pct < 100) return pick('Keep going', byId[started[i]]);
-  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return pick('Start', rows[j].lesson);
-  for (var k = 0; k < cards.length; k++) if (!cards[k].soon && cards[k].pct < 100) return pick('Start', cards[k]);
+  var waiting = function (id) { return reviewStatus_(rec.progress[id]) === 'submitted'; };          // shipped: the teacher has it
+  for (var i = 0; i < started.length; i++) if (byId[started[i]] && byId[started[i]].pct < 100 && !waiting(started[i])) return pick('Keep going', byId[started[i]]);
+  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100 && !waiting(rows[j].lesson.id)) return pick('Start', rows[j].lesson);
+  for (var k = 0; k < cards.length; k++) if (!cards[k].soon && cards[k].pct < 100 && !waiting(cards[k].id)) return pick('Start', cards[k]);
   return null;
 }
 
@@ -191,6 +198,7 @@ function lessonPage_(lid, rec, cfg, base, teacher) {
            data: merge_(base, { lesson: publicLesson_(L), state: state, stage: currentStage_(L, p), stages: stagesDone_(L, p),
                                 lesson_xp: rec ? lessonXp_(rec, lid) : 0, xp_possible: possibleXp_(L), stars: lessonStars_(L, p),
                                 pct: percent_(p, L), feedback: rec ? ((cfg.feedback[rec.email] || {})[lid] || '') : '',
+                                review: p && p.review ? reviewForStudent_(L, p.review) : (p && p.shipped_at ? { status: 'approved', legacy: true } : null),
                                 video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url, help: rec ? !!helpGet_(rec.email) : false, my_fb: myFeedback_(rec, lid),
                                 key: teacher ? { quiz: L.quiz.map(function (q) { return q.choices[q.answer]; }), notes: L.teacher_notes || '',
                                                  standards: L.standards_full || [] } : null }) };
@@ -295,7 +303,7 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/reports', 'Reports'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/teacher/review', reviewNavLabel_()], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/reports', 'Reports'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   if (page.preview) nav = [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher && !page.preview, nav: nav,

@@ -30,10 +30,21 @@
   };
   var stageLabel = function (cell) {
     if (cell.status === 'complete') return '✓ done';
+    if (cell.review === 'submitted') return '📨 to review';
+    if (cell.review === 'returned') return '🔧 sent back';
     if (cell.stage === 'build') return 'Build ' + cell.steps_done + '/' + cell.steps_total;
     return { mission: 'Mission', quiz: 'Quiz', ship: 'Ship it' }[cell.stage] || '';
   };
   var meter = function (pct) { return '<span class="meter" title="' + pct + '% done"><i style="width:' + pct + '%"></i></span>'; };
+
+  var reviewUrl = function (lid, email) { return '/teacher/review/' + encodeURIComponent(lid) + '/' + encodeURIComponent(email); };
+  var whenSent = function (iso) {
+    if (!iso) return '';
+    var t = new Date(iso), mins = Math.round((Date.now() - t.getTime()) / 60000);
+    if (mins < 60) return mins <= 1 ? 'just now' : mins + ' min ago';
+    if (mins < 60 * 20) return Math.round(mins / 60) + ' h ago';
+    return t.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  };
 
   var pages = {};
 
@@ -64,6 +75,11 @@
       '<div style="flex:1"><h1>Hi ' + E(d.name) + '!</h1>' + (RobotAvatar.card(d.avatar) ? '<p class="card-line"><a href="/me" title="Change your calling card">' + RobotAvatar.card(d.avatar) + '</a></p>' : '<p class="card-line"><a class="small" href="/me">🪪 Pick a calling card</a></p>') + (d.avatar && d.avatar.name ? '<p class="muted">…and your robot <b>' + E(d.avatar.name) + '</b></p>' : '') +
       '<div class="level-row"><span class="level-badge">' + lv.level + '</span><div class="grow"><div class="level-title"><span>' + E(lv.title) + '</span>' +
       '<span>' + (lv.max ? 'max level!' : 'next: ' + lv.next) + '</span></div><div class="xpbar"><i style="width:' + lv.pct + '%"></i><b>⭐ ' + lv.xp + ' XP</b></div></div></div></div></section>');
+    var back = (d.reviews || []).filter(function (x) { return x.status === 'returned'; }), wait = (d.reviews || []).filter(function (x) { return x.status === 'submitted'; });
+    if (back.length) h.push('<section class="card review-home returned"><h2>🔧 Your teacher asked for changes</h2>' + back.map(function (x) {
+      return '<a class="assign-row" href="/lessons/' + E(x.lesson_id) + '"><span class="icon-tile">' + E(x.icon) + '</span><span style="flex:1"><b>' + E(x.title) + '</b>' +
+        (x.feedback ? '<br><small>💬 ' + E(x.feedback.length > 160 ? x.feedback.slice(0, 157) + '…' : x.feedback) + '</small>' : '') + '</span><span class="btn small">Fix it ▶</span></a>';
+    }).join('') + '</section>');
     if (nu) h.push('<a class="banner mission-banner ' + E(nu.lesson.color) + '" href="/lessons/' + E(nu.lesson.id) + '"><div class="banner-icon">' + E(nu.lesson.icon) + '</div>' +
       '<div class="grow"><small>' + (nu.verb === 'Keep going' ? 'Keep going' : 'Next mission') + '</small><h1>' + E(nu.lesson.title) + '</h1>' +
       '<p>' + (nu.verb === 'Keep going' ? 'Next up: ' + E(nu.stage) : E(nu.lesson.tagline)) + '</p></div><span class="btn go big">GO ▶</span></a>');
@@ -76,10 +92,14 @@
     if (d.rows.length) d.rows.forEach(function (r) {
       h.push('<a class="assign-row" href="/lessons/' + E(r.lesson.id) + '"><span class="icon-tile ' + E(r.lesson.color) + '">' + E(r.lesson.icon) + '</span>' +
         '<span style="flex:1"><b>' + E(r.lesson.number) + '. ' + E(r.lesson.title) + '</b><br><small class="muted">' + E(r.class_name) +
-        (r.due ? ' · due ' + E(due(r.due)) : '') + (r.overdue ? ' · <span class="bad">overdue</span>' : '') + (r.feedback ? ' · 💬 feedback' : '') + '</small>' +
+        (r.due ? ' · due ' + E(due(r.due)) : '') + (r.overdue ? ' · <span class="bad">overdue</span>' : '') + (r.feedback ? ' · 💬 feedback' : '') +
+        (r.review === 'submitted' && r.pct < 100 ? ' · 📨 with your teacher' : r.review === 'returned' ? ' · <b>🔧 fix it</b>' : '') + '</small>' +
         (r.note ? '<br><small>📌 ' + E(r.note) + '</small>' : '') + '</span>' + meter(r.pct) + '<b>' + r.pct + '%</b></a>');
     });
     else h.push('<p class="muted">No assignments yet. Start the next mission above, or pick any lesson.</p>');
+    if (wait.length) h.push('<h3 class="small-head">📨 Waiting for your teacher</h3><ul class="plain waiting-list">' + wait.map(function (x) {
+      return '<li><a href="/lessons/' + E(x.lesson_id) + '">' + E(x.icon) + ' ' + E(x.title) + '</a> <small class="muted">shipped, waiting for review</small></li>';
+    }).join('') + '</ul>');
     h.push('</section><section class="card" style="padding:18px"><h2>🏅 Badge shelf</h2><div class="badge-shelf">');
     d.badges.forEach(function (b) {
       h.push('<span class="badge-slot' + (b.earned ? '' : ' locked') + '" title="' + E(b.name + ': ' + b.desc) + '">' + (b.earned ? E(b.icon) : '?') + '</span>');
@@ -359,10 +379,15 @@
 
   // ---------------------------------------------------------------- teacher pages
   pages['teacher-home'] = function () {
-    var h = ['<h1>My classes</h1><div class="class-cards">'];
+    var waiting = d.classes.reduce(function (t, c) { return t + (c.waiting || 0); }, 0);
+    var h = ['<h1>My classes</h1>'];
+    if (waiting) h.push('<a class="banner review-banner" href="/teacher/review"><div class="banner-icon">📨</div><div class="grow"><small>Waiting for you</small><h2>' + waiting + ' shipped project' + (waiting > 1 ? 's' : '') + ' to review</h2>' +
+      '<p>Students finish a lesson when you approve it.</p></div><span class="btn">Review ▶</span></a>');
+    h.push('<div class="class-cards">');
     d.classes.forEach(function (c) {
       h.push('<a class="card class-card" href="/teacher/classes/' + E(c.id) + '"><span class="grade-tag ' + E(c.grade) + '">' + E(c.grade_name) + '</span><h2>' + E(c.name) + '</h2><div class="join-code small">Code <b>' + E(c.code) +
-        '</b></div><p class="muted">' + c.students + ' students · ' + c.assignments + ' assignments' + (c.classroom ? '<br>🔗 Google Classroom' : '') + '</p></a>');
+        '</b></div><p class="muted">' + c.students + ' students · ' + c.assignments + ' assignments' + (c.classroom ? '<br>🔗 Google Classroom' : '') + '</p>' +
+        (c.waiting ? '<p class="small"><b>📨 ' + c.waiting + ' to review</b></p>' : '') + '</a>');
     });
     var linked = d.classes.filter(function (c) { return c.classroom; }).length;
     h.push('<div class="card class-card new"><h2>+ New class</h2><input id="new-class" placeholder="e.g. Period 3 Makers" maxlength="80"><select id="new-grade"><option value="">Pick a grade…</option>' + (d.grades || []).map(function (g) { return '<option value="' + E(g.id) + '">' + E(g.name) + '</option>'; }).join('') + '</select><button class="btn" id="new-go" type="button">Create</button></div>' +
@@ -511,11 +536,12 @@
           h.push('<td class="cell ' + cell.status + (cell.late ? ' late' : '') + '"><a href="' + link + '#' + E(a.lesson_id) + '">' + meter(cell.pct) + '<span class="cell-detail">' + cell.pct + '%' +
             (cell.status !== 'not-started' ? ' · ' + E(stageLabel(cell)) : '') + (cell.quiz_total ? ' · Q ' + cell.quiz_best + '/' + cell.quiz_total : '') +
             (cell.late ? ' <b class="bad">late</b>' : '') + (cell.partner ? ' · 👥 ' + E(names[cell.partner] || 'partner') : '') + '</span></a>' +
-            (cell.share ? '<a class="cell-link" href="' + E(cell.share) + '" target="_blank" rel="noopener" title="Open their MakeCode project">🔗 project</a>' : '') + '</td>');
+            (cell.review === 'submitted' ? '<a class="cell-link review-now" href="' + reviewUrl(a.lesson_id, s.email) + '">📨 Review it</a>'
+              : cell.share ? '<a class="cell-link" href="' + reviewUrl(a.lesson_id, s.email) + '" title="Their MakeCode project and your review">🔗 project</a>' : '') + '</td>');
         });
         h.push('</tr>');
       });
-      h.push('</tbody></table></div><p class="muted small">Stage = where they are (Mission, Build step, Quiz, Ship it) · Q = best quiz score · 🔗 = their shipped MakeCode project. ' +
+      h.push('</tbody></table></div><p class="muted small">Stage = where they are (Mission, Build step, Quiz, Ship it) · Q = best quiz score · 📨 = shipped, waiting for your review · 🔧 = you sent it back · ✓ done = you approved it · 🔗 = their MakeCode project and your review. ' +
         'The gradebook catches up with new work within about a minute.</p>');
     }
     h.push('</section><section class="card arcade-teacher" id="arcade-card"></section>');
@@ -621,6 +647,11 @@
       h.push('</ol></dd><dt>Quiz</dt><dd>' + (p.quiz_total ? 'best ' + p.quiz_best + '/' + p.quiz_total + ' · ' + p.quiz_attempts + ' attempt(s)' : '—') + '</dd>' +
         '<dt>Ship it</dt><dd>' + (p.shipped_at ? '📦 shipped ' + E(shortDate(p.shipped_at)) : 'not yet') +
         (p.share ? ' · <a href="' + E(p.share) + '" target="_blank" rel="noopener">🔗 open their MakeCode project</a>' : '') +
+        (it.review === 'submitted' ? '<br><a class="btn small" href="' + reviewUrl(it.id, s.email) + '">📨 Review it</a>'
+          : it.graded ? '<br><span class="chip ' + E(it.graded.status) + '">' + (it.graded.status === 'approved' ? '✅ Approved' : '🔧 Sent back') + '</span>' +
+            (it.graded.max ? ' <small>' + it.graded.total + ' of ' + it.graded.max + '</small>' : '') + (it.graded.feedback ? ' <small class="muted">“' + E(it.graded.feedback) + '”</small>' : '') +
+            ' <a class="small" href="' + reviewUrl(it.id, s.email) + '">open review</a>'
+          : it.review === 'approved' && p.shipped_at ? '<br><small class="muted">✅ Shipped before reviews: counts as done.</small> <a class="small" href="' + reviewUrl(it.id, s.email) + '">review it anyway</a>' : '') +
         (it.extensions.length ? '<br><small>Extensions: ' + (it.extensions.filter(function (e, k) { return (p.ext || {})[k]; }).map(E).join(', ') || 'none yet') + '</small>' : '') +
         it.reflect_q.map(function (q, k) { return '<br><small class="muted">' + E(q) + '</small> <span class="ans">' + E((p.reflect || [])[k] || '—') + '</span>'; }).join('') + '</dd></dl>' +
         '<div class="feedback-form"><label class="field"><span>Feedback (the student sees it in the lesson)</span><textarea rows="2" class="fb-text" data-lesson="' + E(it.id) + '">' +
@@ -642,6 +673,167 @@
       act(this, 'giveBonus', [s.email, document.getElementById('bx').value, document.getElementById('br').value, document.getElementById('bp').checked],
         function (r) { flash('Given! ' + (r.xp ? r.xp + ' XP' : '') + ' It shows up next time ' + s.name + ' opens Maker Lab.', 'success'); document.getElementById('bgo').disabled = false; });
     });
+  };
+
+  // ---------------------------------------------------------------- 📨 reviewing shipped projects (server: 62_review.js)
+  pages['review-queue'] = function () {
+    var h = ['<div class="page-head"><div><h1>📨 Review</h1><p class="muted">Shipped projects wait here, oldest first. A lesson only counts as done once you approve it.</p></div>'];
+    if (d.classes.length > 1) h.push('<label class="field"><span>Class</span><select id="rq-class"><option value="">All classes</option>' +
+      d.classes.map(function (c) { return '<option value="' + E(c.id) + '"' + (c.id === d.cid ? ' selected' : '') + '>' + E(c.name) + '</option>'; }).join('') + '</select></label>');
+    h.push('</div>');
+    if (!d.queue.length) h.push('<section class="card center review-empty"><div class="big-icon">🎉</div><h2>All caught up</h2><p class="muted">Nothing is waiting for review' + (d.cid ? ' in this class' : '') + '.</p></section>');
+    else {
+      h.push('<p><a class="btn" href="' + reviewUrl(d.queue[0].lesson_id, d.queue[0].email) + '">Start reviewing (' + d.queue.length + ') ▶</a></p><section class="card"><ul class="review-list plain">');
+      d.queue.forEach(function (x) {
+        h.push('<li><a class="review-row" href="' + reviewUrl(x.lesson_id, x.email) + '"><span data-avatar="' + A(x.avatar || {}) + '" data-size="40"></span>' +
+          '<span class="grow"><b>' + E(x.name) + '</b>' + (x.partner ? ' <span class="muted">+ ' + E(x.partner) + '</span>' : '') +
+          '<br><small class="muted">' + E(x.class_name) + '</small></span>' +
+          '<span class="grow"><span class="review-lesson">' + E(x.icon) + ' ' + E(x.number) + '. ' + E(x.title) + '</span>' +
+          (x.round > 1 ? ' <span class="chip returned">fixed · try ' + x.round + '</span>' : '') + '</span>' +
+          '<small class="muted">' + E(whenSent(x.submitted_at)) + '</small><span class="btn small">Review</span></a></li>');
+      });
+      h.push('</ul></section>');
+    }
+    main.innerHTML = h.join('');
+    var pick = document.getElementById('rq-class');
+    if (pick) pick.addEventListener('change', function () { ML.go('/teacher/review' + (pick.value ? '/' + pick.value : '')); });
+  };
+
+  pages.review = function () {
+    main.className = 'container wide';
+    var s = d.student, L = d.lesson, r = d.review || {}, scores = {}, h = [];
+    Object.keys(r.scores || {}).forEach(function (k) { scores[k] = r.scores[k]; });
+    var mc = 'https://makecode.microbit.org/';
+    var views = d.project ? [
+      { id: 'code', label: 'Code + simulator', src: mc + '#pub:' + d.project },
+      { id: 'sim', label: 'Simulator only', src: mc + '---run?id=' + encodeURIComponent(d.project) },
+    ] : [];
+    var chip = { submitted: ['submitted', '📨 Waiting for you'], approved: ['approved', '✅ Approved'], returned: ['returned', '🔧 Sent back'], draft: ['draft', '✏️ Being changed'] }[d.status] || ['draft', 'Not shipped yet'];
+    h.push('<div class="page-head"><div><a class="muted small" href="/teacher/review">← Review queue</a>' +
+      '<h1>' + E(L.icon) + ' ' + E(L.number) + '. ' + E(L.title) + ' <span class="chip ' + chip[0] + '">' + chip[1] + '</span></h1>' +
+      '<p class="review-who"><span data-avatar="' + A(s.avatar || {}) + '" data-size="34"></span><b>' + E(s.name) + '</b>' +
+      (d.partner ? ' <span>with 👥 ' + E(d.partner) + '</span>' : '') +
+      (d.classes.length ? ' <span class="muted">· ' + d.classes.map(function (c) { return '<a href="/teacher/classes/' + E(c.id) + '/students/' + encodeURIComponent(s.email) + '#' + E(L.id) + '">' + E(c.name) + '</a>'; }).join(', ') + '</span>' : '') +
+      (d.submitted_at ? ' <span class="muted">· shipped ' + E(whenSent(d.submitted_at)) + '</span>' : '') +
+      (d.round > 1 ? ' <span class="chip returned">try ' + d.round + '</span>' : '') + '</p></div>' +
+      (d.next ? '<a class="btn ghost" href="' + reviewUrl(d.next.lesson_id, d.next.email) + '">Skip to next (' + d.next.left + ' left) ▶</a>' : '') + '</div>');
+    h.push('<div class="review-grid"><div class="review-main">');
+    // the project, running in MakeCode
+    h.push('<section class="card mc-card">');
+    if (views.length) {
+      h.push('<div class="mc-bar"><div class="seg" role="tablist" aria-label="How to show the project">' + views.map(function (v, i) {
+        return '<button type="button" role="tab" class="seg-btn" data-view="' + v.id + '" aria-selected="' + (i === 0) + '">' + E(v.label) + '</button>';
+      }).join('') + '</div><a class="btn small ghost" href="' + E(d.share) + '" target="_blank" rel="noopener">Open in MakeCode ↗</a></div>' +
+        '<div class="mc-frame"><iframe id="mc-embed" title="' + E(s.name) + '\'s MakeCode project" src="' + E(views[0].src) + '" ' +
+        'sandbox="allow-popups allow-forms allow-scripts allow-same-origin" allow="usb; autoplay; camera; microphone" loading="lazy"></iframe></div>' +
+        '<p class="muted small">Their shared project, read-only: changes you make here don\'t touch theirs. If it stays blank, use <b>Open in MakeCode ↗</b>. Share link: <a href="' + E(d.share) + '" target="_blank" rel="noopener">' + E(d.share) + '</a></p>');
+    } else if (d.share) {
+      h.push('<h2>Their project</h2><p class="bad">This link isn\'t a MakeCode share link, so it can\'t be shown here.</p><p><a href="' + E(d.share) + '" target="_blank" rel="noopener">' + E(d.share) + ' ↗</a></p>' +
+        '<p class="muted small">Send it back and ask them to use <b>Share</b> in MakeCode, then paste the link it gives (it starts with https://makecode.microbit.org/).</p>');
+    } else h.push('<h2>Their project</h2><p class="muted">No share link yet.</p>');
+    h.push('</section>');
+    // what Maker Lab checked
+    var c = d.checks;
+    h.push('<section class="card review-checks"><h2>What Maker Lab checked</h2><ul class="plain check-list">' +
+      '<li>' + (c.steps_done === c.steps_total ? '✅' : '⬜') + ' Build steps: <b>' + c.steps_done + ' of ' + c.steps_total + '</b></li>' +
+      '<li>' + (c.quiz_best != null && c.quiz_best >= Math.ceil(c.quiz_total * 0.75) ? '✅' : '⬜') + ' Quiz: best <b>' + (c.quiz_best == null ? '—' : c.quiz_best) + ' of ' + c.quiz_total + '</b>' +
+      (c.quiz_first != null ? ' <span class="muted">(first try ' + c.quiz_first + ')</span>' : '') + '</li>' +
+      (d.extensions.length ? '<li>' + (d.extensions.some(function (e) { return e.done; }) ? '✅' : '⬜') + ' Extensions they say they added: ' +
+        (d.extensions.filter(function (e) { return e.done; }).map(function (e) { return '<b>' + E(e.title) + '</b> <small class="muted">(' + E(e.level) + ')</small>'; }).join(', ') || 'none') + '</li>' : '') +
+      '</ul><p class="muted small">Extensions are ticked by the student. Look for them in the code.</p></section>');
+    if (d.reflect.length) {
+      h.push('<section class="card"><h2>Their reflection</h2><dl class="work">');
+      d.reflect.forEach(function (q) { h.push('<dt>' + E(q.q) + '</dt><dd class="ans">' + (q.a ? E(q.a) : '<span class="muted">—</span>') + '</dd>'); });
+      h.push('</dl></section>');
+    }
+    if (L.mission) h.push('<details class="card review-mission"><summary>The mission they were given</summary><div>' + L.mission + '</div></details>');
+    if (d.history.length) {
+      h.push('<section class="card"><h2>Earlier reviews</h2><ol class="plain history">');
+      d.history.slice().reverse().forEach(function (x) {
+        h.push('<li><span class="chip ' + E(x.status) + '">' + (x.status === 'approved' ? '✅ Approved' : '🔧 Sent back') + '</span> <small class="muted">' + E(shortDate(x.at)) +
+          (x.max ? ' · ' + x.total + ' of ' + x.max : '') + '</small>' + (x.feedback ? '<br>' + E(x.feedback) : '') + '</li>');
+      });
+      h.push('</ol></section>');
+    }
+    h.push('</div>');
+    // the rubric
+    h.push('<aside class="card rubric-card" aria-labelledby="rb-title"><h2 id="rb-title">Rubric</h2>');
+    if (d.standards.length) h.push('<div class="rubric-standards"><small>Standards in this lesson</small>' + d.standards.map(function (st) {
+      return '<details><summary><b>' + E(st.code) + '</b> ' + E(st.text) + '</summary><p class="small">' + E(st.how) + '</p></details>';
+    }).join('') + '</div>');
+    d.rubric.forEach(function (row) {
+      h.push('<fieldset class="rubric-row" data-row="' + E(row.id) + '"><legend>' + E(row.label) + '</legend><div class="levels">' + row.levels.map(function (lv, i) {
+        return '<button type="button" class="level-btn" data-score="' + (i + 1) + '" aria-pressed="' + (scores[row.id] === i + 1) + '"><b>' + (i + 1) + '</b><span>' + E(lv) + '</span></button>';
+      }).join('') + '</div></fieldset>');
+    });
+    h.push('<p class="rubric-total">Total: <b id="rb-total"></b></p>' +
+      '<label class="field"><span>Feedback for ' + E(s.name.split(' ')[0]) + (d.partner ? ' and ' + E(d.partner.split(' ')[0]) : '') + '</span>' +
+      '<textarea id="rb-feedback" rows="5" maxlength="1500" placeholder="Name one thing that works well, and one thing to try next."></textarea></label>' +
+      '<p class="small bad" id="rb-msg" role="status"></p>' +
+      '<div class="rubric-actions"><button class="btn" id="rb-approve" type="button">✅ Approve</button><button class="btn ghost warn" id="rb-return" type="button">🔧 Send back for changes</button></div>' +
+      '<p class="muted small">Approve finishes the lesson for them: 100%, XP, play time, and the next lesson. Send back shows them your feedback and asks them to fix it and ship again.' +
+      (d.partner ? ' <b>Both partners</b> get the same review.' : '') + '</p></aside></div>');
+    main.innerHTML = h.join('');
+    var $ = function (id) { return document.getElementById(id); };
+    $('rb-feedback').value = r.feedback || '';
+    var max = d.rubric.length * 4;
+    var drawTotal = function () {
+      var t = 0, n = 0;
+      d.rubric.forEach(function (row) { if (scores[row.id]) { t += scores[row.id]; n++; } });
+      $('rb-total').textContent = t + ' of ' + max + (n < d.rubric.length ? ' (' + (d.rubric.length - n) + ' row' + (d.rubric.length - n > 1 ? 's' : '') + ' to score)' : '');
+    };
+    drawTotal();
+    main.querySelectorAll('.rubric-row').forEach(function (fs) {
+      fs.addEventListener('click', function (e) {
+        var b = e.target.closest('.level-btn');
+        if (!b) return;
+        scores[fs.dataset.row] = Number(b.dataset.score);
+        fs.querySelectorAll('.level-btn').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        fs.classList.remove('unscored');
+        drawTotal();
+      });
+    });
+    main.querySelectorAll('.seg-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        main.querySelectorAll('.seg-btn').forEach(function (x) { x.setAttribute('aria-selected', String(x === b)); });
+        $('mc-embed').src = views.filter(function (v) { return v.id === b.dataset.view; })[0].src;
+      });
+    });
+    var grade = function (btn, status) {
+      var msg = $('rb-msg'), fb = $('rb-feedback').value.trim();
+      msg.textContent = '';
+      if (status === 'approved') {
+        var missing = d.rubric.filter(function (row) { return !scores[row.id]; });
+        if (missing.length) {
+          missing.forEach(function (row) { main.querySelector('.rubric-row[data-row="' + CSS.escape(row.id) + '"]').classList.add('unscored'); });
+          msg.textContent = 'Score each row of the rubric first.';
+          if (window.Celebrate) window.Celebrate.nope(btn, msg);
+          return;
+        }
+      } else if (fb.length < 3) {
+        msg.textContent = 'Tell them what to fix: write a little feedback first.';
+        if (window.Celebrate) window.Celebrate.nope(btn, msg);
+        $('rb-feedback').focus();
+        return;
+      }
+      $('rb-approve').disabled = $('rb-return').disabled = true;
+      btn.textContent = 'Saving…';
+      ML.run('gradeWork', s.email, L.id, { status: status, scores: scores, feedback: fb }).then(function (res) {
+        var who = res.students.join(' and ');
+        btn.textContent = status === 'approved' ? '✅ Approved' : '🔧 Sent back';
+        msg.className = 'small ok';
+        msg.textContent = (status === 'approved' ? 'Approved for ' : 'Sent back to ') + who + '. They\'ll see it next time they open Maker Lab.';
+        if (status === 'approved' && window.Celebrate) window.Celebrate.sound('coin');
+        ML.go(d.next ? reviewUrl(d.next.lesson_id, d.next.email) : '/teacher/review', msg.textContent + (d.next ? ' Tap Continue for the next project.' : ' Tap Continue to go back to the queue.'));
+      }).catch(function (e) {
+        $('rb-approve').disabled = $('rb-return').disabled = false;
+        btn.textContent = status === 'approved' ? '✅ Approve' : '🔧 Send back for changes';
+        msg.className = 'small bad';
+        msg.textContent = (e && e.message) || 'Something went wrong. Try again.';
+      });
+    };
+    $('rb-approve').addEventListener('click', function () { grade(this, 'approved'); });
+    $('rb-return').addEventListener('click', function () { grade(this, 'returned'); });
   };
 
   pages.videos = function () {
@@ -853,6 +1045,7 @@
     if (window.Visuals) window.Visuals.renderAll();
     ML.fixLinks(document);
     if (window.MLTranslate) window.MLTranslate.start();
+    if (window.MLReview) window.MLReview.start();
     try { if (sessionStorage.getItem('ml-reopen-prefs')) { sessionStorage.removeItem('ml-reopen-prefs'); window.MLPrefs.open(); } } catch (e) { /* fine */ }
   };
 })();

@@ -60,6 +60,7 @@ def lesson_data(lesson: dict) -> dict:
                   "answer": q["answer"], "why": md_inline(q["why"])} for q in lesson["quiz"]],
         "ship": {"extensions": [], "reflect": [plain(r) for r in (lesson.get("ship") or {}).get("reflect") or []]},
         "teacher_notes": md(lesson.get("teacher_notes", "")),
+        "rubric": [{"id": str(r["id"]), "label": plain(r["label"]), "levels": [plain(x) for x in r["levels"]]} for r in lesson.get("rubric") or []],
         "standards_full": [{"code": s["code"], "text": std[s["code"]]["text"], "how": s["how"]} for s in lesson.get("standards") or []],
     }
     for s in lesson["build"]:
@@ -131,7 +132,7 @@ def read(path) -> str:
 def build_assets() -> dict:
     styles = read("css/base.css") + "\n" + read("css/theme.css")
     app = "\n".join([
-        read("lib/sfx.js"), read("lib/prefs.js"), read("lib/bugs.js"), read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/breadboard.js"), read("lib/schematic.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/circuit.js"), read("lib/blocks.js"), read("lib/translate.js"), read("lib/pixel.js"), read("lib/nudge.js"),
+        read("lib/sfx.js"), read("lib/prefs.js"), read("lib/bugs.js"), read("shim.js"), read("lib/avatar.js"), read("lib/rewards.js"), read("lib/breadboard.js"), read("lib/schematic.js"), read("lib/visuals.js"), read("lib/screen.js"), read("lib/game.js"), read("lib/circuit.js"), read("lib/blocks.js"), read("lib/translate.js"), read("lib/pixel.js"), read("lib/nudge.js"), read("lib/review.js"),
         "window.__runMap = function () {\n" + read("lib/map.js") + "\n};",
         "window.__runProfile = function () {\n" + read("lib/profile.js") + "\n};",
         read("pages.js"), read("lesson.js"),

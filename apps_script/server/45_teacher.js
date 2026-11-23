@@ -143,7 +143,8 @@ function gradebookCell_(a, s) {
   return { status: status, pct: x ? x.pct : 0, stage: x ? x.stage : 'mission', steps_done: x ? x.steps_done : 0,
            steps_total: x ? x.steps_total : 0, quiz_best: x ? x.quiz_best : null, quiz_total: x ? x.quiz_total : 0,
            share: x ? x.share : '', shipped: !!(x && x.shipped), stars: x ? x.stars : 0, partner: (x && x.partner) || null,
-           late: !!(a.due && a.due < today && status !== 'complete') };
+           review: (x && x.review) || null,
+           late: !!(a.due && a.due < today && status !== 'complete' && !(x && x.review === 'submitted')) };   // shipped on time, waiting on the teacher: not late
 }
 
 function teacherHome() {
@@ -151,6 +152,7 @@ function teacherHome() {
   return { grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }), classes: Object.keys(cfg.classes).map(function (cid) {
     var c = cfg.classes[cid];
     return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length, classroom: c.classroom || null,
+             waiting: reviewQueue_(cfg, cid, false).queue.length,
              grade: courseOfClass_(cfg, cid), grade_name: DATA.courses[courseOfClass_(cfg, cid)].short,
              assignments: cfg.assignments.filter(function (a) { return a.class_id === cid; }).length };
   }) };
@@ -185,6 +187,7 @@ function studentDetail(cid, email) {
     return { id: L.id, number: L.number, title: L.title, icon: L.icon, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0,
              stage: currentStage_(L, p), p: p, feedback: ((cfg.feedback[email] || {})[L.id]) || '',
              partner: p && p.partner ? partnerName_(cfg, p.partner) : null,
+             review: reviewStatus_(p), graded: p && p.review && p.review.graded_at ? reviewForStudent_(L, p.review) : null,
              steps: L.build.map(function (S) { return { title: S.title, ask: S.ask || '', fields: S.fields || [] }; }),
              talk_q: L.mission.talk, quiz_total: L.quiz.length,
              extensions: ((L.ship || {}).extensions || []).map(function (e) { return e.title; }), reflect_q: (L.ship || {}).reflect || [] };

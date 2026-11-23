@@ -218,7 +218,8 @@ function studentSummary_(rec) {
                      steps_done: stepsDone_(L, p), steps_total: L.build.length,
                      quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: p.quiz_total || 0,
                      shipped: !!p.shipped_at, share: p.share || '', stars: lessonStars_(L, p),
-                     completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null };
+                     completed_at: p.completed_at || null, updated_at: p.updated_at || null, partner: p.partner || null,
+                     review: reviewStatus_(p), submitted_at: (p.review && p.review.submitted_at) || p.shipped_at || null, round: (p.review && p.review.round) || null };
   });
   return { name: rec.name, classes: rec.classes || [], xp: rec.xp || 0, avatar: rec.avatar ? avatarOf_(rec) : null,
            badges: Object.keys(rec.badges || {}), lessons: lessons, updated_at: rec.updated_at, wins: recentWins_(rec),
@@ -254,7 +255,7 @@ function recentWins_(rec) {
 //   mission_done, talk                      the mission's partner question
 //   steps: { "0": {tests: [0, 1], answer, fields: [...], done} }, step_at
 //   quiz_answers, quiz_score, quiz_best, quiz_total, quiz_attempts
-//   ext: { "0": true }, reflect: [...], share, shipped_at
+//   ext: { "0": true }, reflect: [...], share, shipped_at (sent to the teacher), review (62_review.js)
 //   partner, started_at, updated_at, completed_at
 
 var STAGES_ = [['mission', 'Mission', '🎯'], ['build', 'Build', '🛠️'], ['quiz', 'Quiz', '🧠'], ['ship', 'Ship it', '🚀']];
@@ -265,9 +266,10 @@ function stepsDone_(L, p) { var n = 0; for (var i = 0; i < L.build.length; i++) 
 function quizPassed_(L, p) { return !!(p && p.quiz_total && p.quiz_best / p.quiz_total >= DATA.quiz_pass); }
 function quizPerfect_(p) { return !!(p && p.quiz_total && p.quiz_best === p.quiz_total); }
 
-/** Which stages are finished: {mission, build, quiz, ship}. */
+/** Which stages are finished: {mission, build, quiz, ship}. Ship it is finished when the teacher approves the project. */
 function stagesDone_(L, p) {
-  return { mission: !!(p && p.mission_done), build: stepsDone_(L, p) === L.build.length, quiz: quizPassed_(L, p), ship: !!(p && p.shipped_at) };
+  return { mission: !!(p && p.mission_done), build: stepsDone_(L, p) === L.build.length, quiz: quizPassed_(L, p),
+           ship: !!(p && p.shipped_at) && reviewStatus_(p) === 'approved' };
 }
 
 /** The first stage that isn't finished, or 'done'. */
@@ -304,6 +306,7 @@ function stepComplete_(S, row) {
 function shipMissing_(L, p) {
   var out = [], ship = L.ship || {};
   if (!SHARE_RE_.test(String(p.share || ''))) out.push('Paste your MakeCode share link (it starts with https://makecode.microbit.org/).');
+  else if (!makecodeId_(p.share)) out.push('That is the editor\'s address, not a share link. In MakeCode click Share, then Share Project, and copy the link it gives you (like https://makecode.microbit.org/_Ab12Cd34Ef56).');
   if ((ship.extensions || []).length && !Object.keys(p.ext || {}).some(function (k) { return p.ext[k]; })) out.push('Check at least one extension you added.');
   (ship.reflect || []).forEach(function (q, i) {
     if (String((p.reflect || [])[i] || '').trim().length < 3) out.push('Answer: ' + q);
@@ -911,6 +914,7 @@ function student_() {
   if (!me.email) throw new Error('Sign in with your school Google account.');
   var rec = loadStudent_(me.email);
   if (!rec) throw new Error('Join your class first: open Maker Lab and enter your class code.');
+  applyGrades_(rec);                              // the teacher's review decisions (62_review.js); saved with this request
   return { me: me, rec: rec, cfg: config_() };
 }
 
@@ -936,6 +940,7 @@ function api(path, bodyJson) {
     if (path === '/api/run') return runCall_(body);
     if (path === '/api/help') return { status: 200, body: helpApi_(body) };
     if (path === '/api/idle') return { status: 200, body: idleApi_(body) };
+    if (path === '/api/review') return { status: 200, body: reviewApi_(body) };
     if (path === '/api/avatar') return apiAvatar_(body);
     if (/^\/api\/(shop\/buy|arcade\/start|arcade\/finish)$/.test(path)) return { status: 200, body: shopApi_(path, body) };
     var m = /^\/api\/lessons\/([\w-]+)\/(mission|step|quiz|ship|partner|feedback)$/.exec(path);
@@ -964,6 +969,9 @@ var RUN_ = {
   setClassGrade: function (a) { return setClassGrade(a[0], a[1]); },
   deleteClass: function (a) { return deleteClass(a[0], a[1]); },
   assignLessons: function (a) { return assignLessons(a[0], a[1], a[2], a[3]); },
+  reviewQueue: function (a) { return reviewQueue(a[0]); },
+  reviewWork: function (a) { return reviewWork(a[0], a[1]); },
+  gradeWork: function (a) { return gradeWork(a[0], a[1], a[2]); },
   updateAssignment: function (a) { return updateAssignment(a[0], a[1], a[2], a[3]); },
   removeStudent: function (a) { return removeStudent(a[0], a[1]); },
   saveFeedback: function (a) { return saveFeedback(a[0], a[1], a[2]); },
@@ -1045,6 +1053,8 @@ var API_ = {
   feedback: function (ctx, L, p, d) { return lessonFeedback_(ctx, L, d); },
 
   ship: function (ctx, L, p, d) {
+    var status = reviewStatus_(p);
+    if (status === 'approved') return finish_(ctx, L, p, { missing: [], shipped: true, locked: true, review: p.review || null });   // approved work is finished
     if (d.share !== undefined) p.share = text_(d.share, 300).trim();
     if (d.ext !== undefined) {
       p.ext = {};
@@ -1054,11 +1064,15 @@ var API_ = {
     var missing = shipMissing_(L, p);
     if (d.submit) {
       if (missing.length) return finish_(ctx, L, p, { ok: false, missing: missing });
-      if (!p.shipped_at) p.shipped_at = now_();
-    } else if (missing.length && p.shipped_at) {
+      var old = p.review || {}, again = status === 'returned' || status === 'draft';
+      p.shipped_at = now_();
+      // shipping sends it to the teacher; shipping again after "sent back" is a new round
+      p.review = { status: 'submitted', round: (old.round || 0) + (again || !old.round ? 1 : 0), submitted_at: p.shipped_at, history: old.history || [] };
+    } else if (missing.length && p.shipped_at && status === 'submitted') {
       delete p.shipped_at;           // they changed something it needs: turn it in again
+      p.review.status = 'draft';
     }
-    return finish_(ctx, L, p, { missing: missing, shipped: !!p.shipped_at });
+    return finish_(ctx, L, p, { missing: missing, shipped: !!p.shipped_at, review: p.review || null });
   },
 
   partner: function (ctx, L, p, d) {
@@ -1132,6 +1146,7 @@ function mergeProgress_(a, b) {
   a.ext = a.ext || {};
   Object.keys(b.ext || {}).forEach(function (k) { if (b.ext[k]) a.ext[k] = true; });
   if (!a.share && b.share) a.share = b.share;
+  if (!a.review && b.review) a.review = JSON.parse(JSON.stringify(b.review));
   if (!(a.reflect || []).join('') && (b.reflect || []).join('')) a.reflect = b.reflect;
   ['shipped_at', 'completed_at', 'started_at'].forEach(function (f) {
     if (b[f] && (!a[f] || b[f] < a[f])) a[f] = b[f];
@@ -1343,7 +1358,8 @@ function gradebookCell_(a, s) {
   return { status: status, pct: x ? x.pct : 0, stage: x ? x.stage : 'mission', steps_done: x ? x.steps_done : 0,
            steps_total: x ? x.steps_total : 0, quiz_best: x ? x.quiz_best : null, quiz_total: x ? x.quiz_total : 0,
            share: x ? x.share : '', shipped: !!(x && x.shipped), stars: x ? x.stars : 0, partner: (x && x.partner) || null,
-           late: !!(a.due && a.due < today && status !== 'complete') };
+           review: (x && x.review) || null,
+           late: !!(a.due && a.due < today && status !== 'complete' && !(x && x.review === 'submitted')) };   // shipped on time, waiting on the teacher: not late
 }
 
 function teacherHome() {
@@ -1351,6 +1367,7 @@ function teacherHome() {
   return { grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].name }; }), classes: Object.keys(cfg.classes).map(function (cid) {
     var c = cfg.classes[cid];
     return { id: c.id, name: c.name, code: c.code, students: classStudents_(cfg, sum, cid).length, classroom: c.classroom || null,
+             waiting: reviewQueue_(cfg, cid, false).queue.length,
              grade: courseOfClass_(cfg, cid), grade_name: DATA.courses[courseOfClass_(cfg, cid)].short,
              assignments: cfg.assignments.filter(function (a) { return a.class_id === cid; }).length };
   }) };
@@ -1385,6 +1402,7 @@ function studentDetail(cid, email) {
     return { id: L.id, number: L.number, title: L.title, icon: L.icon, assigned: !!assigned[L.id], pct: p ? percent_(p, L) : 0,
              stage: currentStage_(L, p), p: p, feedback: ((cfg.feedback[email] || {})[L.id]) || '',
              partner: p && p.partner ? partnerName_(cfg, p.partner) : null,
+             review: reviewStatus_(p), graded: p && p.review && p.review.graded_at ? reviewForStudent_(L, p.review) : null,
              steps: L.build.map(function (S) { return { title: S.title, ask: S.ask || '', fields: S.fields || [] }; }),
              talk_q: L.mission.talk, quiz_total: L.quiz.length,
              extensions: ((L.ship || {}).extensions || []).map(function (e) { return e.title; }), reflect_q: (L.ship || {}).reflect || [] };
@@ -1821,11 +1839,13 @@ function studentPage_(me, path, preview) {
     saveStudent_(rec);
   }
   if (!rec || !rec.name || !studentClassIds_(rec, cfg).length) return { name: 'join', title: 'Join your class', data: { name: rec ? rec.name : '' } };
+  var graded = !preview && applyGrades_(rec);
   var rewards = syncRewards_(rec, cfg);
-  if (rewards.xp_gained && !preview) saveStudent_(rec);
+  if ((rewards.xp_gained || graded) && !preview) saveStudent_(rec);
   var level = levelInfo_(rec.xp || 0), base = { level: level, avatar: avatarOf_(rec), rewards: rewards, name: rec.name,
                                                 arcade_state: arcadeState_(rec, cfg), spendable: spendable_(rec),
-                                                course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor };
+                                                course: courseOf_(rec, cfg), editor: DATA.courses[courseOf_(rec, cfg)].editor,
+                                                review_news: preview ? [] : reviewNews_(rec) };
   var m;
   if (path === '/' || path === '/dashboard') return { name: 'dashboard', title: 'Home', data: merge_(base, dashboardData_(rec, cfg)) };
   if (path === '/lessons') return { name: 'catalog', title: 'Lessons', data: merge_(base, catalogData_(rec, courseOf_(rec, cfg))) };
@@ -1854,6 +1874,8 @@ function teacherPage_(path) {
   }
   if ((m = /^\/teacher\/classes\/(\w+)\/google-classroom$/.exec(path))) return { name: 'google', title: 'Google Classroom', data: merge_(base, gradebook(m[1])) };
   if (path === '/arcade') return { name: 'arcade', title: 'Arcade', data: merge_(base, merge_(arcadeData_(null, cfg, true), { avatar: DATA.default_avatar })) };
+  if ((m = /^\/teacher\/review(?:\/(\w+))?$/.exec(path))) return { name: 'review-queue', title: 'Review', data: merge_(base, merge_(reviewQueue(m[1] || ''), { classes: Object.keys(cfg.classes).map(function (c) { return { id: c, name: cfg.classes[c].name }; }), cid: m[1] || '' })) };
+  if ((m = /^\/teacher\/review\/([\w-]+)\/(.+)$/.exec(path))) return { name: 'review', title: 'Review', mainClass: 'container wide', data: merge_(base, reviewWork(decodeURIComponent(m[2]), m[1])) };
   if (path === '/teacher/reports') return { name: 'reports', title: 'Problem reports', data: merge_(base, bugList()) };
   if ((m = /^\/teacher\/feedback(?:\/(\w+))?$/.exec(path))) return { name: 'feedback', title: 'Lesson feedback', data: merge_(base, feedbackReport(m[1])) };
   if (path === '/teacher/standards') return { name: 'standards', title: 'Standards', data: merge_(base, standardsData_()) };
@@ -1911,10 +1933,12 @@ function dashboardData_(rec, cfg) {
     .map(function (a) {
       var c = byId[a.lesson_id];
       return { lesson: c, class_name: cfg.classes[a.class_id].name, due: a.due, note: a.note, pct: c.pct,
-               overdue: !!(a.due && a.due < today && c.pct < 100), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
+               overdue: !!(a.due && a.due < today && c.pct < 100 && reviewStatus_(rec.progress[a.lesson_id]) !== 'submitted'), review: reviewStatus_(rec.progress[a.lesson_id]), feedback: !!((cfg.feedback[rec.email] || {})[a.lesson_id]) };
     });
   var done = cards.filter(function (c) { return !c.soon && c.pct === 100; }).length;
-  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec, cid), done: done, course_name: DATA.courses[cid].name,
+  var reviews = Object.keys(rec.progress).filter(function (l) { return DATA.lessons[l] && ['submitted', 'returned'].indexOf(reviewStatus_(rec.progress[l])) >= 0; })
+    .map(function (l) { var L = DATA.lessons[l], r = rec.progress[l].review || {}; return { lesson_id: l, title: L.number + '. ' + L.title, icon: L.icon, status: r.status, feedback: r.feedback || '' }; });
+  return { rows: rows, next_up: nextUp_(rec, rows, cards), badges: badgeList_(rec, cid), done: done, course_name: DATA.courses[cid].name, reviews: reviews,
            total: cards.length, classes: classes.map(function (c) { return cfg.classes[c].name; }) };
 }
 
@@ -1925,9 +1949,10 @@ function nextUp_(rec, rows, cards) {
     .sort(function (a, b) { return String(rec.progress[b].updated_at || '').localeCompare(String(rec.progress[a].updated_at || '')); });
   var byId = {};
   cards.forEach(function (c) { byId[c.id] = c; });
-  for (var i = 0; i < started.length; i++) if (byId[started[i]] && byId[started[i]].pct < 100) return pick('Keep going', byId[started[i]]);
-  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100) return pick('Start', rows[j].lesson);
-  for (var k = 0; k < cards.length; k++) if (!cards[k].soon && cards[k].pct < 100) return pick('Start', cards[k]);
+  var waiting = function (id) { return reviewStatus_(rec.progress[id]) === 'submitted'; };          // shipped: the teacher has it
+  for (var i = 0; i < started.length; i++) if (byId[started[i]] && byId[started[i]].pct < 100 && !waiting(started[i])) return pick('Keep going', byId[started[i]]);
+  for (var j = 0; j < rows.length; j++) if (rows[j].pct < 100 && !waiting(rows[j].lesson.id)) return pick('Start', rows[j].lesson);
+  for (var k = 0; k < cards.length; k++) if (!cards[k].soon && cards[k].pct < 100 && !waiting(cards[k].id)) return pick('Start', cards[k]);
   return null;
 }
 
@@ -1957,6 +1982,7 @@ function lessonPage_(lid, rec, cfg, base, teacher) {
            data: merge_(base, { lesson: publicLesson_(L), state: state, stage: currentStage_(L, p), stages: stagesDone_(L, p),
                                 lesson_xp: rec ? lessonXp_(rec, lid) : 0, xp_possible: possibleXp_(L), stars: lessonStars_(L, p),
                                 pct: percent_(p, L), feedback: rec ? ((cfg.feedback[rec.email] || {})[lid] || '') : '',
+                                review: p && p.review ? reviewForStudent_(L, p.review) : (p && p.shipped_at ? { status: 'approved', legacy: true } : null),
                                 video: embedInfo_(cfg.videos[lid]), makecode: DATA.makecode_url, help: rec ? !!helpGet_(rec.email) : false, my_fb: myFeedback_(rec, lid),
                                 key: teacher ? { quiz: L.quiz.map(function (q) { return q.choices[q.answer]; }), notes: L.teacher_notes || '',
                                                  standards: L.standards_full || [] } : null }) };
@@ -2061,7 +2087,7 @@ var FONTS_HTML_ = '<link rel="preconnect" href="https://fonts.googleapis.com"><l
 
 function render_(me, page) {
   var nav = me.teacher
-    ? [['/', 'My classes'], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/reports', 'Reports'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
+    ? [['/', 'My classes'], ['/teacher/review', reviewNavLabel_()], ['/lessons', 'Lessons'], ['/map', 'Skill trees'], ['/teacher/standards', 'Standards'], ['/teacher/feedback', 'Feedback'], ['/teacher/reports', 'Reports'], ['/teacher/videos', 'Videos'], ['/arcade', '🎮 Arcade']]
     : [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   if (page.preview) nav = [['/', 'Home'], ['/lessons', 'Lessons'], ['/map', 'Skill tree'], ['/me', 'My robot'], ['/arcade', '🎮 Arcade']];
   var ml = { base: ScriptApp.getService().getUrl(), page: page.name, path: page.path || '/', teacher: me.teacher && !page.preview, nav: nav,
@@ -2175,6 +2201,211 @@ function feedbackReport(grade) {
   return { grade: cid, grade_name: DATA.courses[cid].name, grades: DATA.course_ids.map(function (g) { return { id: g, name: DATA.courses[g].short }; }),
            students: Object.keys(sum.students).length, reasons: FB_REASONS_, lessons: lessons,
            generated: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') };
+}
+
+// ---------------------------------------------------------------- 📨 teacher review of shipped projects
+// Shipping a lesson sends the student's MakeCode share link to the teacher. The lesson only counts as complete (100%,
+// completion XP, play time, the finish line on the class display, the next lesson on the skill tree) once the teacher
+// approves it. The teacher reviews with the project open in MakeCode beside a rubric of 1-4 rows tied to the lesson's
+// standards (like Pixel Trail), writes feedback, and approves or sends it back. The student gets a pop-up either way;
+// "sent back" takes them to the lesson to fix it and ship again.
+//
+// On the lesson's progress (rec.progress[lid].review):
+//   { status: 'submitted' | 'approved' | 'returned' | 'draft', round, submitted_at,
+//     scores: {works: 3, ...}, total, max, feedback, graded_at, seen, history: [{status, feedback, total, max, at}] }
+// Work shipped before reviews existed has shipped_at but no review: it stays approved (nothing is taken back).
+//
+// The teacher's decision is written to the student's file and also left in a small mailbox (script property
+// "grade:<email>"), because a student's own save in the same second could write their older copy over it. Every
+// student request delivers the mailbox into their record (applyGrades_) and empties it once the file has it.
+
+var REVIEW_LEVELS_ = 4;
+
+/** The rubric for a lesson: its own `rubric` from the lesson file, or three rows built from the lesson. */
+function rubric_(L) {
+  if (L.rubric && L.rubric.length) return L.rubric;
+  var idea = String(L.python || '').trim();
+  var hasExt = ((L.ship || {}).extensions || []).length > 0;
+  return [
+    { id: 'works', label: 'It works', levels: ["Doesn't run, or is empty", 'Runs, but parts are missing or buggy', 'Does what the mission asks', 'Works smoothly, no bugs found'] },
+    { id: 'concept', label: 'Uses ' + (idea || 'the big idea'), levels: ['Not used', 'Copied without changes', 'Used correctly', 'Used in a way of their own'] },
+    { id: 'own', label: 'Made it their own', levels: hasExt ? ['No changes', 'Small changes', 'An extension added and working', 'Went past the extensions'] : ['No changes', 'Small changes', 'Clear personal choices', 'Went past the lesson'] },
+  ];
+}
+
+/** 'submitted' | 'approved' | 'returned' | 'draft' | null. Old work shipped before reviews existed counts as approved. */
+function reviewStatus_(p) {
+  if (!p) return null;
+  if (p.review && p.review.status) return p.review.status;
+  return p.shipped_at ? 'approved' : null;
+}
+
+/** MakeCode project id from a share link (…/_AbCd1234, …/#pub:_AbCd1234, …/S12345-12345-12345-12345), or ''. */
+function makecodeId_(url) {
+  var m = /makecode\.(?:microbit\.org|com)\/(?:.*?[\/:=])?(_[A-Za-z0-9]{6,}|S?\d{5}(?:-\d{5}){3})(?![\w-])/.exec(String(url || ''));
+  return m ? m[1] : '';
+}
+
+// ---------------------------------------------------------------- the mailbox of decisions not yet in a student's file
+function gradesKey_(email) { return 'grade:' + email; }
+function pendingGrades_(email) {
+  var raw = PropertiesService.getScriptProperties().getProperty(gradesKey_(email));
+  if (!raw) return {};
+  try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+}
+function setPendingGrades_(email, map) {
+  var props = PropertiesService.getScriptProperties();
+  if (Object.keys(map).length) props.setProperty(gradesKey_(email), JSON.stringify(map));
+  else props.deleteProperty(gradesKey_(email));
+}
+
+/** Put any decisions from the mailbox into this student's record. Returns true if the record changed (save it). */
+function applyGrades_(rec) {
+  if (!rec || !rec.email) return false;
+  var box = pendingGrades_(rec.email), changed = false, left = {};
+  Object.keys(box).forEach(function (lid) {
+    var g = box[lid], p = rec.progress[lid];
+    if (!p) return;                                                                   // no such lesson in their file: drop it
+    var r = p.review || {};
+    if (r.graded_at === g.graded_at) return;                                          // already in the file: done with it
+    if ((r.round || 0) > (g.round || 0)) return;                                      // they have shipped again since
+    p.review = g;
+    if (g.status === 'approved' && !p.completed_at) p.completed_at = g.graded_at;
+    changed = true;
+    left[lid] = g;                                                                    // keep it until a later read finds it saved
+  });
+  if (Object.keys(box).length !== Object.keys(left).length) setPendingGrades_(rec.email, left);
+  return changed;
+}
+
+/** Results the student hasn't seen yet, for the pop-up on every page. */
+function reviewNews_(rec) {
+  var out = [];
+  Object.keys((rec && rec.progress) || {}).forEach(function (lid) {
+    var L = DATA.lessons[lid], r = rec.progress[lid].review;
+    if (!L || !r || r.seen || (r.status !== 'approved' && r.status !== 'returned')) return;
+    out.push(reviewForStudent_(L, r));
+  });
+  return out;
+}
+function reviewForStudent_(L, r) {
+  var rows = rubric_(L).map(function (row) { var s = (r.scores || {})[row.id]; return { label: row.label, score: s || 0, level: s ? row.levels[s - 1] : '' }; });
+  return { lesson_id: L.id, title: L.number + '. ' + L.title, icon: L.icon, status: r.status, feedback: r.feedback || '', total: r.total || 0,
+           max: r.max || 0, rows: rows, graded_at: r.graded_at, round: r.round || 1, xp: r.xp || 0, badges: r.badges || [] };
+}
+
+/** Student API: /api/review {action: 'seen', lesson} marks a result as read (the pop-up won't show it again). */
+function reviewApi_(d) {
+  if (whoIs_().teacher) return { ok: true, teacher: true };
+  var ctx = student_(), p = ctx.rec.progress[String(d.lesson || '')];
+  if (d.action === 'seen' && p && p.review && !p.review.seen) {
+    p.review.seen = now_();
+    var box = pendingGrades_(ctx.rec.email);
+    if (box[d.lesson]) { box[d.lesson].seen = p.review.seen; setPendingGrades_(ctx.rec.email, box); }
+    saveStudent_(ctx.rec);
+  }
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------- teacher
+/** Everything waiting for review, oldest first, from every class (or one class). */
+function reviewQueue(cid) { return reviewQueue_(teacher_(), cid, true); }
+function reviewQueue_(cfg, cid, fresh) {
+  var sum = summary_(fresh), out = [], seen = {};
+  Object.keys(cfg.classes).forEach(function (c) {
+    if (cid && c !== cid) return;
+    classStudents_(cfg, sum, c).forEach(function (s) {
+      Object.keys(s.lessons || {}).forEach(function (lid) {
+        var x = s.lessons[lid], L = DATA.lessons[lid];
+        var key = lid + '|' + [s.email, x.partner || ''].sort().join('|');           // a pair shipped one project: list it once
+        if (!L || x.review !== 'submitted' || seen[key]) return;
+        seen[key] = 1;
+        out.push({ email: s.email, name: s.name, avatar: s.avatar || null, class_id: c, class_name: cfg.classes[c].name, lesson_id: lid,
+                   number: L.number, title: L.title, icon: L.icon, submitted_at: x.submitted_at || '', round: x.round || 1,
+                   partner: x.partner ? (sum.students[x.partner] || {}).name || x.partner.split('@')[0] : null });
+      });
+    });
+  });
+  out.sort(function (a, b) { return String(a.submitted_at).localeCompare(String(b.submitted_at)); });
+  return { queue: out };
+}
+
+function reviewCount_() {
+  try { return reviewQueue_(config_(), '', false).queue.length; } catch (e) { return 0; }    // the cached summary: cheap
+}
+
+/** One project to review: the share link, what they wrote, the rubric and the lesson's standards. */
+function reviewWork(email, lid) {
+  var cfg = teacher_(), L = DATA.lessons[lid];
+  if (!L) throw new Error('No such lesson.');
+  var rec = loadStudentFresh_(email);
+  if (!rec || !rec.progress[lid]) throw new Error('No work saved for that lesson yet.');
+  applyGrades_(rec);
+  var p = rec.progress[lid], r = p.review || {}, ship = L.ship || {}, q = reviewQueue().queue;
+  var rest = q.filter(function (x) { return !(x.email === email && x.lesson_id === lid); });
+  return {
+    student: { email: email, name: rec.name, avatar: avatarOf_(rec) },
+    classes: studentClassIds_(rec, cfg).map(function (c) { return { id: c, name: cfg.classes[c].name }; }),
+    lesson: { id: L.id, number: L.number, title: L.title, icon: L.icon, mission: L.mission.goal || '', editor: DATA.courses[L.course].editor },
+    share: p.share || '', project: makecodeId_(p.share), status: reviewStatus_(p), review: r, round: r.round || (p.shipped_at ? 1 : 0),
+    submitted_at: r.submitted_at || p.shipped_at || '', history: r.history || [],
+    partner: p.partner ? partnerName_(cfg, p.partner) : null,
+    checks: { steps_done: stepsDone_(L, p), steps_total: L.build.length, quiz_best: p.quiz_best == null ? null : p.quiz_best, quiz_total: L.quiz.length,
+              quiz_first: p.quiz_first ? gradeQuiz_(L, p.quiz_first).score : null },
+    extensions: (ship.extensions || []).map(function (e, i) { return { title: e.title, level: e.level, done: !!(p.ext || {})[i] }; }),
+    reflect: (ship.reflect || []).map(function (qq, i) { return { q: qq, a: (p.reflect || [])[i] || '' }; }),
+    rubric: rubric_(L), standards: L.standards_full || [],
+    next: rest.length ? { email: rest[0].email, lesson_id: rest[0].lesson_id, left: rest.length } : null,
+  };
+}
+
+/** The teacher's decision. d = {status: 'approved' | 'returned', scores: {rowId: 1-4}, feedback}. */
+function gradeWork(email, lid, d) {
+  teacher_();
+  var L = DATA.lessons[lid];
+  if (!L) throw new Error('No such lesson.');
+  d = d || {};
+  var status = d.status === 'approved' ? 'approved' : d.status === 'returned' ? 'returned' : '';
+  if (!status) throw new Error('Approve it or send it back.');
+  var rubric = rubric_(L), scores = {}, total = 0;
+  rubric.forEach(function (row) {
+    var s = Math.round(Number((d.scores || {})[row.id]) || 0);
+    if (s >= 1 && s <= REVIEW_LEVELS_) { scores[row.id] = s; total += s; }
+  });
+  if (status === 'approved' && Object.keys(scores).length < rubric.length) throw new Error('Score each row of the rubric first.');
+  var feedback = String(d.feedback || '').trim().slice(0, 1500);
+  if (status === 'returned' && feedback.length < 3) throw new Error('Tell them what to fix: write a little feedback first.');
+  var rec = loadStudentFresh_(email);
+  if (!rec || !rec.progress[lid]) throw new Error('No work saved for that lesson yet.');
+  applyGrades_(rec);
+  var who = [rec], p = rec.progress[lid];
+  if (p.partner) {                                                    // a pair shipped one project: the same decision for both
+    var mate = loadStudentFresh_(p.partner);
+    if (mate && mate.progress[lid] && mate.progress[lid].partner === email) { applyGrades_(mate); who.push(mate); }
+  }
+  var at = now_();
+  who.forEach(function (r) {
+    var q = r.progress[lid], old = q.review || {};
+    var g = { status: status, round: old.round || 1, submitted_at: old.submitted_at || q.shipped_at || '', scores: scores, total: total,
+              max: rubric.length * REVIEW_LEVELS_, feedback: feedback, graded_at: at, seen: '',
+              history: (old.history || []).concat([{ status: status, feedback: feedback, total: total, max: rubric.length * REVIEW_LEVELS_, at: at }]).slice(-10) };
+    q.review = g;
+    if (status === 'approved' && !q.completed_at) q.completed_at = at;
+    var won = syncRewards_(r, config_());                             // approval finishes the lesson: XP, badges, play time
+    if (won.xp_gained) g.xp = won.xp_gained;                          // shown in the student's pop-up
+    if (won.badges.length) g.badges = won.badges.map(function (b) { return { name: b.name, icon: b.icon }; });
+    saveStudent_(r);
+    var box = pendingGrades_(r.email);
+    box[lid] = g;
+    setPendingGrades_(r.email, box);
+  });
+  return { ok: true, status: status, total: total, max: rubric.length * REVIEW_LEVELS_, students: who.map(function (r) { return r.name; }) };
+}
+
+/** "📨 Review (3)" in the teacher's top bar; just "📨 Review" when nothing is waiting or the count can't be had. */
+function reviewNavLabel_() {
+  var n = reviewCount_();
+  return n ? '📨 Review (' + n + ')' : '📨 Review';
 }
 
 // ---------------------------------------------------------------- daily backups and the owner's "Your data" card
@@ -2417,6 +2648,6 @@ function bugUpdate(id, status) {
 function bugCountNew_() {
   try { return readNamed_('bugs', []).filter(function (b) { return b.status === 'new'; }).length; } catch (e) { return 0; }
 }
-var BUILD_ID = "48bcb951c6";
-var BUILD_EXPECT = {"Assets": "19837efafc", "Data": "df590a4a53"};
+var BUILD_ID = "15bf1d7b26";
+var BUILD_EXPECT = {"Assets": "adb8f397b9", "Data": "557f2d5553"};
 var BUILD_FILES = ["Assets.gs", "Code.gs", "Data.gs"];

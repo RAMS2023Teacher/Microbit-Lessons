@@ -677,3 +677,80 @@ html.mo-less .nudge-glow, html.mo-less .nudge-hand, html.mo-less .nudge-bubble {
 .go-box { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: rgba(13, 20, 51, .45); }
 .go-card { background: #fff; border: 3px solid #1d2a5c; border-radius: 18px; box-shadow: 0 6px 0 #1d2a5c; padding: 22px 26px; max-width: 420px; text-align: center; }
 .go-card p { font-weight: 700; margin: 0 0 14px; }
+
+/* ---------------------------------------------------------------- 📨 teacher review (pages.js review, review-queue; lib/review.js) */
+.chip { display: inline-block; vertical-align: middle; font: 800 .78rem/1.2 var(--body); padding: 3px 10px; border-radius: 999px; border: 2px solid var(--outline); background: #fff; color: var(--ink); letter-spacing: 0; }
+.chip.submitted { background: var(--brand-soft); } .chip.approved { background: var(--good-soft); } .chip.returned { background: var(--warn-soft); } .chip.draft { background: var(--panel-2); }
+.review-banner { background-color: var(--c-purple); margin: 0 0 18px; text-decoration: none; }
+.review-banner h2 { color: #fff; margin: 0; }
+.review-banner small { font-weight: 900; letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
+.review-list, .history, .check-list, .waiting-list, .rb-rows { list-style: none; padding: 0; margin: 0; }
+.review-list li + li { border-top: 2px solid var(--line); }
+.review-row { display: flex; align-items: center; gap: 14px; padding: 10px 4px; color: inherit; text-decoration: none; font-weight: 700; }
+.review-row:hover, .review-row:focus-visible { background: var(--panel-2); border-radius: 12px; }
+.review-row .grow { flex: 1; min-width: 0; }
+.review-empty { padding: 30px; } .review-empty .big-icon { font-size: 3rem; }
+.review-who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 0; }
+.review-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 20px; align-items: start; }
+.review-main { display: grid; gap: 16px; min-width: 0; }
+.review-main > .card, .rubric-card { padding: 16px 18px; margin: 0; }
+.mc-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.seg { display: inline-flex; border: 2px solid var(--outline); border-radius: 999px; overflow: hidden; }
+.seg-btn { font: 800 .9rem var(--body); padding: 6px 14px; border: 0; background: #fff; color: var(--ink); cursor: pointer; }
+.seg-btn + .seg-btn { border-left: 2px solid var(--outline); }
+.seg-btn[aria-selected="true"] { background: var(--outline); color: #fff; }
+.mc-frame { position: relative; height: min(72vh, 640px); min-height: 420px; border: 3px solid var(--outline); border-radius: 14px; overflow: hidden; background: #f3f5fb; }
+.mc-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.mc-card > p { margin: 8px 0 0; overflow-wrap: anywhere; }
+.check-list li { padding: 3px 0; }
+.review-mission summary { cursor: pointer; font-weight: 800; }
+.history li { padding: 8px 0; } .history li + li { border-top: 2px solid var(--line); }
+.rubric-card { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+.rubric-card h2 { margin-top: 0; }
+.rubric-standards { background: var(--panel-2); border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
+.rubric-standards > small { font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.rubric-standards details { font-size: .9rem; margin: 4px 0; } .rubric-standards summary { cursor: pointer; }
+.rubric-standards details p { margin: 4px 0 6px 14px; }
+.rubric-row { border: 0; padding: 0; margin: 0 0 12px; }
+.rubric-row legend { font-weight: 900; margin-bottom: 6px; padding: 0; }
+.rubric-row .levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.level-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border: 2px solid var(--line); border-radius: 10px; background: #fff;
+  font: 700 .74rem/1.2 var(--body); color: var(--ink-2); cursor: pointer; text-align: center; }
+.level-btn b { font: 400 1.25rem var(--display); color: var(--ink); }
+.level-btn:hover { border-color: var(--brand); }
+.level-btn[aria-pressed="true"] { border-color: var(--outline); background: var(--brand); color: #fff; box-shadow: 0 3px 0 var(--outline); }
+.level-btn[aria-pressed="true"] b { color: #fff; }
+.rubric-row.unscored .levels { outline: 3px dashed var(--bad); outline-offset: 3px; border-radius: 10px; }
+.rubric-total { font-size: 1.1rem; margin: 4px 0 10px; }
+.rubric-card textarea { width: 100%; }
+.rubric-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn.warn { color: var(--warn); }
+@media (max-width: 980px) { .review-grid { grid-template-columns: 1fr; } .rubric-card { position: static; max-height: none; } }
+/* the student's side */
+.review-note { border: 3px solid var(--outline); border-radius: 16px; padding: 14px 18px; box-shadow: 0 4px 0 var(--outline); margin-bottom: 14px; }
+.review-note h3 { margin: 0 0 6px; }
+.review-note.submitted { background: var(--brand-soft); } .review-note.approved { background: var(--good-soft); }
+.review-note.returned { background: var(--warn-soft); } .review-note.draft { background: var(--panel-2); }
+.teacher-fb { margin: 8px 0; padding: 10px 14px; background: #fff; border-left: 5px solid var(--outline); border-radius: 8px; font-weight: 700; }
+.rb-rows li { padding: 2px 0; font-size: .95rem; }
+.rb-dots { color: var(--brand); letter-spacing: 1px; font-size: .9rem; }
+.rb-score { font-size: 1.1rem; margin: 2px 0; }
+.ship-locked textarea:disabled, .ship-locked input:disabled { background: var(--panel-2); color: var(--ink-2); }
+.review-home { padding: 16px 18px; margin: 18px 0; background: var(--warn-soft); }
+.review-home h2 { margin-top: 0; }
+.small-head { margin: 16px 0 4px; }
+.waiting-list li { padding: 3px 0; }
+.stage-name small { font-family: var(--body); font-weight: 800; font-size: .72rem; display: block; }
+.review-pop { position: fixed; inset: 0; z-index: 140; display: grid; place-items: center; padding: 16px; background: rgba(13, 20, 51, .55); animation: spot-in .25s ease; }
+.review-pop-card { position: relative; width: min(520px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #fff; border: 3px solid var(--outline); border-radius: 24px;
+  box-shadow: 0 6px 0 var(--outline); padding: 24px 26px 20px; text-align: center; }
+.review-pop-card.approved { background: linear-gradient(180deg, var(--good-soft), #fff 140px); }
+.review-pop-card.returned { background: linear-gradient(180deg, var(--warn-soft), #fff 140px); }
+.review-pop-card .rp-icon { font-size: 3.6rem; line-height: 1; }
+.review-pop-card > small { display: block; font-weight: 900; color: var(--ink-3); margin-top: 6px; }
+.review-pop-card h2 { margin: 2px 0 8px; }
+.review-pop-card .teacher-fb, .review-pop-card .rb-rows { text-align: left; }
+.rp-won { font-weight: 900; margin: 6px 0; }
+.rp-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+@media (prefers-reduced-motion: reduce) { .review-pop { animation: none; } }
+.rb-rows { margin: 6px 0; }

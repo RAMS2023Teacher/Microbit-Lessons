@@ -9,6 +9,7 @@
     const ML = window.ML, d = ML.data, L = d.lesson, S = d.state, E = ML.esc;
     const main = document.getElementById('main'), base = '/api/lessons/' + L.id;
     const STAGES = [['mission', 'Mission', '🎯'], ['build', 'Build', '🛠️'], ['quiz', 'Quiz', '🧠'], ['ship', 'Ship it', '🚀']];
+    let review = d.review || null;          // the teacher's review of what they shipped (server: 62_review.js)
     let stagesDone = d.stages, view = d.stage === 'done' ? 'ship' : d.stage, stepAt = Math.min(S.step_at || 0, L.build.length - 1);
     S.steps = S.steps || {};
     const $ = (id) => document.getElementById(id);
@@ -23,6 +24,7 @@
       if (r.stages) { stagesDone = r.stages; drawStages(); }
       if (typeof r.lesson_xp === 'number') drawXp(r.lesson_xp, r.stars);
       if (r.arcade) { ML.arcadePill(r.arcade); arcadeOpen = r.arcade; }
+      if (r.review && r.review.status && r.review.status !== (review || {}).status) review = Object.assign({}, review || {}, { status: r.review.status });
       return r;
     }
     const put = (id, t) => { const e = $(id); if (e) e.textContent = t; };   // a save can finish after the student moved on
@@ -196,13 +198,14 @@
       $('xp-side').textContent = xp + ' XP';
       if (typeof stars === 'number') $('stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
     }
+    const shipTag = () => { const t = (review || {}).status; return t === 'submitted' ? ' <small>⏳ with teacher</small>' : t === 'returned' ? ' <small>🔧 fix it</small>' : ''; };
     function drawStages() {
       const nav = $('stages');
       nav.innerHTML = STAGES.map((st, i) => {
         const done = stagesDone[st[0]], here = view === st[0];
         return (i ? `<span class="stage-bar${stagesDone[STAGES[i - 1][0]] ? ' done' : ''}"></span>` : '') +
           `<button type="button" class="stage${done ? ' done' : ''}${here ? ' here' : ''}" data-stage="${st[0]}" aria-current="${here ? 'step' : 'false'}">` +
-          `<span class="stage-dot">${done && !here ? '✔' : st[2]}</span><span class="stage-name">${st[1]}</span></button>`;
+          `<span class="stage-dot">${done && !here ? '✔' : st[2]}</span><span class="stage-name">${st[1]}${st[0] === 'ship' && !done ? shipTag() : ''}</span></button>`;
       }).join('');
       nav.querySelectorAll('.stage').forEach((b) => b.addEventListener('click', () => show(b.dataset.stage)));
     }
@@ -432,8 +435,8 @@
     // ------------------------------------------------------------ Ship it
     function drawShip() {
       const ship = L.ship, box = $('stage-view'), ext = S.ext || {}, reflect = (S.reflect || []).slice();
-      box.innerHTML = `<section class="panel"><div class="step-head"><h2>🚀 Ship it</h2></div>` +
-        (S.shipped_at ? `<div class="shipped" id="shipped">📦 <b>Shipped!</b> Your teacher can open your project. You can still add more and ship again.</div>` : '') +
+      const st = review ? review.status : (S.shipped_at ? 'submitted' : ''), locked = st === 'approved';
+      box.innerHTML = `<section class="panel${locked ? ' ship-locked' : ''}"><div class="step-head"><h2>🚀 Ship it</h2></div>` + reviewBanner(st) +
         (ship.extensions.length ? `<h3>🧩 Make it yours: add at least one extension</h3><div class="ext-grid">${ship.extensions.map((e, k) =>
           `<details class="ext"${ext[k] ? ' open' : ''}><summary><input type="checkbox" data-ext="${k}" ${ext[k] ? 'checked' : ''} aria-label="I added ${E(e.title)}">` +
           `<span>${'ABCDEFG'[k]}. ${E(e.title)}</span><span class="ext-level ${E(e.level)}">${E(e.level)}</span></summary><div class="ext-body">` +
@@ -445,11 +448,16 @@
         `<li>Click <b>Share Project</b>, then <b>Copy</b>.</li><li>Paste the link here.</li></ol>` +
         `<div class="share-row"><input id="share" placeholder="https://makecode.microbit.org/_…" aria-label="MakeCode share link"></div></div>` +
         `<div class="step-nav"><span class="saved" id="ship-saved"></span><span class="missing" id="ship-missing"></span>` +
-        `<button type="button" class="btn go big" id="ship-go">Ship it! 🚀</button></div></section>`;
+        (locked ? '' : `<button type="button" class="btn go big" id="ship-go">${st === 'returned' ? 'Ship it again 🚀' : st === 'submitted' ? 'Update what I sent 🚀' : 'Ship it to my teacher 🚀'}</button>`) + `</div></section>`;
       box.querySelector('.panel').appendChild(ratingCard());
       $('share').value = S.share || '';
       box.querySelectorAll('[data-reflect]').forEach((t) => { t.value = reflect[+t.dataset.reflect] || ''; });
       afterDraw(box);
+      if (locked) {                          // approved: the work is finished, so it can't be changed
+        box.querySelectorAll('[data-ext], [data-reflect], #share').forEach((x) => { x.disabled = true; });
+        return;
+      }
+      const sentLink = S.share || '';
       const body = () => ({
         share: $('share').value.trim(),
         ext: [...box.querySelectorAll('[data-ext]:checked')].map((c) => +c.dataset.ext),
@@ -466,17 +474,54 @@
       });
       box.querySelectorAll('textarea, #share').forEach((t) => t.addEventListener('input', () => { latest = body(); $('ship-saved').textContent = 'Saving…'; save(); }));
       $('ship-go').addEventListener('click', async () => {
-        $('ship-go').disabled = true;
         const b = body(); b.submit = true;
+        // MakeCode share links are snapshots: after fixing, Share again for a new link, or the teacher sees the old code
+        if (st === 'returned' && b.share && b.share === sentLink &&
+            !confirm('This is the same share link you sent before. MakeCode links don\'t change when you edit, so your teacher would see your old code.\n\nIn MakeCode, click Share again and paste the new link.\n\nShip it with the old link anyway?')) return;
+        $('ship-go').disabled = true;
         const r = await api('ship', b);
         $('ship-go').disabled = false;
         if (r.teacher) { $('ship-missing').textContent = '(Teacher preview: nothing is saved.)'; return; }
         if (r.missing && r.missing.length && !r.shipped) { $('ship-missing').textContent = 'Not yet: ' + r.missing.join(' '); C.nope($('ship-go'), $('ship-missing')); return; }
-        Object.assign(S, b, { shipped_at: S.shipped_at || new Date().toISOString() });
+        if (r.locked) { ML.reload(); return; }          // the teacher approved it in the meantime: show that
+        Object.assign(S, b, { shipped_at: new Date().toISOString() });
         S.ext = {}; b.ext.forEach((k) => { S.ext[k] = true; });
+        review = Object.assign({}, review || {}, { status: 'submitted' });
         drawShip();
+        C.sound('pass');
         if (r.stage === 'done') celebrate();
+        else sent();
       });
+    }
+    // What the teacher said: waiting, sent back (fix it and ship again), or approved (the lesson is done)
+    function reviewRows(rv) {
+      return (rv.rows || []).filter((x) => x.score).map((x) => `<li><span class="rb-dots" aria-label="${x.score} of 4">${'●'.repeat(x.score)}${'○'.repeat(4 - x.score)}</span> <b>${E(x.label)}</b>: ${E(x.level)}</li>`).join('');
+    }
+    function teacherSays(rv) {
+      const fb = rv.feedback ? `<blockquote class="teacher-fb">${E(rv.feedback).replace(/\n/g, '<br>')}</blockquote>` : '';
+      const rows = reviewRows(rv);
+      return fb + (rows ? `<ul class="plain rb-rows">${rows}</ul>` : '');
+    }
+    function reviewBanner(st) {
+      const rv = review || {};
+      if (st === 'approved' && rv.legacy) return `<div class="shipped" id="shipped">📦 <b>Shipped!</b> This lesson is complete.</div>`;
+      if (st === 'approved') return `<div class="review-note approved" id="shipped"><h3>✅ Approved! This lesson is complete.</h3>` +
+        (rv.max ? `<p class="rb-score">Score <b>${rv.total} of ${rv.max}</b></p>` : '') + teacherSays(rv) +
+        `<p class="small"><a href="/map">See what you unlocked on the skill tree →</a></p></div>`;
+      if (st === 'returned') return `<div class="review-note returned" id="shipped"><h3>🔧 Your teacher asked for changes</h3>` + teacherSays(rv) +
+        `<ol class="do-list small"><li>Fix it in MakeCode.</li><li>Click <b>Share</b> again and copy the <b>new</b> link (the old link still shows your old code).</li>` +
+        `<li>Paste it below and press <b>Ship it again</b>.</li></ol></div>`;
+      if (st === 'submitted') return `<div class="review-note submitted" id="shipped"><h3>📨 Sent to your teacher</h3>` +
+        `<p>Waiting for review. You'll get a pop-up when your teacher has looked at it. You can start your next lesson while you wait.</p>` +
+        `<p class="small muted">Changed something? Share again in MakeCode, paste the new link and press <b>Update what I sent</b>.</p></div>`;
+      if (st === 'draft') return `<div class="review-note draft" id="shipped">✏️ You changed something, so it isn't with your teacher right now. Fix what's missing and ship it again.</div>`;
+      return `<p class="muted">When you ship it, your teacher reviews your project. The lesson is complete once they approve it.</p>`;
+    }
+    function sent() {
+      const go = $('stage-view').querySelector('.review-note');
+      if (go) go.insertAdjacentHTML('beforeend', `<p><a class="btn small" href="/">Start my next lesson ▶</a></p>`);
+      const n = $('shipped');
+      if (n && n.scrollIntoView) n.scrollIntoView({ block: 'center', behavior: window.MLPrefs && window.MLPrefs.reducedMotion() ? 'auto' : 'smooth' });
     }
     function celebrate() {
       C.confetti();
