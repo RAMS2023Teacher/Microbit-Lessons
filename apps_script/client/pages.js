@@ -222,7 +222,7 @@
       '<div class="game-wrap" id="game-wrap" hidden><canvas id="rush" aria-label="Arcade race"></canvas>' +
       '<div class="game-pad" id="game-pad"></div></div><div id="result"></div></section>' +
       '<section class="card"><h2>🛒 Power-up shop</h2><p class="muted small">Spend XP on upgrades for your robot. Your level never goes down: it counts all the XP you ever earned.</p>' +
-      '<div class="power-grid" id="power-grid"></div><p class="small">🎨 More robot looks to buy in <a href="/me">My robot</a>.</p><p class="bad small" id="shop-msg" role="status"></p></section></div>' +
+      '<div class="power-grid" id="power-grid"></div><p class="small">🎨 Costumes, jerseys, hats, beards and more robot looks to buy in <a href="/me">My robot</a>.</p><p class="bad small" id="shop-msg" role="status"></p></section></div>' +
       '<section class="card board-card"><h2>🏆 <span id="board-game"></span> leaderboard</h2><div class="board-tabs"><button type="button" class="here" data-b="today">Today</button>' +
       '<button type="button" data-b="all">All time</button></div><ol class="board" id="board"></ol>' +
       '<p class="muted small" id="board-best"></p><p class="small">🎁 Big scores win robot parts you can\'t buy. See them in <a href="/me">My robot</a>.</p></section></div>');

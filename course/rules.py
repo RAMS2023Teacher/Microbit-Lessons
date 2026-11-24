@@ -126,9 +126,9 @@ BADGES = [
 # unlock: None (free), ("level", n), ("badge", id), ("cost", n): bought in the shop with XP to spend,
 # or ("rush", n) / ("circuit", n): score n points in one race of that arcade game.
 # Spending never lowers a level: levels count all the XP ever earned; the shop spends from "XP to spend".
-AVATAR_PARTS = {"body": "Body", "color": "Color", "eyes": "Eyes", "mouth": "Mouth",
-                "antenna": "Antenna", "accessory": "Accessory", "bg": "Background", "card": "Calling card"}
-DEFAULT_AVATAR = {"body": "box", "color": "teal", "eyes": "round", "mouth": "smile",
+AVATAR_PARTS = {"body": "Body", "color": "Color", "outfit": "Costume", "eyes": "Eyes", "mouth": "Mouth", "face": "Face",
+                "antenna": "Antenna", "accessory": "Hats & gear", "bg": "Background", "card": "Calling card"}
+DEFAULT_AVATAR = {"body": "box", "color": "teal", "outfit": "none", "eyes": "round", "mouth": "smile", "face": "none",
                   "antenna": "ball", "accessory": "none", "bg": "sky", "card": "none", "name": ""}
 AVATAR_OPTIONS = {
     "body": [("box", "Boxy", None), ("round", "Dome", None), ("tall", "Tall", ("level", 3)),
@@ -140,6 +140,14 @@ AVATAR_OPTIONS = {
               ("lime", "Neon lime", ("cost", 100)), ("galaxy", "Galaxy", ("cost", 250)),
               ("ice", "Ice blue", ("cost", 120)), ("midnight", "Midnight", ("cost", 120)), ("sunset", "Sunset", ("cost", 300)),
               ("copper", "Copper trace", ("circuit", 1200))],
+    # Costumes go over the body (some come with their own helmet or hood), so a hat or bow tie can still go on top.
+    "outfit": [("none", "No costume", None),
+               ("hoops23", "#23 hoops jersey", ("cost", 250)), ("football", "Football player", ("cost", 250)),
+               ("soccer", "Soccer player", ("cost", 200)), ("hockey", "Hockey player", ("cost", 250)),
+               ("bat", "Bat hero", ("cost", 350)), ("cat", "Cat Lady", ("cost", 300)),
+               ("astronaut", "Astronaut", ("cost", 350)), ("ninja", "Ninja", ("cost", 300)),
+               ("pirate", "Pirate", ("cost", 250)), ("dino", "Dino suit", ("cost", 300)),
+               ("tux", "Tuxedo", ("cost", 200)), ("chef", "Chef", ("cost", 150))],
     "eyes": [("dots", "Dots", None), ("round", "Round", None), ("visor", "Visor", ("level", 2)),
              ("cyclops", "Cyclops", ("level", 4)), ("hearts", "Hearts", ("badge", "quiz-whiz")),
              ("leds", "LED grid", ("level", 5)), ("happy", "Happy", ("badge", "finisher")),
@@ -149,6 +157,14 @@ AVATAR_OPTIONS = {
               ("grille", "Grille", ("level", 3)), ("zigzag", "Zigzag", ("badge", "remixer")),
               ("fangs", "Fangs", ("cost", 100)), ("mustache", "Mustache", ("cost", 150)),
               ("tongue", "Tongue out", ("cost", 120)), ("braces", "Braces", ("cost", 100)), ("speaker", "Speaker", ("level", 6))],
+    # Face extras: facial hair, glasses and silly bits. They go with any eyes and mouth.
+    "face": [("none", "Nothing", None), ("rosy", "Rosy cheeks", None),
+             ("glasses", "Round glasses", ("cost", 80)), ("monocle", "Monocle", ("cost", 150)),
+             ("beard", "Beard", ("cost", 150)), ("goatee", "Goatee", ("cost", 100)),
+             ("handlebar", "Handlebar mustache", ("cost", 150)), ("sideburns", "Sideburns", ("cost", 100)),
+             ("wizardbeard", "Long white beard", ("cost", 200)), ("eyepatch", "Eye patch", ("cost", 120)),
+             ("eyeblack", "Eye black", ("cost", 60)), ("freckles", "Freckles", ("cost", 60)),
+             ("clownnose", "Clown nose", ("cost", 80))],
     "antenna": [("none", "None", None), ("ball", "Ball", None), ("double", "Double", ("level", 2)),
                 ("bolt", "Lightning", ("level", 4)), ("dish", "Radar dish", ("badge", "echo-hunter")),
                 ("propeller", "Propeller", ("level", 7)),
@@ -160,6 +176,9 @@ AVATAR_OPTIONS = {
                   ("cape", "Cape", ("level", 9)), ("crown", "Crown", ("badge", "graduate")),
                   ("scarf", "Scarf", ("cost", 120)), ("wizard", "Wizard hat", ("cost", 250)), ("jetpack", "Jetpack", ("cost", 300)),
                   ("tie", "Necktie", ("cost", 80)), ("tophat", "Top hat", ("cost", 200)),
+                  ("cowboy", "Cowboy hat", ("cost", 150)), ("fedora", "Fedora", ("cost", 150)),
+                  ("beanie", "Beanie", ("cost", 100)), ("party", "Party hat", ("cost", 80)),
+                  ("viking", "Viking helmet", ("cost", 200)), ("sweatband", "Sweatband", ("cost", 80)),
                   ("medal", "Gold medal", ("rush", 1800)), ("helmet", "Racing helmet", ("circuit", 800))],
     "bg": [("sky", "Sky", None), ("mint", "Mint", None), ("sun", "Sunny", None), ("lilac", "Lilac", None),
            ("night", "Night", None), ("circuit", "Circuit board", ("level", 5)),

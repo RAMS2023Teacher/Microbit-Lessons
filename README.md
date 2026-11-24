@@ -88,7 +88,10 @@ The arcade is **closed unless the teacher opens it** for a class, from the class
 or the class page. Finishing a lesson earns 5 minutes of play time; each race uses its length from that time, and only
 while the arcade is open for the student's own class. The teacher can also give everyone 5 minutes.
 Students spend **XP to spend** in the shop on power-ups (Turbo, Shield, Bolt magnet, Rocket dash, Overtime) and robot
-parts. Levels count all XP ever earned, so spending never lowers a level. Prices, power-ups and play time are in
+looks on **My robot**: costumes (a purple-and-gold #23 hoops jersey, football, soccer and hockey players, Bat hero,
+Cat Lady, astronaut, ninja, pirate, dino suit, tuxedo, chef), face extras (beards, goatee, handlebar mustache,
+sideburns, monocle, glasses, eye patch, eye black, freckles, clown nose), hats (top hat, cowboy, fedora, beanie, party
+hat, Viking helmet, sweatband) and more. A costume, a face extra and a hat can all be worn together. Levels count all XP ever earned, so spending never lowers a level. Prices, power-ups and play time are in
 `course/rules.py` (`AVATAR_OPTIONS`, `POWERUPS`, `ARCADE`).
 
 ## Accessibility, translation, problem reports, student view

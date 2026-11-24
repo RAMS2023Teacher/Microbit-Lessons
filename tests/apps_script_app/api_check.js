@@ -110,6 +110,8 @@ b = shop({ item: 'part:eyes:star' });
 assert.ok(b.ok && b.catalog.eyes.find((o) => o.id === 'star').unlocked);
 assert.ok(w.call(S, 'api', ['/api/avatar', JSON.stringify({ eyes: 'star' })]).body.ok);
 assert.ok(!w.call(S, 'api', ['/api/avatar', JSON.stringify({ eyes: 'shades' })]).body.ok);      // not bought
+assert.ok(!w.call(S, 'api', ['/api/avatar', JSON.stringify({ outfit: 'bat', face: 'beard' })]).body.ok);   // costumes and face extras are bought too
+assert.ok(w.call(S, 'api', ['/api/avatar', JSON.stringify({ eyes: 'star', face: 'rosy' })]).body.ok);      // rosy cheeks are free
 assert.ok(!shop({ item: 'part:eyes:round' }).ok);                                                // free parts aren't for sale
 const samNow = w.g.loadStudent_(S);
 assert.ok(samNow.xp >= xpBefore && samNow.spent === 230 && w.g.levelInfo_(samNow.xp).level >= lvBefore);   // spending never lowers XP or level
