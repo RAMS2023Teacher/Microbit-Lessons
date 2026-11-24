@@ -61,9 +61,9 @@ build:
       - Change line 2 to match. Run it and move your hand closer and farther.
     code: |
       while True:
-          basic.plot_bar_graph(input.light_level(), 255)
+          led.plot_bar_graph(input.light_level(), 255)
     new: "2"
-    what: "`plot_bar_graph` lights up more LEDs for bigger numbers. `255` is the biggest number, which fills the whole screen."
+    what: "`led.plot_bar_graph` lights up more LEDs for bigger numbers. It lives in the **Led** drawer, with `led.plot`. `255` is the biggest number, which fills the whole screen."
     test:
       - The bars go up and down as the light changes
     ask: Why is the second number 255 and not 100?

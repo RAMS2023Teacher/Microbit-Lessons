@@ -68,3 +68,10 @@ def test_every_wiring_step_has_a_checked_picture():
     # the breakout board's pins use holes f-j of rows 1-22
     clash = {"add": [{"type": "wire", "color": "red", "from": "mb.P0", "to": "f5"}], "check": []}
     assert any("breakout" in e for e in lessons.check_breadboard(clash))
+
+
+def test_led_calls_use_the_led_drawer():
+    """basic.plot_bar_graph isn't MakeCode Python (it's led.plot_bar_graph): the lesson checker catches it."""
+    assert L.check_calls("s", "basic.plot_bar_graph(input.light_level(), 255)")
+    assert L.check_calls("s", "basic.unplot(2, 2)")
+    assert not L.check_calls("s", "led.plot_bar_graph(input.light_level(), 255)\nled.plot(2, 2)\nbasic.show_number(3)")

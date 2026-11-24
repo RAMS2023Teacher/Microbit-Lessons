@@ -27,6 +27,22 @@ STEP_KEYS = {"part", "title", "say", "do", "code", "blocks", "new", "what", "tip
 BLOCK_CATS = {"basic", "input", "music", "led", "radio", "loops", "logic", "variables", "math", "game", "functions", "ml", "text"}
 
 
+# MakeCode Python puts every LED-drawing call in `led`, not `basic` (basic only has show_..., clear_screen, pause).
+WRONG_CALLS = {r"\bbasic\.(plot|unplot|point|toggle|plot_bar_graph|plot_brightness|set_brightness|brightness|enable|stop_animation)\b": "led.",
+               r"\bdisplay\.(scroll|show|clear|set_pixel)\b": "basic.show_string / basic.show_number / led.plot (that is MicroPython)",
+               r"^\s*from microbit import": "nothing: MakeCode Python needs no import (that is MicroPython)"}
+
+
+def check_calls(where: str, code: str) -> list[str]:
+    """Calls that are wrong in MakeCode Python, like basic.plot_bar_graph (it's led.plot_bar_graph)."""
+    errs = []
+    for pat, fix in WRONG_CALLS.items():
+        for m in re.finditer(pat, code or "", flags=re.M):
+            name = m.group(0).strip()
+            errs.append(f"{where}: `{name}` isn't MakeCode Python; use " + (f"`led.{m.group(1)}`" if fix == "led." else fix))
+    return errs
+
+
 def check_rubric(rows) -> list[str]:
     """An optional `rubric:` replaces the three default review rows: a list of {id, label, levels: [4 descriptions, 1-4]}."""
     if rows is None:
@@ -179,6 +195,10 @@ def validate(lesson: dict) -> list[str]:
         elif not st.get("how"):
             errs.append(f"standards: {st['code']} needs a 'how'")
     errs += check_rubric(lesson.get("rubric"))
+    for i, s in enumerate(lesson.get("build") or [], 1):
+        errs += check_calls(f"build step {i} ({s.get('title', '?')})", s.get("code"))
+    for e in (lesson.get("ship") or {}).get("extensions") or []:
+        errs += check_calls(f"extension {e.get('title', '?')}", e.get("code"))
     return errs
 
 
